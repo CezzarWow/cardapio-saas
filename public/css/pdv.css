@@ -29,7 +29,7 @@ body {
 
 /* --- SIDEBAR --- */
 .sidebar {
-    width: 80px;
+    width: 160px;
     background-color: var(--sidebar-bg);
     color: white;
     display: flex;
@@ -42,10 +42,10 @@ body {
 }
 
 .brand-icon {
-    width: 40px;
-    height: 40px;
+    width: 60px;
+    height: 60px;
     background: var(--primary-color);
-    border-radius: 12px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -53,15 +53,15 @@ body {
 }
 
 .nav-item {
-    width: 56px;
-    height: 56px;
+    width: 120px;
+    height: 100px;
     border-radius: 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    color: #9ca3af;
+    gap: 8px;
+    color: #ffffff;
     text-decoration: none;
     transition: all 0.2s ease;
 }
@@ -79,9 +79,9 @@ body {
 }
 
 .nav-label {
-    font-size: 10px;
-    font-weight: 500;
-    opacity: 0.8;
+    font-size: 16px;
+    font-weight: 600;
+    opacity: 0.9;
 }
 
 .nav-bottom {
@@ -131,19 +131,21 @@ body {
 
 .search-icon {
     position: absolute;
-    left: 12px;
-    top: 10px;
+    left: 16px;
+    top: 12px;
     color: var(--text-light);
-    width: 18px;
+    width: 24px;
+    height: 24px;
 }
 
 .search-input {
     width: 100%;
-    padding: 0.6rem 1rem 0.6rem 2.5rem;
+    padding: 0.8rem 1rem 0.8rem 3rem;
     background: var(--bg-color);
     border: none;
     border-radius: 8px;
     outline: none;
+    font-size: 1rem;
 }
 
 .search-input:focus {
