@@ -3,29 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Painel Admin</title>
-    <style>
-        body { font-family: sans-serif; background: #f4f4f9; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn { background: #3498db; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
-        th { background: #333; color: white; }
-        tr:hover { background: #f1f1f1; }
-
-        /* Estilos dos Botões de Status */
-        .btn-status { 
-            padding: 5px 10px; 
-            border-radius: 15px; 
-            font-weight: bold; 
-            text-decoration: none; 
-            border: 1px solid; 
-            font-size: 0.9em;
-            margin-left: 15px; 
-        }
-        .status-ativo { color: green; border-color: green; }
-        .status-suspenso { color: red; border-color: red; }
-    </style>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
@@ -38,59 +17,49 @@
     <table>
         <thead>
             <tr>
-                <th>ID</th>
+                <th style="width: 50px;">ID</th>
                 <th>Nome</th>
-                <th>Cardápio</th>
-                <th>Ações e Status</th>
+                <th class="text-center" style="width: 120px;">PDV</th>
+                <th class="text-center" style="width: 80px;">Cardápio</th>
+                <th class="text-center" style="width: 120px;">Status</th>
+                <th class="text-center" style="width: 120px;">Ações</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($restaurants as $loja): ?>
                 <tr>
                     <td>#<?php echo $loja['id']; ?></td>
-                    <td><?php echo $loja['name']; ?></td>
-                    
                     <td>
-                        <a href="../<?php echo $loja['slug']; ?>" target="_blank" style="text-decoration: none; color: #2980b9; font-weight: bold;">
-                            <?php echo $loja['slug']; ?> 🔗
+                        <strong><?php echo $loja['name']; ?></strong><br>
+                        <small style="color:#777">/<?php echo $loja['slug']; ?></small>
+                    </td>
+                    
+                    <td class="text-center">
+                        <a href="admin/autologin?id=<?php echo $loja['id']; ?>" class="btn-pdv" title="Gerenciar esta Loja">
+                            <i class="fas fa-desktop"></i> Acessar
+                        </a>
+                    </td>
+
+                    <td class="text-center">
+                        <a href="<?php echo $loja['slug']; ?>" target="_blank" class="btn-link-cardapio">
+                            <i class="fas fa-external-link-alt"></i>
                         </a>
                     </td>
                     
-                    <td>
-                        <a href="admin/restaurantes/editar?id=<?php echo $loja['id']; ?>" 
-                           style="color: blue; text-decoration: none; margin-right: 10px;">
-                           ✏️ Editar
-                        </a>
-
-                        <a href="admin/restaurantes/deletar?id=<?php echo $loja['id']; ?>" 
-                           onclick="return confirm('Tem certeza que deseja EXCLUIR DEFINITIVAMENTE o restaurante <?php echo $loja['name']; ?>?');"
-                           style="color: red; text-decoration: none; margin-right: 10px;">
-                           🗑️ Excluir
-                        </a>
-
+                    <td class="text-center">
                         <?php if ($loja['is_active'] == 1): ?>
-                            <a href="admin/restaurantes/status?id=<?php echo $loja['id']; ?>" 
-                               class="btn-status status-ativo"
-                               onclick="return confirm('⚠️ Tem certeza que deseja SUSPENDER a loja <?php echo $loja['name']; ?>? O cliente perderá o acesso!');">
-                               🟢 Ativo
-                            </a>
+                            <a href="admin/restaurantes/status?id=<?php echo $loja['id']; ?>" class="badge status-ativo">Ativo</a>
                         <?php else: ?>
-                            <a href="admin/restaurantes/status?id=<?php echo $loja['id']; ?>" 
-                               class="btn-status status-suspenso"
-                               onclick="return confirm('Deseja REATIVAR a loja <?php echo $loja['name']; ?>?');">
-                               🔴 Suspenso
-                            </a>
+                            <a href="admin/restaurantes/status?id=<?php echo $loja['id']; ?>" class="badge status-suspenso">Suspenso</a>
                         <?php endif; ?>
+                    </td>
 
+                    <td class="text-center">
+                        <a href="admin/restaurantes/editar?id=<?php echo $loja['id']; ?>" class="btn-action btn-edit"><i class="fas fa-edit"></i></a>
+                        <a href="admin/restaurantes/deletar?id=<?php echo $loja['id']; ?>" class="btn-action btn-delete" onclick="return confirm('Excluir?');"><i class="fas fa-trash"></i></a>
                     </td>
                 </tr>
             <?php endforeach; ?>
-
-            <?php if (empty($restaurants)): ?>
-                <tr>
-                    <td colspan="4" style="text-align:center">Nenhum restaurante criado ainda.</td>
-                </tr>
-            <?php endif; ?>
         </tbody>
     </table>
 </div>

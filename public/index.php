@@ -5,10 +5,14 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 // -----------------------------------
 
+// *** NOVO: Iniciar Sessão para o Autologin funcionar ***
+session_start();
+
 require '../vendor/autoload.php';
 
 use App\Controllers\Admin\DashboardController;
 use App\Controllers\Admin\RestaurantController;
+use App\Controllers\Admin\AutologinController; // <--- Importante
 
 $url = $_SERVER['REQUEST_URI'];
 // 1. Limpa os parâmetros GET (tudo depois do ?) para não confundir o switch
@@ -49,10 +53,24 @@ switch ($path) {
         $controller->update();
         break;
 
-    // Rota de EXCLUSÃO
-    case '/admin/restaurantes/deletar':
         $controller = new RestaurantController();
         $controller->delete();
+        break;
+
+    // --- NOVAS ROTAS ESCALÁVEIS ---
+
+    // 1. Rota que faz o login na loja
+    case '/admin/autologin':
+        $controller = new AutologinController();
+        $controller->login();
+        break;
+
+    // 2. Rota do Painel da Loja (Para onde fomos redirecionados)
+    // Por enquanto vamos apenas exibir uma mensagem, depois criamos o Controller real
+    case '/admin/loja/painel':
+        echo "<h1>Bem-vindo à gestão da loja: " . $_SESSION['loja_ativa_nome'] . "</h1>";
+        echo "<p>Aqui vamos gerenciar Categorias e Produtos.</p>";
+        echo "<a href='../../admin'>Voltar para Admin Geral</a>";
         break;
 
     default:
