@@ -1,83 +1,78 @@
 <?php
-// --- LIGAR VISUALIZAÇÃO DE ERROS ---
+// public/index.php
+
+// 1. Configurações de Erro e Sessão
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-// -----------------------------------
-
-// *** NOVO: Iniciar Sessão para o Autologin funcionar ***
 session_start();
 
 require '../vendor/autoload.php';
 
 use App\Controllers\Admin\DashboardController;
 use App\Controllers\Admin\RestaurantController;
-use App\Controllers\Admin\AutologinController; // <--- Importante
+use App\Controllers\Admin\AutologinController;
+use App\Controllers\Admin\PanelController; // <--- Vamos criar esse cara já já
 
 $url = $_SERVER['REQUEST_URI'];
-// 1. Limpa os parâmetros GET (tudo depois do ?) para não confundir o switch
 $url_clean = parse_url($url, PHP_URL_PATH);
-
-// 2. Remove a pasta base para sobrar só a rota limpa
 $path = str_replace('/cardapio-saas/public', '', $url_clean);
 
 switch ($path) {
+    // --- ROTAS DO ADMIN GERAL (Dono do SaaS) ---
     case '/admin':
-        $controller = new DashboardController();
-        $controller->index();
+        (new DashboardController())->index();
         break;
 
     case '/admin/restaurantes/novo':
-        $controller = new RestaurantController();
-        $controller->create();
+        (new RestaurantController())->create();
         break;
 
     case '/admin/restaurantes/salvar':
-        $controller = new RestaurantController();
-        $controller->store();
+        (new RestaurantController())->store();
         break;
 
     case '/admin/restaurantes/editar':
-        $controller = new RestaurantController();
-        $controller->edit();
+        (new RestaurantController())->edit();
+        break;
+
+    case '/admin/restaurantes/atualizar':
+        (new RestaurantController())->update();
+        break;
+
+    case '/admin/restaurantes/deletar': // <--- CORREÇÃO APLICADA AQUI
+        (new RestaurantController())->delete();
         break;
 
     case '/admin/restaurantes/status':
-        $controller = new RestaurantController();
-        $controller->toggleStatus();
+        (new RestaurantController())->toggleStatus();
         break;
     
-    // Rota que PROCESSA a edição (O botão Salvar manda pra cá)
-    case '/admin/restaurantes/atualizar':
-        $controller = new RestaurantController();
-        $controller->update();
-        break;
-
-        $controller = new RestaurantController();
-        $controller->delete();
-        break;
-
-    // --- NOVAS ROTAS ESCALÁVEIS ---
-
-    // 1. Rota que faz o login na loja
     case '/admin/autologin':
-        $controller = new AutologinController();
-        $controller->login();
+        (new AutologinController())->login();
         break;
 
-    // 2. Rota do Painel da Loja (Para onde fomos redirecionados)
-    // Por enquanto vamos apenas exibir uma mensagem, depois criamos o Controller real
+    // --- ROTAS DO PAINEL DO RESTAURANTE (Onde o cliente mexe) ---
     case '/admin/loja/painel':
-        echo "<h1>Bem-vindo à gestão da loja: " . $_SESSION['loja_ativa_nome'] . "</h1>";
-        echo "<p>Aqui vamos gerenciar Categorias e Produtos.</p>";
-        echo "<a href='../../admin'>Voltar para Admin Geral</a>";
+        // Agora chamamos um Controller real, não um echo solto
+        // Se a classe ainda não existir, vai dar erro, então vamos criá-la no Passo 2
+        require __DIR__ . '/../app/Controllers/Admin/PanelController.php';
+        (new PanelController())->index();
         break;
 
+    // --- ROTA PÚBLICA (Cardápio) ---
     default:
+        // Se for a raiz ou vazio, vai pro admin
         if ($path == '/' || $path == '') {
-            echo "<h1>Página Inicial</h1> <a href='admin'>Ir para Admin</a>";
-        } else {
-            echo "<h1>Erro 404</h1><p>Página não encontrada: $path</p>";
+            header('Location: admin');
+            exit;
         }
+        
+        // Se não, tenta carregar o cardápio
+        require __DIR__ . '/../app/Controllers/MenuController.php';
+        $menu = new \App\Controllers\MenuController();
+        // Remove a barra inicial do slug (ex: "/pizzaria" vira "pizzaria")
+        $slug = ltrim($path, '/');
+        if($slug) $menu->index($slug);
         break;
 }
