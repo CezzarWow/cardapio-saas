@@ -1,0 +1,10 @@
+{
+    "name": "projeto/cardapio-saas",
+    "description": "SaaS de Cardápio Digital",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "require": {}
+}
