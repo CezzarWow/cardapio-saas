@@ -1,0 +1,19 @@
+/* Importação da Fonte */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Configuração Geral */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Utilitário para esconder barra de rolagem (mas permitir rolar) */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
