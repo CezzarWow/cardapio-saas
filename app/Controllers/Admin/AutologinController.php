@@ -32,7 +32,7 @@ class AutologinController {
 
             // 5. Redireciona para o Painel da Loja (onde cadastraremos produtos)
             // Obs: Vamos criar essa rota '/admin/loja/painel' no próximo passo
-            header('Location: ../loja/painel');
+            header('Location: loja/painel');    // O correto (segue em frente dentro do admin)
             exit;
         } else {
             die('Loja não encontrada.');

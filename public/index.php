@@ -60,6 +60,26 @@ switch ($path) {
         (new PanelController())->index();
         break;
 
+    // --- GESTÃO DE CATEGORIAS ---
+    
+    // 1. Listar
+    case '/admin/categories':
+        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
+        (new \App\Controllers\Admin\CategoryController())->index();
+        break;
+
+    // 2. Salvar (POST do formulário)
+    case '/admin/categories/salvar':
+        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
+        (new \App\Controllers\Admin\CategoryController())->store();
+        break;
+
+    // 3. Deletar
+    case '/admin/categories/deletar':
+        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
+        (new \App\Controllers\Admin\CategoryController())->delete();
+        break;
+
     // --- ROTA PÚBLICA (Cardápio) ---
     default:
         // Se for a raiz ou vazio, vai pro admin
