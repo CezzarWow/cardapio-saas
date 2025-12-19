@@ -1,56 +1,76 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Painel da Loja - <?= $_SESSION['loja_ativa_nome'] ?></title>
-    <link rel="stylesheet" href="../../css/admin.css"> 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .top-bar { background: #2c3e50; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .top-bar a { color: #ecf0f1; text-decoration: none; font-size: 0.9em; }
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px; }
-        .menu-card { background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s; text-decoration: none; color: #333; }
-        .menu-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        .menu-card i { font-size: 3em; margin-bottom: 15px; color: #3498db; }
-        .menu-card h3 { margin: 0; font-size: 1.2em; }
-    </style>
-</head>
-<body>
+<?php 
+require __DIR__ . '/layout/header.php'; 
+require __DIR__ . '/layout/sidebar.php'; 
+?>
 
-    <div class="top-bar">
-        <div>
-            <strong>Loja:</strong> <?= $_SESSION['loja_ativa_nome'] ?>
-        </div>
-        <div>
-            <a href="../../admin"><i class="fas fa-arrow-left"></i> Voltar para Admin Geral</a>
-        </div>
-    </div>
-
-    <div class="container">
-        <h2 style="margin-top: 20px;">Painel de Gestão</h2>
+<main class="main-content">
+    <section class="catalog-section">
         
-        <div class="menu-grid">
-            <a href="categories" class="menu-card">
-                <i class="fas fa-tags"></i>
-                <h3>Categorias</h3>
-            </a>
-
-            <a href="produtos" class="menu-card">
-                <i class="fas fa-hamburger"></i>
-                <h3>Produtos</h3>
-            </a>
-
-            <a href="#" class="menu-card" style="opacity: 0.5;">
-                <i class="fas fa-motorcycle"></i>
-                <h3>Pedidos (Em breve)</h3>
-            </a>
+        <header class="top-header">
+            <div class="page-title">
+                <h1>Balcão de Vendas</h1>
+                <p>Loja: <?= $_SESSION['loja_ativa_nome'] ?></p>
+            </div>
             
-            <a href="#" class="menu-card" style="opacity: 0.5;">
-                <i class="fas fa-cog"></i>
-                <h3>Configurações</h3>
-            </a>
-        </div>
-    </div>
+            <div class="search-bar">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" placeholder="Buscar produtos (F2)..." class="search-input" />
+            </div>
 
-</body>
-</html>
+            <div class="status-badge">
+                <div class="status-dot"></div> Online
+            </div>
+        </header>
+
+        <div class="products-container">
+            <div class="products-grid">
+                
+                <div class="product-card">
+                    <div class="product-icon icon-orange">X</div>
+                    <div class="product-info">
+                        <h3>X-Salada Especial</h3>
+                        <span>Lanches</span>
+                    </div>
+                    <div class="product-price">R$ 25,00</div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-icon icon-red">C</div>
+                    <div class="product-info">
+                        <h3>Coca-Cola Lata</h3>
+                        <span>Bebidas</span>
+                    </div>
+                    <div class="product-price">R$ 6,00</div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <aside class="cart-sidebar">
+        <div class="cart-header">
+            <h2 class="cart-title">
+                <i data-lucide="shopping-cart" color="#2563eb"></i> Cesta
+            </h2>
+            <button class="btn-icon"><i data-lucide="trash-2"></i></button>
+        </div>
+        
+        <div class="cart-empty">
+            <i data-lucide="shopping-cart" size="48" color="#e5e7eb" style="margin-bottom: 1rem;"></i>
+            <p>Carrinho Vazio</p>
+        </div>
+
+        <div class="cart-footer">
+            <div class="total-row">
+                <span class="total-label">Total</span>
+                <span class="total-value">R$ 0,00</span>
+            </div>
+            <button class="btn-primary" disabled>
+                Finalizar Venda
+            </button>
+        </div>
+    </aside>
+
+</main>
+
+<?php require __DIR__ . '/layout/footer.php'; ?>
