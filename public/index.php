@@ -72,9 +72,7 @@ switch ($path) {
         echo "<h1>Tela de Estoque (Em construção) 📦</h1>";
         break;
 
-    case '/admin/loja/vendas':
-        echo "<h1>Tela de Vendas (Em construção) 🛍️</h1>";
-        break;
+
 
     case '/admin/loja/caixa':
         echo "<h1>Tela de Caixa (Em construção) 💰</h1>";
@@ -82,6 +80,12 @@ switch ($path) {
 
     case '/admin/loja/config':
         echo "<h1>Tela de Configurações (Em construção) ⚙️</h1>";
+        break;
+
+    // --- ROTAS DE AÇÃO (AJAX) ---
+    case '/admin/loja/venda/finalizar':
+        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
+        (new \App\Controllers\Admin\OrderController())->store();
         break;
 
     // --- GESTÃO DE CATEGORIAS ---
@@ -102,6 +106,12 @@ switch ($path) {
     case '/admin/categories/deletar':
         require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
         (new \App\Controllers\Admin\CategoryController())->delete();
+        break;
+
+    // --- ROTA DE RELATÓRIO DE VENDAS ---
+    case '/admin/loja/vendas':
+        require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
+        (new \App\Controllers\Admin\SalesController())->index();
         break;
 
     // --- ROTA PÚBLICA (Cardápio) ---

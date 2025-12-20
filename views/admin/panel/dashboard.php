@@ -86,7 +86,7 @@ require __DIR__ . '/layout/sidebar.php';
                 <span class="total-label">Total</span>
                 <span id="cart-total" class="total-value">R$ 0,00</span>
             </div>
-            <button id="btn-finalizar" class="btn-primary" disabled>
+            <button id="btn-finalizar" class="btn-primary" disabled onclick="finalizeSale()">
                 Finalizar Venda
             </button>
         </div>
@@ -94,6 +94,6 @@ require __DIR__ . '/layout/sidebar.php';
 
 </main>
 
-<script src="../../../js/pdv.js"></script>
+<script src="../../js/pdv.js"></script>
 
 <?php require __DIR__ . '/layout/footer.php'; ?>

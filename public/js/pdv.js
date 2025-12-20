@@ -89,3 +89,43 @@ function updateCartUI() {
     // Atualiza o Total formatado em Reais
     totalElement.innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
+
+// Função para Finalizar Venda (Envia para o PHP)
+function finalizeSale() {
+    // Pega o botão para travar ele durante o envio
+    const btn = document.getElementById('btn-finalizar');
+
+    // Trava o botão para não clicar duas vezes
+    btn.disabled = true;
+    btn.innerText = "Processando...";
+
+    // Envia os dados para o PHP via AJAX (sem recarregar a tela)
+    fetch('venda/finalizar', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ cart: cart }) // Envia o carrinho global
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Venda realizada com sucesso! 💰✅');
+                cart = [];      // Zera o carrinho na memória do JS
+                updateCartUI(); // Limpa a tela visualmente
+            } else {
+                alert('Erro ao finalizar: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro de conexão com o servidor.');
+        })
+        .finally(() => {
+            // Destrava o botão e volta o texto normal
+            btn.disabled = false;
+            btn.innerText = "Finalizar Venda";
+            // Força atualização da UI para garantir que o botão desabilite se o carrinho estiver vazio
+            updateCartUI();
+        });
+}
