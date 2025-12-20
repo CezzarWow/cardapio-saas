@@ -7,8 +7,10 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 session_start();
 
-// Define a URL base do sistema (Ajuste conforme sua pasta no htdocs)
-define('BASE_URL', '/cardapio-saas/public');
+// Define a URL base dinamicamente
+$scriptName = dirname($_SERVER['SCRIPT_NAME']);
+$baseUrl = str_replace('\\', '/', $scriptName);
+define('BASE_URL', rtrim($baseUrl, '/'));
 
 require '../vendor/autoload.php';
 
@@ -100,8 +102,19 @@ switch ($path) {
         echo "<h1>Tela de Caixa (Em construção) 💰</h1>";
         break;
 
+    // --- CONFIGURAÇÕES DA LOJA ---
     case '/admin/loja/config':
-        echo "<h1>Tela de Configurações (Em construção) ⚙️</h1>";
+        require __DIR__ . '/../app/Controllers/Admin/ConfigController.php';
+        (new \App\Controllers\Admin\ConfigController())->index();
+        break;
+
+    case '/admin/loja/config/salvar':
+        require __DIR__ . '/../app/Controllers/Admin/ConfigController.php';
+        (new \App\Controllers\Admin\ConfigController())->update();
+        break;
+
+    case '/admin/loja/configuracoes-gerais':
+        echo "<h1>Tela de Configurações Gerais (Em construção) ⚙️</h1>";
         break;
 
     // --- ROTAS DE AÇÃO (AJAX) ---
