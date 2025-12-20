@@ -7,7 +7,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link rel="stylesheet" href="../../css/pdv.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/pdv.css">
     
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>

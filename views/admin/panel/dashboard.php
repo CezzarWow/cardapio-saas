@@ -38,7 +38,7 @@ require __DIR__ . '/layout/sidebar.php';
                 <?php foreach ($categories as $category): ?>
                     <?php if (!empty($category['products'])): ?>
                         
-                        <h3 style="font-weight: 700; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; margin: 1.5rem 0 0.5rem 0.25rem;">
+                        <h3 style="font-weight: 800; color: #111827; font-size: 1.25rem; margin: 2rem 0 1rem 0; padding-left: 5px; border-left: 4px solid #f59e0b;">
                             <?= htmlspecialchars($category['name']) ?>
                         </h3>
 
@@ -48,12 +48,16 @@ require __DIR__ . '/layout/sidebar.php';
                                 <div class="product-card" 
                                      onclick="addToCart(<?= $product['id'] ?>, '<?= addslashes($product['name']) ?>', <?= $product['price'] ?>)">
                                     
-                                    <div class="product-icon icon-orange">
-                                        <?= strtoupper(substr($product['name'], 0, 1)) ?>
-                                    </div>
+                                    <?php if (!empty($product['image'])): ?>
+                                        <img src="<?= BASE_URL ?>/uploads/<?= $product['image'] ?>" alt="<?= htmlspecialchars($product['name']) ?>" class="product-image">
+                                    <?php else: ?>
+                                        <div class="product-icon icon-orange">
+                                            <?= strtoupper(substr($product['name'], 0, 1)) ?>
+                                        </div>
+                                    <?php endif; ?>
+
                                     <div class="product-info">
                                         <h3><?= htmlspecialchars($product['name']) ?></h3>
-                                        <span><?= htmlspecialchars($category['name']) ?></span>
                                     </div>
                                     <div class="product-price">
                                         R$ <?= number_format($product['price'], 2, ',', '.') ?>
@@ -142,6 +146,6 @@ require __DIR__ . '/layout/sidebar.php';
 
 </main>
 
-<script src="../../js/pdv.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/pdv.js?v=<?= time() ?>"></script>
 
 <?php require __DIR__ . '/layout/footer.php'; ?>

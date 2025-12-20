@@ -7,6 +7,9 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 session_start();
 
+// Define a URL base do sistema (Ajuste conforme sua pasta no htdocs)
+define('BASE_URL', '/cardapio-saas/public');
+
 require '../vendor/autoload.php';
 
 use App\Controllers\Admin\DashboardController;
@@ -70,8 +73,25 @@ switch ($path) {
         echo "<h1>Tela de Delivery (Em construção) 🛵</h1>";
         break;
 
-    case '/admin/loja/produtos': // Estoque
-        echo "<h1>Tela de Estoque (Em construção) 📦</h1>";
+    // --- GESTÃO DE ESTOQUE (PRODUTOS) ---
+    case '/admin/loja/produtos':
+        require __DIR__ . '/../app/Controllers/Admin/StockController.php';
+        (new \App\Controllers\Admin\StockController())->index();
+        break;
+    
+    case '/admin/loja/produtos/novo':
+        require __DIR__ . '/../app/Controllers/Admin/StockController.php';
+        (new \App\Controllers\Admin\StockController())->create();
+        break;
+
+    case '/admin/loja/produtos/salvar':
+        require __DIR__ . '/../app/Controllers/Admin/StockController.php';
+        (new \App\Controllers\Admin\StockController())->store();
+        break;
+
+    case '/admin/loja/produtos/deletar':
+        require __DIR__ . '/../app/Controllers/Admin/StockController.php';
+        (new \App\Controllers\Admin\StockController())->delete();
         break;
 
 
