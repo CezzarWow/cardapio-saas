@@ -27,7 +27,6 @@ require __DIR__ . '/layout/sidebar.php';
                 <div style="padding: 2rem; text-align: center; color: #9ca3af;">
                     <i data-lucide="package-open" style="width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.5;"></i>
                     <p>Nenhum produto cadastrado.</p>
-                    <p style="font-size: 0.8rem;">Cadastre categorias e produtos para começar.</p>
                 </div>
             <?php else: ?>
             
@@ -41,7 +40,9 @@ require __DIR__ . '/layout/sidebar.php';
                         <div class="products-grid">
                             <?php foreach ($category['products'] as $product): ?>
                                 
-                                <div class="product-card">
+                                <div class="product-card" 
+                                     onclick="addToCart(<?= $product['id'] ?>, '<?= addslashes($product['name']) ?>', <?= $product['price'] ?>)">
+                                    
                                     <div class="product-icon icon-orange">
                                         <?= strtoupper(substr($product['name'], 0, 1)) ?>
                                     </div>
@@ -72,22 +73,27 @@ require __DIR__ . '/layout/sidebar.php';
             <button class="btn-icon"><i data-lucide="trash-2"></i></button>
         </div>
         
-        <div class="cart-empty">
+        <div id="cart-empty-state" class="cart-empty">
             <i data-lucide="shopping-cart" size="48" color="#e5e7eb" style="margin-bottom: 1rem;"></i>
             <p>Carrinho Vazio</p>
         </div>
 
+        <div id="cart-items-area" style="flex: 1; overflow-y: auto; padding: 1rem; display: none;">
+            </div>
+
         <div class="cart-footer">
             <div class="total-row">
                 <span class="total-label">Total</span>
-                <span class="total-value">R$ 0,00</span>
+                <span id="cart-total" class="total-value">R$ 0,00</span>
             </div>
-            <button class="btn-primary" disabled>
+            <button id="btn-finalizar" class="btn-primary" disabled>
                 Finalizar Venda
             </button>
         </div>
     </aside>
 
 </main>
+
+<script src="../../../js/pdv.js"></script>
 
 <?php require __DIR__ . '/layout/footer.php'; ?>
