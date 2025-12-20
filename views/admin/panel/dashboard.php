@@ -8,8 +8,13 @@ require __DIR__ . '/layout/sidebar.php';
         
         <header class="top-header">
             <div class="page-title">
-                <h1>Balcão de Vendas</h1>
-                <p>Loja: <?= $_SESSION['loja_ativa_nome'] ?></p>
+                <?php if ($mesa_numero): ?>
+                    <h1 style="color: #b91c1c;">Mesa <?= $mesa_numero ?></h1>
+                    <p>Gerenciando Pedido</p>
+                <?php else: ?>
+                    <h1>Balcão de Vendas</h1>
+                    <p>Venda Rápida</p>
+                <?php endif; ?>
             </div>
             
             <div class="search-bar">
@@ -65,10 +70,13 @@ require __DIR__ . '/layout/sidebar.php';
         </div>
     </section>
 
+    <input type="hidden" id="current_table_id" value="<?= $mesa_id ?? '' ?>">
+    <input type="hidden" id="current_table_number" value="<?= $mesa_numero ?? '' ?>">
+
     <aside class="cart-sidebar">
         <div class="cart-header">
             <h2 class="cart-title">
-                <i data-lucide="shopping-cart" color="#2563eb"></i> Cesta
+                <i data-lucide="shopping-cart" color="#2563eb"></i> Carrinho
             </h2>
             <button class="btn-icon"><i data-lucide="trash-2"></i></button>
         </div>
@@ -79,21 +87,61 @@ require __DIR__ . '/layout/sidebar.php';
         </div>
 
         <div id="cart-items-area" style="flex: 1; overflow-y: auto; padding: 1rem; display: none;">
+        </div>
+
+        <?php if (!empty($itensJaPedidos)): ?>
+            <div style="padding: 1rem; background: #fff7ed; border-bottom: 1px solid #fed7aa;">
+                <h3 style="font-size: 0.85rem; font-weight: 700; color: #9a3412; margin-bottom: 0.5rem; display:flex; justify-content:space-between;">
+                    <span>Já na Mesa</span>
+                    <span>Total: R$ <?= number_format($contaAberta['total'], 2, ',', '.') ?></span>
+                </h3>
+                <div style="max-height: 150px; overflow-y: auto;">
+                    <?php foreach ($itensJaPedidos as $itemAntigo): ?>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #9a3412; margin-bottom: 4px;">
+                            <span><?= $itemAntigo['quantity'] ?>x <?= $itemAntigo['name'] ?></span>
+                            <span>R$ <?= number_format($itemAntigo['price'], 2, ',', '.') ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
+        <?php endif; ?>
 
         <div class="cart-footer">
-            <div class="total-row">
-                <span class="total-label">Total</span>
-                <span id="cart-total" class="total-value">R$ 0,00</span>
+            
+            <!-- TOTAL GERAL (Mesa + Carrinho) -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span style="font-size: 1.5rem; font-weight: 900; color: #111827; text-transform: uppercase;">TOTAL</span>
+                <span id="grand-total" style="font-size: 1.8rem; font-weight: 900; color: #2563eb;">R$ 0,00</span>
             </div>
-            <button id="btn-finalizar" class="btn-primary" disabled onclick="finalizeSale()">
-                Finalizar Venda
-            </button>
+
+            <!-- Adicionar (Carrinho) -->
+            <div class="total-row" style="margin-bottom: 1.5rem;">
+                <span class="total-label" style="font-size: 1rem; color: #111827; font-weight: 700;">Adicionar</span>
+                <span id="cart-total" class="total-value" style="font-size: 1.1rem; color: #16a34a;">R$ 0,00</span>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-finalizar" class="btn-primary" disabled onclick="finalizeSale()" style="flex: 1;">
+                    Finalizar
+                </button>
+
+                <?php if (!empty($contaAberta)): ?>
+                    <button onclick="fecharContaMesa(<?= $mesa_id ?>)" 
+                            style="flex: 1; background: #ef4444; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer;">
+                        Fechar
+                    </button>
+                    <!-- Hidden input para o JS ler o valor inicial da mesa -->
+                    <input type="hidden" id="table-initial-total" value="<?= $contaAberta['total'] ?>">
+                <?php else: ?>
+                    <input type="hidden" id="table-initial-total" value="0">
+                <?php endif; ?>
+            </div>
         </div>
     </aside>
 
 </main>
 
-<script src="../../js/pdv.js"></script>
+<script src="../../js/pdv.js?v=<?= time() ?>"></script>
 
 <?php require __DIR__ . '/layout/footer.php'; ?>

@@ -60,8 +60,10 @@ switch ($path) {
         (new \App\Controllers\Admin\ProductController())->index();
         break;
 
+    // --- ROTA DE MESAS ---
     case '/admin/loja/mesas':
-        echo "<h1>Tela de Mesas (Em construção) 🚧</h1>";
+        require __DIR__ . '/../app/Controllers/Admin/TableController.php';
+        (new \App\Controllers\Admin\TableController())->index();
         break;
 
     case '/admin/loja/delivery':
@@ -88,6 +90,11 @@ switch ($path) {
         (new \App\Controllers\Admin\OrderController())->store();
         break;
 
+    case '/admin/loja/mesa/fechar':
+        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
+        (new \App\Controllers\Admin\OrderController())->closeTable();
+        break;
+
     // --- GESTÃO DE CATEGORIAS ---
     
     // 1. Listar
@@ -112,6 +119,12 @@ switch ($path) {
     case '/admin/loja/vendas':
         require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
         (new \App\Controllers\Admin\SalesController())->index();
+        break;
+
+    // --- ROTA PARA PEGAR ITENS DA VENDA (AJAX) ---
+    case '/admin/loja/vendas/itens':
+        require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
+        (new \App\Controllers\Admin\SalesController())->getItems();
         break;
 
     // --- ROTA PÚBLICA (Cardápio) ---

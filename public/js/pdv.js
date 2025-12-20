@@ -1,6 +1,21 @@
 // Variável global que guarda os itens
 let cart = [];
 
+// Verifica se estamos numa mesa assim que carrega
+document.addEventListener('DOMContentLoaded', () => {
+    const tableIdInput = document.getElementById('current_table_id');
+    const tableId = tableIdInput ? tableIdInput.value : null;
+    const btn = document.getElementById('btn-finalizar');
+
+    if (tableId) {
+        btn.innerText = "Salvar na Mesa"; // Muda o texto visualmente
+        btn.style.backgroundColor = "#d97706"; // Um laranja para diferenciar
+    }
+
+    // Atualiza a UI inicial (para mostrar o TOTAL da mesa se houver)
+    updateCartUI();
+});
+
 // Função chamada quando clica no produto
 function addToCart(id, name, price) {
     // 1. Verifica se o produto já está no carrinho
@@ -86,46 +101,92 @@ function updateCartUI() {
         });
     }
 
-    // Atualiza o Total formatado em Reais
+    // --- LÓGICA DE TOTAL UNIFICADO ---
+
+    // --- LÓGICA DE TOTAIS SEPARADOS ---
+
+    // 1. Pega o valor que JÁ ESTÁ na mesa
+    let tableInitialValue = document.getElementById('table-initial-total')?.value || "0";
+    const tableInitialTotal = parseFloat(tableInitialValue);
+
+    // 2. Calcula o Grand Total (Mesa + Carrinho)
+    const grandTotal = total + tableInitialTotal;
+
+    // 3. Atualiza "Adicionar" (Só o Carrinho)
     totalElement.innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    // 4. Atualiza "TOTAL" (Tudo Junto)
+    const grandTotalElement = document.getElementById('grand-total');
+    if (grandTotalElement) {
+        grandTotalElement.innerText = grandTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
 }
 
-// Função para Finalizar Venda (Envia para o PHP)
 function finalizeSale() {
-    // Pega o botão para travar ele durante o envio
     const btn = document.getElementById('btn-finalizar');
+    const tableIdInput = document.getElementById('current_table_id');
+    const tableId = tableIdInput ? tableIdInput.value : null; // Pega o ID da mesa, se houver
 
-    // Trava o botão para não clicar duas vezes
     btn.disabled = true;
     btn.innerText = "Processando...";
 
-    // Envia os dados para o PHP via AJAX (sem recarregar a tela)
+    // Prepara o pacote para enviar
+    const payload = {
+        cart: cart,
+        table_id: tableId ? parseInt(tableId) : null // Manda o ID se existir
+    };
+
     fetch('venda/finalizar', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ cart: cart }) // Envia o carrinho global
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
     })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Venda realizada com sucesso! 💰✅');
-                cart = [];      // Zera o carrinho na memória do JS
-                updateCartUI(); // Limpa a tela visualmente
+                if (tableId) {
+
+                    window.location.reload(); // Recarrega para atualizar a lista "Já na Mesa"
+                } else {
+                    alert('Venda realizada! 💰✅');
+                    cart = [];
+                    updateCartUI();
+                }
             } else {
-                alert('Erro ao finalizar: ' + data.message);
+                alert('Erro: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Erro de conexão.');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerText = tableId ? "Salvar na Mesa" : "Finalizar Venda";
+        });
+}
+
+// Função para fechar conta da mesa e liberar
+function fecharContaMesa(mesaId) {
+    if (!confirm('Tem certeza que deseja fechar a conta e liberar a mesa?')) return;
+
+    fetch('mesa/fechar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table_id: mesaId })
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+
+                window.location.href = 'mesas'; // Volta para o mapa
+            } else {
+                alert('Erro: ' + data.message);
             }
         })
         .catch(error => {
             console.error('Erro:', error);
-            alert('Erro de conexão com o servidor.');
-        })
-        .finally(() => {
-            // Destrava o botão e volta o texto normal
-            btn.disabled = false;
-            btn.innerText = "Finalizar Venda";
-            // Força atualização da UI para garantir que o botão desabilite se o carrinho estiver vazio
-            updateCartUI();
+            alert('Erro de conexão ao fechar conta.');
         });
 }
+

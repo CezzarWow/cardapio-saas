@@ -249,6 +249,7 @@ body {
 /* --- CARRINHO --- */
 .cart-sidebar {
     width: 380px;
+    /* Mais largo */
     background: white;
     border-left: 1px solid var(--border-color);
     display: flex;
@@ -258,27 +259,43 @@ body {
 }
 
 .cart-header {
-    padding: 1.25rem;
+    padding: 1.5rem;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: #f9fafb;
 }
 
 .cart-title {
-    font-size: 1.1rem;
+    font-size: 1.5rem;
+    /* Maior */
     font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.75rem;
     color: var(--text-dark);
 }
 
+/* Ícone da Lixeira */
 .btn-icon {
     background: none;
     border: none;
     cursor: pointer;
     color: var(--danger-color);
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background-color: #fee2e2;
+    transform: scale(1.1);
+}
+
+.btn-icon svg {
+    width: 28px;
+    height: 28px;
 }
 
 .cart-empty {
@@ -288,10 +305,11 @@ body {
     align-items: center;
     justify-content: center;
     color: var(--text-light);
+    gap: 1rem;
 }
 
 .cart-footer {
-    padding: 1.25rem;
+    padding: 1.5rem;
     background: #f9fafb;
     border-top: 1px solid var(--border-color);
 }
@@ -299,17 +317,19 @@ body {
 .total-row {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
+    /* Centralizado */
     margin-bottom: 1rem;
 }
 
 .total-label {
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 600;
     color: var(--text-dark);
 }
 
 .total-value {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 800;
     color: var(--primary-color);
 }
@@ -321,8 +341,8 @@ body {
     padding: 1rem;
     border: none;
     border-radius: 12px;
-    font-weight: 700;
-    font-size: 1rem;
+    font-weight: 600;
+    font-size: 1.1rem;
     cursor: pointer;
     box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.4);
     transition: background 0.2s;
