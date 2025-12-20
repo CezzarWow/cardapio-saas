@@ -23,27 +23,44 @@ require __DIR__ . '/layout/sidebar.php';
         </header>
 
         <div class="products-container">
-            <div class="products-grid">
-                
-                <div class="product-card">
-                    <div class="product-icon icon-orange">X</div>
-                    <div class="product-info">
-                        <h3>X-Salada Especial</h3>
-                        <span>Lanches</span>
-                    </div>
-                    <div class="product-price">R$ 25,00</div>
+            <?php if (empty($categories)): ?>
+                <div style="padding: 2rem; text-align: center; color: #9ca3af;">
+                    <i data-lucide="package-open" style="width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>Nenhum produto cadastrado.</p>
+                    <p style="font-size: 0.8rem;">Cadastre categorias e produtos para começar.</p>
                 </div>
+            <?php else: ?>
+            
+                <?php foreach ($categories as $category): ?>
+                    <?php if (!empty($category['products'])): ?>
+                        
+                        <h3 style="font-weight: 700; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; margin: 1.5rem 0 0.5rem 0.25rem;">
+                            <?= htmlspecialchars($category['name']) ?>
+                        </h3>
 
-                <div class="product-card">
-                    <div class="product-icon icon-red">C</div>
-                    <div class="product-info">
-                        <h3>Coca-Cola Lata</h3>
-                        <span>Bebidas</span>
-                    </div>
-                    <div class="product-price">R$ 6,00</div>
-                </div>
+                        <div class="products-grid">
+                            <?php foreach ($category['products'] as $product): ?>
+                                
+                                <div class="product-card">
+                                    <div class="product-icon icon-orange">
+                                        <?= strtoupper(substr($product['name'], 0, 1)) ?>
+                                    </div>
+                                    <div class="product-info">
+                                        <h3><?= htmlspecialchars($product['name']) ?></h3>
+                                        <span><?= htmlspecialchars($category['name']) ?></span>
+                                    </div>
+                                    <div class="product-price">
+                                        R$ <?= number_format($product['price'], 2, ',', '.') ?>
+                                    </div>
+                                </div>
 
-            </div>
+                            <?php endforeach; ?>
+                        </div>
+
+                    <?php endif; ?>
+                <?php endforeach; ?>
+
+            <?php endif; ?>
         </div>
     </section>
 

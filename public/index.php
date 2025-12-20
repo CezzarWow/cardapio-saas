@@ -53,11 +53,35 @@ switch ($path) {
         break;
 
     // --- ROTAS DO PAINEL DO RESTAURANTE (Onde o cliente mexe) ---
-    case '/admin/loja/painel':
-        // Agora chamamos um Controller real, não um echo solto
-        // Se a classe ainda não existir, vai dar erro, então vamos criá-la no Passo 2
-        require __DIR__ . '/../app/Controllers/Admin/PanelController.php';
-        (new PanelController())->index();
+    // --- ROTAS DO PAINEL DO RESTAURANTE ---
+    case '/admin/loja/painel': 
+    case '/admin/loja/pdv': // Adicionei essa rota pois seu botão na sidebar aponta para 'pdv'
+        require __DIR__ . '/../app/Controllers/Admin/ProductController.php';
+        (new \App\Controllers\Admin\ProductController())->index();
+        break;
+
+    case '/admin/loja/mesas':
+        echo "<h1>Tela de Mesas (Em construção) 🚧</h1>";
+        break;
+
+    case '/admin/loja/delivery':
+        echo "<h1>Tela de Delivery (Em construção) 🛵</h1>";
+        break;
+
+    case '/admin/loja/produtos': // Estoque
+        echo "<h1>Tela de Estoque (Em construção) 📦</h1>";
+        break;
+
+    case '/admin/loja/vendas':
+        echo "<h1>Tela de Vendas (Em construção) 🛍️</h1>";
+        break;
+
+    case '/admin/loja/caixa':
+        echo "<h1>Tela de Caixa (Em construção) 💰</h1>";
+        break;
+
+    case '/admin/loja/config':
+        echo "<h1>Tela de Configurações (Em construção) ⚙️</h1>";
         break;
 
     // --- GESTÃO DE CATEGORIAS ---
