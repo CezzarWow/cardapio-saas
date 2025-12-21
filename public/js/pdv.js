@@ -177,27 +177,37 @@ function calculateTotal() {
 
 // function formatCurrency removed (duplicate)
 
-// FORMATADOR DE MOEDA (Input: 5050 -> 50,50)
+// FORMATADOR DE MOEDA (Input: 5050 -> 50,50) - Estilo centavos
 function formatMoneyInput(input) {
-    let value = input.value.replace(/\D/g, '');
-    value = (parseInt(value) / 100).toFixed(2) + '';
-    value = value.replace('.', ',');
-    value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+    let value = input.value.replace(/\D/g, ''); // Remove tudo que não é número
+    if (value === '') {
+        input.value = '';
+        return;
+    }
+    value = (parseInt(value) / 100).toFixed(2); // Divide por 100
+    value = value.replace('.', ','); // Ponto vira vírgula
+    value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'); // Adiciona pontos de milhar
     input.value = value;
 }
 
-// Attach event listener to pay-amount
+// Event listener para input de pagamento
 document.addEventListener('DOMContentLoaded', () => {
     const payInput = document.getElementById('pay-amount');
     if (payInput) {
-        payInput.type = 'text'; // Change to text for masking
+        payInput.type = 'text';
         payInput.addEventListener('input', function () { formatMoneyInput(this); });
+        payInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addPayment();
+            }
+        });
     }
 });
 
 // Função para fechar conta da mesa e liberar
 function fecharContaMesa(mesaId) {
-    if (!confirm('Tem certeza que deseja fechar a conta da mesa?')) return;
+    // REMOVIDO CONFIRM POR SOLICITAÇÃO DO USUÁRIO
 
     // PREPARA O CHECKOUT PARA MESA
     isClosingTable = true;
@@ -689,7 +699,7 @@ function updateCheckoutUI() {
         const val = document.getElementById('table-initial-total').value;
         total = parseFloat(val) || 0.00; // Fallback to 0 if NaN/Empty
     } else {
-        total = cart.reduce((acc, item) => acc + (parseFloat(item.price) * parseFloat(item.qty)), 0);
+        total = cart.reduce((acc, item) => acc + (parseFloat(item.price) * parseFloat(item.quantity)), 0);
     }
 
     const remaining = total - totalPaid;
@@ -699,19 +709,21 @@ function updateCheckoutUI() {
     document.getElementById('checkout-remaining').innerText = formatCurrency(Math.max(0, remaining));
     document.getElementById('checkout-total-display').innerText = formatCurrency(total);
 
-    // Lógica de Troco
+    // Lógica de Troco (com tolerância para floats)
     const changeBox = document.getElementById('change-box');
-    if (remaining < 0) {
-        // Tem troco
+    const epsilon = 0.009; // Tolerância para arredondamento
+
+    if (remaining < -epsilon) {
+        // Tem troco (pagou mais que o total)
         changeBox.style.display = 'block';
         document.getElementById('checkout-change').innerText = formatCurrency(Math.abs(remaining));
 
-        // Pode finalizar se pagou tudo (mesmo com troco)
+        // Pode finalizar
         btnFinish.disabled = false;
         btnFinish.style.background = '#22c55e'; // Verde
         btnFinish.style.cursor = 'pointer';
-    } else if (remaining === 0) {
-        // Pagou exato
+    } else if (Math.abs(remaining) <= epsilon) {
+        // Pagou exato (ou diferença insignificante)
         changeBox.style.display = 'none';
         btnFinish.disabled = false;
         btnFinish.style.background = '#22c55e';
@@ -719,10 +731,6 @@ function updateCheckoutUI() {
     } else {
         // Falta pagar
         changeBox.style.display = 'none';
-
-        // Permite finalizar se for "Retirada/Pendura" ou se pagou tudo? 
-        // Normalmente só libera se pagou tudo. 
-        // Se quiser "Fiado", teria que ter logica específica. Por enquanto: Bloqueia.
         btnFinish.disabled = true;
         btnFinish.style.background = '#cbd5e1';
         btnFinish.style.cursor = 'not-allowed';
@@ -914,11 +922,19 @@ function setMethod(method) {
 
 function addPayment() {
     const amountInput = document.getElementById('pay-amount');
-    // Troca vírgula por ponto
-    let valStr = amountInput.value.replace(/\./g, '').replace(',', '.');
+    let valStr = amountInput.value.trim();
+
+    // Detecta formato brasileiro: se tem vírgula, assume pt-BR
+    // Ex: "1.234,56" -> 1234.56 | "67,00" -> 67.00 | "67" -> 67
+    if (valStr.includes(',')) {
+        // Formato brasileiro: remove pontos de milhar, troca vírgula por ponto
+        valStr = valStr.replace(/\./g, '').replace(',', '.');
+    }
+    // Se não tem vírgula, assume que é número simples (67 ou 67.00)
+
     let amount = parseFloat(valStr);
 
-    if (!amount || amount <= 0) {
+    if (!amount || amount <= 0 || isNaN(amount)) {
         alert('Digite um valor válido.');
         return;
     }

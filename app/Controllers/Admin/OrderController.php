@@ -116,24 +116,20 @@ class OrderController {
                 // 2. Salva os Pagamentos na tabela nova (order_payments)
                 $stmtPay = $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)");
                 
-                // 3. Lança no Caixa (cash_movements) SOMENTE O QUE FOR DINHEIRO
-                $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
-
+                // Salva pagamentos
                 foreach ($payments as $pay) {
-                    // Salva na tabela de pagamentos
                     $stmtPay->execute(['oid' => $orderId, 'method' => $pay['method'], 'amount' => $pay['amount']]);
-
-                    // Se for dinheiro, entra na gaveta do caixa
-                    if ($pay['method'] == 'dinheiro') {
-                        $desc = "Venda Balcão #" . $orderId;
-                        $stmtMov->execute([
-                            'cid' => $caixa['id'],
-                            'val' => $pay['amount'],
-                            'desc' => $desc,
-                            'oid' => $orderId
-                        ]);
-                    }
                 }
+
+                // 3. Lança UMA entrada no Caixa com o TOTAL da venda
+                $desc = "Venda Balcão #" . $orderId;
+                $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
+                $stmtMov->execute([
+                    'cid' => $caixa['id'],
+                    'val' => $totalVenda, // TOTAL da venda, não apenas dinheiro
+                    'desc' => $desc,
+                    'oid' => $orderId
+                ]);
             }
 
             // --- SALVA OS ITENS ---
@@ -221,23 +217,21 @@ class OrderController {
 
                 // 3. Salva os Pagamentos na tabela order_payments
                 $stmtPay = $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)");
-                $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
 
+                // Salva pagamentos
                 foreach ($payments as $pay) {
-                    // Salva Detalhe
                     $stmtPay->execute(['oid' => $orderId, 'method' => $pay['method'], 'amount' => $pay['amount']]);
-
-                    // Se for dinheiro, lança no caixa
-                    if ($pay['method'] == 'dinheiro') {
-                        $desc = "Pagamento Mesa #" . $mesa['number'];
-                        $stmtMov->execute([
-                            'cid' => $caixa['id'],
-                            'val' => $pay['amount'],
-                            'desc' => $desc,
-                            'oid' => $orderId
-                        ]);
-                    }
                 }
+
+                // Lança UMA entrada no Caixa com o TOTAL da venda
+                $desc = "Mesa #" . $mesa['number'];
+                $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
+                $stmtMov->execute([
+                    'cid' => $caixa['id'],
+                    'val' => $mesa['total'], // TOTAL da mesa
+                    'desc' => $desc,
+                    'oid' => $orderId
+                ]);
 
                 // 4. Libera a mesa
                 $conn->prepare("UPDATE tables SET status = 'livre', current_order_id = NULL WHERE id = :tid")
@@ -316,21 +310,23 @@ class OrderController {
 
                 // Registra Pagamentos
                 $stmtPay = $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)");
-                $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
 
+                // Salva pagamentos e calcula total
+                $totalPago = 0;
                 foreach ($payments as $pay) {
                     $stmtPay->execute(['oid' => $order_id, 'method' => $pay['method'], 'amount' => $pay['amount']]);
-
-                    if ($pay['method'] == 'dinheiro') {
-                        $desc = "Pagamento Comanda #" . $order_id;
-                        $stmtMov->execute([
-                            'cid' => $caixa['id'],
-                            'val' => $pay['amount'],
-                            'desc' => $desc,
-                            'oid' => $order_id
-                        ]);
-                    }
+                    $totalPago += $pay['amount'];
                 }
+
+                // Lança UMA entrada no Caixa com o TOTAL
+                $desc = "Comanda #" . $order_id;
+                $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
+                $stmtMov->execute([
+                    'cid' => $caixa['id'],
+                    'val' => $totalPago, // TOTAL pago
+                    'desc' => $desc,
+                    'oid' => $order_id
+                ]);
                 
                 // Define como PAGO
                 $conn->prepare("UPDATE orders SET is_paid = 1, payment_method = :method WHERE id = :oid")

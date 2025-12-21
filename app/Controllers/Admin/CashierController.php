@@ -23,13 +23,14 @@ class CashierController {
         }
 
         // 2. TOTAIS DOS CARDS (Resumo do Dia)
-        // Busca pedidos feitos DESDE a abertura do caixa até agora
-        $sqlTotais = "SELECT payment_method, SUM(total) as total 
-                      FROM orders 
-                      WHERE restaurant_id = :rid 
-                      AND created_at >= :opened_at 
-                      AND status = 'concluido'
-                      GROUP BY payment_method";
+        // Busca pagamentos da tabela order_payments (suporta múltiplos pagamentos por pedido)
+        $sqlTotais = "SELECT op.method, SUM(op.amount) as total 
+                      FROM order_payments op
+                      INNER JOIN orders o ON o.id = op.order_id
+                      WHERE o.restaurant_id = :rid 
+                      AND o.created_at >= :opened_at 
+                      AND o.status = 'concluido'
+                      GROUP BY op.method";
         
         $stmtTotais = $conn->prepare($sqlTotais);
         $stmtTotais->execute(['rid' => $restaurant_id, 'opened_at' => $caixa['opened_at']]);
