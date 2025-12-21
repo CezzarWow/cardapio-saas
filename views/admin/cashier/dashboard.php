@@ -87,28 +87,28 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                                     <div style="margin-top: 5px; display: flex; gap: 10px;">
 
                                         <?php if ($mov['type'] == 'venda' && $mov['order_id']): ?>
-                                            
-                                            <?php if (strpos($mov['description'], 'Mesa') === false): ?>
+                                            <div style="margin-top: 5px; display: flex; gap: 10px;">
+                                                
                                                 <a href="caixa/estornar-pdv?id=<?= $mov['id'] ?>" 
-                                                   onclick="return confirm('Editar venda? O valor sairá do caixa e os itens voltarão pro carrinho.')"
+                                                   onclick="return confirm('Editar venda? O valor sairá do caixa e os itens irão para o balcão.')"
                                                    style="font-size: 0.75rem; color: #2563eb; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 3px;">
                                                     <i data-lucide="edit-3" size="12"></i> Editar
                                                 </a>
-                                            <?php endif; ?>
 
-                                            <?php if (strpos($mov['description'], 'Mesa') !== false): ?>
-                                                <a href="caixa/estornar-mesa?id=<?= $mov['id'] ?>" 
-                                                   onclick="return confirm('Reabrir mesa? O valor sairá do caixa e a mesa ficará ocupada novamente.')"
-                                                   style="font-size: 0.75rem; color: #d97706; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 3px;">
-                                                    <i data-lucide="rotate-ccw" size="12"></i> Reabrir Mesa
+                                                <?php if (strpos($mov['description'], 'Mesa') !== false): ?>
+                                                    <a href="caixa/estornar-mesa?id=<?= $mov['id'] ?>" 
+                                                       onclick="return confirm('Reabrir mesa? A mesa ficará ocupada novamente.')"
+                                                       style="font-size: 0.75rem; color: #d97706; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 3px;">
+                                                        <i data-lucide="rotate-ccw" size="12"></i> Reabrir
+                                                    </a>
+                                                <?php endif; ?>
+
+                                                <a href="javascript:void(0)" onclick="openOrderDetails(<?= $mov['order_id'] ?>)"
+                                                   style="font-size: 0.75rem; color: #6b7280; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 3px;">
+                                                    <i data-lucide="eye" size="12"></i> Ver
                                                 </a>
-                                            <?php endif; ?>
 
-                                            <a href="#" onclick="openOrderDetails(<?= $mov['order_id'] ?>); return false;"
-                                               style="font-size: 0.75rem; color: #6b7280; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 3px;">
-                                                <i data-lucide="eye" size="12"></i> Ver
-                                            </a>
-
+                                            </div>
                                         <?php endif; ?>
 
                                         <a href="caixa/remover?id=<?= $mov['id'] ?>" 

@@ -120,6 +120,7 @@ class CashierController {
         if (!isset($_SESSION['loja_ativa_id'])) header('Location: ../../admin');
     }
     // --- AÇÃO 1: EDITAR PEDIDO (Estorna + Manda pro PDV) ---
+    // --- AÇÃO 1: EDITAR PEDIDO (COM BACKUP DE SEGURANÇA) ---
     public function reverseToPdv() {
         $this->checkSession();
         $movementId = $_GET['id'];
@@ -128,37 +129,47 @@ class CashierController {
         try {
             $conn->beginTransaction();
 
-            // 1. Busca dados do movimento e do pedido
-            $stmt = $conn->prepare("SELECT order_id, amount FROM cash_movements WHERE id = :id");
+            // 1. Busca dados do movimento
+            $stmt = $conn->prepare("SELECT * FROM cash_movements WHERE id = :id");
             $stmt->execute(['id' => $movementId]);
             $mov = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$mov || !$mov['order_id']) die('Movimento inválido ou sem pedido vinculado.');
+            if (!$mov || !$mov['order_id']) die('Movimento inválido.');
 
-            // 2. Busca os itens para devolver pro carrinho
+            // 2. Busca o pedido original e os itens
+            $stmtOrder = $conn->prepare("SELECT * FROM orders WHERE id = :oid");
+            $stmtOrder->execute(['oid' => $mov['order_id']]);
+            $oldOrder = $stmtOrder->fetch(PDO::FETCH_ASSOC);
+
             $stmtItems = $conn->prepare("SELECT product_id as id, name, price, quantity FROM order_items WHERE order_id = :oid");
             $stmtItems->execute(['oid' => $mov['order_id']]);
             $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
 
-            // 3. Devolve Estoque
+            // --- CRIA O BACKUP NA SESSÃO (Para poder cancelar a edição) ---
+            $_SESSION['edit_backup'] = [
+                'movement' => $mov,
+                'order' => $oldOrder,
+                'items' => $items
+            ];
+            // -------------------------------------------------------------
+
+            // 3. Devolve Estoque (Igual antes)
             foreach ($items as $item) {
                 $conn->prepare("UPDATE products SET stock = stock + :qtd WHERE id = :pid")
                      ->execute(['qtd' => $item['quantity'], 'pid' => $item['id']]);
             }
 
-            // 4. Apaga o Movimento do Caixa (O dinheiro sai)
+            // 4. Apaga Registros (Igual antes)
             $conn->prepare("DELETE FROM cash_movements WHERE id = :id")->execute(['id' => $movementId]);
-
-            // 5. Apaga o Pedido Antigo (Vamos criar um novo ao finalizar no PDV)
             $conn->prepare("DELETE FROM order_items WHERE order_id = :oid")->execute(['oid' => $mov['order_id']]);
             $conn->prepare("DELETE FROM orders WHERE id = :oid")->execute(['oid' => $mov['order_id']]);
 
             $conn->commit();
 
-            // 6. A MÁGICA: Salva os itens na Sessão para o PDV pegar
+            // 5. Manda itens pro carrinho
             $_SESSION['cart_recovery'] = $items;
             
-            header('Location: ../pdv'); // Manda pro balcão com o carrinho cheio
+            header('Location: ../pdv?mode=edit'); // Avisa o PDV que é modo edição
 
         } catch (\Exception $e) {
             $conn->rollBack();

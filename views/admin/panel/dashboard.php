@@ -5,6 +5,16 @@ require __DIR__ . '/layout/sidebar.php';
 
 <main class="main-content">
     <section class="catalog-section">
+
+        <?php if (isset($isEditing) && $isEditing): ?>
+            <div style="background: #fff7ed; border-bottom: 1px solid #fed7aa; padding: 10px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 15px;">
+                <span style="font-weight: 700; color: #9a3412;">✏️ Você está editando uma venda antiga.</span>
+                <a href="pdv/cancelar-edicao" onclick="return confirm('Descartar alterações e restaurar a venda original?')" 
+                   style="background: #ef4444; color: white; padding: 5px 15px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; font-weight: 600;">
+                    Cancelar Edição
+                </a>
+            </div>
+        <?php endif; ?>
         
         <header class="top-header">
             <div class="page-title">

@@ -119,6 +119,11 @@ switch ($path) {
         (new \App\Controllers\Admin\CashierController())->addMovement();
         break;
 
+    case '/admin/loja/pdv/cancelar-edicao':
+        require __DIR__ . '/../app/Controllers/Admin/ProductController.php';
+        (new \App\Controllers\Admin\ProductController())->cancelEdit();
+        break;
+
     case '/admin/loja/caixa/estornar-pdv':
         require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
         (new \App\Controllers\Admin\CashierController())->reverseToPdv();

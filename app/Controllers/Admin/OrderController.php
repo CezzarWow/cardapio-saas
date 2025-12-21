@@ -148,7 +148,7 @@ class OrderController {
             $conn->beginTransaction();
 
             // 1. Busca dados da mesa e do pedido
-            $stmt = $conn->prepare("SELECT t.current_order_id, o.total 
+            $stmt = $conn->prepare("SELECT t.current_order_id, t.number, o.total 
                                     FROM tables t 
                                     JOIN orders o ON t.current_order_id = o.id 
                                     WHERE t.id = :tid");
@@ -166,12 +166,12 @@ class OrderController {
                      ->execute(['tid' => $table_id]);
                 
                 // 💰 4. LANÇA NO CAIXA (A grana entrou agora!)
-                $desc = "Pagamento Mesa #" . ($data['table_number'] ?? $table_id); // Se tiver o numero vindo do JS ajuda, senao usa ID
+                $desc = "Pagamento Mesa #" . $mesa['number']; 
                 $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
                 $stmtMov->execute([
                     'cid' => $caixa['id'],
                     'val' => $mesa['total'],
-                    'desc' => "Fechamento Mesa",
+                    'desc' => $desc,
                     'oid' => $mesa['current_order_id']
                 ]);
 
