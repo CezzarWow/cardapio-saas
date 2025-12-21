@@ -29,6 +29,7 @@ class AutologinController {
             // 4. A MÁGICA: Salva na sessão que estamos gerenciando ESSA loja
             $_SESSION['loja_ativa_id'] = $loja['id'];
             $_SESSION['loja_ativa_nome'] = $loja['name'];
+            $_SESSION['loja_ativa_logo'] = $loja['logo']; // Salva a logo na sessão
 
             // 5. Redireciona para o Painel da Loja (onde cadastraremos produtos)
             // Obs: Vamos criar essa rota '/admin/loja/painel' no próximo passo
