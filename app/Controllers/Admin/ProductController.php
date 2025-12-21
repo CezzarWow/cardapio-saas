@@ -62,6 +62,13 @@ class ProductController {
             $cat['products'] = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
         }
 
+        // --- VERIFICA SE TEM CARRINHO RECUPERADO (EDIÇÃO) ---
+        $cartRecovery = [];
+        if (isset($_SESSION['cart_recovery'])) {
+            $cartRecovery = $_SESSION['cart_recovery'];
+            unset($_SESSION['cart_recovery']); // Limpa para não carregar de novo
+        }
+
         require __DIR__ . '/../../../views/admin/panel/dashboard.php';
     }
 }

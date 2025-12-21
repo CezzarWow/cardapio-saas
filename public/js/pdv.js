@@ -7,12 +7,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const tableId = tableIdInput ? tableIdInput.value : null;
     const btn = document.getElementById('btn-finalizar');
 
+    // --- NOVO: Carrega carrinho recuperado (Edição) ---
+    if (typeof recoveredCart !== 'undefined' && recoveredCart.length > 0) {
+        // Converte os tipos para garantir numéricos
+        cart = recoveredCart.map(item => ({
+            id: parseInt(item.id),
+            name: item.name,
+            price: parseFloat(item.price),
+            quantity: parseInt(item.quantity)
+        }));
+        alert('Pedido carregado para edição! ✏️');
+    }
+    // --------------------------------------------------
+
     if (tableId) {
-        btn.innerText = "Salvar na Mesa"; // Muda o texto visualmente
-        btn.style.backgroundColor = "#d97706"; // Um laranja para diferenciar
+        btn.innerText = "Salvar na Mesa";
+        btn.style.backgroundColor = "#d97706";
     }
 
-    // Atualiza a UI inicial (para mostrar o TOTAL da mesa se houver)
     updateCartUI();
 });
 

@@ -146,6 +146,10 @@ require __DIR__ . '/layout/sidebar.php';
 
 </main>
 
-<script src="<?= BASE_URL ?>/js/pdv.js?v=<?= time() ?>"></script>
+    <script>
+        // Injeta o carrinho recuperado do PHP para o JS
+        const recoveredCart = <?= json_encode($cartRecovery ?? []) ?>;
+    </script>
+    <script src="<?= BASE_URL ?>/js/pdv.js?v=<?= time() ?>"></script>
 
 <?php require __DIR__ . '/layout/footer.php'; ?>

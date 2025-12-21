@@ -98,8 +98,40 @@ switch ($path) {
 
 
 
+    // --- FINANCEIRO E CAIXA ---
     case '/admin/loja/caixa':
-        echo "<h1>Tela de Caixa (Em construção) 💰</h1>";
+        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
+        (new \App\Controllers\Admin\CashierController())->index();
+        break;
+
+    case '/admin/loja/caixa/abrir':
+        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
+        (new \App\Controllers\Admin\CashierController())->open();
+        break;
+
+    case '/admin/loja/caixa/fechar':
+        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
+        (new \App\Controllers\Admin\CashierController())->close();
+        break;
+
+    case '/admin/loja/caixa/movimentar':
+        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
+        (new \App\Controllers\Admin\CashierController())->addMovement();
+        break;
+
+    case '/admin/loja/caixa/estornar-pdv':
+        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
+        (new \App\Controllers\Admin\CashierController())->reverseToPdv();
+        break;
+
+    case '/admin/loja/caixa/remover':
+        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
+        (new \App\Controllers\Admin\CashierController())->removeMovement();
+        break;
+
+    case '/admin/loja/caixa/estornar-mesa':
+        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
+        (new \App\Controllers\Admin\CashierController())->reverseToTable();
         break;
 
     // --- CONFIGURAÇÕES DA LOJA ---
@@ -158,6 +190,17 @@ switch ($path) {
     case '/admin/loja/vendas/itens':
         require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
         (new \App\Controllers\Admin\SalesController())->getItems();
+        break;
+
+    // --- AÇÕES DE VENDAS ---
+    case '/admin/loja/vendas/cancelar':
+        require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
+        (new \App\Controllers\Admin\SalesController())->cancel();
+        break;
+
+    case '/admin/loja/vendas/reabrir':
+        require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
+        (new \App\Controllers\Admin\SalesController())->reactivateTable();
         break;
 
     // --- ROTA PÚBLICA (Cardápio) ---
