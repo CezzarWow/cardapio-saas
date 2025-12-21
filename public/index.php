@@ -165,6 +165,38 @@ switch ($path) {
         (new \App\Controllers\Admin\OrderController())->closeTable();
         break;
 
+    case '/admin/loja/venda/remover-item':
+        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
+        (new \App\Controllers\Admin\OrderController())->removeItem();
+        break;
+
+    case '/admin/loja/mesa/cancelar':
+        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
+        (new \App\Controllers\Admin\OrderController())->cancelTableOrder();
+        break;
+
+    case '/admin/loja/mesas/buscar':
+        require __DIR__ . '/../app/Controllers/Admin/TableController.php';
+        (new \App\Controllers\Admin\TableController())->search();
+        break;
+
+    // 3. Obter Itens (AJAX)
+    case '/admin/loja/vendas/itens':
+        require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
+        (new \App\Controllers\Admin\SalesController())->getItems();
+        break;
+
+    // --- GESTÃO DE CLIENTES (AJAX) ---
+    case '/admin/loja/clientes/buscar':
+        require __DIR__ . '/../app/Controllers/Admin/ClientController.php';
+        (new \App\Controllers\Admin\ClientController())->search();
+        break;
+
+    case '/admin/loja/clientes/salvar':
+        require __DIR__ . '/../app/Controllers/Admin/ClientController.php';
+        (new \App\Controllers\Admin\ClientController())->store();
+        break;
+
     // --- GESTÃO DE CATEGORIAS ---
     
     // 1. Listar

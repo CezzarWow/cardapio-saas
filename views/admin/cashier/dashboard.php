@@ -103,9 +103,9 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                                                     </a>
                                                 <?php endif; ?>
 
-                                                <a href="javascript:void(0)" onclick="openOrderDetails(<?= $mov['order_id'] ?>)"
+                                                <a href="javascript:void(0)" onclick="openOrderDetails(<?= $mov['order_id'] ?>, '<?= number_format($mov['amount'], 2, ',', '.') ?>', '<?= date('d/m/Y H:i', strtotime($mov['created_at'])) ?>')"
                                                    style="font-size: 0.75rem; color: #6b7280; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 3px;">
-                                                    <i data-lucide="eye" size="12"></i> Ver
+                                                    <i data-lucide="scroll-text" size="12"></i> Ver Comanda
                                                 </a>
 
                                             </div>
@@ -207,20 +207,30 @@ function openModal(type) {
 }
 </script>
 
+<!-- MODAL COMANDA (Estilo Cupom Fiscal) -->
 <div id="orderDetailsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 20px; border-radius: 12px; width: 400px; max-width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">
-            <h3 style="font-weight: 700; color: #1f2937;">Detalhes do Pedido</h3>
-            <button onclick="document.getElementById('orderDetailsModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+    <div style="background: #fff; padding: 0; border-radius: 5px; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-family: 'Courier New', Courier, monospace; border: 1px solid #e5e7eb;">
+        
+        <!-- Cabeçalho do Cupom -->
+        <div style="background: #fef3c7; padding: 15px; text-align: center; border-bottom: 2px dashed #d1d5db; border-radius: 5px 5px 0 0;">
+            <h3 style="font-weight: 800; font-size: 1.1rem; color: #000; margin: 0; text-transform: uppercase;">Comprovante</h3>
+            <div id="receiptDate" style="font-size: 0.75rem; color: #4b5563; margin-top: 5px;"></div>
         </div>
         
-        <div id="modalItemsList" style="max-height: 300px; overflow-y: auto;">
+        <!-- Lista de Itens -->
+        <div id="modalItemsList" style="padding: 15px; max-height: 400px; overflow-y: auto; background: #fffbeeb0;">
             Carregando...
         </div>
 
-        <div style="margin-top: 15px; text-align: right;">
+        <!-- Total e Rodapé -->
+        <div style="padding: 15px; background: #fff; border-top: 2px dashed #d1d5db; border-radius: 0 0 5px 5px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 1.1rem;">
+                <span>TOTAL</span>
+                <span id="receiptTotal">R$ 0,00</span>
+            </div>
+            
             <button onclick="document.getElementById('orderDetailsModal').style.display='none'" 
-                    style="background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;">
+                    style="width: 100%; margin-top: 15px; background: #000; color: #fff; border: none; padding: 10px; font-family: sans-serif; font-weight: bold; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-size: 0.8rem;">
                 Fechar
             </button>
         </div>
@@ -228,45 +238,59 @@ function openModal(type) {
 </div>
 
 <script>
-function openOrderDetails(orderId) {
+function openOrderDetails(orderId, total, date) {
     const modal = document.getElementById('orderDetailsModal');
     const list = document.getElementById('modalItemsList');
+    const dateEl = document.getElementById('receiptDate');
+    const totalEl = document.getElementById('receiptTotal');
     
-    // Mostra o modal carregando
+    // Configura infos básicas
+    dateEl.innerText = 'PEDIDO #' + orderId + ' • ' + date;
+    totalEl.innerText = 'R$ ' + total;
+    
+    // Mostra o modal
     modal.style.display = 'flex';
-    list.innerHTML = '<p style="text-align:center; color:#666;">Buscando itens...</p>';
+    list.innerHTML = '<p style="text-align:center; padding: 20px 0;">Impressora conectando...</p>';
 
-    // Chama a rota de itens de venda (já existe em SalesController)
-    fetch('../vendas/itens?id=' + orderId)
+    // Chama a API
+    fetch('<?= BASE_URL ?>/admin/loja/vendas/itens?id=' + orderId)
         .then(response => response.json())
         .then(data => {
             if(data.length === 0) {
-                list.innerHTML = '<p>Nenhum item encontrado.</p>';
+                list.innerHTML = '<p style="text-align:center;">Sem itens.</p>';
                 return;
             }
 
-            let html = '<ul style="list-style: none; padding: 0;">';
+            let html = '<table style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">';
+            
             data.forEach(item => {
+                let unitPrice = parseFloat(item.price);
+                let subTotal = unitPrice * item.quantity;
+                
                 html += `
-                    <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">
-                        <div>
-                            <span style="font-weight: 600; color: #374151;">${item.quantity}x</span> 
-                            ${item.name}
-                        </div>
-                        <div style="font-weight: 600; color: #1f2937;">
-                            R$ ${parseFloat(item.price).toFixed(2).replace('.', ',')}
-                        </div>
-                    </li>
+                    <tr>
+                        <td style="padding: 4px 0; vertical-align: top;">
+                            <div style="font-weight:bold;">${item.quantity}x ${item.name}</div>
+                            <div style="font-size:0.7rem; color:#666;">Unit: R$ ${unitPrice.toFixed(2).replace('.', ',')}</div>
+                        </td>
+                        <td style="padding: 4px 0; text-align: right; vertical-align: top; font-weight:bold;">
+                            R$ ${subTotal.toFixed(2).replace('.', ',')}
+                        </td>
+                    </tr>
                 `;
             });
-            html += '</ul>';
+            
+            html += '</table>';
+            html += '<div style="margin-top:10px; border-top:1px solid #000; padding-top:5px; font-size:0.7rem; text-align:center;">*** FIM DO COMPROVANTE ***</div>';
+            
             list.innerHTML = html;
         })
         .catch(err => {
             console.error(err);
-            list.innerHTML = '<p style="color:red;">Erro ao carregar itens.</p>';
+            list.innerHTML = '<p style="color:red; text-align:center;">Erro de conexão.</p>';
         });
 }
+</script>
 
 
 <script>

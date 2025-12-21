@@ -69,24 +69,49 @@ class OrderController {
                          ->execute(['oid' => $orderId, 'tid' => $table_id]);
                 }
             } 
-            // --- LÓGICA DE BALCÃO ---
+            // --- LÓGICA DE BALCÃO (FINALIZAR AGORA) ---
             else {
-                // Cria pedido novo já FECHADO
-                // Por padrão assumimos 'dinheiro' no balcão rápido, depois podemos melhorar isso
-                $stmtOrder = $conn->prepare("INSERT INTO orders (restaurant_id, total, status, payment_method) VALUES (:rid, 0, 'concluido', 'dinheiro')");
-                $stmtOrder->execute(['rid' => $restaurant_id]);
+                
+                // 1. Cria o Pedido (Status Concluido)
+                $payments = $input['payments'] ?? [];
+                
+                // Se não vier pagamentos (ex: versão antiga do front), assume dinheiro
+                if (empty($payments)) {
+                    $payments = [['method' => 'dinheiro', 'amount' => $totalVenda]];
+                }
+
+                $mainMethod = $payments[0]['method'] ?? 'dinheiro';
+                $paymentMethodDesc = (count($payments) > 1) ? 'multiplo' : $mainMethod;
+
+                $stmtOrder = $conn->prepare("INSERT INTO orders (restaurant_id, client_id, total, status, payment_method) VALUES (:rid, :cid, 0, 'concluido', :method)");
+                $stmtOrder->execute([
+                    'rid' => $restaurant_id, 
+                    'cid' => $input['client_id'] ?? null, 
+                    'method' => $paymentMethodDesc
+                ]);
                 $orderId = $conn->lastInsertId();
 
-                // 💰 MOVIMENTAÇÃO FINANCEIRA (Só no Balcão, pois Mesa paga só no final)
-                // Lança a entrada no extrato do caixa
-                $desc = "Venda Balcão #" . $orderId;
+                // 2. Salva os Pagamentos na tabela nova (order_payments)
+                $stmtPay = $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)");
+                
+                // 3. Lança no Caixa (cash_movements) SOMENTE O QUE FOR DINHEIRO
                 $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
-                $stmtMov->execute([
-                    'cid' => $caixa['id'],
-                    'val' => $totalVenda,
-                    'desc' => $desc,
-                    'oid' => $orderId
-                ]);
+
+                foreach ($payments as $pay) {
+                    // Salva na tabela de pagamentos
+                    $stmtPay->execute(['oid' => $orderId, 'method' => $pay['method'], 'amount' => $pay['amount']]);
+
+                    // Se for dinheiro, entra na gaveta do caixa
+                    if ($pay['method'] == 'dinheiro') {
+                        $desc = "Venda Balcão #" . $orderId;
+                        $stmtMov->execute([
+                            'cid' => $caixa['id'],
+                            'val' => $pay['amount'],
+                            'desc' => $desc,
+                            'oid' => $orderId
+                        ]);
+                    }
+                }
             }
 
             // --- SALVA OS ITENS ---
@@ -156,30 +181,158 @@ class OrderController {
             $mesa = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($mesa && $mesa['current_order_id']) {
-                // 2. Marca o pedido como CONCLUIDO
-                // Aqui estamos assumindo 'dinheiro' por padrão, mas você pode passar isso via JSON futuramente
-                $conn->prepare("UPDATE orders SET status = 'concluido', payment_method = 'dinheiro' WHERE id = :oid")
-                     ->execute(['oid' => $mesa['current_order_id']]);
+                $orderId = $mesa['current_order_id'];
+                
+                // 2. Processa Pagamentos
+                $payments = $data['payments'] ?? [];
+                
+                // Fallback para versão antiga ou pagamento único implícito
+                if (empty($payments)) {
+                    $payments = [['method' => 'dinheiro', 'amount' => $mesa['total']]];
+                }
 
-                // 3. Libera a mesa
+                $mainMethod = $payments[0]['method'] ?? 'dinheiro';
+                $paymentMethodDesc = (count($payments) > 1) ? 'multiplo' : $mainMethod;
+
+                $conn->prepare("UPDATE orders SET status = 'concluido', payment_method = :method WHERE id = :oid")
+                     ->execute(['oid' => $orderId, 'method' => $paymentMethodDesc]);
+
+                // 3. Salva os Pagamentos na tabela order_payments
+                $stmtPay = $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)");
+                $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
+
+                foreach ($payments as $pay) {
+                    // Salva Detalhe
+                    $stmtPay->execute(['oid' => $orderId, 'method' => $pay['method'], 'amount' => $pay['amount']]);
+
+                    // Se for dinheiro, lança no caixa
+                    if ($pay['method'] == 'dinheiro') {
+                        $desc = "Pagamento Mesa #" . $mesa['number'];
+                        $stmtMov->execute([
+                            'cid' => $caixa['id'],
+                            'val' => $pay['amount'],
+                            'desc' => $desc,
+                            'oid' => $orderId
+                        ]);
+                    }
+                }
+
+                // 4. Libera a mesa
                 $conn->prepare("UPDATE tables SET status = 'livre', current_order_id = NULL WHERE id = :tid")
                      ->execute(['tid' => $table_id]);
-                
-                // 💰 4. LANÇA NO CAIXA (A grana entrou agora!)
-                $desc = "Pagamento Mesa #" . $mesa['number']; 
-                $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
-                $stmtMov->execute([
-                    'cid' => $caixa['id'],
-                    'val' => $mesa['total'],
-                    'desc' => $desc,
-                    'oid' => $mesa['current_order_id']
-                ]);
 
                 $conn->commit();
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Mesa já está livre']);
             }
+        } catch (\Exception $e) {
+            $conn->rollBack();
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    // --- REMOVER ITEM SALVO (MESA) ---
+    public function removeItem() {
+        header('Content-Type: application/json');
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        $item_id = $data['item_id'] ?? null;
+        $order_id = $data['order_id'] ?? null;
+
+        if (!$item_id || !$order_id) {
+            echo json_encode(['success' => false, 'message' => 'Dados inválidos']);
+            exit;
+        }
+
+        $conn = Database::connect();
+
+        try {
+            $conn->beginTransaction();
+
+            // 1. Busca dados do item para processar
+            $stmtItem = $conn->prepare("SELECT product_id, quantity, price FROM order_items WHERE id = :id AND order_id = :oid");
+            $stmtItem->execute(['id' => $item_id, 'oid' => $order_id]);
+            $item = $stmtItem->fetch(PDO::FETCH_ASSOC);
+
+            if (!$item) {
+                echo json_encode(['success' => false, 'message' => 'Item não encontrado']);
+                $conn->rollBack();
+                exit;
+            }
+
+            // 2. Lógica de Remover (Decrementar ou Deletar)
+            if ($item['quantity'] > 1) {
+                // Diminui 1
+                $conn->prepare("UPDATE order_items SET quantity = quantity - 1 WHERE id = :id")->execute(['id' => $item_id]);
+                // Valor a abater = Preço Unitário
+                $valueToDeduct = $item['price'];
+            } else {
+                // Remove a linha
+                $conn->prepare("DELETE FROM order_items WHERE id = :id")->execute(['id' => $item_id]);
+                // Valor a abater = Preço Unitário (que é o total dessa linha de qtd 1)
+                $valueToDeduct = $item['price'];
+            }
+
+            // 3. Devolve 1 unidade ao Estoque
+            $conn->prepare("UPDATE products SET stock = stock + 1 WHERE id = :pid")
+                 ->execute(['pid' => $item['product_id']]);
+
+            // 4. Atualiza o Total do Pedido
+            // Garante que não fique negativo (sanity check)
+            $conn->prepare("UPDATE orders SET total = GREATEST(0, total - :val) WHERE id = :oid")
+                 ->execute(['val' => $valueToDeduct, 'oid' => $order_id]);
+
+            $conn->commit();
+            echo json_encode(['success' => true]);
+
+        } catch (\Exception $e) {
+            $conn->rollBack();
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    // --- CANCELAR PEDIDO DA MESA (Apagar todos os itens salvos) ---
+    public function cancelTableOrder() {
+        header('Content-Type: application/json');
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        $table_id = $data['table_id'] ?? null;
+        $order_id = $data['order_id'] ?? null;
+
+        if (!$table_id || !$order_id) {
+            echo json_encode(['success' => false, 'message' => 'Dados inválidos']);
+            exit;
+        }
+
+        $conn = Database::connect();
+
+        try {
+            $conn->beginTransaction();
+
+            // 1. Busca itens para devolver estoque
+            $stmtItems = $conn->prepare("SELECT product_id, quantity FROM order_items WHERE order_id = :oid");
+            $stmtItems->execute(['oid' => $order_id]);
+            $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($items as $item) {
+                $conn->prepare("UPDATE products SET stock = stock + :qtd WHERE id = :pid")
+                     ->execute(['qtd' => $item['quantity'], 'pid' => $item['product_id']]);
+            }
+
+            // 2. Remove Itens e Pedido
+            $conn->prepare("DELETE FROM order_items WHERE order_id = :oid")->execute(['oid' => $order_id]);
+            $conn->prepare("DELETE FROM orders WHERE id = :oid")->execute(['oid' => $order_id]);
+
+            // 3. Libera a Mesa
+            $conn->prepare("UPDATE tables SET status = 'livre', current_order_id = NULL WHERE id = :tid")
+                 ->execute(['tid' => $table_id]);
+
+            $conn->commit();
+            echo json_encode(['success' => true]);
+
         } catch (\Exception $e) {
             $conn->rollBack();
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
