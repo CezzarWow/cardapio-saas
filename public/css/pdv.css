@@ -323,7 +323,7 @@ body {
 
 /* --- CARRINHO --- */
 .cart-sidebar {
-    width: 380px;
+    width: 450px;
     /* Mais largo */
     background: white;
     border-left: 1px solid var(--border-color);

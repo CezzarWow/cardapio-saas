@@ -111,3 +111,67 @@ tr:hover {
 .btn-delete {
     color: #c0392b;
 }
+
+/* --- MODAL DE CADASTRO DE CLIENTES (ABAS) --- */
+.tab-navigation {
+    display: flex;
+    gap: 20px;
+    padding: 0 25px;
+    border-bottom: 1px solid #e2e8f0;
+    background: white;
+}
+
+.tab-btn {
+    padding: 15px 0;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    color: #64748b;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: #2563eb;
+}
+
+.tab-btn.active {
+    color: #2563eb;
+    border-bottom: 2px solid #2563eb;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Ajustes dos Botões de Tipo (PF/PJ) */
+.type-btn-active-pf {
+    background: #059669;
+    color: white;
+}
+
+.type-btn-active-pj {
+    background: #4f46e5;
+    color: white;
+}
+
+.type-btn-inactive {
+    background: #e2e8f0;
+    color: #64748b;
+}

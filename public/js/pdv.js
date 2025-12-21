@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --------------------------------------------------
 
     if (tableId) {
-        btn.innerText = "Salvar na Mesa";
+        btn.innerText = "Salvar";
         btn.style.backgroundColor = "#d97706";
     }
 
@@ -139,6 +139,8 @@ let currentPayments = [];
 let totalPaid = 0;
 let selectedMethod = 'dinheiro'; // Padrão
 let isClosingTable = false; // Flag para saber se é fechamento de mesa
+let isClosingCommand = false; // Flag para fechamento de comanda
+let closingOrderId = null; // ID da comanda sendo fechada
 
 function finalizeSale() {
     // SE ESTIVER EM MESA (ADICIONAR ITENS) -> SALVA DIRETO SEM PAGAMENTO
@@ -173,9 +175,7 @@ function calculateTotal() {
     return total;
 }
 
-function formatCurrency(value) {
-    return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+// function formatCurrency removed (duplicate)
 
 // FORMATADOR DE MOEDA (Input: 5050 -> 50,50)
 function formatMoneyInput(input) {
@@ -369,13 +369,14 @@ function selectTable(table) {
     document.getElementById('client-search-area').style.display = 'none';
     document.getElementById('client-results').style.display = 'none';
 
-    // Muda Botão para "Salvar na Mesa"
+    // Muda Botão para "Salvar"
     const btn = document.getElementById('btn-finalizar');
-    btn.innerText = "Salvar na Mesa";
+    btn.innerText = "Salvar";
     btn.style.backgroundColor = "#d97706"; // Laranja
     btn.disabled = false;
 }
 
+// 4. SELECIONAR CLIENTE (Contexto de Balcão)
 // 4. SELECIONAR CLIENTE (Contexto de Balcão)
 function selectClient(id, name) {
     document.getElementById('current_client_id').value = id;
@@ -388,12 +389,16 @@ function selectClient(id, name) {
     document.getElementById('client-search-area').style.display = 'none';
     document.getElementById('client-results').style.display = 'none';
 
-    // Volta botão ao normal
+    // Muda Botão para Finalizar e Exibe Salvar Comanda
     const btn = document.getElementById('btn-finalizar');
     btn.innerText = "Finalizar";
-    btn.style.backgroundColor = ""; // Remove inline style (volta pro CSS default)
+    btn.style.backgroundColor = "";
+
+    const btnSave = document.getElementById('btn-save-command');
+    if (btnSave) btnSave.style.display = 'flex';
 }
 
+// 5. Limpar Seleção (X)
 // 5. Limpar Seleção (X)
 function clearClient() {
     document.getElementById('current_client_id').value = '';
@@ -405,10 +410,14 @@ function clearClient() {
     document.getElementById('client-search').value = '';
     document.getElementById('client-search').focus();
 
-    // Volta botão
+    // Volta botão normal e esconde Salvar Comanda
     const btn = document.getElementById('btn-finalizar');
+    const btnSave = document.getElementById('btn-save-command');
+
     btn.innerText = "Finalizar";
     btn.style.backgroundColor = ""; // Default
+
+    if (btnSave) btnSave.style.display = 'none';
 }
 
 // 6. Modal Novo Cliente
@@ -478,7 +487,7 @@ function setMethod(method) {
 
 // Helper para obter o total correto (Mesa ou Carrinho)
 function getFinalTotal() {
-    if (isClosingTable) {
+    if (isClosingTable || isClosingCommand) {
         const tableTotalStr = document.getElementById('table-initial-total').value;
         return parseFloat(tableTotalStr);
     }
@@ -612,6 +621,41 @@ function closeCheckout() {
     document.getElementById('checkoutModal').style.display = 'none';
 }
 
+// --- SALVAR COMANDA (Cliente) ---
+function saveClientOrder() {
+    if (cart.length === 0) return alert('O carrinho está vazio!');
+    const clientId = document.getElementById('current_client_id').value;
+    const orderId = document.getElementById('current_order_id') ? document.getElementById('current_order_id').value : null;
+
+    if (!clientId) return alert('Nenhum cliente selecionado!');
+
+    fetch('venda/finalizar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            cart: cart,
+            client_id: clientId,
+            order_id: orderId, // Envia ID para atualizar
+            save_account: true // FLAG IMPORTANTE
+        })
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                // Sucesso!
+                const modal = document.getElementById('successModal');
+                modal.style.display = 'flex';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    window.location.reload();
+                }, 1000);
+            } else {
+                alert('Erro: ' + data.message);
+            }
+        })
+        .catch(err => alert('Erro de conexão.'));
+}
+
 // Função para fechar conta da mesa e liberar
 function fecharContaMesa(mesaId) {
     // REMOVIDO CONFIRM POR SOLICITAÇÃO DO USUÁRIO
@@ -622,16 +666,125 @@ function fecharContaMesa(mesaId) {
     currentPayments = [];
     totalPaid = 0;
 
-    // Total da mesa (vindo do input hidden)
-    const tableTotalStr = document.getElementById('table-initial-total').value;
-    const tableTotal = parseFloat(tableTotalStr);
+    // Pega total da mesa (input hidden na view)
+    const totalStr = document.getElementById('table-initial-total').value;
+    const total = parseFloat(totalStr);
 
-    document.getElementById('checkout-total-display').innerText = formatCurrency(tableTotal);
-
-    // Abre modal
+    document.getElementById('checkout-total-display').innerText = formatCurrency(total);
     document.getElementById('checkoutModal').style.display = 'flex';
     setMethod('dinheiro');
-    // Força o total total da mesa como base para cálculos
+    updateCheckoutUI();
+}
+
+// FORMATA MOEDA
+function formatCurrency(value) {
+    return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// ATUALIZA UI DO CHECKOUT (CALCULA RESTANTE/TROCO)
+function updateCheckoutUI() {
+    let total = 0;
+
+    if (isClosingTable || isClosingCommand) {
+        const val = document.getElementById('table-initial-total').value;
+        total = parseFloat(val) || 0.00; // Fallback to 0 if NaN/Empty
+    } else {
+        total = cart.reduce((acc, item) => acc + (parseFloat(item.price) * parseFloat(item.qty)), 0);
+    }
+
+    const remaining = total - totalPaid;
+    const btnFinish = document.getElementById('btn-finish-sale');
+
+    // Atualiza textos
+    document.getElementById('checkout-remaining').innerText = formatCurrency(Math.max(0, remaining));
+    document.getElementById('checkout-total-display').innerText = formatCurrency(total);
+
+    // Lógica de Troco
+    const changeBox = document.getElementById('change-box');
+    if (remaining < 0) {
+        // Tem troco
+        changeBox.style.display = 'block';
+        document.getElementById('checkout-change').innerText = formatCurrency(Math.abs(remaining));
+
+        // Pode finalizar se pagou tudo (mesmo com troco)
+        btnFinish.disabled = false;
+        btnFinish.style.background = '#22c55e'; // Verde
+        btnFinish.style.cursor = 'pointer';
+    } else if (remaining === 0) {
+        // Pagou exato
+        changeBox.style.display = 'none';
+        btnFinish.disabled = false;
+        btnFinish.style.background = '#22c55e';
+        btnFinish.style.cursor = 'pointer';
+    } else {
+        // Falta pagar
+        changeBox.style.display = 'none';
+
+        // Permite finalizar se for "Retirada/Pendura" ou se pagou tudo? 
+        // Normalmente só libera se pagou tudo. 
+        // Se quiser "Fiado", teria que ter logica específica. Por enquanto: Bloqueia.
+        btnFinish.disabled = true;
+        btnFinish.style.background = '#cbd5e1';
+        btnFinish.style.cursor = 'not-allowed';
+    }
+
+    // Atualiza input com o restante (sugestão)
+    const payInput = document.getElementById('pay-amount');
+    if (remaining > 0) {
+        payInput.value = remaining.toFixed(2);
+    } else {
+        payInput.value = '';
+    }
+}
+
+// Função para FECHAR COMANDA (Sem Mesa)
+function fecharComanda(orderId) {
+    const isPaid = document.getElementById('current_order_is_paid') ? document.getElementById('current_order_is_paid').value == '1' : false;
+
+    if (isPaid) {
+        // JÁ PAGO -> FINALIZAR / ENTREGAR
+        if (!confirm('Este pedido já está PAGO. Deseja entregá-lo e finalizar?')) return;
+
+        fetch('venda/fechar-comanda', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                order_id: orderId,
+                payments: [], // Sem pagamentos extras
+                keep_open: false // Finaliza de vez
+            })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Pedido entregue com sucesso! ✅');
+                    window.location.href = BASE_URL + '/admin/loja/mesas';
+                } else {
+                    alert('Erro: ' + data.message);
+                }
+            });
+        return;
+    }
+
+    // AINDA NÃO PAGO -> CHECKOUT
+    isClosingCommand = true;
+    closingOrderId = orderId;
+
+    currentPayments = [];
+    totalPaid = 0;
+
+    // Total da comanda (mesmo input hidden da mesa, pois a view usa o mesmo layout)
+    const totalStr = document.getElementById('table-initial-total').value;
+    const total = parseFloat(totalStr);
+
+    document.getElementById('checkout-total-display').innerText = formatCurrency(total);
+
+    // Reset Order Type to Local (Default)
+    const cards = document.querySelectorAll('.order-type-card');
+    if (cards.length > 0) selectOrderType('local', cards[0]);
+
+    document.getElementById('checkoutModal').style.display = 'flex';
+    setMethod('dinheiro');
     updateCheckoutUI();
 }
 
@@ -729,6 +882,158 @@ function showSuccessModal(msg = 'Sucesso!') {
 }
 
 // --- ENVIA A VENDA PRO PHP ---
+// --- CONTROLE DE PAGAMENTOS ---
+// selectedMethod já declarado lá em cima
+
+
+function setMethod(method) {
+    selectedMethod = method;
+
+    // Atualiza botões visuais
+    document.querySelectorAll('.payment-method-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.borderColor = '#cbd5e1';
+        btn.style.background = 'white';
+        // Reset icon color
+        const icon = btn.querySelector('svg');
+        if (icon) icon.style.color = 'currentColor';
+    });
+
+    const activeBtn = document.getElementById('btn-method-' + method);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+        activeBtn.style.borderColor = '#2563eb';
+        activeBtn.style.background = '#eff6ff';
+        const icon = activeBtn.querySelector('svg');
+        if (icon) icon.style.color = '#2563eb';
+    }
+
+    // Foca no input de valor
+    setTimeout(() => document.getElementById('pay-amount').focus(), 100);
+}
+
+function addPayment() {
+    const amountInput = document.getElementById('pay-amount');
+    // Troca vírgula por ponto
+    let valStr = amountInput.value.replace(/\./g, '').replace(',', '.');
+    let amount = parseFloat(valStr);
+
+    if (!amount || amount <= 0) {
+        alert('Digite um valor válido.');
+        return;
+    }
+
+    // Adiciona ao array
+    currentPayments.push({
+        method: selectedMethod,
+        amount: amount,
+        label: formatMethodLabel(selectedMethod)
+    });
+
+    // Atualiza Total Pago
+    totalPaid += amount;
+
+    // Limpa input
+    amountInput.value = '';
+
+    // Atualiza UI
+    updatePaymentList();
+    updateCheckoutUI();
+}
+
+function removePayment(index) {
+    // Remove do array
+    const removed = currentPayments.splice(index, 1)[0];
+    totalPaid -= removed.amount;
+
+    updatePaymentList();
+    updateCheckoutUI();
+}
+
+function updatePaymentList() {
+    const listEl = document.getElementById('payment-list');
+    listEl.innerHTML = '';
+
+    if (currentPayments.length === 0) {
+        listEl.style.display = 'none';
+        return;
+    }
+
+    listEl.style.display = 'block';
+
+    currentPayments.forEach((pay, index) => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.justifyContent = 'space-between';
+        row.style.alignItems = 'center';
+        row.style.padding = '8px 0';
+        row.style.borderBottom = '1px solid #e2e8f0';
+
+        row.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-weight:600; font-size:0.9rem; color:#1e293b;">${pay.label}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-weight:700; color:#1e293b;">${formatCurrency(pay.amount)}</span>
+                <button onclick="removePayment(${index})" style="background:none; border:none; cursor:pointer; color:#ef4444;">
+                    <i data-lucide="trash-2" size="16"></i>
+                </button>
+            </div>
+        `;
+        listEl.appendChild(row);
+    });
+
+    // Re-render icons
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function formatMethodLabel(method) {
+    const map = {
+        'dinheiro': 'Dinheiro',
+        'pix': 'Pix',
+        'credito': 'Cartão Crédito',
+        'debito': 'Cartão Débito'
+    };
+    return map[method] || method;
+}
+
+function closeCheckout() {
+    document.getElementById('checkoutModal').style.display = 'none';
+    currentPayments = [];
+    totalPaid = 0;
+}
+
+// SELEÇÃO DE TIPO DE PEDIDO (NOVO MODAL)
+function selectOrderType(type, element) {
+    if (element.classList.contains('disabled')) return;
+
+    // Reset visual
+    document.querySelectorAll('.order-type-card').forEach(el => {
+        el.className = 'order-type-card';
+        el.style.border = '1px solid #cbd5e1';
+        el.style.background = 'white';
+        // Reset icon color
+        const icon = el.querySelector('svg');
+        if (icon) icon.style.color = '#64748b';
+    });
+
+    // Set Active
+    element.className = 'order-type-card active';
+    element.style.border = '2px solid #2563eb';
+    element.style.background = '#eff6ff';
+    const icon = element.querySelector('svg');
+    if (icon) icon.style.color = '#2563eb';
+
+    // Set Logic
+    const keepOpenInput = document.getElementById('keep_open_value');
+    if (type === 'retirada') {
+        keepOpenInput.value = 'true';
+    } else {
+        keepOpenInput.value = 'false';
+    }
+}
+
+// --- ENVIA A VENDA PRO PHP ---
 function submitSale() {
     const tableId = document.getElementById('current_table_id').value;
     const clientId = document.getElementById('current_client_id').value;
@@ -748,15 +1053,24 @@ function submitSale() {
     // Usa BASE_URL global definida no dashboard.php
     let endpoint = '/admin/loja/venda/finalizar';
 
+    // Ler valor do card selecionado
+    const keepOpenStr = document.getElementById('keep_open_value') ? document.getElementById('keep_open_value').value : 'false';
+    const keepOpen = keepOpenStr === 'true';
+
     const payload = {
         cart: cart,
         table_id: tableId ? parseInt(tableId) : null,
         client_id: clientId ? parseInt(clientId) : null,
-        payments: currentPayments
+        payments: currentPayments,
+        keep_open: keepOpen
     };
 
     if (isClosingTable) {
         endpoint = '/admin/loja/mesa/fechar';
+    } else if (isClosingCommand) {
+        endpoint = '/admin/loja/venda/fechar-comanda'; // Nova Rota
+        // Adiciona Order ID no payload
+        payload.order_id = closingOrderId;
     }
 
     const url = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + endpoint;
@@ -786,11 +1100,13 @@ function submitSale() {
 
                 // Delay para mostrar o modal antes de recarregar
                 setTimeout(() => {
-                    // Se estava em mesa, recarrega
-                    if (tableId) {
-                        window.location.href = isClosingTable ? 'mesas' : window.location.href;
+                    // Se estava em MESA ou COMANDA -> Recarrega ou Vai para Mesas
+                    if (tableId || isClosingCommand) {
+                        // Se for Retirada (keep_open), vai para Mesas para ver o pedido "Pago"
+                        // Se for normal, também vai para Mesas (liberou a mesa/comanda)
+                        window.location.href = BASE_URL + '/admin/loja/mesas';
                     } else {
-                        // Se é balcão, só limpa
+                        // Se é balcão puro, só limpa
                         if (typeof clearClient === 'function') clearClient();
                     }
                 }, 1500);

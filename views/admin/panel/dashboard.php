@@ -21,6 +21,9 @@ require __DIR__ . '/layout/sidebar.php';
                 <?php if ($mesa_numero): ?>
                     <h1 style="color: #b91c1c;">Mesa <?= $mesa_numero ?></h1>
                     <p>Gerenciando Pedido</p>
+                <?php elseif (!empty($contaAberta) && !$mesa_id): ?>
+                    <h1 style="color: #ea580c;">Comanda #<?= $contaAberta['id'] ?></h1>
+                    <p style="color: #9a3412; font-weight: 600;">Cliente: <?= htmlspecialchars($contaAberta['client_name'] ?? 'Cliente') ?></p>
                 <?php else: ?>
                     <h1>Balcão de Vendas</h1>
                     <p>Venda Rápida</p>
@@ -106,10 +109,10 @@ require __DIR__ . '/layout/sidebar.php';
         <?php if (!empty($itensJaPedidos)): ?>
             <div style="padding: 1rem; background: #fff7ed; border-bottom: 1px solid #fed7aa;">
                 <h3 style="font-size: 0.85rem; font-weight: 700; color: #9a3412; margin-bottom: 0.5rem; display:flex; justify-content:space-between; align-items:center;">
-                    <span>Já na Mesa</span>
+                    <span><?= $mesa_id ? 'Já na Mesa' : 'Já na Comanda' ?></span>
                     <span>Total: R$ <?= number_format($contaAberta['total'], 2, ',', '.') ?></span>
                 </h3>
-                <div style="max-height: 150px; overflow-y: auto;">
+                <div style="max-height: 250px; overflow-y: auto;">
                     <?php foreach ($itensJaPedidos as $itemAntigo): ?>
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #9a3412; margin-bottom: 4px;">
                             <span><?= $itemAntigo['quantity'] ?>x <?= $itemAntigo['name'] ?></span>
@@ -132,20 +135,20 @@ require __DIR__ . '/layout/sidebar.php';
             </div>
         <?php endif; ?>
 
-        <div class="cart-footer">
+        <div class="cart-footer" style="box-shadow: 0 -4px 12px rgba(0,0,0,0.05); padding-top: 20px; padding-bottom: 30px;">
             
-        <?php if (!$mesa_id): ?>
-            <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed #e5e7eb;">
-                <label style="font-size: 0.8rem; font-weight: 700; color: #374151; margin-bottom: 5px; display: block;">Identificar Mesa / Cliente</label>
+        <?php if (!$mesa_id && empty($contaAberta)): ?>
+            <div style="margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px dashed #e5e7eb;">
+                <label style="font-size: 1.1rem; font-weight: 800; color: #1f2937; margin-bottom: 10px; display: block;">Identificar Mesa / Cliente</label>
                 
-                    <div id="client-search-area" style="display: flex; gap: 8px; align-items: flex-start;">
+                    <div id="client-search-area" style="display: flex; gap: 12px; align-items: flex-start;">
                     <!-- Wrapper relativo apenas para o Input e Resultados -->
                     <div style="position: relative; flex: 1;">
                         <input type="text" id="client-search" placeholder="Clique para ver mesas ou digite..." autocomplete="off"
-                               style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color 0.2s;">
+                               style="width: 100%; padding: 15px 12px; border: 1px solid #94a3b8; border-radius: 10px; font-size: 1.1rem; outline: none; transition: all 0.2s; background: #f8fafc;">
                         
-                        <!-- Dropdown Redesenhado (Visual mais limpo e integrado) -->
-                        <div id="client-results" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); max-height: 250px; overflow-y: auto; z-index: 1000; margin-top: 6px;">
+                        <!-- Dropdown Redesenhado -->
+                        <div id="client-results" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); max-height: 200px; overflow-y: auto; z-index: 9999; margin-top: 6px;">
                         </div>
                     </div>
                     
@@ -166,10 +169,11 @@ require __DIR__ . '/layout/sidebar.php';
                 <input type="hidden" id="current_client_id" name="client_id">
             </div>
         <?php else: ?>
-            <!-- SE ESTIVER EM MESA, NÃO MOSTRA BUSCA, MAS PRECISA DOS INPUTS PRA JS NÃO QUEBRAR -->
-             <input type="hidden" id="current_client_id" name="client_id">
+            <!-- SE ESTIVER EM MESA OU COMANDA, NÃO MOSTRA BUSCA -->
+             <input type="hidden" id="current_client_id" name="client_id" value="<?= $contaAberta['client_id'] ?? '' ?>">
+             <input type="hidden" id="current_order_id" value="<?= $contaAberta['id'] ?? '' ?>">
+             <input type="hidden" id="current_order_is_paid" value="<?= ($contaAberta['is_paid'] ?? 0) ?>">
              <input type="hidden" id="client-search"> 
-             <!-- Hack simples p/ evitar erro JS "element not found" sem refatorar tudo -->
         <?php endif; ?>
             
             <!-- TOTAL GERAL (Mesa + Carrinho) -->
@@ -186,16 +190,37 @@ require __DIR__ . '/layout/sidebar.php';
 
             <!-- Botões de Ação -->
             <div style="display: flex; gap: 10px;">
-                <button id="btn-finalizar" class="btn-primary" disabled onclick="finalizeSale()" style="flex: 1;">
+                <!-- Botão SALVAR COMANDA: Exibe se for Comanda OU Balcão (via JS) -->
+                <button id="btn-save-command" onclick="saveClientOrder()" 
+                        style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: <?= (!empty($contaAberta) && !$mesa_id) ? 'flex' : 'none' ?>; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
+                    Salvar
+                </button>
+
+                <!-- Botão FINALIZAR (Venda Rápida): Só exibe se NÃO for Comanda aberta -->
+                <button id="btn-finalizar" class="btn-primary" disabled onclick="finalizeSale()" 
+                        style="flex: 1; display: <?= (!empty($contaAberta) && !$mesa_id) ? 'none' : 'block' ?>; padding: 16px; font-size: 1.1rem;">
                     Finalizar
                 </button>
 
                 <?php if (!empty($contaAberta)): ?>
-                    <button onclick="fecharContaMesa(<?= $mesa_id ?>)" 
-                            style="flex: 1; background: #ef4444; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer;">
-                        Fechar
-                    </button>
-                    <!-- Hidden input para o JS ler o valor inicial da mesa -->
+                    <?php if ($mesa_id): ?>
+                        <button onclick="fecharContaMesa(<?= $mesa_id ?>)" 
+                                style="flex: 1; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
+                            Finalizar
+                        </button>
+                    <?php else: ?>
+                        <?php 
+                            $isPaid = !empty($contaAberta['is_paid']) && $contaAberta['is_paid'] == 1;
+                            $btnText = $isPaid ? 'Entregar (Concluir)' : 'Finalizar';
+                            $btnColor = $isPaid ? '#059669' : '#2563eb';
+                        ?>
+                        <button onclick="fecharComanda(<?= $contaAberta['id'] ?>)" 
+                                style="flex: 1; background: <?= $btnColor ?>; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
+                            <?= $btnText ?>
+                        </button>
+                    <?php endif; ?>
+                    
+                    <!-- Hidden input para o JS ler o valor inicial -->
                     <input type="hidden" id="table-initial-total" value="<?= $contaAberta['total'] ?>">
                 <?php else: ?>
                     <input type="hidden" id="table-initial-total" value="0">
@@ -226,79 +251,111 @@ require __DIR__ . '/layout/sidebar.php';
     <div id="checkoutModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center;">
     <!-- ... (Rest of Checkout Modal) ... -->
     
-    <div style="background: white; width: 600px; max-width: 95%; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); display: flex; flex-direction: column;">
+    <div style="background: white; width: 620px; max-width: 95%; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 90vh;">
         
-        <div style="background: #f8fafc; padding: 20px; border-bottom: 1px solid #e2e8f0; text-align: center; display: flex; justify-content: space-between; align-items: center;">
-            <div style="text-align: left;">
-                <h2 style="margin: 0; color: #1e293b; font-size: 1.4rem; font-weight: 800;">Pagamento</h2>
-                <p style="margin: 0; color: #64748b; font-size: 0.85rem;">Selecione a forma de pagamento</p>
-            </div>
-            <div style="text-align: right;">
-                <div style="font-size: 0.8rem; font-weight: 700; color: #64748b;">TOTAL A PAGAR</div>
-                <div style="font-size: 1.8rem; font-weight: 800; color: #2563eb;">
-                    R$ <span id="checkout-total-display">0,00</span>
-                </div>
-            </div>
+        <!-- Header minimalista / Apenas título ou nada? O usuário pediu pra tirar tudo -->
+        <div style="padding: 20px 25px 0 25px;">
+            <h2 style="margin: 0; color: #1e293b; font-size: 1.4rem; font-weight: 800;">Pagamento</h2>
         </div>
 
         <div style="padding: 25px;">
             
-            <div id="payment-list" style="margin-bottom: 20px; max-height: 120px; overflow-y: auto; display: none;">
+            <!-- NOVO LAYOUT DO BODY DO MODAL -->
+            <div style="flex: 1; min-height: 0; padding: 0 25px 20px; overflow-y: auto;">
+                
+                <!-- 1. Lista de Pagamentos (Topo e maior) -->
+                <div id="payment-list" style="border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 20px; padding: 15px; overflow-y: auto; background: #f8fafc; min-height: 80px; display: none;"></div>
+
+                <!-- 2. Seleção de Método -->
+                <!-- REMOVIDO TEXTO "FORMA DE PAGAMENTO" -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <button onclick="setMethod('dinheiro')" id="btn-method-dinheiro" class="payment-method-btn active" style="padding: 12px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s;">
+                        <i data-lucide="banknote" size="24"></i>
+                        <span style="font-size: 0.85rem; font-weight: 700;">Dinheiro</span>
+                    </button>
+                    <button onclick="setMethod('pix')" id="btn-method-pix" class="payment-method-btn" style="padding: 12px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s;">
+                        <i data-lucide="qr-code" size="24"></i>
+                        <span style="font-size: 0.85rem; font-weight: 700;">Pix</span>
+                    </button>
+                    <button onclick="setMethod('credito')" id="btn-method-credito" class="payment-method-btn" style="padding: 12px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s;">
+                        <i data-lucide="credit-card" size="24"></i>
+                        <span style="font-size: 0.85rem; font-weight: 700;">Crédito</span>
+                    </button>
+                    <button onclick="setMethod('debito')" id="btn-method-debito" class="payment-method-btn" style="padding: 12px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s;">
+                        <i data-lucide="credit-card" size="24"></i>
+                        <span style="font-size: 0.85rem; font-weight: 700;">Débito</span>
+                    </button>
                 </div>
 
-            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 10px;">ESCOLHA O MÉTODO:</label>
+                <!-- 3. Valor em Destaque -->
+                <!-- REMOVIDO TEXTO "VALOR RECEBIDO" -->
+                <div style="background: #f1f5f9; padding: 15px; border-radius: 12px; display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px;">
+                    <div style="flex: 1; position: relative;">
+                        <span style="position: absolute; left: 12px; top: 16px; color: #64748b; font-weight: bold; font-size: 1.1rem;">R$</span>
+                        <input type="text" id="pay-amount" placeholder="0,00" 
+                               style="width: 100%; padding: 12px 12px 12px 40px; border: 2px solid #94a3b8; border-radius: 10px; font-weight: 800; font-size: 1.5rem; color: #1e293b; outline: none;">
+                    </div>
+                    <button onclick="addPayment()" style="width: 60px; height: 55px; background: #0f172a; color: white; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                        <i data-lucide="arrow-down" size="28"></i>
+                    </button>
+                </div>
+
+                <!-- 4. Tipo de Pedido (Cards) -->
+                <div style="background: white; margin-bottom: 5px;">
+                    <label style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 10px; font-weight: 700;">TIPO DE PEDIDO</label>
+                    <input type="hidden" id="keep_open_value" value="false">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                         <!-- OPÇÃO 1: LOCAL -->
+                        <div onclick="selectOrderType('local', this)" class="order-type-card active" title="Finaliza o pedido imediatamente"
+                             style="border: 2px solid #2563eb; background: #eff6ff; border-radius: 8px; padding: 10px 5px; cursor: pointer; text-align: center; transition: all 0.2s;">
+                            <i data-lucide="utensils" size="18" style="color: #2563eb; margin-bottom: 4px;"></i>
+                            <div style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">Local</div>
+                        </div>
+                        <!-- OPÇÃO 2: RETIRADA -->
+                        <div onclick="selectOrderType('retirada', this)" class="order-type-card" title="Mantém aberto como PAGO"
+                             style="border: 1px solid #cbd5e1; background: white; border-radius: 8px; padding: 10px 5px; cursor: pointer; text-align: center; transition: all 0.2s;">
+                            <i data-lucide="shopping-bag" size="18" style="color: #64748b; margin-bottom: 4px;"></i>
+                            <div style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">Retirada</div>
+                        </div>
+                        <!-- OPÇÃO 3: ENTREGA -->
+                        <div class="order-type-card disabled" style="border: 1px solid #e2e8f0; background: #f1f5f9; border-radius: 8px; padding: 10px 5px; text-align: center; opacity: 0.5; cursor: not-allowed;">
+                            <i data-lucide="truck" size="18" style="color: #94a3b8; margin-bottom: 4px;"></i>
+                            <div style="font-weight: 700; font-size: 0.85rem; color: #94a3b8;">Entrega</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        <!-- FOOTER: TOTAL, RESTANTE E BOTÕES -->
+        <div style="padding: 20px; border-top: 1px solid #e2e8f0; background: #f8fafc;">
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                <button onclick="setMethod('dinheiro')" id="btn-dinheiro" class="pay-btn" style="padding: 15px 5px; border: 2px solid #e2e8f0; background: white; border-radius: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: all 0.2s;">
-                    <span style="font-size: 1.5rem;">💵</span>
-                    <span style="font-weight: 700; font-size: 0.85rem; color: #475569;">Dinheiro</span>
-                </button>
-                <button onclick="setMethod('pix')" id="btn-pix" class="pay-btn" style="padding: 15px 5px; border: 2px solid #e2e8f0; background: white; border-radius: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: all 0.2s;">
-                    <span style="font-size: 1.5rem;">💠</span>
-                    <span style="font-weight: 700; font-size: 0.85rem; color: #475569;">Pix</span>
-                </button>
-                <button onclick="setMethod('credito')" id="btn-credito" class="pay-btn" style="padding: 15px 5px; border: 2px solid #e2e8f0; background: white; border-radius: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: all 0.2s;">
-                    <span style="font-size: 1.5rem;">💳</span>
-                    <span style="font-weight: 700; font-size: 0.85rem; color: #475569;">Crédito</span>
-                </button>
-                <button onclick="setMethod('debito')" id="btn-debito" class="pay-btn" style="padding: 15px 5px; border: 2px solid #e2e8f0; background: white; border-radius: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: all 0.2s;">
-                    <span style="font-size: 1.5rem;">💳</span>
-                    <span style="font-weight: 700; font-size: 0.85rem; color: #475569;">Débito</span>
-                </button>
-            </div>
-
-            <div style="background: #f1f5f9; padding: 15px; border-radius: 12px; display: flex; gap: 15px; align-items: flex-end;">
-                <div style="flex: 1;">
-                    <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">VALOR A PAGAR (R$)</label>
-                    <input type="number" id="pay-amount" step="0.01" 
-                           style="width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-weight: 800; font-size: 1.5rem; color: #1e293b; outline: none;">
+            <!-- LINHA DE TOTAIS -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 5px;">
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">
+                        TOTAL A PAGAR: <span id="checkout-total-display" style="color: #2563eb;">R$ 0,00</span>
+                    </div>
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">
+                        FALTAM: <span id="checkout-remaining" style="color: #dc2626;">R$ 0,00</span>
+                    </div>
                 </div>
-                <button onclick="addPayment()" style="padding: 0 25px; height: 55px; background: #0f172a; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 1rem;">
-                    LANÇAR <i data-lucide="arrow-down"></i>
-                </button>
-            </div>
-
-            <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <div id="remaining-box">
-                    <span style="font-size: 0.9rem; font-weight: 600; color: #64748b;">FALTAM:</span>
-                    <span id="checkout-remaining" style="font-size: 1.5rem; font-weight: 800; color: #dc2626; margin-left: 5px;">R$ 0,00</span>
-                </div>
-
-                <div id="change-box" style="display: none; background: #dcfce7; padding: 10px 20px; border-radius: 8px; border: 1px solid #86efac;">
-                    <span style="font-size: 0.9rem; font-weight: 700; color: #166534;">TROCO:</span>
-                    <span id="checkout-change" style="font-size: 1.5rem; font-weight: 800; color: #166534; margin-left: 5px;">R$ 0,00</span>
+                
+                <div id="change-box" style="display: none; text-align: right; background: #dcfce7; padding: 10px 20px; border-radius: 8px; border: 1px solid #86efac; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                    <span style="font-size: 0.85rem; font-weight: 800; color: #166534; display: block; letter-spacing: 0.5px;">TROCO</span>
+                    <span id="checkout-change" style="font-size: 1.6rem; font-weight: 900; color: #166534;">R$ 0,00</span>
                 </div>
             </div>
 
-        </div>
-
-        <div style="padding: 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; gap: 15px;">
-            <button onclick="closeCheckout()" style="flex: 1; padding: 15px; background: white; border: 1px solid #cbd5e1; color: #475569; border-radius: 10px; font-weight: 700; cursor: pointer;">Cancelar</button>
-            
-            <button id="btn-finish-sale" onclick="submitSale()" disabled 
-                    style="flex: 2; padding: 15px; background: #cbd5e1; color: white; border: none; border-radius: 10px; font-weight: 800; cursor: not-allowed; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
-                CONCLUIR VENDA <i data-lucide="check-circle"></i>
-            </button>
+            <!-- BOTÕES -->
+            <div style="display: flex; gap: 15px;">
+                <button onclick="closeCheckout()" style="flex: 1; padding: 15px; background: white; border: 1px solid #cbd5e1; color: #475569; border-radius: 10px; font-weight: 700; cursor: pointer;">Cancelar</button>
+                
+                <button id="btn-finish-sale" onclick="submitSale()" disabled 
+                        style="flex: 2; padding: 15px; background: #cbd5e1; color: white; border: none; border-radius: 10px; font-weight: 800; cursor: not-allowed; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
+                    CONCLUIR VENDA <i data-lucide="check-circle"></i>
+                </button>
+            </div>
         </div>
     </div>
 </div>

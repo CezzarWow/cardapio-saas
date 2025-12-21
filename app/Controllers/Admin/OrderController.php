@@ -69,6 +69,28 @@ class OrderController {
                          ->execute(['oid' => $orderId, 'tid' => $table_id]);
                 }
             } 
+            // --- LÓGICA DE SALVAR COMANDA (CLIENTE) ---
+            elseif (!empty($input['save_account']) && !empty($input['client_id'])) {
+                // Se já vier ID do pedido (edição), usa ele
+                $orderId = $input['order_id'] ?? null;
+
+                if ($orderId) {
+                    // Verifica se existe e é do cliente
+                    $chk = $conn->prepare("SELECT id FROM orders WHERE id = :oid AND client_id = :cid AND status = 'aberto'");
+                    $chk->execute(['oid' => $orderId, 'cid' => $input['client_id']]);
+                    if (!$chk->fetch()) $orderId = null; // Se não bater, cria novo
+                }
+
+                if (!$orderId) {
+                    // Cria NOVO pedido ABERTO
+                    $stmtOrder = $conn->prepare("INSERT INTO orders (restaurant_id, client_id, total, status) VALUES (:rid, :cid, 0, 'aberto')");
+                    $stmtOrder->execute([
+                        'rid' => $restaurant_id,
+                        'cid' => $input['client_id']
+                    ]);
+                    $orderId = $conn->lastInsertId();
+                }
+            }
             // --- LÓGICA DE BALCÃO (FINALIZAR AGORA) ---
             else {
                 
@@ -226,6 +248,104 @@ class OrderController {
             } else {
                 echo json_encode(['success' => false, 'message' => 'Mesa já está livre']);
             }
+        } catch (\Exception $e) {
+            $conn->rollBack();
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+
+
+    // --- FECHAR COMANDA (SEM MESA) ---
+    public function closeCommand() {
+        header('Content-Type: application/json');
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        $order_id = $data['order_id'] ?? null;
+        $restaurant_id = $_SESSION['loja_ativa_id'];
+
+        if (!$order_id) {
+            echo json_encode(['success' => false, 'message' => 'Pedido inválido']);
+            exit;
+        }
+
+        $conn = Database::connect();
+        
+        // 🛑 VERIFICA CAIXA
+        $stmtCaixa = $conn->prepare("SELECT id FROM cash_registers WHERE restaurant_id = :rid AND status = 'aberto'");
+        $stmtCaixa->execute(['rid' => $restaurant_id]);
+        $caixa = $stmtCaixa->fetch(PDO::FETCH_ASSOC);
+
+        if (!$caixa) {
+            echo json_encode(['success' => false, 'message' => 'Caixa FECHADO! Abra o caixa para receber.']);
+            exit;
+        }
+
+        try {
+            $conn->beginTransaction();
+
+            $keepOpen = $data['keep_open'] ?? false;
+            
+            // Verifica status atual
+            $stmtCheck = $conn->prepare("SELECT is_paid, total FROM orders WHERE id = :oid");
+            $stmtCheck->execute(['oid' => $order_id]);
+            $currentOrder = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            // SE JÁ ESTÁ PAGO e NÃO é pra manter aberto -> Apenas Finaliza (Entrega)
+            if ($currentOrder['is_paid'] == 1 && !$keepOpen) {
+                 $conn->prepare("UPDATE orders SET status = 'concluido' WHERE id = :oid")
+                      ->execute(['oid' => $order_id]);
+                 $conn->commit();
+                 echo json_encode(['success' => true]);
+                 exit;
+            }
+
+            // SE NÃO ESTÁ PAGO, PRECISA DE PAGAMENTOS
+            $payments = $data['payments'] ?? [];
+            if ($currentOrder['is_paid'] == 0 && empty($payments)) {
+                $conn->rollBack();
+                echo json_encode(['success' => false, 'message' => 'Nenhum pagamento informado']);
+                exit;
+            }
+
+            // Se tem pagamentos, processa
+            if (!empty($payments)) {
+                $mainMethod = $payments[0]['method'] ?? 'dinheiro';
+                $paymentMethodDesc = (count($payments) > 1) ? 'multiplo' : $mainMethod;
+
+                // Registra Pagamentos
+                $stmtPay = $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)");
+                $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
+
+                foreach ($payments as $pay) {
+                    $stmtPay->execute(['oid' => $order_id, 'method' => $pay['method'], 'amount' => $pay['amount']]);
+
+                    if ($pay['method'] == 'dinheiro') {
+                        $desc = "Pagamento Comanda #" . $order_id;
+                        $stmtMov->execute([
+                            'cid' => $caixa['id'],
+                            'val' => $pay['amount'],
+                            'desc' => $desc,
+                            'oid' => $order_id
+                        ]);
+                    }
+                }
+                
+                // Define como PAGO
+                $conn->prepare("UPDATE orders SET is_paid = 1, payment_method = :method WHERE id = :oid")
+                     ->execute(['oid' => $order_id, 'method' => $paymentMethodDesc]);
+            }
+
+            // SE NÃO FOR PRA MANTER ABERTO, FECHA
+            if (!$keepOpen) {
+                $conn->prepare("UPDATE orders SET status = 'concluido' WHERE id = :oid")
+                     ->execute(['oid' => $order_id]);
+            }
+
+            $conn->commit();
+            echo json_encode(['success' => true]);
+
         } catch (\Exception $e) {
             $conn->rollBack();
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);

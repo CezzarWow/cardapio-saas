@@ -47,7 +47,34 @@ class ProductController {
                 foreach ($itensJaPedidos as $item) {
                     $totalReal += ($item['price'] * $item['quantity']);
                 }
+            }
+        }
+
+        // 1b. Se for Comanda (Order ID direto), busca dados
+        $order_id = $_GET['order_id'] ?? null;
+        if ($order_id && !$mesa_id) {
+            $stmtOrder = $conn->prepare("SELECT o.*, c.name as client_name, c.id as client_id 
+                                       FROM orders o 
+                                       JOIN clients c ON o.client_id = c.id 
+                                       WHERE o.id = :oid AND o.restaurant_id = :rid AND o.status = 'aberto'");
+            $stmtOrder->execute(['oid' => $order_id, 'rid' => $restaurant_id]);
+            $contaAberta = $stmtOrder->fetch(PDO::FETCH_ASSOC);
+
+            if ($contaAberta) {
+                // Busca itens
+                $stmtItens = $conn->prepare("SELECT * FROM order_items WHERE order_id = :oid");
+                $stmtItens->execute(['oid' => $order_id]);
+                $itensJaPedidos = $stmtItens->fetchAll(PDO::FETCH_ASSOC);
+
+                // Recálculo
+                $totalReal = 0;
+                foreach ($itensJaPedidos as $item) {
+                    $totalReal += ($item['price'] * $item['quantity']);
+                }
                 $contaAberta['total'] = $totalReal;
+                
+                // Previne busca de clientes
+                $isComanda = true;
             }
         }
 

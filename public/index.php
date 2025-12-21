@@ -165,6 +165,11 @@ switch ($path) {
         (new \App\Controllers\Admin\OrderController())->closeTable();
         break;
 
+    case '/admin/loja/venda/fechar-comanda':
+        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
+        (new \App\Controllers\Admin\OrderController())->closeCommand();
+        break;
+
     case '/admin/loja/venda/remover-item':
         require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
         (new \App\Controllers\Admin\OrderController())->removeItem();
@@ -175,9 +180,19 @@ switch ($path) {
         (new \App\Controllers\Admin\OrderController())->cancelTableOrder();
         break;
 
+    case '/admin/loja/mesas/deletar':
+        require __DIR__ . '/../app/Controllers/Admin/TableController.php';
+        (new \App\Controllers\Admin\TableController())->deleteByNumber();
+        break;
+
     case '/admin/loja/mesas/buscar':
         require __DIR__ . '/../app/Controllers/Admin/TableController.php';
         (new \App\Controllers\Admin\TableController())->search();
+        break;
+
+    case '/admin/loja/mesas/salvar':
+        require __DIR__ . '/../app/Controllers/Admin/TableController.php';
+        (new \App\Controllers\Admin\TableController())->store();
         break;
 
     // 3. Obter Itens (AJAX)
