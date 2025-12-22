@@ -145,6 +145,42 @@ let closingOrderId = null; // ID da comanda sendo fechada
 function finalizeSale() {
     // SE ESTIVER EM MESA (ADICIONAR ITENS) -> SALVA DIRETO SEM PAGAMENTO
     const tableId = document.getElementById('current_table_id').value;
+
+    console.log('=== finalizeSale DEBUG ===');
+    console.log('tableId:', tableId);
+    console.log('isEditingPaidOrder defined:', typeof isEditingPaidOrder !== 'undefined');
+    console.log('isEditingPaidOrder value:', typeof isEditingPaidOrder !== 'undefined' ? isEditingPaidOrder : 'N/A');
+    console.log('cart.length:', cart.length);
+
+    // VERIFICAÇÃO ESPECIAL: Se é pedido PAGO com novos itens, COBRA OS NOVOS ITENS
+    // O carrinho contém APENAS os novos itens (os existentes ficam em "Já na Comanda")
+    if (typeof isEditingPaidOrder !== 'undefined' && isEditingPaidOrder) {
+        const cartTotal = calculateTotal(); // Só os novos itens do carrinho
+
+        console.log('DEBUG isEditingPaidOrder:', isEditingPaidOrder);
+        console.log('DEBUG cartTotal (novos itens):', cartTotal);
+        console.log('DEBUG originalPaidTotal:', originalPaidTotal);
+
+        if (cart.length > 0 && cartTotal > 0.01) {
+            // TEM NOVOS ITENS -> Abre pagamento para cobrar os novos
+            isClosingTable = false;
+            isClosingCommand = false;
+            currentPayments = [];
+            totalPaid = 0;
+
+            // Mostra o valor do carrinho (novos itens) no modal
+            document.getElementById('checkout-total-display').innerText = formatCurrency(cartTotal);
+            document.getElementById('checkoutModal').style.display = 'flex';
+            setMethod('dinheiro');
+            updateCheckoutUI();
+            return;
+        } else {
+            // Carrinho vazio -> Nenhum novo item a cobrar
+            alert('Carrinho vazio! Adicione novos itens para cobrar.');
+            return;
+        }
+    }
+
     if (tableId) {
         if (cart.length === 0) { alert('Carrinho vazio!'); return; }
         isClosingTable = false;
@@ -440,6 +476,11 @@ function saveClient() {
     const name = document.getElementById('new_client_name').value;
     const phone = document.getElementById('new_client_phone').value;
 
+    if (!name.trim()) {
+        alert('Digite o nome do cliente');
+        return;
+    }
+
     fetch('clientes/salvar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -448,16 +489,98 @@ function saveClient() {
         .then(r => r.json())
         .then(data => {
             if (data.success) {
+                // Fecha o modal de cadastro
                 document.getElementById('clientModal').style.display = 'none';
-                // Já seleciona automático
-                selectClient(data.client.id, data.client.name);
+
+                // ATUALIZA O INPUT HIDDEN COM O ID DO CLIENTE
+                document.getElementById('current_client_id').value = data.client.id;
+
+                // ATUALIZA A ÁREA VISUAL DE CLIENTE SELECIONADO
+                const clientArea = document.getElementById('selected-client-area');
+                const clientNameSpan = document.getElementById('selected-client-name');
+                if (clientArea && clientNameSpan) {
+                    clientNameSpan.innerText = data.client.name;
+                    clientArea.style.display = 'flex';
+                }
+
+                // Se tem alerta de retirada aberto, mostra confirmação com botão X
+                const retiradaAlert = document.getElementById('retirada-client-alert');
+                if (retiradaAlert && retiradaAlert.style.display !== 'none') {
+                    retiradaAlert.style.background = '#dcfce7';
+                    retiradaAlert.style.borderColor = '#22c55e';
+                    retiradaAlert.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="check-circle" size="18" style="color: #16a34a;"></i>
+                                <span style="font-weight: 700; color: #166534; font-size: 0.9rem;">Cliente: ${data.client.name}</span>
+                            </div>
+                            <button onclick="clearClient()" style="background: none; border: none; color: #166534; cursor: pointer; font-size: 1.2rem; font-weight: bold; padding: 0 5px;" title="Desmarcar cliente">&times;</button>
+                        </div>
+                    `;
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+                    // Atualiza botão de finalizar (libera)
+                    updateCheckoutUI();
+                }
+
                 // Limpa form
                 document.getElementById('new_client_name').value = '';
                 document.getElementById('new_client_phone').value = '';
+
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             } else {
                 alert('Erro: ' + data.message);
             }
+        })
+        .catch(err => {
+            alert('Erro ao salvar: ' + err.message);
         });
+}
+
+// LIMPAR CLIENTE SELECIONADO
+function clearClient() {
+    // Limpa o ID
+    document.getElementById('current_client_id').value = '';
+
+    // Esconde a área visual
+    const clientArea = document.getElementById('selected-client-area');
+    if (clientArea) clientArea.style.display = 'none';
+
+    // Se estiver no modal de pagamento com Retirada, mostra o alerta novamente
+    const keepOpen = document.getElementById('keep_open_value')?.value === 'true';
+    const checkoutModal = document.getElementById('checkoutModal');
+
+    if (keepOpen && checkoutModal && checkoutModal.style.display !== 'none') {
+        // Reseta o alerta de retirada para o estado original
+        const alertBox = document.getElementById('retirada-client-alert');
+        if (alertBox) {
+            alertBox.style.background = '#fef3c7';
+            alertBox.style.borderColor = '#f59e0b';
+            alertBox.style.display = 'block';
+            alertBox.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <i data-lucide="alert-triangle" size="18" style="color: #d97706;"></i>
+                    <span style="font-weight: 700; color: #92400e; font-size: 0.9rem;">Cliente obrigatório para Retirada</span>
+                </div>
+                <div style="position: relative; margin-bottom: 10px;">
+                    <input type="text" id="retirada-client-search" placeholder="Buscar cliente por nome ou telefone..."
+                           style="width: 100%; padding: 10px 12px; border: 1px solid #d97706; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box;"
+                           oninput="searchClientForRetirada(this.value)">
+                    <div id="retirada-client-results" style="display: none; position: absolute; left: 0; right: 0; top: 100%; background: white; border: 1px solid #e5e7eb; border-radius: 6px; max-height: 150px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="document.getElementById('clientModal').style.display='flex'" 
+                            style="flex: 1; padding: 10px; background: white; color: #d97706; border: 1px solid #d97706; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <i data-lucide="user-plus" size="16"></i> Cadastrar Novo
+                    </button>
+                </div>
+            `;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        // Atualiza UI (bloqueia botão)
+        updateCheckoutUI();
+    }
 }
 
 // ... Pay Methods (Mantido igual) ...
@@ -496,12 +619,25 @@ function setMethod(method) {
 }
 
 // Helper para obter o total correto (Mesa ou Carrinho)
+// Se estiver editando pedido PAGO, retorna apenas a DIFERENÇA (novos itens)
 function getFinalTotal() {
+    let total = 0;
+
     if (isClosingTable || isClosingCommand) {
         const tableTotalStr = document.getElementById('table-initial-total').value;
-        return parseFloat(tableTotalStr);
+        total = parseFloat(tableTotalStr);
+    } else {
+        total = calculateTotal();
     }
-    return calculateTotal();
+
+    // Se estiver editando pedido PAGO, subtrai o que já foi pago
+    // Assim cobra apenas os NOVOS itens adicionados
+    if (typeof isEditingPaidOrder !== 'undefined' && isEditingPaidOrder && typeof originalPaidTotal !== 'undefined') {
+        const difference = total - originalPaidTotal;
+        return difference > 0 ? difference : 0;
+    }
+
+    return total;
 }
 
 function addPayment() {
@@ -634,6 +770,7 @@ function closeCheckout() {
 // --- SALVAR COMANDA (Cliente) ---
 function saveClientOrder() {
     if (cart.length === 0) return alert('O carrinho está vazio!');
+
     const clientId = document.getElementById('current_client_id').value;
     const orderId = document.getElementById('current_order_id') ? document.getElementById('current_order_id').value : null;
 
@@ -664,6 +801,35 @@ function saveClientOrder() {
             }
         })
         .catch(err => alert('Erro de conexão.'));
+}
+
+// --- INCLUIR ITENS EM PEDIDO PAGO (Cobra antes de incluir) ---
+function includePaidOrderItems() {
+    if (cart.length === 0) {
+        alert('Carrinho vazio! Adicione itens para incluir.');
+        return;
+    }
+
+    const cartTotal = calculateTotal();
+
+    if (cartTotal <= 0.01) {
+        alert('Nenhum valor a cobrar.');
+        return;
+    }
+
+    // Abre modal de pagamento para cobrar os novos itens
+    isClosingTable = false;
+    isClosingCommand = false;
+    currentPayments = [];
+    totalPaid = 0;
+
+    document.getElementById('checkout-total-display').innerText = formatCurrency(cartTotal);
+    document.getElementById('checkoutModal').style.display = 'flex';
+    setMethod('dinheiro');
+    updateCheckoutUI();
+
+    // Marca que após o pagamento, deve salvar como inclusão
+    window.isPaidOrderInclusion = true;
 }
 
 // Função para fechar conta da mesa e liberar
@@ -733,6 +899,17 @@ function updateCheckoutUI() {
         changeBox.style.display = 'none';
         btnFinish.disabled = true;
         btnFinish.style.background = '#cbd5e1';
+        btnFinish.style.cursor = 'not-allowed';
+    }
+
+    // VALIDAÇÃO EXTRA: Se for Retirada sem cliente, bloqueia mesmo que tenha pago
+    const keepOpenValue = document.getElementById('keep_open_value')?.value;
+    const clientId = document.getElementById('current_client_id')?.value;
+    const tableId = document.getElementById('current_table_id')?.value;
+
+    if (keepOpenValue === 'true' && !clientId && !tableId) {
+        btnFinish.disabled = true;
+        btnFinish.style.background = '#fbbf24'; // Amarelo de atenção
         btnFinish.style.cursor = 'not-allowed';
     }
 
@@ -1017,6 +1194,111 @@ function closeCheckout() {
     document.getElementById('checkoutModal').style.display = 'none';
     currentPayments = [];
     totalPaid = 0;
+
+    // Limpa alerta de retirada
+    const alertBox = document.getElementById('retirada-client-alert');
+    if (alertBox) alertBox.style.display = 'none';
+
+    // LIMPA O CLIENTE SELECIONADO (se foi selecionado no modal de Retirada)
+    // Só limpa se era uma venda de balcão (não mesa/comanda)
+    const tableId = document.getElementById('current_table_id')?.value;
+    if (!tableId) {
+        document.getElementById('current_client_id').value = '';
+        const clientArea = document.getElementById('selected-client-area');
+        if (clientArea) clientArea.style.display = 'none';
+    }
+}
+
+// BUSCA CLIENTE PARA RETIRADA (dentro do alerta)
+let retiradaSearchTimeout = null;
+function searchClientForRetirada(term) {
+    clearTimeout(retiradaSearchTimeout);
+    const resultsDiv = document.getElementById('retirada-client-results');
+
+    if (term.length < 2) {
+        resultsDiv.style.display = 'none';
+        return;
+    }
+
+    retiradaSearchTimeout = setTimeout(() => {
+        fetch('clientes/buscar?q=' + encodeURIComponent(term))
+            .then(r => r.json())
+            .then(clients => {
+                resultsDiv.innerHTML = '';
+
+                if (clients.length === 0) {
+                    resultsDiv.innerHTML = '<div style="padding: 10px; color: #6b7280; text-align: center;">Nenhum cliente encontrado</div>';
+                    resultsDiv.style.display = 'block';
+                    return;
+                }
+
+                clients.forEach(client => {
+                    const div = document.createElement('div');
+                    div.style.cssText = 'padding: 10px; cursor: pointer; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center;';
+                    div.onmouseenter = () => div.style.background = '#f3f4f6';
+                    div.onmouseleave = () => div.style.background = 'white';
+                    div.onclick = () => selectClientForRetirada(client);
+
+                    div.innerHTML = `
+                        <div>
+                            <div style="font-weight: 600; color: #1f2937;">${client.name}</div>
+                            <div style="font-size: 0.8rem; color: #6b7280;">${client.phone || 'Sem telefone'}</div>
+                        </div>
+                        <i data-lucide="check-circle" size="18" style="color: #22c55e;"></i>
+                    `;
+                    resultsDiv.appendChild(div);
+                });
+
+                resultsDiv.style.display = 'block';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            })
+            .catch(err => {
+                resultsDiv.innerHTML = '<div style="padding: 10px; color: #dc2626;">Erro na busca</div>';
+                resultsDiv.style.display = 'block';
+            });
+    }, 300);
+}
+
+function selectClientForRetirada(client) {
+    // Atualiza o input hidden do cliente
+    document.getElementById('current_client_id').value = client.id;
+
+    // Atualiza visual no PDV principal (área de cliente selecionado)
+    const clientArea = document.getElementById('selected-client-area');
+    const clientName = document.getElementById('selected-client-name');
+    if (clientArea && clientName) {
+        clientName.innerText = client.name;
+        clientArea.style.display = 'flex';
+    }
+
+    // Mostra confirmação no próprio alerta (fica fixo com botão X)
+    const alertBox = document.getElementById('retirada-client-alert');
+    if (alertBox) {
+        // Transforma o alerta em confirmação verde (fica fixo)
+        alertBox.style.background = '#dcfce7';
+        alertBox.style.borderColor = '#22c55e';
+        alertBox.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="check-circle" size="18" style="color: #16a34a;"></i>
+                    <span style="font-weight: 700; color: #166534; font-size: 0.9rem;">Cliente: ${client.name}</span>
+                </div>
+                <button onclick="clearClient()" style="background: none; border: none; color: #166534; cursor: pointer; font-size: 1.2rem; font-weight: bold; padding: 0 5px;" title="Desmarcar cliente">&times;</button>
+            </div>
+        `;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // Limpa resultados de busca
+    const results = document.getElementById('retirada-client-results');
+    const searchInput = document.getElementById('retirada-client-search');
+    if (results) results.style.display = 'none';
+    if (searchInput) searchInput.value = '';
+
+    // Atualiza UI do checkout (libera o botão)
+    updateCheckoutUI();
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // SELEÇÃO DE TIPO DE PEDIDO (NOVO MODAL)
@@ -1042,11 +1324,29 @@ function selectOrderType(type, element) {
 
     // Set Logic
     const keepOpenInput = document.getElementById('keep_open_value');
+    const alertBox = document.getElementById('retirada-client-alert');
+    const clientId = document.getElementById('current_client_id')?.value;
+    const tableId = document.getElementById('current_table_id')?.value;
+
     if (type === 'retirada') {
         keepOpenInput.value = 'true';
+
+        // SE FOR RETIRADA E NÃO TEM CLIENTE NEM MESA, MOSTRA ALERTA
+        if (!clientId && !tableId) {
+            if (alertBox) {
+                alertBox.style.display = 'block';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        } else {
+            if (alertBox) alertBox.style.display = 'none';
+        }
     } else {
         keepOpenInput.value = 'false';
+        if (alertBox) alertBox.style.display = 'none';
     }
+
+    // Atualiza estado do botão de finalizar
+    updateCheckoutUI();
 }
 
 // --- ENVIA A VENDA PRO PHP ---
@@ -1081,11 +1381,19 @@ function submitSale() {
         keep_open: keepOpen
     };
 
-    if (isClosingTable) {
+    // TRATAMENTO ESPECIAL: Inclusão em pedido PAGO (usa mesma lógica do saveClientOrder)
+    let wasPaidOrderInclusion = false;
+    if (window.isPaidOrderInclusion && typeof editingPaidOrderId !== 'undefined' && editingPaidOrderId) {
+        // Usa o mesmo endpoint que funciona para salvar comanda
+        endpoint = '/admin/loja/venda/finalizar';
+        payload.order_id = editingPaidOrderId;
+        payload.save_account = true; // FLAG IMPORTANTE - mesmo que saveClientOrder
+        wasPaidOrderInclusion = true;
+        window.isPaidOrderInclusion = false;
+    } else if (isClosingTable) {
         endpoint = '/admin/loja/mesa/fechar';
     } else if (isClosingCommand) {
-        endpoint = '/admin/loja/venda/fechar-comanda'; // Nova Rota
-        // Adiciona Order ID no payload
+        endpoint = '/admin/loja/venda/fechar-comanda';
         payload.order_id = closingOrderId;
     }
 
@@ -1116,10 +1424,12 @@ function submitSale() {
 
                 // Delay para mostrar o modal antes de recarregar
                 setTimeout(() => {
-                    // Se estava em MESA ou COMANDA -> Recarrega ou Vai para Mesas
-                    if (tableId || isClosingCommand) {
-                        // Se for Retirada (keep_open), vai para Mesas para ver o pedido "Pago"
-                        // Se for normal, também vai para Mesas (liberou a mesa/comanda)
+                    // Se foi INCLUSÃO em pedido pago -> Recarrega para ver os itens atualizados
+                    if (wasPaidOrderInclusion) {
+                        window.location.reload();
+                    }
+                    // Se estava em MESA ou COMANDA -> Vai para Mesas
+                    else if (tableId || isClosingCommand) {
                         window.location.href = BASE_URL + '/admin/loja/mesas';
                     } else {
                         // Se é balcão puro, só limpa
@@ -1135,4 +1445,27 @@ function submitSale() {
             console.error('Erro na requisição:', error);
             alert('Erro ao processar venda: ' + error.message);
         });
+}
+
+// CANCELAR PEDIDO PAGO (Retirada)
+function cancelPaidOrder(orderId) {
+    if (!confirm('⚠️ ATENÇÃO!\n\nIsso irá CANCELAR o pedido e DEVOLVER o valor ao cliente.\n\nDeseja continuar?')) {
+        return;
+    }
+
+    fetch(BASE_URL + '/admin/loja/pedidos/cancelar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId })
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                alert('Pedido cancelado! O valor será estornado.');
+                window.location.href = BASE_URL + '/admin/loja/mesas';
+            } else {
+                alert('Erro: ' + (data.message || 'Falha ao cancelar'));
+            }
+        })
+        .catch(err => alert('Erro: ' + err.message));
 }

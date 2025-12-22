@@ -94,7 +94,10 @@ class OrderController {
             // --- LÓGICA DE BALCÃO (FINALIZAR AGORA) ---
             else {
                 
-                // 1. Cria o Pedido (Status Concluido)
+                // 1. Verifica se é RETIRADA (keep_open = true)
+                $keepOpen = isset($input['keep_open']) && $input['keep_open'] === true;
+                
+                // 2. Cria o Pedido
                 $payments = $input['payments'] ?? [];
                 
                 // Se não vier pagamentos (ex: versão antiga do front), assume dinheiro
@@ -105,11 +108,18 @@ class OrderController {
                 $mainMethod = $payments[0]['method'] ?? 'dinheiro';
                 $paymentMethodDesc = (count($payments) > 1) ? 'multiplo' : $mainMethod;
 
-                $stmtOrder = $conn->prepare("INSERT INTO orders (restaurant_id, client_id, total, status, payment_method) VALUES (:rid, :cid, 0, 'concluido', :method)");
+                // Se for RETIRADA: status = aberto, is_paid = 1 (Pago mas aguardando retirada)
+                // Se for LOCAL: status = concluido (Venda finalizada)
+                $orderStatus = $keepOpen ? 'aberto' : 'concluido';
+                $isPaid = $keepOpen ? 1 : 0; // Retirada = Pago antecipado
+
+                $stmtOrder = $conn->prepare("INSERT INTO orders (restaurant_id, client_id, total, status, payment_method, is_paid) VALUES (:rid, :cid, 0, :status, :method, :paid)");
                 $stmtOrder->execute([
                     'rid' => $restaurant_id, 
                     'cid' => $input['client_id'] ?? null, 
-                    'method' => $paymentMethodDesc
+                    'status' => $orderStatus,
+                    'method' => $paymentMethodDesc,
+                    'paid' => $isPaid
                 ]);
                 $orderId = $conn->lastInsertId();
 
@@ -448,6 +458,197 @@ class OrderController {
 
             $conn->commit();
             echo json_encode(['success' => true]);
+
+        } catch (\Exception $e) {
+            $conn->rollBack();
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    // --- ENTREGAR PEDIDO (Retirada - Finalizar pedido pago aguardando) ---
+    public function deliverOrder() {
+        header('Content-Type: application/json');
+        
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        
+        if (!isset($_SESSION['loja_ativa_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Sessão expirada']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $orderId = $input['order_id'] ?? null;
+
+        if (!$orderId) {
+            echo json_encode(['success' => false, 'message' => 'ID do pedido não informado']);
+            exit;
+        }
+
+        $conn = Database::connect();
+        
+        try {
+            // Verifica se o pedido existe e está pago
+            $stmt = $conn->prepare("SELECT * FROM orders WHERE id = :oid AND restaurant_id = :rid");
+            $stmt->execute(['oid' => $orderId, 'rid' => $_SESSION['loja_ativa_id']]);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$order) {
+                echo json_encode(['success' => false, 'message' => 'Pedido não encontrado']);
+                exit;
+            }
+
+            // Marca como concluído (entregue)
+            $conn->prepare("UPDATE orders SET status = 'concluido' WHERE id = :oid")
+                 ->execute(['oid' => $orderId]);
+
+            echo json_encode(['success' => true, 'message' => 'Pedido entregue com sucesso!']);
+
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    // --- CANCELAR PEDIDO (Remove do caixa e marca como cancelado) ---
+    public function cancelOrder() {
+        header('Content-Type: application/json');
+        
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        
+        if (!isset($_SESSION['loja_ativa_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Sessão expirada']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $orderId = $input['order_id'] ?? null;
+
+        if (!$orderId) {
+            echo json_encode(['success' => false, 'message' => 'ID do pedido não informado']);
+            exit;
+        }
+
+        $conn = Database::connect();
+        
+        try {
+            $conn->beginTransaction();
+            
+            // Verifica se o pedido existe
+            $stmt = $conn->prepare("SELECT * FROM orders WHERE id = :oid AND restaurant_id = :rid");
+            $stmt->execute(['oid' => $orderId, 'rid' => $_SESSION['loja_ativa_id']]);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$order) {
+                $conn->rollBack();
+                echo json_encode(['success' => false, 'message' => 'Pedido não encontrado']);
+                exit;
+            }
+
+            // Remove do cash_movements (estorna)
+            $conn->prepare("DELETE FROM cash_movements WHERE order_id = :oid")
+                 ->execute(['oid' => $orderId]);
+
+            // Remove pagamentos
+            $conn->prepare("DELETE FROM order_payments WHERE order_id = :oid")
+                 ->execute(['oid' => $orderId]);
+
+            // Marca como cancelado
+            $conn->prepare("UPDATE orders SET status = 'cancelado' WHERE id = :oid")
+                 ->execute(['oid' => $orderId]);
+
+            $conn->commit();
+            echo json_encode(['success' => true, 'message' => 'Pedido cancelado com sucesso!']);
+
+        } catch (\Exception $e) {
+            $conn->rollBack();
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    // --- INCLUIR ITENS EM PEDIDO PAGO (Adiciona itens, registra pagamento, atualiza total) ---
+    public function includePaidOrderItems() {
+        header('Content-Type: application/json');
+        
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        
+        if (!isset($_SESSION['loja_ativa_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Sessão expirada']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $orderId = $input['order_id'] ?? null;
+        $cart = $input['cart'] ?? [];
+        $payments = $input['payments'] ?? [];
+
+        if (!$orderId || empty($cart)) {
+            echo json_encode(['success' => false, 'message' => 'Dados incompletos']);
+            exit;
+        }
+
+        $conn = Database::connect();
+        
+        try {
+            $conn->beginTransaction();
+            
+            // Verifica se o pedido existe
+            $stmt = $conn->prepare("SELECT * FROM orders WHERE id = :oid AND restaurant_id = :rid");
+            $stmt->execute(['oid' => $orderId, 'rid' => $_SESSION['loja_ativa_id']]);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$order) {
+                $conn->rollBack();
+                echo json_encode(['success' => false, 'message' => 'Pedido não encontrado']);
+                exit;
+            }
+
+            // Calcula total dos novos itens
+            $newTotal = 0;
+            
+            // Adiciona os novos itens
+            foreach ($cart as $item) {
+                $qty = intval($item['quantity'] ?? 1);
+                $price = floatval($item['price'] ?? 0);
+                $itemTotal = $qty * $price;
+                $newTotal += $itemTotal;
+                
+                $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (:oid, :pid, :qty, :price)")
+                     ->execute([
+                         'oid' => $orderId,
+                         'pid' => $item['id'],
+                         'qty' => $qty,
+                         'price' => $price
+                     ]);
+            }
+
+            // Registra os pagamentos dos novos itens
+            foreach ($payments as $p) {
+                $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)")
+                     ->execute([
+                         'oid' => $orderId,
+                         'method' => $p['method'],
+                         'amount' => floatval($p['amount'])
+                     ]);
+            }
+
+            // Atualiza o total do pedido
+            $updatedTotal = floatval($order['total']) + $newTotal;
+            $conn->prepare("UPDATE orders SET total = :total WHERE id = :oid")
+                 ->execute(['total' => $updatedTotal, 'oid' => $orderId]);
+
+            // Registra no cash_movements
+            if (!empty($payments)) {
+                $paymentTotal = array_sum(array_column($payments, 'amount'));
+                $conn->prepare("INSERT INTO cash_movements (restaurant_id, type, amount, description, date, order_id) VALUES (:rid, 'entrada', :amount, :desc, NOW(), :oid)")
+                     ->execute([
+                         'rid' => $_SESSION['loja_ativa_id'],
+                         'amount' => $paymentTotal,
+                         'desc' => 'Inclusão Pedido #' . $orderId,
+                         'oid' => $orderId
+                     ]);
+            }
+
+            $conn->commit();
+            echo json_encode(['success' => true, 'message' => 'Itens incluídos com sucesso!', 'new_total' => $updatedTotal]);
 
         } catch (\Exception $e) {
             $conn->rollBack();

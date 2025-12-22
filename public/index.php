@@ -180,6 +180,21 @@ switch ($path) {
         (new \App\Controllers\Admin\OrderController())->cancelTableOrder();
         break;
 
+    case '/admin/loja/pedidos/entregar':
+        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
+        (new \App\Controllers\Admin\OrderController())->deliverOrder();
+        break;
+
+    case '/admin/loja/pedidos/cancelar':
+        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
+        (new \App\Controllers\Admin\OrderController())->cancelOrder();
+        break;
+
+    case '/admin/loja/pedido-pago/incluir':
+        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
+        (new \App\Controllers\Admin\OrderController())->includePaidOrderItems();
+        break;
+
     case '/admin/loja/mesas/deletar':
         require __DIR__ . '/../app/Controllers/Admin/TableController.php';
         (new \App\Controllers\Admin\TableController())->deleteByNumber();

@@ -6,7 +6,38 @@ require __DIR__ . '/layout/sidebar.php';
 <main class="main-content">
     <section class="catalog-section">
 
-        <?php if (isset($isEditing) && $isEditing): ?>
+<?php 
+// Detecta modo edição de pedido PAGO (Retirada)
+$isEditingPaid = isset($_GET['edit_paid']) && $_GET['edit_paid'] == '1';
+$editingOrderId = isset($_GET['order_id']) ? intval($_GET['order_id']) : null;
+
+// Se está editando pedido pago, busca o total original do banco
+$originalPaidTotalFromDB = 0;
+if ($isEditingPaid && $editingOrderId) {
+    $conn = \App\Core\Database::connect();
+    $stmt = $conn->prepare("SELECT total FROM orders WHERE id = :oid");
+    $stmt->execute(['oid' => $editingOrderId]);
+    $orderData = $stmt->fetch(PDO::FETCH_ASSOC);
+    $originalPaidTotalFromDB = floatval($orderData['total'] ?? 0);
+}
+?>
+
+        <?php if ($isEditingPaid && $editingOrderId): ?>
+            <div id="edit-paid-banner" style="background: #dcfce7; border-bottom: 2px solid #22c55e; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="background: #16a34a; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 800;">PAGO</span>
+                    <span style="font-weight: 700; color: #166534;">Pedido #<?= $editingOrderId ?> - Aguardando Retirada</span>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <a href="<?= BASE_URL ?>/admin/loja/mesas" style="background: #64748b; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+                        ← Voltar
+                    </a>
+                    <button onclick="cancelPaidOrder(<?= $editingOrderId ?>)" style="background: #ef4444; color: white; padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; font-size: 0.9rem;">
+                        Cancelar Pedido
+                    </button>
+                </div>
+            </div>
+        <?php elseif (isset($isEditing) && $isEditing): ?>
             <div style="background: #fff7ed; border-bottom: 1px solid #fed7aa; padding: 10px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 15px;">
                 <span style="font-weight: 700; color: #9a3412;">✏️ Você está editando uma venda antiga.</span>
                 <a href="pdv/cancelar-edicao" onclick="return confirm('Descartar alterações e restaurar a venda original?')" 
@@ -190,11 +221,20 @@ require __DIR__ . '/layout/sidebar.php';
 
             <!-- Botões de Ação -->
             <div style="display: flex; gap: 10px;">
-                <!-- Botão SALVAR COMANDA: Exibe se for Comanda OU Balcão (via JS) -->
+                <!-- Botão SALVAR COMANDA: Exibe se for Comanda NÃO paga -->
+                <?php $showSalvar = (!empty($contaAberta) && !$mesa_id && !$isEditingPaid); ?>
                 <button id="btn-save-command" onclick="saveClientOrder()" 
-                        style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: <?= (!empty($contaAberta) && !$mesa_id) ? 'flex' : 'none' ?>; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
+                        style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: <?= $showSalvar ? 'flex' : 'none' ?>; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                     Salvar
                 </button>
+
+                <!-- Botão INCLUIR: Só para pedido PAGO em edição (cobra antes de incluir) -->
+                <?php if ($isEditingPaid ?? false): ?>
+                <button id="btn-include-paid" onclick="includePaidOrderItems()" 
+                        style="flex: 1; background: #16a34a; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
+                    <i data-lucide="plus-circle" size="20"></i> Incluir
+                </button>
+                <?php endif; ?>
 
                 <!-- Botão FINALIZAR (Venda Rápida): Só exibe se NÃO for Comanda aberta -->
                 <button id="btn-finalizar" class="btn-primary" disabled onclick="finalizeSale()" 
@@ -257,6 +297,20 @@ require __DIR__ . '/layout/sidebar.php';
         <div style="padding: 20px 25px 0 25px;">
             <h2 style="margin: 0; color: #1e293b; font-size: 1.4rem; font-weight: 800;">Pagamento</h2>
         </div>
+        
+        <?php if ($isEditingPaid ?? false): ?>
+        <!-- AVISO: Cobrando apenas a diferença -->
+        <div id="differential-payment-banner" style="margin: 15px 25px 0; padding: 12px; background: #dbeafe; border: 1px solid #3b82f6; border-radius: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                <i data-lucide="info" size="18" style="color: #2563eb;"></i>
+                <span style="font-weight: 700; color: #1e40af; font-size: 0.9rem;">Cobrando apenas os novos itens</span>
+            </div>
+            <div style="font-size: 0.85rem; color: #1e40af;">
+                Valor já pago: <strong>R$ <?= number_format($contaAberta['total'] ?? 0, 2, ',', '.') ?></strong> — 
+                Você está cobrando apenas a <strong>diferença</strong>.
+            </div>
+        </div>
+        <?php endif; ?>
 
         <div style="padding: 25px;">
             
@@ -321,6 +375,30 @@ require __DIR__ . '/layout/sidebar.php';
                         <div class="order-type-card disabled" style="border: 1px solid #e2e8f0; background: #f1f5f9; border-radius: 8px; padding: 10px 5px; text-align: center; opacity: 0.5; cursor: not-allowed;">
                             <i data-lucide="truck" size="18" style="color: #94a3b8; margin-bottom: 4px;"></i>
                             <div style="font-weight: 700; font-size: 0.85rem; color: #94a3b8;">Entrega</div>
+                        </div>
+                    </div>
+                    
+                    <!-- AVISO: Cliente obrigatório para Retirada -->
+                    <div id="retirada-client-alert" style="display: none; margin-top: 12px; padding: 12px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <i data-lucide="alert-triangle" size="18" style="color: #d97706;"></i>
+                            <span style="font-weight: 700; color: #92400e; font-size: 0.9rem;">Cliente obrigatório para Retirada</span>
+                        </div>
+                        
+                        <!-- Campo de busca de cliente -->
+                        <div style="position: relative; margin-bottom: 10px;">
+                            <input type="text" id="retirada-client-search" placeholder="Buscar cliente por nome ou telefone..."
+                                   style="width: 100%; padding: 10px 12px; border: 1px solid #d97706; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box;"
+                                   oninput="searchClientForRetirada(this.value)">
+                            <div id="retirada-client-results" style="display: none; position: absolute; left: 0; right: 0; top: 100%; background: white; border: 1px solid #e5e7eb; border-radius: 6px; max-height: 150px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+                        </div>
+                        
+                        <!-- Botões -->
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" onclick="document.getElementById('clientModal').style.display='flex'" 
+                                    style="flex: 1; padding: 10px; background: white; color: #d97706; border: 1px solid #d97706; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                <i data-lucide="user-plus" size="16"></i> Cadastrar Novo
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -395,6 +473,11 @@ require __DIR__ . '/layout/sidebar.php';
         const BASE_URL = '<?= BASE_URL ?>';
         // Injeta o carrinho recuperado do PHP para o JS
         const recoveredCart = <?= json_encode($cartRecovery ?? []) ?>;
+        
+        // Modo edição de pedido PAGO (para cobrar só a diferença)
+        const isEditingPaidOrder = <?= ($isEditingPaid ?? false) ? 'true' : 'false' ?>;
+        const originalPaidTotal = <?= $originalPaidTotalFromDB ?? 0 ?>;
+        const editingPaidOrderId = <?= $editingOrderId ?? 'null' ?>;
     </script>
     <script src="<?= BASE_URL ?>/js/pdv.js?v=<?= time() ?>"></script>
 
