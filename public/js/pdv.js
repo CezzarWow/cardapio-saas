@@ -3,7 +3,7 @@
 // ============================================
 // IMPORTANTE: Este código é APENAS fundação.
 // Nenhuma função existente foi alterada.
-// As flags antigas (isClosingTable, etc) permanecem.
+// [FASE 8] Flags antigas REMOVIDAS - PDVState é a única fonte de verdade
 // O sistema deve funcionar EXATAMENTE igual.
 // ============================================
 
@@ -170,7 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
         status = 'editando_pago';
     } else if (tableId) {
         modo = 'mesa';
-    } else if (orderId || clientId) {
+    } else if (orderId) {
+        // Comanda = tem orderId (pedido existente), não apenas clientId
+        // clientId sozinho = balcão com cliente associado
         modo = 'comanda';
     }
 
@@ -315,8 +317,7 @@ function updateCartUI() {
 let currentPayments = [];
 let totalPaid = 0;
 let selectedMethod = 'dinheiro'; // Padrão
-let isClosingTable = false; // Flag para saber se é fechamento de mesa
-let isClosingCommand = false; // Flag para fechamento de comanda
+// [FASE 8] Flags isClosingTable e isClosingCommand REMOVIDAS - PDVState.fechandoConta é a única fonte de verdade
 let closingOrderId = null; // ID da comanda sendo fechada
 
 function finalizeSale() {
@@ -340,8 +341,6 @@ function finalizeSale() {
 
         if (cart.length > 0 && cartTotal > 0.01) {
             // TEM NOVOS ITENS -> Abre pagamento para cobrar os novos
-            isClosingTable = false;
-            isClosingCommand = false;
             currentPayments = [];
             totalPaid = 0;
 
@@ -360,7 +359,6 @@ function finalizeSale() {
 
     if (tableId) {
         if (cart.length === 0) { alert('Carrinho vazio!'); return; }
-        isClosingTable = false;
         submitSale(); // Salva direto
         return;
     }
@@ -377,7 +375,6 @@ function finalizeSale() {
     // Valida usando nova função (mas mantém comportamento original para compatibilidade)
     if (cart.length === 0) { alert('Carrinho vazio!'); return; }
 
-    isClosingTable = false;
     currentPayments = [];
     totalPaid = 0;
 
@@ -443,8 +440,7 @@ function fecharContaMesa(mesaId) {
         return;
     }
 
-    // PREPARA O CHECKOUT PARA MESA (flags mantidas por compatibilidade)
-    isClosingTable = true;
+    // PREPARA O CHECKOUT PARA MESA
     currentPayments = [];
     totalPaid = 0;
 
@@ -733,51 +729,7 @@ function saveClient() {
         });
 }
 
-// LIMPAR CLIENTE SELECIONADO
-function clearClient() {
-    // Limpa o ID
-    document.getElementById('current_client_id').value = '';
-
-    // Esconde a área visual
-    const clientArea = document.getElementById('selected-client-area');
-    if (clientArea) clientArea.style.display = 'none';
-
-    // Se estiver no modal de pagamento com Retirada, mostra o alerta novamente
-    const keepOpen = document.getElementById('keep_open_value')?.value === 'true';
-    const checkoutModal = document.getElementById('checkoutModal');
-
-    if (keepOpen && checkoutModal && checkoutModal.style.display !== 'none') {
-        // Reseta o alerta de retirada para o estado original
-        const alertBox = document.getElementById('retirada-client-alert');
-        if (alertBox) {
-            alertBox.style.background = '#fef3c7';
-            alertBox.style.borderColor = '#f59e0b';
-            alertBox.style.display = 'block';
-            alertBox.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <i data-lucide="alert-triangle" size="18" style="color: #d97706;"></i>
-                    <span style="font-weight: 700; color: #92400e; font-size: 0.9rem;">Cliente obrigatório para Retirada</span>
-                </div>
-                <div style="position: relative; margin-bottom: 10px;">
-                    <input type="text" id="retirada-client-search" placeholder="Buscar cliente por nome ou telefone..."
-                           style="width: 100%; padding: 10px 12px; border: 1px solid #d97706; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box;"
-                           oninput="searchClientForRetirada(this.value)">
-                    <div id="retirada-client-results" style="display: none; position: absolute; left: 0; right: 0; top: 100%; background: white; border: 1px solid #e5e7eb; border-radius: 6px; max-height: 150px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
-                </div>
-                <div style="display: flex; gap: 8px;">
-                    <button type="button" onclick="document.getElementById('clientModal').style.display='flex'" 
-                            style="flex: 1; padding: 10px; background: white; color: #d97706; border: 1px solid #d97706; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        <i data-lucide="user-plus" size="16"></i> Cadastrar Novo
-                    </button>
-                </div>
-            `;
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        // Atualiza UI (bloqueia botão)
-        updateCheckoutUI();
-    }
-}
+// [REMOVIDA] Função clearClient duplicada - a versão correta está na linha 641
 
 // ... Pay Methods (Mantido igual) ...
 // Função para clicar nos botões de pagamento
@@ -1042,9 +994,7 @@ function includePaidOrderItems() {
         return;
     }
 
-    // Abre modal de pagamento para cobrar os novos itens (flags mantidas por compatibilidade)
-    isClosingTable = false;
-    isClosingCommand = false;
+    // Abre modal de pagamento para cobrar os novos itens
     currentPayments = [];
     totalPaid = 0;
 
@@ -1173,8 +1123,7 @@ function fecharComanda(orderId) {
         return;
     }
 
-    // AINDA NÃO PAGO -> CHECKOUT (flags mantidas por compatibilidade)
-    isClosingCommand = true;
+    // AINDA NÃO PAGO -> CHECKOUT
     closingOrderId = orderId;
 
     currentPayments = [];
@@ -1658,13 +1607,16 @@ function submitSale() {
                     if (wasPaidOrderInclusion) {
                         window.location.reload();
                     }
-                    // [FASE 7] Migrado de isClosingCommand para PDVState.modo
-                    // Se estava em MESA ou COMANDA -> Vai para Mesas
-                    else if (tableId || modo === 'mesa' || modo === 'comanda') {
+                    // Se estava FECHANDO conta de MESA ou COMANDA -> Vai para Mesas
+                    // fechandoConta distingue de "balcão com cliente" que não deve redirecionar
+                    else if (tableId || (fechandoConta && (modo === 'mesa' || modo === 'comanda'))) {
                         window.location.href = BASE_URL + '/admin/loja/mesas';
                     } else {
-                        // Se é balcão puro, só limpa
+                        // Se é balcão (com ou sem cliente), limpa e reseta
                         if (typeof clearClient === 'function') clearClient();
+                        // Reseta PDVState para balcão limpo
+                        PDVState.reset();
+                        console.log('[submitSale] Balcão finalizado, UI resetada');
                     }
                 }, 1500);
 
