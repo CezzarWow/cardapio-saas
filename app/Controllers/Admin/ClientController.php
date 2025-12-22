@@ -113,6 +113,68 @@ class ClientController {
         }
     }
 
+    // DOSSIÊ DO CLIENTE (Detalhes + Dívida + Histórico)
+    public function details() {
+        header('Content-Type: application/json');
+        $this->checkSession();
+        
+        $clientId = $_GET['id'] ?? null;
+        $rid = $_SESSION['loja_ativa_id'];
+
+        if (!$clientId) {
+            echo json_encode(['success' => false, 'message' => 'ID do cliente obrigatório']);
+            return;
+        }
+
+        $conn = Database::connect();
+
+        // 1. Busca dados do cliente
+        $stmt = $conn->prepare("SELECT * FROM clients WHERE id = :id AND restaurant_id = :rid");
+        $stmt->execute(['id' => $clientId, 'rid' => $rid]);
+        $client = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$client) {
+            echo json_encode(['success' => false, 'message' => 'Cliente não encontrado']);
+            return;
+        }
+
+        // 2. Calcula dívida atual (soma de pedidos NÃO pagos)
+        $stmtDebt = $conn->prepare("SELECT COALESCE(SUM(total), 0) as debt FROM orders WHERE client_id = :cid AND is_paid = 0 AND status = 'aberto'");
+        $stmtDebt->execute(['cid' => $clientId]);
+        $debtResult = $stmtDebt->fetch(PDO::FETCH_ASSOC);
+        $client['current_debt'] = floatval($debtResult['debt'] ?? 0);
+
+        // 3. Busca histórico de pedidos recentes (últimos 20)
+        $stmtHistory = $conn->prepare("
+            SELECT id, total, is_paid, status, created_at,
+                   CASE WHEN is_paid = 1 THEN 'pagamento' ELSE 'pedido' END as type,
+                   CONCAT('Pedido #', id) as description
+            FROM orders 
+            WHERE client_id = :cid AND restaurant_id = :rid
+            ORDER BY created_at DESC
+            LIMIT 20
+        ");
+        $stmtHistory->execute(['cid' => $clientId, 'rid' => $rid]);
+        $history = $stmtHistory->fetchAll(PDO::FETCH_ASSOC);
+
+        // Formata histórico para o frontend
+        $formattedHistory = [];
+        foreach ($history as $item) {
+            $formattedHistory[] = [
+                'type' => $item['type'],
+                'description' => $item['description'] . ($item['is_paid'] ? ' (Pago)' : ' (Aberto)'),
+                'amount' => floatval($item['total']),
+                'created_at' => $item['created_at']
+            ];
+        }
+
+        echo json_encode([
+            'success' => true,
+            'client' => $client,
+            'history' => $formattedHistory
+        ]);
+    }
+
     private function checkSession() {
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (!isset($_SESSION['loja_ativa_id'])) exit;

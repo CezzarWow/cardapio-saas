@@ -227,6 +227,11 @@ switch ($path) {
         (new \App\Controllers\Admin\ClientController())->store();
         break;
 
+    case '/admin/loja/clientes/detalhes':
+        require __DIR__ . '/../app/Controllers/Admin/ClientController.php';
+        (new \App\Controllers\Admin\ClientController())->details();
+        break;
+
     // --- GESTÃO DE CATEGORIAS ---
     
     // 1. Listar

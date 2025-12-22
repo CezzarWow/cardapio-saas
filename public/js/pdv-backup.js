@@ -1,193 +1,15 @@
-// ============================================
-// FASE 1: FUNDAÇÃO - PDVState + PDVCart + Regras
-// ============================================
-// IMPORTANTE: Este código é APENAS fundação.
-// Nenhuma função existente foi alterada.
-// As flags antigas (isClosingTable, etc) permanecem.
-// O sistema deve funcionar EXATAMENTE igual.
-// ============================================
-
-// --- PDVState: Estado Central Encapsulado ---
-const PDVState = (() => {
-    let state = {
-        modo: 'balcao',        // balcao | mesa | comanda | retirada
-        pedidoId: null,
-        mesaId: null,
-        clienteId: null,
-        status: 'aberto',      // aberto | pago | editando_pago
-        fechandoConta: false   // true = fechando conta (mesa/comanda), false = salvando itens
-    };
-
-    const TRANSICOES = {
-        'aberto': ['pago'],
-        'pago': ['editando_pago'],
-        'editando_pago': ['pago']
-    };
-
-    return {
-        getState() {
-            return { ...state };
-        },
-
-        reset() {
-            state = {
-                modo: 'balcao',
-                pedidoId: null,
-                mesaId: null,
-                clienteId: null,
-                status: 'aberto',
-                fechandoConta: false
-            };
-        },
-
-        set(patch) {
-            // status NÃO pode ser alterado por set()
-            const { status, ...rest } = patch;
-            state = { ...state, ...rest };
-        },
-
-        // Método especial para INICIALIZAÇÃO do status (sem validar transição)
-        // Usar APENAS no carregamento inicial da página
-        initStatus(novoStatus) {
-            if (['aberto', 'pago', 'editando_pago'].includes(novoStatus)) {
-                state.status = novoStatus;
-                console.log(`[PDVState] Status inicializado: ${novoStatus}`);
-                return true;
-            }
-            console.error(`[PDVState] Status inválido: ${novoStatus}`);
-            return false;
-        },
-
-        mudarStatus(novoStatus) {
-            if (!TRANSICOES[state.status]?.includes(novoStatus)) {
-                console.error(`[PDVState] Transição inválida: ${state.status} → ${novoStatus}`);
-                return false;
-            }
-            state.status = novoStatus;
-            console.log(`[PDVState] Status alterado: ${novoStatus}`);
-            return true;
-        }
-    };
-})();
-
-// --- PDVCart: Carrinho Passivo (não substitui o cart antigo ainda) ---
-const PDVCart = (() => {
-    let items = [];
-
-    return {
-        getItems() {
-            return [...items];
-        },
-
-        add(item) {
-            const existing = items.find(i => i.id === item.id);
-            if (existing) {
-                existing.quantity += item.quantity || 1;
-            } else {
-                items.push({ ...item, quantity: item.quantity || 1 });
-            }
-        },
-
-        remove(id) {
-            const index = items.findIndex(i => i.id === id);
-            if (index !== -1) {
-                if (items[index].quantity > 1) {
-                    items[index].quantity--;
-                } else {
-                    items.splice(index, 1);
-                }
-            }
-        },
-
-        clear() {
-            items = [];
-        },
-
-        total() {
-            return items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-        },
-
-        isEmpty() {
-            return items.length === 0;
-        }
-    };
-})();
-
-// --- Regras de Negócio Puras ---
-function validarEstado(state, cartItems) {
-    if (!cartItems || cartItems.length === 0) {
-        return { code: 'CARRINHO_VAZIO', msg: 'Carrinho vazio!' };
-    }
-
-    if (state.modo === 'retirada' && state.status !== 'editando_pago') {
-        return { code: 'RETIRADA_INVALIDA', msg: 'Retirada só existe em pedido pago.' };
-    }
-
-    if (state.modo === 'retirada' && !state.clienteId) {
-        return { code: 'CLIENTE_OBRIGATORIO', msg: 'Selecione um cliente para retirada.' };
-    }
-
-    if (state.modo === 'mesa' && state.status === 'editando_pago') {
-        return { code: 'MESA_NAO_EDITA_PAGO', msg: 'Mesa não permite editar pedido pago.' };
-    }
-
-    return null; // OK
-}
-
-// --- Reset do PDV (para cancelamento/saída) ---
-function resetarPDV() {
-    PDVCart.clear();
-    PDVState.reset();
-    console.log('[PDV] Estado resetado');
-}
-
-console.log('[PDV] Fase 1 carregada: PDVState + PDVCart + Regras ✓');
-
-// ============================================
-// FIM DA FASE 1 - CÓDIGO ORIGINAL ABAIXO
-// ============================================
-
-// Variável global que guarda os itens (MANTIDA - não alterar)
+// Variável global que guarda os itens
 let cart = [];
 
 // Verifica se estamos numa mesa assim que carrega
 document.addEventListener('DOMContentLoaded', () => {
     const tableIdInput = document.getElementById('current_table_id');
     const tableId = tableIdInput ? tableIdInput.value : null;
-    const clientIdInput = document.getElementById('current_client_id');
-    const clientId = clientIdInput ? clientIdInput.value : null;
-    const orderIdInput = document.getElementById('current_order_id');
-    const orderId = orderIdInput ? orderIdInput.value : null;
     const btn = document.getElementById('btn-finalizar');
 
-    // [FASE 5] Inicializa PDVState baseado no contexto da página
-    let modo = 'balcao';
-    let status = 'aberto';
-
-    // Detecta modo baseado em variáveis PHP (definidas no dashboard.php)
-    if (typeof isEditingPaidOrder !== 'undefined' && isEditingPaidOrder) {
-        modo = 'retirada';
-        status = 'editando_pago';
-    } else if (tableId) {
-        modo = 'mesa';
-    } else if (orderId || clientId) {
-        modo = 'comanda';
-    }
-
-    PDVState.set({
-        modo: modo,
-        mesaId: tableId ? parseInt(tableId) : null,
-        clienteId: clientId ? parseInt(clientId) : null,
-        pedidoId: orderId ? parseInt(orderId) : null
-    });
-
-    // Inicializa status corretamente (usa initStatus para bypass de transição)
-    PDVState.initStatus(status);
-
-    console.log('[FASE 5] PDVState inicializado:', PDVState.getState());
-
-    // --- Carrega carrinho recuperado (Edição) ---
+    // --- NOVO: Carrega carrinho recuperado (Edição) ---
     if (typeof recoveredCart !== 'undefined' && recoveredCart.length > 0) {
+        // Converte os tipos para garantir numéricos
         cart = recoveredCart.map(item => ({
             id: parseInt(item.id),
             name: item.name,
@@ -196,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }));
         alert('Pedido carregado para edição! ✏️');
     }
+    // --------------------------------------------------
 
     if (tableId) {
         btn.innerText = "Salvar";
@@ -366,15 +189,6 @@ function finalizeSale() {
     }
 
     // SE FOR BALCÃO -> ABRE PAGAMENTO
-    // [FASE 2] Usando PDVState para validação (comportamento igual)
-    const stateBalcao = PDVState.getState();
-
-    // Sincroniza PDVState com contexto atual (ainda não remove flags antigas)
-    if (!tableId && stateBalcao.modo !== 'retirada') {
-        PDVState.set({ modo: 'balcao' });
-    }
-
-    // Valida usando nova função (mas mantém comportamento original para compatibilidade)
     if (cart.length === 0) { alert('Carrinho vazio!'); return; }
 
     isClosingTable = false;
@@ -387,8 +201,6 @@ function finalizeSale() {
     document.getElementById('checkoutModal').style.display = 'flex';
     setMethod('dinheiro');
     updateCheckoutUI();
-
-    console.log('[FASE 2] Balcão: PDVState.modo =', PDVState.getState().modo);
 }
 
 function calculateTotal() {
@@ -431,19 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Função para fechar conta da mesa e liberar
 function fecharContaMesa(mesaId) {
-    // [FASE 3] Sincroniza PDVState - FECHANDO CONTA (não apenas salvando)
-    PDVState.set({ modo: 'mesa', mesaId: mesaId, fechandoConta: true });
+    // REMOVIDO CONFIRM POR SOLICITAÇÃO DO USUÁRIO
 
-    const state = PDVState.getState();
-    console.log('[FASE 3] Mesa (fechar conta): PDVState =', state);
-
-    // Validação: Mesa não pode estar em editando_pago
-    if (state.status === 'editando_pago') {
-        alert('Mesa não permite editar pedido pago.');
-        return;
-    }
-
-    // PREPARA O CHECKOUT PARA MESA (flags mantidas por compatibilidade)
+    // PREPARA O CHECKOUT PARA MESA
     isClosingTable = true;
     currentPayments = [];
     totalPaid = 0;
@@ -457,6 +259,8 @@ function fecharContaMesa(mesaId) {
     // Abre modal
     document.getElementById('checkoutModal').style.display = 'flex';
     setMethod('dinheiro');
+    // Força o total total da mesa como base para cálculos (Hack: sobrescreve calculateTotal temporariamente ou usa logica ajustada)
+    // Melhor abordagem: Ajustar updateCheckoutUI para usar tableTotal se isClosingTable for true
     updateCheckoutUI();
 }
 
@@ -819,10 +623,7 @@ function setMethod(method) {
 function getFinalTotal() {
     let total = 0;
 
-    // [FASE 7] Migrado de flags para PDVState
-    const { modo } = PDVState.getState();
-
-    if (modo === 'mesa' || modo === 'comanda') {
+    if (isClosingTable || isClosingCommand) {
         const tableTotalStr = document.getElementById('table-initial-total').value;
         total = parseFloat(tableTotalStr);
     } else {
@@ -968,21 +769,11 @@ function closeCheckout() {
 
 // --- SALVAR COMANDA (Cliente) ---
 function saveClientOrder() {
-    // [FASE 4] Sincroniza PDVState
+    if (cart.length === 0) return alert('O carrinho está vazio!');
+
     const clientId = document.getElementById('current_client_id').value;
     const orderId = document.getElementById('current_order_id') ? document.getElementById('current_order_id').value : null;
 
-    PDVState.set({
-        modo: 'comanda',
-        clienteId: clientId ? parseInt(clientId) : null,
-        pedidoId: orderId ? parseInt(orderId) : null
-    });
-
-    const state = PDVState.getState();
-    console.log('[FASE 4] Comanda (saveClientOrder): PDVState =', state);
-
-    // Validação usando nova função
-    if (cart.length === 0) return alert('O carrinho está vazio!');
     if (!clientId) return alert('Nenhum cliente selecionado!');
 
     fetch('venda/finalizar', {
@@ -991,13 +782,14 @@ function saveClientOrder() {
         body: JSON.stringify({
             cart: cart,
             client_id: clientId,
-            order_id: orderId,
-            save_account: true
+            order_id: orderId, // Envia ID para atualizar
+            save_account: true // FLAG IMPORTANTE
         })
     })
         .then(r => r.json())
         .then(data => {
             if (data.success) {
+                // Sucesso!
                 const modal = document.getElementById('successModal');
                 modal.style.display = 'flex';
                 setTimeout(() => {
@@ -1013,25 +805,8 @@ function saveClientOrder() {
 
 // --- INCLUIR ITENS EM PEDIDO PAGO (Cobra antes de incluir) ---
 function includePaidOrderItems() {
-    // [FASE 5] Sincroniza PDVState para retirada
-    const clientId = document.getElementById('current_client_id')?.value;
-    const orderId = typeof editingPaidOrderId !== 'undefined' ? editingPaidOrderId : null;
-
-    PDVState.set({
-        modo: 'retirada',
-        pedidoId: orderId,
-        clienteId: clientId ? parseInt(clientId) : null
-    });
-
-    // Força status para editando_pago (retirada só existe nesse estado)
-    // Nota: não usa mudarStatus pois é inicialização, não transição
-    const state = PDVState.getState();
-    console.log('[FASE 5] Retirada (includePaidOrderItems): PDVState =', state);
-
-    // Validação usando regras centralizadas
-    const erro = validarEstado(state, cart);
-    if (erro) {
-        alert(erro.msg || erro.code);
+    if (cart.length === 0) {
+        alert('Carrinho vazio! Adicione itens para incluir.');
         return;
     }
 
@@ -1042,7 +817,7 @@ function includePaidOrderItems() {
         return;
     }
 
-    // Abre modal de pagamento para cobrar os novos itens (flags mantidas por compatibilidade)
+    // Abre modal de pagamento para cobrar os novos itens
     isClosingTable = false;
     isClosingCommand = false;
     currentPayments = [];
@@ -1053,10 +828,29 @@ function includePaidOrderItems() {
     setMethod('dinheiro');
     updateCheckoutUI();
 
+    // Marca que após o pagamento, deve salvar como inclusão
     window.isPaidOrderInclusion = true;
 }
 
-// [FASE 6] Função fecharContaMesa DUPLICADA removida - a definição está na linha 431
+// Função para fechar conta da mesa e liberar
+function fecharContaMesa(mesaId) {
+    // REMOVIDO CONFIRM POR SOLICITAÇÃO DO USUÁRIO
+    // if (!confirm('Tem certeza que deseja fechar a conta da mesa?')) return;
+
+    // PREPARA O CHECKOUT PARA MESA
+    isClosingTable = true;
+    currentPayments = [];
+    totalPaid = 0;
+
+    // Pega total da mesa (input hidden na view)
+    const totalStr = document.getElementById('table-initial-total').value;
+    const total = parseFloat(totalStr);
+
+    document.getElementById('checkout-total-display').innerText = formatCurrency(total);
+    document.getElementById('checkoutModal').style.display = 'flex';
+    setMethod('dinheiro');
+    updateCheckoutUI();
+}
 
 // FORMATA MOEDA
 function formatCurrency(value) {
@@ -1067,15 +861,10 @@ function formatCurrency(value) {
 function updateCheckoutUI() {
     let total = 0;
 
-    // [FASE 7] Migrado de flags para PDVState
-    const { modo, status } = PDVState.getState();
-
-    // Mesa ou Comanda (não retirada/balcão) = total vem do input hidden
-    if (modo === 'mesa' || modo === 'comanda') {
+    if (isClosingTable || isClosingCommand) {
         const val = document.getElementById('table-initial-total').value;
-        total = parseFloat(val) || 0.00;
+        total = parseFloat(val) || 0.00; // Fallback to 0 if NaN/Empty
     } else {
-        // Balcão ou Retirada = total do carrinho
         total = cart.reduce((acc, item) => acc + (parseFloat(item.price) * parseFloat(item.quantity)), 0);
     }
 
@@ -1137,17 +926,6 @@ function updateCheckoutUI() {
 function fecharComanda(orderId) {
     const isPaid = document.getElementById('current_order_is_paid') ? document.getElementById('current_order_is_paid').value == '1' : false;
 
-    // [FASE 4] Sincroniza PDVState - FECHANDO CONTA
-    PDVState.set({
-        modo: 'comanda',
-        pedidoId: orderId ? parseInt(orderId) : null,
-        fechandoConta: true
-    });
-
-    // Define status baseado em isPaid (sem usar mudarStatus pois é leitura inicial)
-    const currentStatus = isPaid ? 'pago' : 'aberto';
-    console.log('[FASE 4] Comanda (fecharComanda): orderId =', orderId, ', isPaid =', isPaid, ', status =', currentStatus);
-
     if (isPaid) {
         // JÁ PAGO -> FINALIZAR / ENTREGAR
         if (!confirm('Este pedido já está PAGO. Deseja entregá-lo e finalizar?')) return;
@@ -1157,8 +935,8 @@ function fecharComanda(orderId) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 order_id: orderId,
-                payments: [],
-                keep_open: false
+                payments: [], // Sem pagamentos extras
+                keep_open: false // Finaliza de vez
             })
         })
             .then(r => r.json())
@@ -1173,14 +951,14 @@ function fecharComanda(orderId) {
         return;
     }
 
-    // AINDA NÃO PAGO -> CHECKOUT (flags mantidas por compatibilidade)
+    // AINDA NÃO PAGO -> CHECKOUT
     isClosingCommand = true;
     closingOrderId = orderId;
 
     currentPayments = [];
     totalPaid = 0;
 
-    // Total da comanda
+    // Total da comanda (mesmo input hidden da mesa, pois a view usa o mesmo layout)
     const totalStr = document.getElementById('table-initial-total').value;
     const total = parseFloat(totalStr);
 
@@ -1605,27 +1383,19 @@ function submitSale() {
 
     // TRATAMENTO ESPECIAL: Inclusão em pedido PAGO (usa mesma lógica do saveClientOrder)
     let wasPaidOrderInclusion = false;
-
-    // [FASE 7] Migrado de flags para PDVState - AGORA USA fechandoConta
-    const { modo, fechandoConta } = PDVState.getState();
-    console.log('[submitSale] modo:', modo, 'fechandoConta:', fechandoConta);
-
     if (window.isPaidOrderInclusion && typeof editingPaidOrderId !== 'undefined' && editingPaidOrderId) {
         // Usa o mesmo endpoint que funciona para salvar comanda
         endpoint = '/admin/loja/venda/finalizar';
         payload.order_id = editingPaidOrderId;
-        payload.save_account = true;
+        payload.save_account = true; // FLAG IMPORTANTE - mesmo que saveClientOrder
         wasPaidOrderInclusion = true;
         window.isPaidOrderInclusion = false;
-    } else if (modo === 'mesa' && fechandoConta) {
-        // FECHANDO conta da mesa (não apenas salvando itens)
+    } else if (isClosingTable) {
         endpoint = '/admin/loja/mesa/fechar';
-    } else if (modo === 'comanda' && fechandoConta) {
-        // FECHANDO comanda (não apenas salvando itens)
+    } else if (isClosingCommand) {
         endpoint = '/admin/loja/venda/fechar-comanda';
         payload.order_id = closingOrderId;
     }
-    // Se modo === 'mesa' sem fechandoConta, usa endpoint padrão (venda/finalizar)
 
     const url = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + endpoint;
 
@@ -1658,9 +1428,8 @@ function submitSale() {
                     if (wasPaidOrderInclusion) {
                         window.location.reload();
                     }
-                    // [FASE 7] Migrado de isClosingCommand para PDVState.modo
                     // Se estava em MESA ou COMANDA -> Vai para Mesas
-                    else if (tableId || modo === 'mesa' || modo === 'comanda') {
+                    else if (tableId || isClosingCommand) {
                         window.location.href = BASE_URL + '/admin/loja/mesas';
                     } else {
                         // Se é balcão puro, só limpa
