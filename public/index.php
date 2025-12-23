@@ -97,7 +97,69 @@ switch ($path) {
         (new \App\Controllers\Admin\StockController())->delete();
         break;
 
+    // [FASE 1] Editar e Atualizar Produto
+    case '/admin/loja/produtos/editar':
+        require __DIR__ . '/../app/Controllers/Admin/StockController.php';
+        (new \App\Controllers\Admin\StockController())->edit();
+        break;
 
+    case '/admin/loja/produtos/atualizar':
+        require __DIR__ . '/../app/Controllers/Admin/StockController.php';
+        (new \App\Controllers\Admin\StockController())->update();
+        break;
+
+    // [FASE 3] Reposição de Estoque
+    case '/admin/loja/reposicao':
+        require __DIR__ . '/../app/Controllers/Admin/StockRepositionController.php';
+        (new \App\Controllers\Admin\StockRepositionController())->index();
+        break;
+
+    case '/admin/loja/reposicao/ajustar':
+        require __DIR__ . '/../app/Controllers/Admin/StockRepositionController.php';
+        (new \App\Controllers\Admin\StockRepositionController())->adjust();
+        break;
+
+    // [FASE 4] Movimentações de Estoque (Histórico)
+    case '/admin/loja/movimentacoes':
+        require __DIR__ . '/../app/Controllers/Admin/StockMovementController.php';
+        (new \App\Controllers\Admin\StockMovementController())->index();
+        break;
+
+    // [FASE 5] Adicionais
+    case '/admin/loja/adicionais':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->index();
+        break;
+
+    case '/admin/loja/adicionais/grupo/criar':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->storeGroup();
+        break;
+
+    case '/admin/loja/adicionais/grupo/atualizar':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->updateGroup();
+        break;
+
+    case '/admin/loja/adicionais/grupo/excluir':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->deleteGroup();
+        break;
+
+    case '/admin/loja/adicionais/item/criar':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->storeItem();
+        break;
+
+    case '/admin/loja/adicionais/item/atualizar':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->updateItem();
+        break;
+
+    case '/admin/loja/adicionais/item/excluir':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->deleteItem();
+        break;
 
     // --- FINANCEIRO E CAIXA ---
     case '/admin/loja/caixa':

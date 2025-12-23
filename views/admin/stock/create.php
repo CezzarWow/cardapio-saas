@@ -36,6 +36,13 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                     <textarea name="description" rows="3" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-family: sans-serif;"></textarea>
                 </div>
 
+                <!-- [FASE 1] Campo de Estoque Inicial -->
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Estoque Inicial</label>
+                    <input type="number" name="stock" value="0" min="0" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
+                    <small style="color: #6b7280; font-size: 0.85rem;">Quantidade inicial em estoque</small>
+                </div>
+
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Foto do Produto</label>
                     <input type="file" name="image" accept="image/*" style="width: 100%; padding: 10px; border: 1px dashed #d1d5db; border-radius: 8px; background: #f9fafb;">

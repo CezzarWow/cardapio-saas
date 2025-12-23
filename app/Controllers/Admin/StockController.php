@@ -45,8 +45,11 @@ class StockController {
         $name = $_POST['name'];
         $price = str_replace(',', '.', $_POST['price']); // Troca vírgula por ponto
         $category_id = $_POST['category_id'];
-        $description = $_POST['description'];
+        $description = $_POST['description'] ?? '';
         $restaurant_id = $_SESSION['loja_ativa_id'];
+        
+        // [FASE 1] Estoque vem do formulário (padrão 0 se vazio)
+        $stock = isset($_POST['stock']) && $_POST['stock'] !== '' ? intval($_POST['stock']) : 0;
 
         // --- Lógica de Upload de Imagem ---
         $imageName = null;
@@ -59,7 +62,7 @@ class StockController {
 
         $conn = Database::connect();
         $sql = "INSERT INTO products (restaurant_id, category_id, name, description, price, image, stock) 
-                VALUES (:rid, :cid, :name, :desc, :price, :img, 100)";
+                VALUES (:rid, :cid, :name, :desc, :price, :img, :stock)";
         
         $stmt = $conn->prepare($sql);
         $stmt->execute([
@@ -68,7 +71,8 @@ class StockController {
             'name' => $name,
             'desc' => $description,
             'price' => $price,
-            'img' => $imageName
+            'img' => $imageName,
+            'stock' => $stock
         ]);
 
         header('Location: ../produtos');
@@ -83,6 +87,87 @@ class StockController {
         // Só apaga se for da loja logada
         $stmt = $conn->prepare("DELETE FROM products WHERE id = :id AND restaurant_id = :rid");
         $stmt->execute(['id' => $id, 'rid' => $_SESSION['loja_ativa_id']]);
+
+        header('Location: ../produtos');
+    }
+
+    // 5. TELA DE EDITAR (Formulário) [FASE 1]
+    public function edit() {
+        $this->checkSession();
+        $id = $_GET['id'];
+        $conn = Database::connect();
+
+        // Busca o produto (respeitando multi-tenant)
+        $stmt = $conn->prepare("SELECT * FROM products WHERE id = :id AND restaurant_id = :rid");
+        $stmt->execute(['id' => $id, 'rid' => $_SESSION['loja_ativa_id']]);
+        $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$product) {
+            header('Location: ../produtos');
+            exit;
+        }
+
+        // Busca categorias para o select
+        $stmtCat = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :rid ORDER BY name");
+        $stmtCat->execute(['rid' => $_SESSION['loja_ativa_id']]);
+        $categories = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
+
+        require __DIR__ . '/../../../views/admin/stock/edit.php';
+    }
+
+    // 6. ATUALIZAR NO BANCO (Recebe o POST) [FASE 1]
+    public function update() {
+        $this->checkSession();
+        
+        $id = $_POST['id'];
+        $name = $_POST['name'];
+        $price = str_replace(',', '.', $_POST['price']);
+        $category_id = $_POST['category_id'];
+        $description = $_POST['description'] ?? '';
+        $stock = isset($_POST['stock']) && $_POST['stock'] !== '' ? intval($_POST['stock']) : 0;
+        $restaurant_id = $_SESSION['loja_ativa_id'];
+
+        $conn = Database::connect();
+
+        // Verifica se pertence à loja
+        $stmt = $conn->prepare("SELECT id, image FROM products WHERE id = :id AND restaurant_id = :rid");
+        $stmt->execute(['id' => $id, 'rid' => $restaurant_id]);
+        $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$product) {
+            header('Location: ../produtos');
+            exit;
+        }
+
+        // Lógica de Upload de Imagem (só se enviar nova)
+        $imageName = $product['image']; // Mantém a atual
+        if (!empty($_FILES['image']['name'])) {
+            $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+            $imageName = md5(time() . rand(0,9999)) . '.' . $ext;
+            move_uploaded_file($_FILES['image']['tmp_name'], __DIR__ . '/../../../public/uploads/' . $imageName);
+        }
+
+        // Atualiza o produto
+        $sql = "UPDATE products SET 
+                    name = :name, 
+                    price = :price, 
+                    category_id = :cid, 
+                    description = :desc, 
+                    stock = :stock, 
+                    image = :img 
+                WHERE id = :id AND restaurant_id = :rid";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([
+            'name' => $name,
+            'price' => $price,
+            'cid' => $category_id,
+            'desc' => $description,
+            'stock' => $stock,
+            'img' => $imageName,
+            'id' => $id,
+            'rid' => $restaurant_id
+        ]);
 
         header('Location: ../produtos');
     }
