@@ -72,7 +72,8 @@ switch ($path) {
         break;
 
     case '/admin/loja/delivery':
-        echo "<h1>Tela de Delivery (Em construção) 🛵</h1>";
+        require __DIR__ . '/../app/Controllers/Admin/DeliveryController.php';
+        (new \App\Controllers\Admin\DeliveryController())->index();
         break;
 
     // --- GESTÃO DE ESTOQUE (PRODUTOS) ---
@@ -102,6 +103,12 @@ switch ($path) {
     case '/admin/loja/caixa':
         require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
         (new \App\Controllers\Admin\CashierController())->index();
+        break;
+
+    // --- CARDÁPIO (Em construção) ---
+    case '/admin/loja/cardapio':
+        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
+        (new \App\Controllers\Admin\CardapioController())->index();
         break;
 
     case '/admin/loja/caixa/abrir':
@@ -151,7 +158,8 @@ switch ($path) {
         break;
 
     case '/admin/loja/configuracoes-gerais':
-        echo "<h1>Tela de Configurações Gerais (Em construção) ⚙️</h1>";
+        require __DIR__ . '/../app/Controllers/Admin/ConfigGeraisController.php';
+        (new \App\Controllers\Admin\ConfigGeraisController())->index();
         break;
 
     // --- ROTAS DE AÇÃO (AJAX) ---
