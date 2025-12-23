@@ -125,30 +125,40 @@ switch ($path) {
         (new \App\Controllers\Admin\StockMovementController())->index();
         break;
 
-    // [FASE 5] Adicionais
+    // [FASE 5.1] Adicionais - Arquitetura Global
     case '/admin/loja/adicionais':
         require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
         (new \App\Controllers\Admin\AdditionalController())->index();
         break;
 
-    case '/admin/loja/adicionais/grupo/criar':
+    case '/admin/loja/adicionais/itens':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->listItems();
+        break;
+
+    case '/admin/loja/adicionais/grupo/salvar':
         require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
         (new \App\Controllers\Admin\AdditionalController())->storeGroup();
         break;
 
-    case '/admin/loja/adicionais/grupo/atualizar':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->updateGroup();
-        break;
-
-    case '/admin/loja/adicionais/grupo/excluir':
+    case '/admin/loja/adicionais/grupo/deletar':
         require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
         (new \App\Controllers\Admin\AdditionalController())->deleteGroup();
         break;
 
-    case '/admin/loja/adicionais/item/criar':
+    case '/admin/loja/adicionais/item/novo':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->createItem();
+        break;
+
+    case '/admin/loja/adicionais/item/salvar':
         require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
         (new \App\Controllers\Admin\AdditionalController())->storeItem();
+        break;
+
+    case '/admin/loja/adicionais/item/editar':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->editItem();
         break;
 
     case '/admin/loja/adicionais/item/atualizar':
@@ -156,9 +166,19 @@ switch ($path) {
         (new \App\Controllers\Admin\AdditionalController())->updateItem();
         break;
 
-    case '/admin/loja/adicionais/item/excluir':
+    case '/admin/loja/adicionais/item/deletar':
         require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
         (new \App\Controllers\Admin\AdditionalController())->deleteItem();
+        break;
+
+    case '/admin/loja/adicionais/vincular':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->linkItem();
+        break;
+
+    case '/admin/loja/adicionais/desvincular':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->unlinkItem();
         break;
 
     // --- FINANCEIRO E CAIXA ---
