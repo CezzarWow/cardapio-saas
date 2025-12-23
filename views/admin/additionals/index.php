@@ -29,6 +29,14 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
                 Produtos
             </a>
+            <a href="<?= BASE_URL ?>/admin/loja/categorias" 
+               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
+                Categorias
+            </a>
+            <a href="<?= BASE_URL ?>/admin/loja/adicionais" 
+               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #2563eb; color: white;">
+                Adicionais
+            </a>
             <a href="<?= BASE_URL ?>/admin/loja/reposicao" 
                style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
                 Reposição
@@ -36,10 +44,6 @@ require __DIR__ . '/../panel/layout/sidebar.php';
             <a href="<?= BASE_URL ?>/admin/loja/movimentacoes" 
                style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
                 Movimentações
-            </a>
-            <a href="<?= BASE_URL ?>/admin/loja/adicionais" 
-               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #2563eb; color: white;">
-                Adicionais
             </a>
         </div>
 

@@ -82,6 +82,32 @@ switch ($path) {
         (new \App\Controllers\Admin\StockController())->index();
         break;
     
+    // [CATEGORIAS] - Layout Moderno
+    case '/admin/loja/categorias':
+        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
+        (new \App\Controllers\Admin\CategoryController())->index();
+        break;
+
+    case '/admin/loja/categorias/salvar':
+        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
+        (new \App\Controllers\Admin\CategoryController())->store();
+        break;
+
+    case '/admin/loja/categorias/editar':
+        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
+        (new \App\Controllers\Admin\CategoryController())->edit();
+        break;
+
+    case '/admin/loja/categorias/atualizar':
+        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
+        (new \App\Controllers\Admin\CategoryController())->update();
+        break;
+
+    case '/admin/loja/categorias/deletar':
+        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
+        (new \App\Controllers\Admin\CategoryController())->delete();
+        break;
+
     case '/admin/loja/produtos/novo':
         require __DIR__ . '/../app/Controllers/Admin/StockController.php';
         (new \App\Controllers\Admin\StockController())->create();
