@@ -17,6 +17,13 @@ foreach ($products as $p) {
 <main class="main-content">
     <div style="padding: 2rem; width: 100%; overflow-y: auto;">
         
+        <!-- Breadcrumb (dentro do main) -->
+        <div class="breadcrumb">
+            <a href="<?= BASE_URL ?>/admin">Painel</a> › 
+            <span>Estoque</span> › 
+            <strong>Produtos</strong>
+        </div>
+
         <!-- Header com título e botão -->
         <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <h1 style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">Gerenciar Estoque</h1>
@@ -25,33 +32,30 @@ foreach ($products as $p) {
             </a>
         </div>
 
-        <!-- [FASE 3] Sub-abas do Estoque -->
-        <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-            <a href="<?= BASE_URL ?>/admin/loja/produtos" 
-               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #2563eb; color: white;">
-                Produtos
-            </a>
-            <a href="<?= BASE_URL ?>/admin/loja/categorias" 
-               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
-                Categorias
-            </a>
-            <a href="<?= BASE_URL ?>/admin/loja/adicionais" 
-               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
-                Adicionais
-            </a>
-            <a href="<?= BASE_URL ?>/admin/loja/reposicao" 
-               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
-                Reposição
-            </a>
-            <a href="<?= BASE_URL ?>/admin/loja/movimentacoes" 
-               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
-                Movimentações
-            </a>
+        <!-- Sub-abas do Estoque (STICKY) -->
+        <div class="sticky-tabs">
+            <div class="stock-tabs">
+                <a href="<?= BASE_URL ?>/admin/loja/produtos" class="stock-tab active">
+                    Produtos
+                </a>
+                <a href="<?= BASE_URL ?>/admin/loja/categorias" class="stock-tab">
+                    Categorias
+                </a>
+                <a href="<?= BASE_URL ?>/admin/loja/adicionais" class="stock-tab">
+                    Adicionais
+                </a>
+                <a href="<?= BASE_URL ?>/admin/loja/reposicao" class="stock-tab">
+                    Reposição
+                </a>
+                <a href="<?= BASE_URL ?>/admin/loja/movimentacoes" class="stock-tab">
+                    Movimentações
+                </a>
+            </div>
         </div>
 
-        <!-- [FASE 1] Indicadores -->
-        <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-            <div style="background: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px;">
+        <!-- Indicadores -->
+        <div class="stock-indicators">
+            <div class="stock-indicator">
                 <div style="background: #dbeafe; padding: 10px; border-radius: 8px;">
                     <i data-lucide="package" size="24" style="color: #2563eb;"></i>
                 </div>
@@ -61,7 +65,7 @@ foreach ($products as $p) {
                 </div>
             </div>
             
-            <div style="background: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px;">
+            <div class="stock-indicator">
                 <div style="background: <?= $criticalStock > 0 ? '#fef3c7' : '#d1fae5' ?>; padding: 10px; border-radius: 8px;">
                     <i data-lucide="alert-triangle" size="24" style="color: <?= $criticalStock > 0 ? '#d97706' : '#059669' ?>;"></i>
                 </div>
@@ -72,38 +76,38 @@ foreach ($products as $p) {
             </div>
         </div>
 
-        <!-- [FASE 1] Busca e Filtros -->
-        <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <input type="text" id="searchProduct" placeholder="Buscar produto..." 
-                       style="flex: 1; min-width: 200px; padding: 10px 15px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem;"
-                       oninput="filterProducts()">
-                <select id="filterCategory" style="padding: 10px 15px; border: 1px solid #d1d5db; border-radius: 8px; background: white; min-width: 150px;" onchange="filterProducts()">
-                    <option value="">Todas as categorias</option>
-                    <?php 
-                    $cats = [];
-                    foreach ($products as $p) { 
-                        if (!in_array($p['category_name'], $cats)) {
-                            $cats[] = $p['category_name'];
-                            echo '<option value="'.htmlspecialchars($p['category_name']).'">'.htmlspecialchars($p['category_name']).'</option>';
-                        }
-                    } 
-                    ?>
-                </select>
+        <!-- Busca -->
+        <div class="stock-search-container">
+            <input type="text" id="searchProduct" placeholder="🔍 Buscar produto por nome..." 
+                   class="stock-search-input" style="width: 100%; max-width: 400px;"
+                   oninput="filterProducts()">
+        </div>
+
+        <!-- Chips de Categorias (usando $categories do controller) -->
+        <div class="category-chips-container">
+            <div class="category-chips">
+                <button class="category-chip active" data-category="">
+                    📂 Todas
+                </button>
+                <?php foreach ($categories as $cat): ?>
+                    <button class="category-chip" data-category="<?= htmlspecialchars($cat['name']) ?>">
+                        <?= htmlspecialchars($cat['name']) ?>
+                    </button>
+                <?php endforeach; ?>
             </div>
         </div>
 
         <!-- Tabela de Produtos -->
-        <div style="background: white; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden;">
-            <table style="width: 100%; border-collapse: collapse;" id="productsTable">
-                <thead style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+        <div class="stock-table-container">
+            <table id="productsTable">
+                <thead>
                     <tr>
-                        <th style="padding: 15px; text-align: left; color: #6b7280; font-size: 0.85rem; text-transform: uppercase;">Imagem</th>
-                        <th style="padding: 15px; text-align: left; color: #6b7280; font-size: 0.85rem; text-transform: uppercase;">Produto</th>
-                        <th style="padding: 15px; text-align: left; color: #6b7280; font-size: 0.85rem; text-transform: uppercase;">Categoria</th>
-                        <th style="padding: 15px; text-align: left; color: #6b7280; font-size: 0.85rem; text-transform: uppercase;">Preço</th>
-                        <th style="padding: 15px; text-align: center; color: #6b7280; font-size: 0.85rem; text-transform: uppercase;">Estoque</th>
-                        <th style="padding: 15px; text-align: center; color: #6b7280; font-size: 0.85rem; text-transform: uppercase;">Ações</th>
+                        <th style="width: 70px;">Imagem</th>
+                        <th>Produto</th>
+                        <th>Categoria</th>
+                        <th>Preço</th>
+                        <th style="text-align: center;">Estoque</th>
+                        <th style="text-align: center; width: 180px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -118,9 +122,8 @@ foreach ($products as $p) {
                         ?>
                         <tr class="product-row" 
                             data-name="<?= strtolower($prod['name']) ?>" 
-                            data-category="<?= htmlspecialchars($prod['category_name']) ?>"
-                            style="border-bottom: 1px solid #f3f4f6;">
-                            <td style="padding: 10px;">
+                            data-category="<?= htmlspecialchars($prod['category_name']) ?>">
+                            <td>
                                 <?php if($prod['image']): ?>
                                     <img src="<?= BASE_URL ?>/uploads/<?= $prod['image'] ?>" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
                                 <?php else: ?>
@@ -129,30 +132,35 @@ foreach ($products as $p) {
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td style="padding: 15px;">
+                            <td>
                                 <strong style="color: #1f2937;"><?= htmlspecialchars($prod['name']) ?></strong><br>
                                 <small style="color: #6b7280;"><?= htmlspecialchars(substr($prod['description'] ?? '', 0, 30)) ?>...</small>
                             </td>
-                            <td style="padding: 15px;">
+                            <td>
                                 <span style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: 600;">
                                     <?= htmlspecialchars($prod['category_name']) ?>
                                 </span>
                             </td>
-                            <td style="padding: 15px; font-weight: bold; color: #2563eb;">R$ <?= number_format($prod['price'], 2, ',', '.') ?></td>
-                            <td style="padding: 15px; text-align: center;">
+                            <td style="font-weight: bold; color: #2563eb;">R$ <?= number_format($prod['price'], 2, ',', '.') ?></td>
+                            <td style="text-align: center;">
                                 <span style="padding: 4px 12px; border-radius: 15px; font-size: 0.85rem; font-weight: 600;
                                     background: <?= $isNegative ? '#fecaca' : ($isCritical ? '#fef3c7' : '#d1fae5') ?>;
                                     color: <?= $isNegative ? '#dc2626' : ($isCritical ? '#d97706' : '#059669') ?>;">
                                     <?= $stock ?>
                                 </span>
                             </td>
-                            <td style="padding: 15px; text-align: center;">
-                                <div style="display: flex; justify-content: center; gap: 10px;">
-                                    <a href="<?= BASE_URL ?>/admin/loja/produtos/editar?id=<?= $prod['id'] ?>" style="color: #2563eb;" title="Editar">
-                                        <i data-lucide="pencil" style="width: 18px;"></i>
+                            <td>
+                                <div class="stock-actions">
+                                    <a href="<?= BASE_URL ?>/admin/loja/produtos/editar?id=<?= $prod['id'] ?>" 
+                                       class="btn-stock-action btn-stock-edit">
+                                        <i data-lucide="pencil" size="14"></i>
+                                        Editar
                                     </a>
-                                    <a href="<?= BASE_URL ?>/admin/loja/produtos/deletar?id=<?= $prod['id'] ?>" onclick="return confirm('Tem certeza que deseja apagar este produto?')" style="color: #ef4444;" title="Excluir">
-                                        <i data-lucide="trash-2" style="width: 18px;"></i>
+                                    <a href="<?= BASE_URL ?>/admin/loja/produtos/deletar?id=<?= $prod['id'] ?>" 
+                                       onclick="return confirm('Tem certeza que deseja apagar este produto?')"
+                                       class="btn-stock-action btn-stock-delete">
+                                        <i data-lucide="trash-2" size="14"></i>
+                                        Excluir
                                     </a>
                                 </div>
                             </td>
@@ -165,11 +173,14 @@ foreach ($products as $p) {
     </div>
 </main>
 
-<!-- [FASE 1] Script de Busca e Filtro -->
+<!-- Script de Filtro UNIFICADO (busca + chips) -->
 <script>
+// Variável para armazenar a categoria selecionada
+let selectedCategory = '';
+
+// Função unificada de filtro
 function filterProducts() {
     const search = document.getElementById('searchProduct').value.toLowerCase();
-    const category = document.getElementById('filterCategory').value;
     const rows = document.querySelectorAll('.product-row');
     
     rows.forEach(row => {
@@ -177,11 +188,27 @@ function filterProducts() {
         const cat = row.dataset.category;
         
         const matchName = name.includes(search);
-        const matchCategory = !category || cat === category;
+        const matchCategory = !selectedCategory || cat === selectedCategory;
         
         row.style.display = (matchName && matchCategory) ? '' : 'none';
     });
 }
+
+// Event listeners para chips de categoria
+document.querySelectorAll('.category-chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+        // Remove active de todos
+        document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+        // Adiciona no clicado
+        this.classList.add('active');
+        
+        // Atualiza categoria selecionada
+        selectedCategory = this.dataset.category;
+        
+        // Aplica filtro
+        filterProducts();
+    });
+});
 </script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>

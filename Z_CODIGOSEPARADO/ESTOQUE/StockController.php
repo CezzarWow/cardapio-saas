@@ -1,4 +1,5 @@
 <?php
+// LOCALIZAÇÃO ORIGINAL: app/Controllers/Admin/StockController.php
 namespace App\Controllers\Admin;
 
 use App\Core\Database;
@@ -21,11 +22,6 @@ class StockController {
         $stmt = $conn->prepare($sql);
         $stmt->execute(['rid' => $_SESSION['loja_ativa_id']]);
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Busca TODAS as categorias cadastradas (para chips)
-        $stmtCat = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :rid ORDER BY name");
-        $stmtCat->execute(['rid' => $_SESSION['loja_ativa_id']]);
-        $categories = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
 
         require __DIR__ . '/../../../views/admin/stock/index.php';
     }

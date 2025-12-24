@@ -1,24 +1,18 @@
-<?php 
+﻿<?php
+// LOCALIZACAO ORIGINAL: views/admin/additionals/index.php 
 require __DIR__ . '/../panel/layout/header.php'; 
 require __DIR__ . '/../panel/layout/sidebar.php';
-
-$totalGroups = count($groups);
-$totalItems = count($allItems);
 ?>
 
 <main class="main-content">
     <div style="padding: 2rem; width: 100%; overflow-y: auto;">
         
-        <!-- Breadcrumb -->
-        <div class="breadcrumb">
-            <a href="<?= BASE_URL ?>/admin">Painel</a> › 
-            <span>Estoque</span> › 
-            <strong>Adicionais</strong>
-        </div>
-
         <!-- Header -->
         <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-            <h1 style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">Adicionais</h1>
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">Adicionais</h1>
+                <p style="color: #6b7280; margin-top: 5px;">Gerencie grupos e vincule itens</p>
+            </div>
             <div style="display: flex; gap: 10px;">
                 <a href="<?= BASE_URL ?>/admin/loja/adicionais/itens" 
                    style="padding: 10px 20px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
@@ -30,54 +24,38 @@ $totalItems = count($allItems);
             </div>
         </div>
 
-        <!-- Sub-abas (STICKY) -->
-        <div class="sticky-tabs">
-            <div class="stock-tabs">
-                <a href="<?= BASE_URL ?>/admin/loja/produtos" class="stock-tab">
-                    Produtos
-                </a>
-                <a href="<?= BASE_URL ?>/admin/loja/categorias" class="stock-tab">
-                    Categorias
-                </a>
-                <a href="<?= BASE_URL ?>/admin/loja/adicionais" class="stock-tab active">
-                    Adicionais
-                </a>
-                <a href="<?= BASE_URL ?>/admin/loja/reposicao" class="stock-tab">
-                    Reposição
-                </a>
-                <a href="<?= BASE_URL ?>/admin/loja/movimentacoes" class="stock-tab">
-                    Movimentações
-                </a>
-            </div>
+        <!-- Sub-abas -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+            <a href="<?= BASE_URL ?>/admin/loja/produtos" 
+               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
+                Produtos
+            </a>
+            <a href="<?= BASE_URL ?>/admin/loja/categorias" 
+               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
+                Categorias
+            </a>
+            <a href="<?= BASE_URL ?>/admin/loja/adicionais" 
+               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #2563eb; color: white;">
+                Adicionais
+            </a>
+            <a href="<?= BASE_URL ?>/admin/loja/reposicao" 
+               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
+                Reposição
+            </a>
+            <a href="<?= BASE_URL ?>/admin/loja/movimentacoes" 
+               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
+                Movimentações
+            </a>
         </div>
 
-        <!-- Indicadores -->
-        <div class="stock-indicators">
-            <div class="stock-indicator">
-                <div style="background: #dbeafe; padding: 10px; border-radius: 8px;">
-                    <i data-lucide="layers" size="24" style="color: #2563eb;"></i>
-                </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #1f2937;"><?= $totalGroups ?></div>
-                    <div style="font-size: 0.85rem; color: #6b7280;">Grupos</div>
-                </div>
+        <!-- Barra de Pesquisa -->
+        <div style="background: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <div style="position: relative;">
+                <i data-lucide="search" size="18" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
+                <input type="text" id="searchGroups" placeholder="Pesquisar grupos..." 
+                       oninput="filterGroups(this.value)"
+                       style="width: 100%; padding: 10px 12px 10px 40px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem;">
             </div>
-            <div class="stock-indicator">
-                <div style="background: #d1fae5; padding: 10px; border-radius: 8px;">
-                    <i data-lucide="package" size="24" style="color: #059669;"></i>
-                </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #059669;"><?= $totalItems ?></div>
-                    <div style="font-size: 0.85rem; color: #6b7280;">Itens cadastrados</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Busca -->
-        <div class="stock-search-container">
-            <input type="text" id="searchGroups" placeholder="🔍 Buscar grupo..." 
-                   class="stock-search-input" style="width: 100%; max-width: 400px;"
-                   oninput="filterGroups(this.value)">
         </div>
 
         <!-- Lista de Grupos -->
@@ -103,38 +81,43 @@ $totalItems = count($allItems);
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <button onclick="openLinkModal(<?= $group['id'] ?>, '<?= htmlspecialchars($group['name']) ?>')" 
-                           class="btn-stock-action" style="background: #10b981; color: white;">
-                            <i data-lucide="link" size="14"></i> Vincular
+                           style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                            <i data-lucide="link" size="14"></i> Vincular Item
                         </button>
                         <a href="<?= BASE_URL ?>/admin/loja/adicionais/grupo/deletar?id=<?= $group['id'] ?>" 
                            onclick="return confirm('Excluir o grupo &quot;<?= htmlspecialchars($group['name']) ?>&quot;?')"
-                           class="btn-stock-action btn-stock-delete">
-                            <i data-lucide="trash-2" size="14"></i> Excluir
+                           style="padding: 6px 12px; background: #fef2f2; color: #dc2626; text-decoration: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">
+                            <i data-lucide="trash-2" size="14"></i>
                         </a>
                     </div>
                 </div>
                 
-                <!-- Itens do Grupo (CHIPS) -->
-                <div class="group-card-body">
+                <!-- Itens do Grupo -->
+                <div style="padding: 15px 20px;">
                     <?php if (empty($group['items'])): ?>
-                        <div class="group-card-empty">
+                        <p style="color: #9ca3af; font-size: 0.9rem; text-align: center; padding: 15px;">
                             Nenhum item vinculado. 
-                            <a href="javascript:void(0)" onclick="openLinkModal(<?= $group['id'] ?>, '<?= htmlspecialchars($group['name']) ?>')" style="color: #2563eb; text-decoration: none; font-weight: 600;">+ Vincular item</a>
-                        </div>
+                            <a href="javascript:void(0)" onclick="openLinkModal(<?= $group['id'] ?>, '<?= htmlspecialchars($group['name']) ?>')" style="color: #2563eb; text-decoration: none;">Vincular item</a>
+                        </p>
                     <?php else: ?>
-                        <div class="item-chips-container">
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
                             <?php foreach ($group['items'] as $item): ?>
-                            <div class="item-chip">
-                                <span class="item-chip-name"><?= htmlspecialchars($item['name']) ?></span>
-                                <span class="item-chip-price <?= $item['price'] > 0 ? 'paid' : 'free' ?>">
-                                    <?= $item['price'] > 0 ? '+R$ ' . number_format($item['price'], 2, ',', '.') : 'Grátis' ?>
-                                </span>
-                                <a href="<?= BASE_URL ?>/admin/loja/adicionais/desvincular?grupo=<?= $group['id'] ?>&item=<?= $item['id'] ?>" 
-                                   onclick="return confirm('Desvincular &quot;<?= htmlspecialchars($item['name']) ?>&quot; deste grupo?')"
-                                   title="Desvincular"
-                                   class="item-chip-unlink">
-                                    <i data-lucide="x" size="12"></i>
-                                </a>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #f9fafb; border-radius: 8px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i data-lucide="circle" size="8" style="color: #2563eb;"></i>
+                                    <span style="font-weight: 500; color: #1f2937;"><?= htmlspecialchars($item['name']) ?></span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 15px;">
+                                    <span style="font-weight: 600; color: <?= $item['price'] > 0 ? '#059669' : '#6b7280' ?>;">
+                                        <?= $item['price'] > 0 ? '+R$ ' . number_format($item['price'], 2, ',', '.') : 'Grátis' ?>
+                                    </span>
+                                    <a href="<?= BASE_URL ?>/admin/loja/adicionais/desvincular?grupo=<?= $group['id'] ?>&item=<?= $item['id'] ?>" 
+                                       onclick="return confirm('Desvincular &quot;<?= htmlspecialchars($item['name']) ?>&quot; deste grupo?')"
+                                       title="Desvincular do grupo"
+                                       style="padding: 4px 8px; background: #fef2f2; color: #dc2626; text-decoration: none; border-radius: 4px;">
+                                        <i data-lucide="unlink" size="12"></i>
+                                    </a>
+                                </div>
                             </div>
                             <?php endforeach; ?>
                         </div>
@@ -249,3 +232,4 @@ function filterGroups(query) {
 </script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+

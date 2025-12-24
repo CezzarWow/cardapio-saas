@@ -1,113 +1,64 @@
-<?php 
+﻿<?php
+// LOCALIZACAO ORIGINAL: views/admin/reposition/index.php 
 require __DIR__ . '/../panel/layout/header.php'; 
 require __DIR__ . '/../panel/layout/sidebar.php';
 
 $STOCK_CRITICAL_LIMIT = 5;
-$totalProducts = count($products);
-
-// Contar produtos por status
-$criticalCount = 0;
-$negativeCount = 0;
-foreach ($products as $p) {
-    $s = intval($p['stock']);
-    if ($s < 0) $negativeCount++;
-    elseif ($s <= $STOCK_CRITICAL_LIMIT) $criticalCount++;
-}
-
 ?>
 
 <main class="main-content">
     <div style="padding: 2rem; width: 100%; overflow-y: auto;">
         
-        <!-- Breadcrumb -->
-        <div class="breadcrumb">
-            <a href="<?= BASE_URL ?>/admin">Painel</a> › 
-            <span>Estoque</span> › 
-            <strong>Reposição</strong>
-        </div>
-
         <!-- Header -->
         <div style="margin-bottom: 20px;">
             <h1 style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">Reposição de Estoque</h1>
             <p style="color: #6b7280; margin-top: 5px;">Ajuste a quantidade em estoque de forma operacional</p>
         </div>
 
-        <!-- Sub-abas (STICKY) -->
-        <div class="sticky-tabs">
-            <div class="stock-tabs">
-                <a href="<?= BASE_URL ?>/admin/loja/produtos" class="stock-tab">
-                    Produtos
-                </a>
-                <a href="<?= BASE_URL ?>/admin/loja/categorias" class="stock-tab">
-                    Categorias
-                </a>
-                <a href="<?= BASE_URL ?>/admin/loja/adicionais" class="stock-tab">
-                    Adicionais
-                </a>
-                <a href="<?= BASE_URL ?>/admin/loja/reposicao" class="stock-tab active">
-                    Reposição
-                </a>
-                <a href="<?= BASE_URL ?>/admin/loja/movimentacoes" class="stock-tab">
-                    Movimentações
-                </a>
-            </div>
+        <!-- Sub-abas do Estoque -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+            <a href="<?= BASE_URL ?>/admin/loja/produtos" 
+               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
+                Produtos
+            </a>
+            <a href="<?= BASE_URL ?>/admin/loja/categorias" 
+               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
+                Categorias
+            </a>
+            <a href="<?= BASE_URL ?>/admin/loja/adicionais" 
+               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
+                Adicionais
+            </a>
+            <a href="<?= BASE_URL ?>/admin/loja/reposicao" 
+               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #2563eb; color: white;">
+                Reposição
+            </a>
+            <a href="<?= BASE_URL ?>/admin/loja/movimentacoes" 
+               style="padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #f3f4f6; color: #6b7280;">
+                Movimentações
+            </a>
         </div>
 
-        <!-- Indicadores -->
-        <div class="stock-indicators">
-            <div class="stock-indicator">
-                <div style="background: #dbeafe; padding: 10px; border-radius: 8px;">
-                    <i data-lucide="package" size="24" style="color: #2563eb;"></i>
-                </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #1f2937;"><?= $totalProducts ?></div>
-                    <div style="font-size: 0.85rem; color: #6b7280;">Produtos</div>
-                </div>
-            </div>
-            <div class="stock-indicator">
-                <div style="background: #fef3c7; padding: 10px; border-radius: 8px;">
-                    <i data-lucide="alert-triangle" size="24" style="color: #d97706;"></i>
-                </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #d97706;"><?= $criticalCount ?></div>
-                    <div style="font-size: 0.85rem; color: #6b7280;">Críticos</div>
-                </div>
-            </div>
-            <div class="stock-indicator">
-                <div style="background: #fecaca; padding: 10px; border-radius: 8px;">
-                    <i data-lucide="trending-down" size="24" style="color: #dc2626;"></i>
-                </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #dc2626;"><?= $negativeCount ?></div>
-                    <div style="font-size: 0.85rem; color: #6b7280;">Negativos</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Chips de Categorias -->
-        <div class="category-chips-container">
-            <div class="category-chips">
-                <button class="category-chip active" data-category="">
-                    📂 Todas
-                </button>
+        <!-- Filtro por Categoria -->
+        <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <select id="filterCategory" style="padding: 10px 15px; border: 1px solid #d1d5db; border-radius: 8px; background: white; min-width: 200px;" onchange="filterProducts()">
+                <option value="">Todas as categorias</option>
                 <?php foreach ($categories as $cat): ?>
-                    <button class="category-chip" data-category="<?= htmlspecialchars($cat['name']) ?>">
-                        <?= htmlspecialchars($cat['name']) ?>
-                    </button>
+                    <option value="<?= htmlspecialchars($cat['name']) ?>"><?= htmlspecialchars($cat['name']) ?></option>
                 <?php endforeach; ?>
-            </div>
+            </select>
         </div>
 
         <!-- Tabela de Produtos -->
-        <div class="stock-table-container">
-            <table id="productsTable">
-                <thead>
+        <div style="background: white; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;" id="productsTable">
+                <thead style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
                     <tr>
-                        <th style="width: 70px;">Imagem</th>
-                        <th>Produto</th>
-                        <th style="text-align: center;">Estoque</th>
-                        <th style="text-align: center;">Status</th>
-                        <th style="text-align: center; width: 150px;">Ação</th>
+                        <th style="padding: 15px; text-align: left; color: #6b7280; font-size: 0.85rem; text-transform: uppercase;">Imagem</th>
+                        <th style="padding: 15px; text-align: left; color: #6b7280; font-size: 0.85rem; text-transform: uppercase;">Nome</th>
+                        <th style="padding: 15px; text-align: center; color: #6b7280; font-size: 0.85rem; text-transform: uppercase;">Estoque Atual</th>
+                        <th style="padding: 15px; text-align: center; color: #6b7280; font-size: 0.85rem; text-transform: uppercase;">Status</th>
+                        <th style="padding: 15px; text-align: center; color: #6b7280; font-size: 0.85rem; text-transform: uppercase;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -125,8 +76,9 @@ foreach ($products as $p) {
                             data-id="<?= $prod['id'] ?>"
                             data-name="<?= htmlspecialchars($prod['name']) ?>"
                             data-stock="<?= $stock ?>"
-                            data-category="<?= htmlspecialchars($prod['category_name']) ?>">
-                            <td>
+                            data-category="<?= htmlspecialchars($prod['category_name']) ?>"
+                            style="border-bottom: 1px solid #f3f4f6;">
+                            <td style="padding: 10px;">
                                 <?php if($prod['image']): ?>
                                     <img src="<?= BASE_URL ?>/uploads/<?= $prod['image'] ?>" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
                                 <?php else: ?>
@@ -135,26 +87,26 @@ foreach ($products as $p) {
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td>
+                            <td style="padding: 15px;">
                                 <strong style="color: #1f2937;"><?= htmlspecialchars($prod['name']) ?></strong><br>
                                 <small style="color: #6b7280;"><?= htmlspecialchars($prod['category_name']) ?></small>
                             </td>
-                            <td style="text-align: center;">
+                            <td style="padding: 15px; text-align: center;">
                                 <span id="stock-<?= $prod['id'] ?>" style="font-size: 1.25rem; font-weight: 700; color: <?= $isNegative ? '#dc2626' : ($isCritical ? '#d97706' : '#059669') ?>;">
                                     <?= $stock ?>
                                 </span>
                             </td>
-                            <td style="text-align: center;">
+                            <td style="padding: 15px; text-align: center;">
                                 <span style="padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 600;
                                     background: <?= $isNegative ? '#fecaca' : ($isCritical ? '#fef3c7' : '#d1fae5') ?>;
                                     color: <?= $isNegative ? '#dc2626' : ($isCritical ? '#d97706' : '#059669') ?>;">
                                     <?= $isNegative ? 'Negativo' : ($isCritical ? 'Crítico' : 'Normal') ?>
                                 </span>
                             </td>
-                            <td style="text-align: center;">
+                            <td style="padding: 15px; text-align: center;">
                                 <button onclick="openAdjustModal(<?= $prod['id'] ?>, '<?= htmlspecialchars(addslashes($prod['name'])) ?>', <?= $stock ?>)"
-                                        class="btn-stock-action" style="background: #2563eb; color: white;">
-                                    <i data-lucide="plus-minus" size="14"></i> Ajustar
+                                        style="padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i data-lucide="plus-minus" size="16"></i> Ajustar
                                 </button>
                             </td>
                         </tr>
@@ -201,23 +153,16 @@ foreach ($products as $p) {
 <script>
 let currentProductId = null;
 let currentStock = 0;
-let selectedCategory = '';
 
-// Filtro por chips de categoria
-document.querySelectorAll('.category-chip').forEach(chip => {
-    chip.addEventListener('click', function() {
-        document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
-        this.classList.add('active');
-        selectedCategory = this.dataset.category;
-        filterProducts();
-    });
-});
-
+// Filtrar por categoria
 function filterProducts() {
+    const category = document.getElementById('filterCategory').value;
     const rows = document.querySelectorAll('.product-row');
+    
     rows.forEach(row => {
         const cat = row.dataset.category;
-        row.style.display = (!selectedCategory || cat === selectedCategory) ? '' : 'none';
+        const matchCategory = !category || cat === category;
+        row.style.display = matchCategory ? '' : 'none';
     });
 }
 
@@ -235,6 +180,7 @@ function openAdjustModal(productId, productName, stock) {
     document.getElementById('adjustAmount').focus();
 }
 
+// Fechar modal
 function closeAdjustModal() {
     document.getElementById('adjustModal').style.display = 'none';
     currentProductId = null;
@@ -248,6 +194,7 @@ document.getElementById('adjustAmount').addEventListener('input', function() {
         document.getElementById('previewStock').textContent = newStock;
         document.getElementById('previewResult').style.display = 'block';
         
+        // Cor baseada no resultado
         const preview = document.getElementById('previewResult');
         if (newStock < 0) {
             preview.style.background = '#fecaca';
@@ -284,6 +231,7 @@ function submitAdjust() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
+            // Atualiza o estoque na tabela
             const stockEl = document.getElementById('stock-' + currentProductId);
             const row = stockEl?.closest('.product-row');
             
@@ -291,6 +239,7 @@ function submitAdjust() {
                 const newStock = data.new_stock;
                 stockEl.textContent = newStock;
                 
+                // Atualiza cor do número
                 if (newStock < 0) {
                     stockEl.style.color = '#dc2626';
                 } else if (newStock <= 5) {
@@ -299,8 +248,10 @@ function submitAdjust() {
                     stockEl.style.color = '#059669';
                 }
                 
+                // Atualiza data-stock para próximo ajuste
                 row.dataset.stock = newStock;
                 
+                // [FIX] Atualiza o badge de Status também
                 const statusCell = row.querySelector('td:nth-child(4) span');
                 if (statusCell) {
                     if (newStock < 0) {
@@ -320,6 +271,8 @@ function submitAdjust() {
             }
             
             closeAdjustModal();
+            
+            // Feedback visual
             alert('Estoque ajustado com sucesso!');
         } else {
             alert('Erro: ' + data.message);
@@ -331,9 +284,11 @@ function submitAdjust() {
     });
 }
 
+// Fechar modal ao clicar fora
 document.getElementById('adjustModal').addEventListener('click', function(e) {
     if (e.target === this) closeAdjustModal();
 });
 </script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+

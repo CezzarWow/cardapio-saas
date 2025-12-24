@@ -34,11 +34,93 @@ $isEdit = isset($item) && $item;
 
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Preço Adicional (R$)</label>
-                    <input type="text" name="price" placeholder="0,00" 
-                           value="<?= $isEdit ? number_format($item['price'], 2, ',', '') : '0' ?>"
-                           style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem;">
-                    <small style="color: #6b7280; margin-top: 5px; display: block;">Deixe 0 para itens gratuitos</small>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" name="price" id="priceInput" placeholder="0,00" 
+                               value="<?= $isEdit ? number_format($item['price'], 2, ',', '') : '0' ?>"
+                               style="flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem;">
+                        <button type="button" id="btnGratis" onclick="setGratis()" 
+                                style="padding: 12px 20px; background: #f3f4f6; color: #6b7280; border: 2px solid #d1d5db; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                            🎁 Grátis
+                        </button>
+                    </div>
+                    <small style="color: #6b7280; margin-top: 5px; display: block;">Clique em "Grátis" para zerar o preço</small>
                 </div>
+
+                <script>
+                (function() {
+                    const priceInput = document.getElementById('priceInput');
+                    const btn = document.getElementById('btnGratis');
+                    if (!priceInput) return;
+                    
+                    // Converte valor inicial para centavos
+                    let initialValue = priceInput.value.replace(/\D/g, '');
+                    let cents = parseInt(initialValue) || 0;
+                    
+                    function formatCents(c) {
+                        const str = String(c).padStart(3, '0');
+                        const integer = str.slice(0, -2) || '0';
+                        const decimal = str.slice(-2);
+                        return integer + ',' + decimal;
+                    }
+                    
+                    // Exibe valor formatado
+                    priceInput.value = formatCents(cents);
+                    priceInput.style.textAlign = 'right';
+                    priceInput.style.fontWeight = '600';
+                    
+                    // Função grátis global
+                    window.setGratis = function() {
+                        cents = 0;
+                        priceInput.value = '0,00';
+                        
+                        btn.style.background = '#d1fae5';
+                        btn.style.color = '#059669';
+                        btn.style.borderColor = '#10b981';
+                        
+                        setTimeout(() => {
+                            btn.style.background = '#f3f4f6';
+                            btn.style.color = '#6b7280';
+                            btn.style.borderColor = '#d1d5db';
+                        }, 1500);
+                    };
+                    
+                    priceInput.addEventListener('focus', function() {
+                        this.select();
+                    });
+                    
+                    priceInput.addEventListener('click', function() {
+                        this.select();
+                    });
+                    
+                    priceInput.addEventListener('keydown', function(e) {
+                        if ([8, 46, 9, 13, 27].includes(e.keyCode)) {
+                            if (e.keyCode === 8 || e.keyCode === 46) {
+                                e.preventDefault();
+                                cents = Math.floor(cents / 10);
+                                this.value = formatCents(cents);
+                            }
+                            return;
+                        }
+                        
+                        if (e.key < '0' || e.key > '9') {
+                            e.preventDefault();
+                            return;
+                        }
+                        
+                        e.preventDefault();
+                        
+                        if (cents > 999999) return;
+                        
+                        cents = cents * 10 + parseInt(e.key);
+                        this.value = formatCents(cents);
+                    });
+                    
+                    priceInput.addEventListener('input', function() {
+                        const len = this.value.length;
+                        this.setSelectionRange(len, len);
+                    });
+                })();
+                </script>
 
                 <div style="display: flex; gap: 10px;">
                     <a href="<?= BASE_URL ?>/admin/loja/adicionais/itens" 

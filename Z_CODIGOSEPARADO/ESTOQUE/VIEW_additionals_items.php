@@ -1,4 +1,5 @@
-<?php 
+﻿<?php
+// LOCALIZACAO ORIGINAL: views/admin/additionals/items.php 
 require __DIR__ . '/../panel/layout/header.php'; 
 require __DIR__ . '/../panel/layout/sidebar.php';
 ?>
@@ -108,14 +109,9 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 
             <div style="margin-bottom: 1.5rem;">
                 <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Preço (R$)</label>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="text" name="price" id="modalPriceInput" placeholder="0,00" value="0" 
-                           style="flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem;">
-                    <button type="button" id="btnGratisModal" onclick="setGratisModal()" 
-                            style="padding: 10px 16px; background: #f3f4f6; color: #6b7280; border: 2px solid #d1d5db; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;">
-                        🎁 Grátis
-                    </button>
-                </div>
+                <input type="text" name="price" placeholder="0,00" value="0" 
+                       style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem;">
+                <small style="color: #6b7280; margin-top: 5px; display: block;">Deixe 0 para itens gratuitos</small>
             </div>
 
             <div style="display: flex; gap: 10px;">
@@ -149,81 +145,7 @@ function filterItems(query) {
         row.style.display = row.dataset.name.includes(q) ? '' : 'none';
     });
 }
-
-// Função do botão Grátis
-function setGratisModal() {
-    const priceInput = document.getElementById('modalPriceInput');
-    const btn = document.getElementById('btnGratisModal');
-    
-    modalCents = 0;
-    priceInput.value = '0,00';
-    
-    // Feedback visual - fica verde
-    btn.style.background = '#d1fae5';
-    btn.style.color = '#059669';
-    btn.style.borderColor = '#10b981';
-    
-    setTimeout(() => {
-        btn.style.background = '#f3f4f6';
-        btn.style.color = '#6b7280';
-        btn.style.borderColor = '#d1d5db';
-    }, 1500);
-}
-
-// Máscara de preço estilo calculadora
-(function() {
-    const priceInput = document.getElementById('modalPriceInput');
-    if (!priceInput) return;
-    
-    window.modalCents = 0;
-    
-    function formatCents(c) {
-        const str = String(c).padStart(3, '0');
-        const integer = str.slice(0, -2) || '0';
-        const decimal = str.slice(-2);
-        return integer + ',' + decimal;
-    }
-    
-    priceInput.value = '0,00';
-    priceInput.style.textAlign = 'right';
-    priceInput.style.fontWeight = '600';
-    
-    priceInput.addEventListener('focus', function() {
-        this.select();
-    });
-    
-    priceInput.addEventListener('click', function() {
-        this.select();
-    });
-    
-    priceInput.addEventListener('keydown', function(e) {
-        if ([8, 46, 9, 13, 27].includes(e.keyCode)) {
-            if (e.keyCode === 8 || e.keyCode === 46) {
-                e.preventDefault();
-                modalCents = Math.floor(modalCents / 10);
-                this.value = formatCents(modalCents);
-            }
-            return;
-        }
-        
-        if (e.key < '0' || e.key > '9') {
-            e.preventDefault();
-            return;
-        }
-        
-        e.preventDefault();
-        
-        if (modalCents > 999999) return;
-        
-        modalCents = modalCents * 10 + parseInt(e.key);
-        this.value = formatCents(modalCents);
-    });
-    
-    priceInput.addEventListener('input', function() {
-        const len = this.value.length;
-        this.setSelectionRange(len, len);
-    });
-})();
 </script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+

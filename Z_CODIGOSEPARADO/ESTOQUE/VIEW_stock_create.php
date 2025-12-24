@@ -1,4 +1,5 @@
-<?php 
+﻿<?php
+// LOCALIZACAO ORIGINAL: views/admin/stock/create.php 
 require __DIR__ . '/../panel/layout/header.php'; 
 require __DIR__ . '/../panel/layout/sidebar.php'; 
 ?>
@@ -27,8 +28,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                     </div>
                     <div style="flex: 1;">
                         <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Preço (R$)</label>
-                        <input type="text" name="price" id="priceInput" required placeholder="0,00" 
-                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1.1rem; font-weight: 600; text-align: right;">
+                        <input type="text" name="price" required placeholder="0,00" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
                     </div>
                 </div>
 
@@ -59,74 +59,5 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 
     </div>
 </main>
-
-<!-- Máscara de preço estilo calculadora -->
-<script>
-(function() {
-    const priceInput = document.getElementById('priceInput');
-    if (!priceInput) return;
-    
-    // Armazena o valor como centavos internamente
-    let cents = 0;
-    
-    // Formata centavos para exibição
-    function formatCents(c) {
-        const str = String(c).padStart(3, '0');
-        const integer = str.slice(0, -2) || '0';
-        const decimal = str.slice(-2);
-        return integer + ',' + decimal;
-    }
-    
-    // Inicializa com 0,00
-    priceInput.value = '0,00';
-    cents = 0;
-    
-    // Ao focar, seleciona tudo
-    priceInput.addEventListener('focus', function() {
-        this.select();
-    });
-    
-    // Ao clicar, também seleciona tudo
-    priceInput.addEventListener('click', function() {
-        this.select();
-    });
-    
-    // Controla a digitação
-    priceInput.addEventListener('keydown', function(e) {
-        // Permite: backspace, delete, tab, enter, escape
-        if ([8, 46, 9, 13, 27].includes(e.keyCode)) {
-            if (e.keyCode === 8 || e.keyCode === 46) { // backspace ou delete
-                e.preventDefault();
-                cents = Math.floor(cents / 10);
-                this.value = formatCents(cents);
-            }
-            return;
-        }
-        
-        // Bloqueia tudo que não for número
-        if (e.key < '0' || e.key > '9') {
-            e.preventDefault();
-            return;
-        }
-        
-        e.preventDefault();
-        
-        // Limite de 99999,99 (9999999 centavos)
-        if (cents > 999999) return;
-        
-        // Adiciona dígito à direita
-        cents = cents * 10 + parseInt(e.key);
-        this.value = formatCents(cents);
-    });
-    
-    // Move cursor pro final sempre
-    priceInput.addEventListener('input', function() {
-        const len = this.value.length;
-        this.setSelectionRange(len, len);
-    });
-})();
-</script>
-
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>
-
 
