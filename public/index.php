@@ -76,6 +76,13 @@ switch ($path) {
         (new \App\Controllers\Admin\DeliveryController())->index();
         break;
 
+    // --- CARDÁPIO WEB ---
+    case '/admin/loja/cardapio':
+        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
+        (new \App\Controllers\Admin\CardapioController())->index();
+        break;
+
+
     // --- GESTÃO DE ESTOQUE (PRODUTOS) ---
     case '/admin/loja/produtos':
         require __DIR__ . '/../app/Controllers/Admin/StockController.php';
@@ -389,6 +396,13 @@ switch ($path) {
     case '/admin/loja/vendas/reabrir':
         require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
         (new \App\Controllers\Admin\SalesController())->reactivateTable();
+        break;
+
+    // --- ROTA PÚBLICA: CARDÁPIO POR ID (para acesso pelo celular) ---
+    // Acesse: /c/1 para ver cardápio do restaurante ID 1
+    case (preg_match('/^\/c\/(\d+)$/', $path, $m) ? true : false):
+        require __DIR__ . '/../app/Controllers/CardapioPublicoController.php';
+        (new \App\Controllers\CardapioPublicoController())->show(intval($m[1]));
         break;
 
     // --- ROTA PÚBLICA (Cardápio) ---

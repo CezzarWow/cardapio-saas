@@ -771,3 +771,1210 @@ body {
     border-radius: 8px;
     border: 2px dashed #e5e7eb;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARDÁPIO WEB - Entrega 1
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ========== CONTAINER PRINCIPAL ========== */
+.cardapio-container {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    background: #ffffff;
+    min-height: 100vh;
+    padding-bottom: 100px;
+}
+
+/* ========== HEADER ========== */
+.cardapio-header {
+    background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+    color: white;
+    padding: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.cardapio-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cardapio-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cardapio-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cardapio-logo-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cardapio-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.cardapio-subtitle {
+    font-size: 0.75rem;
+    margin: 2px 0 0 0;
+    opacity: 0.9;
+}
+
+.cardapio-info {
+    text-align: right;
+}
+
+.cardapio-delivery-time {
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* ========== BUSCA ========== */
+.cardapio-search-container {
+    padding: 16px;
+    background: white;
+    position: sticky;
+    top: 88px;
+    z-index: 90;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.cardapio-search-box {
+    position: relative;
+}
+
+.cardapio-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+.cardapio-search-input {
+    width: 100%;
+    padding: 12px 12px 12px 40px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.cardapio-search-input:focus {
+    border-color: #ea580c;
+}
+
+/* ========== CATEGORIAS ========== */
+.cardapio-categories {
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    background: white;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.cardapio-categories::-webkit-scrollbar {
+    display: none;
+}
+
+.cardapio-category-btn {
+    padding: 10px 20px;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cardapio-category-btn.active {
+    background: #ea580c;
+    color: white;
+    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
+}
+
+.cardapio-category-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* ========== RODAPÉ ========== */
+.cardapio-footer {
+    text-align: center;
+    padding: 30px 16px;
+    margin-bottom: 80px;
+}
+
+.cardapio-footer p {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin: 0;
+}
+
+.cardapio-footer strong {
+    color: #ea580c;
+    font-weight: 700;
+}
+
+/* ========== PRODUTOS ========== */
+.cardapio-products {
+    padding: 0 16px 200px 16px;
+    /* 200px para compensar carrinho + barra navegador mobile */
+}
+
+.cardapio-category-section {
+    margin-bottom: 32px;
+}
+
+.cardapio-category-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #1f2937;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cardapio-product-card {
+    background: white;
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    border: 2px solid transparent;
+}
+
+.cardapio-product-card:hover {
+    border-color: #ea580c;
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.15);
+}
+
+.cardapio-product-card:active {
+    transform: scale(0.98);
+}
+
+.cardapio-product-image-wrapper {
+    width: 90px;
+    height: 90px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #f3f4f6;
+}
+
+.cardapio-product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cardapio-product-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d1d5db;
+}
+
+.cardapio-product-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-right: 40px;
+}
+
+.cardapio-product-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+    line-height: 1.3;
+}
+
+.cardapio-product-description {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.cardapio-product-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.cardapio-product-price {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #ea580c;
+}
+
+.cardapio-add-btn {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ea580c;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cardapio-add-btn:hover {
+    background: #ea580c;
+    color: white;
+}
+
+/* ========== MODAL ========== */
+.cardapio-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: flex-end;
+    backdrop-filter: blur(4px);
+}
+
+.cardapio-modal.show {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+}
+
+.cardapio-modal-content {
+    background: white;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    margin: 0 auto;
+    border-radius: 24px 24px 0 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Modal que ocupa tela inteira */
+.cardapio-modal-content.fullscreen {
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+    max-width: 100%;
+}
+
+/* Quando o modal tem conteúdo fullscreen, alinhar do topo */
+.cardapio-modal:has(.fullscreen) {
+    align-items: flex-start;
+}
+
+.cardapio-modal-image-wrapper {
+    position: relative;
+    height: 150px;
+    background: #f3f4f6;
+    flex-shrink: 0;
+}
+
+.cardapio-modal-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cardapio-modal-close {
+    position: absolute;
+    top: 40px;
+    left: 12px;
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    z-index: 10;
+}
+
+.cardapio-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.cardapio-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.cardapio-modal-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #1f2937;
+    margin: 0;
+    flex: 1;
+}
+
+.cardapio-modal-price {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #ea580c;
+    margin-left: 12px;
+}
+
+.cardapio-modal-description {
+    font-size: 0.85rem;
+    color: #6b7280;
+    line-height: 1.5;
+    margin: 0 0 24px 0;
+}
+
+/* ========== CONTROLE DE QUANTIDADE ========== */
+.cardapio-quantity-control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.cardapio-quantity-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cardapio-quantity-buttons {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: white;
+    padding: 6px 12px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.cardapio-qty-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #ea580c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cardapio-qty-btn:hover {
+    transform: scale(1.1);
+}
+
+.cardapio-quantity-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1f2937;
+    min-width: 24px;
+    text-align: center;
+}
+
+/* ========== ADICIONAIS ========== */
+.cardapio-additionals {
+    margin-bottom: 24px;
+}
+
+.cardapio-additionals-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 12px 0;
+}
+
+.cardapio-additionals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cardapio-additional-group {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.cardapio-additional-group-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 8px 0;
+}
+
+.cardapio-additional-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+
+.cardapio-additional-item:hover {
+    border-color: #fef3c7;
+    background: #fffbeb;
+}
+
+.cardapio-additional-item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cardapio-additional-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #ea580c;
+}
+
+.cardapio-additional-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.cardapio-additional-price {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #ea580c;
+}
+
+/* ========== OBSERVAÇÕES ========== */
+.cardapio-observations {
+    margin-bottom: 24px;
+}
+
+.cardapio-observations-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 12px 0;
+}
+
+.cardapio-observations-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.cardapio-observations-textarea:focus {
+    border-color: #ea580c;
+}
+
+/* ========== MODAL FOOTER ========== */
+.cardapio-modal-footer {
+    padding: 20px;
+    border-top: 2px solid #f3f4f6;
+    background: white;
+}
+
+.cardapio-add-cart-btn {
+    width: 100%;
+    padding: 16px 24px;
+    background: #ea580c;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cardapio-add-cart-btn:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+}
+
+.cardapio-add-cart-btn:active {
+    transform: translateY(0);
+}
+
+/* ========== CARRINHO FLUTUANTE (BOTÃO COMPACTO) ========== */
+.cardapio-floating-cart-btn {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 20px;
+    /* Chrome / Android - funciona perfeitamente */
+    padding: 14px 24px;
+    background: #ea580c;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 800;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(234, 88, 12, 0.4);
+    z-index: 900;
+}
+
+.cardapio-floating-cart-btn.show {
+    display: flex;
+}
+
+.cardapio-floating-cart-btn:active {
+    transform: translateX(-50%) scale(0.98);
+}
+
+/* Ajuste EXCLUSIVO para Safari iOS */
+@supports (-webkit-touch-callout: none) {
+    .cardapio-floating-cart-btn {
+        bottom: env(safe-area-inset-bottom);
+        padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    }
+}
+
+/* Remover estilos antigos não utilizados */
+.cardapio-floating-cart {
+    display: none !important;
+}
+
+.cardapio-cart-summary {
+    display: none !important;
+}
+
+.cardapio-cart-count {
+    display: none !important;
+}
+
+.cardapio-cart-total {
+    display: none !important;
+}
+
+.cardapio-view-cart-btn {
+    display: none !important;
+}
+
+/* ========== MODAL DO CARRINHO ========== */
+.cardapio-cart-modal-content {
+    max-height: 85vh;
+}
+
+.cardapio-cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.cardapio-cart-header h2 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #1f2937;
+    margin: 0;
+}
+
+.cardapio-modal-close-round {
+    width: 36px;
+    height: 36px;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cardapio-modal-close-round:hover {
+    background: #e5e7eb;
+}
+
+.cardapio-cart-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.cardapio-cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.cardapio-cart-item-info {
+    flex: 1;
+}
+
+.cardapio-cart-item-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+}
+
+.cardapio-cart-item-additionals {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin: 2px 0;
+}
+
+.cardapio-cart-item-obs {
+    font-size: 0.75rem;
+    color: #ea580c;
+    font-style: italic;
+    margin: 4px 0;
+}
+
+.cardapio-cart-item-remove {
+    font-size: 0.7rem;
+    color: #ef4444;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-top: 4px;
+    padding: 0;
+}
+
+.cardapio-cart-item-price {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-left: 16px;
+}
+
+.cardapio-cart-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+}
+
+.cardapio-cart-empty-icon {
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.cardapio-cart-footer {
+    padding: 20px;
+    border-top: 2px solid #f3f4f6;
+    background: #f9fafb;
+}
+
+.cardapio-cart-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.cardapio-cart-total-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cardapio-cart-total-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1f2937;
+}
+
+.cardapio-checkout-btn {
+    width: 100%;
+    padding: 16px 24px;
+    background: #1f2937;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cardapio-checkout-btn:hover {
+    background: #111827;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.cardapio-checkout-btn:active {
+    transform: translateY(0);
+}
+
+/* ========== ANIMAÇÕES ========== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+/* ========== RESPONSIVO ========== */
+@media (max-width: 480px) {
+    .cardapio-container {
+        max-width: 100%;
+    }
+
+    .cardapio-product-card {
+        padding: 10px;
+    }
+
+    .cardapio-product-image-wrapper {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARDÁPIO WEB - ETAPA 2: SUGESTÕES, CLIENTE, PAGAMENTO
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ========== HEADER DE SUGESTÕES ========== */
+.cardapio-suggestions-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 20px 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    background: white;
+}
+
+.cardapio-suggestions-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.cardapio-back-btn {
+    width: 36px;
+    height: 36px;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1f2937;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.cardapio-back-btn:hover {
+    background: #e5e7eb;
+}
+
+/* Modal de sugestões - empurrar conteúdo pra baixo */
+.cardapio-suggestions-modal .cardapio-modal-body {
+    padding-top: 24px;
+}
+
+/* ========== MODAL DE SUGESTÕES ========== */
+.suggestion-section {
+    margin-bottom: 24px;
+}
+
+.suggestion-section-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px 0;
+}
+
+.suggestion-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.suggestion-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.suggestion-item:hover {
+    border-color: #ea580c;
+    background: #fff7ed;
+}
+
+.suggestion-item-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.suggestion-item-image {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.suggestion-item-image-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+}
+
+.suggestion-item-image-placeholder.sauce {
+    background: #fed7aa;
+    color: #ea580c;
+}
+
+.suggestion-item-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.suggestion-item-price {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #ea580c;
+    margin: 2px 0 0 0;
+}
+
+.suggestion-drink-btn,
+.suggestion-sauce-btn {
+    width: 36px;
+    height: 36px;
+    background: #ea580c;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.suggestion-drink-btn:hover,
+.suggestion-sauce-btn:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+}
+
+.suggestion-empty {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.85rem;
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 12px;
+}
+
+/* ========== FORMULÁRIO DO CLIENTE ========== */
+.customer-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-input {
+    padding: 14px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.form-input:focus {
+    border-color: #ea580c;
+}
+
+.form-row {
+    display: flex;
+    gap: 12px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+/* Opções de entrega */
+.delivery-options {
+    display: flex;
+    gap: 10px;
+}
+
+.delivery-option {
+    flex: 1;
+    cursor: pointer;
+}
+
+.delivery-option input {
+    display: none;
+}
+
+.delivery-option-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 12px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.delivery-option-content span {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6b7280;
+}
+
+.delivery-option input:checked+.delivery-option-content {
+    background: #fff7ed;
+    border-color: #ea580c;
+}
+
+.delivery-option input:checked+.delivery-option-content span {
+    color: #ea580c;
+}
+
+/* ========== MODAL DE PAGAMENTO ========== */
+.payment-total-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.payment-total-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.payment-total-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: white;
+}
+
+.payment-methods-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 16px 0;
+}
+
+.payment-methods {
+    display: flex;
+    gap: 12px;
+}
+
+.payment-method-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 16px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.payment-method-btn:hover {
+    border-color: #ea580c;
+    background: #fff7ed;
+}
+
+.payment-method-btn.selected {
+    background: #fff7ed;
+    border-color: #ea580c;
+    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.2);
+}
+
+.payment-method-icon {
+    font-size: 2rem;
+}
+
+.payment-method-btn span {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+/* Botão finalizar */
+.cardapio-finish-btn {
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cardapio-finish-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.cardapio-finish-btn:active {
+    transform: translateY(0);
+}

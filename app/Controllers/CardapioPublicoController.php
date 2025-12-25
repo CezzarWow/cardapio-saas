@@ -1,33 +1,36 @@
 <?php
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * LOCALIZAÇÃO: app/Controllers/Admin/CardapioController.php
+ * CARDÁPIO PÚBLICO - Acesso sem login
+ * Rota: /cardapio/{slug} ou /c/{id}
  * ═══════════════════════════════════════════════════════════════════════════
- * DESCRIÇÃO: Controller do Cardápio Web (Entrega 1: Base + Carrinho)
  */
 
-namespace App\Controllers\Admin;
+namespace App\Controllers;
 
 use App\Core\Database;
 use PDO;
 
-class CardapioController {
+class CardapioPublicoController {
 
     /**
-     * Exibe o cardápio web completo
+     * Exibe o cardápio público de um restaurante
+     * @param int $restaurantId ID do restaurante
      */
-    public function index() {
-        $this->checkSession();
-        
+    public function show($restaurantId) {
         $conn = Database::connect();
-        $restaurantId = $_SESSION['loja_ativa_id'];
         
         // Buscar dados do restaurante
         $stmtRestaurant = $conn->prepare("SELECT * FROM restaurants WHERE id = :rid");
         $stmtRestaurant->execute(['rid' => $restaurantId]);
         $restaurant = $stmtRestaurant->fetch(PDO::FETCH_ASSOC);
         
-        // Buscar todas as categorias do restaurante (apenas que tenham produtos)
+        if (!$restaurant) {
+            echo "Restaurante não encontrado ou inativo.";
+            exit;
+        }
+        
+        // Buscar categorias com produtos
         $stmtCategories = $conn->prepare("
             SELECT DISTINCT c.* 
             FROM categories c
@@ -38,8 +41,7 @@ class CardapioController {
         $stmtCategories->execute(['rid' => $restaurantId]);
         $categories = $stmtCategories->fetchAll(PDO::FETCH_ASSOC);
         
-        // Buscar produtos com suas categorias
-        // NOTA: Sem filtro de estoque - o sistema permite estoque negativo
+        // Buscar produtos
         $stmtProducts = $conn->prepare("
             SELECT 
                 p.id,
@@ -58,7 +60,7 @@ class CardapioController {
         $stmtProducts->execute(['rid' => $restaurantId]);
         $allProducts = $stmtProducts->fetchAll(PDO::FETCH_ASSOC);
         
-        // Organizar produtos por categoria
+        // Organizar por categoria
         $productsByCategory = [];
         foreach ($allProducts as $product) {
             $catName = $product['category_name'] ?? 'Sem Categoria';
@@ -77,7 +79,7 @@ class CardapioController {
         $stmtAdditionalGroups->execute(['rid' => $restaurantId]);
         $additionalGroups = $stmtAdditionalGroups->fetchAll(PDO::FETCH_ASSOC);
         
-        // Buscar itens de adicionais (usando tabela pivot additional_group_items)
+        // Buscar itens via pivot
         $additionalItems = [];
         foreach ($additionalGroups as $group) {
             $stmtItems = $conn->prepare("
@@ -90,20 +92,7 @@ class CardapioController {
             $additionalItems[$group['id']] = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
         }
         
-        // Renderizar view
-        require __DIR__ . '/../../../views/admin/cardapio/index.php';
-    }
-
-    /**
-     * Verifica sessão ativa
-     */
-    private function checkSession() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            header('Location: ' . BASE_URL . '/admin');
-            exit;
-        }
+        // Renderizar view pública
+        require __DIR__ . '/../../views/cardapio_publico.php';
     }
 }

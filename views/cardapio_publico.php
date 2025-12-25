@@ -1,13 +1,82 @@
-<?php 
-/**
- * ═══════════════════════════════════════════════════════════════════════════
- * LOCALIZAÇÃO: views/admin/cardapio/index.php
- * ═══════════════════════════════════════════════════════════════════════════
- */
-
-require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php'; 
-?>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title><?= htmlspecialchars($restaurant['name']) ?> - Cardápio</title>
+    
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/pdv.css?v=<?= time() ?>">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* ========== LAYOUT FLEX CORRETO (conforme técnico) ========== */
+        * { box-sizing: border-box; }
+        
+        html, body { 
+            height: 100%;
+            margin: 0; 
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            overflow: hidden; /* Scroll NÃO fica no body */
+        }
+        
+        /* Container principal - 100vh flex column */
+        .main-content {
+            margin-left: 0 !important; 
+            width: 100% !important;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: transparent;
+        }
+        
+        /* Container do cardápio - cresce */
+        .cardapio-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            background: transparent;
+        }
+        
+        /* Header - tamanho fixo, não encolhe */
+        .cardapio-header {
+            flex-shrink: 0;
+        }
+        
+        /* Busca - tamanho fixo */
+        .cardapio-search-container {
+            flex-shrink: 0;
+        }
+        
+        /* Categorias - tamanho fixo */
+        .cardapio-categories {
+            flex-shrink: 0;
+        }
+        
+        /* Lista de produtos - ELEMENTO QUE SCROLLA */
+        .cardapio-products {
+            flex: 1;
+            min-height: 0; /* ESSENCIAL para flex */
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            background: transparent;
+            padding-bottom: 80px; /* Chrome/Android */
+        }
+        
+        /* Ajuste EXCLUSIVO para Safari iOS */
+        @supports (-webkit-touch-callout: none) {
+            .cardapio-products {
+                padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            }
+        }
+        
+        .sidebar { display: none !important; }
+    </style>
+</head>
+<body>
 
 <main class="main-content">
     <div class="cardapio-container">
@@ -193,20 +262,12 @@ require __DIR__ . '/../panel/layout/sidebar.php';
     </div>
 </div>
 
-<!-- CARRINHO FLUTUANTE -->
-<div id="floatingCart" class="cardapio-floating-cart">
-    <div class="cardapio-cart-summary">
-        <div class="cardapio-cart-count">
-            <i data-lucide="shopping-bag" size="18"></i>
-            <span id="cartCount">0 itens</span>
-        </div>
-        <span id="cartTotal" class="cardapio-cart-total">R$ 0,00</span>
-    </div>
-    <button class="cardapio-view-cart-btn" onclick="openCartModal()">
-        Ver Pedido
-        <i data-lucide="arrow-right" size="18"></i>
-    </button>
-</div>
+<!-- CARRINHO FLUTUANTE (BOTÃO COMPACTO) -->
+<button id="floatingCart" class="cardapio-floating-cart-btn" onclick="openCartModal()">
+    <i data-lucide="shopping-cart" size="20"></i>
+    <span id="cartTotal">R$ 0,00</span>
+    <i data-lucide="arrow-right" size="18"></i>
+</button>
 
 <!-- MODAL DO CARRINHO -->
 <div id="cartModal" class="cardapio-modal cardapio-cart-modal">
@@ -219,7 +280,6 @@ require __DIR__ . '/../panel/layout/sidebar.php';
         </div>
         
         <div class="cardapio-cart-body" id="cartItemsContainer">
-            <!-- Itens serão inseridos via JavaScript -->
         </div>
         
         <div class="cardapio-cart-footer">
@@ -235,9 +295,118 @@ require __DIR__ . '/../panel/layout/sidebar.php';
     </div>
 </div>
 
+<!-- MODAL DE SUGESTÕES (BEBIDAS E MOLHOS) - TELA INTEIRA -->
+<div id="suggestionsModal" class="cardapio-modal">
+    <div class="cardapio-modal-content fullscreen cardapio-suggestions-modal">
+        <div class="cardapio-suggestions-header">
+            <button class="cardapio-back-btn" onclick="closeSuggestionsModal()">
+                <i data-lucide="arrow-left" size="20"></i>
+            </button>
+            <h2>🥤 Quer adicionar algo?</h2>
+        </div>
+        
+        <div class="cardapio-modal-body">
+            <!-- Bebidas -->
+            <div class="suggestion-section">
+                <h3 class="suggestion-section-title">
+                    <i data-lucide="cup-soda" size="20"></i>
+                    Bebidas
+                </h3>
+                <div class="suggestion-items">
+                    <?php 
+                    // Filtrar produtos da categoria "Bebidas" ou similar
+                    $drinks = [];
+                    foreach ($allProducts as $p) {
+                        $catLower = strtolower($p['category_name'] ?? '');
+                        if (strpos($catLower, 'bebida') !== false || strpos($catLower, 'drink') !== false || strpos($catLower, 'refrigerante') !== false || strpos($catLower, 'suco') !== false) {
+                            $drinks[] = $p;
+                        }
+                    }
+                    if (empty($drinks)): ?>
+                        <p class="suggestion-empty">Nenhuma bebida disponível</p>
+                    <?php else: ?>
+                        <?php foreach ($drinks as $drink): ?>
+                            <div class="suggestion-item">
+                                <div class="suggestion-item-info">
+                                    <?php if (!empty($drink['image'])): ?>
+                                        <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($drink['image']) ?>" class="suggestion-item-image" alt="">
+                                    <?php else: ?>
+                                        <div class="suggestion-item-image-placeholder">
+                                            <i data-lucide="cup-soda" size="20"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div>
+                                        <p class="suggestion-item-name"><?= htmlspecialchars($drink['name']) ?></p>
+                                        <p class="suggestion-item-price">R$ <?= number_format($drink['price'], 2, ',', '.') ?></p>
+                                    </div>
+                                </div>
+                                <button class="suggestion-drink-btn" data-id="<?= $drink['id'] ?>" 
+                                    onclick="addDrinkToCart(<?= $drink['id'] ?>, '<?= htmlspecialchars(addslashes($drink['name'])) ?>', <?= $drink['price'] ?>, '<?= htmlspecialchars($drink['image'] ?? '') ?>')">
+                                    <i data-lucide="plus" size="16"></i>
+                                </button>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <!-- Molhos extras -->
+            <div class="suggestion-section">
+                <h3 class="suggestion-section-title">
+                    <i data-lucide="droplet" size="20"></i>
+                    Molhos Extras
+                </h3>
+                <div class="suggestion-items">
+                    <?php 
+                    $hasSauces = false;
+                    foreach ($additionalGroups as $group): 
+                        $groupLower = strtolower($group['name']);
+                        if (strpos($groupLower, 'molho') !== false || strpos($groupLower, 'sauce') !== false):
+                            $hasSauces = true;
+                            if (isset($additionalItems[$group['id']])):
+                                foreach ($additionalItems[$group['id']] as $sauce): ?>
+                                    <div class="suggestion-item">
+                                        <div class="suggestion-item-info">
+                                            <div class="suggestion-item-image-placeholder sauce">
+                                                <i data-lucide="droplet" size="18"></i>
+                                            </div>
+                                            <div>
+                                                <p class="suggestion-item-name"><?= htmlspecialchars($sauce['name']) ?></p>
+                                                <p class="suggestion-item-price"><?= $sauce['price'] > 0 ? 'R$ ' . number_format($sauce['price'], 2, ',', '.') : 'Grátis' ?></p>
+                                            </div>
+                                        </div>
+                                        <button class="suggestion-sauce-btn" data-id="<?= $sauce['id'] ?>" 
+                                            onclick="addSauceToCart(<?= $sauce['id'] ?>, '<?= htmlspecialchars(addslashes($sauce['name'])) ?>', <?= $sauce['price'] ?>)">
+                                            <i data-lucide="plus" size="16"></i>
+                                        </button>
+                                    </div>
+                                <?php endforeach;
+                            endif;
+                        endif;
+                    endforeach;
+                    if (!$hasSauces): ?>
+                        <p class="suggestion-empty">Nenhum molho extra disponível</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cardapio-cart-footer">
+            <button class="cardapio-checkout-btn" onclick="finalizarPedido()">
+                Finalizar Pedido
+                <i data-lucide="arrow-right" size="18"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     window.BASE_URL = '<?= BASE_URL ?>';
 </script>
 <script src="<?= BASE_URL ?>/js/cardapio.js?v=<?= time() ?>"></script>
+<script>
+    lucide.createIcons();
+</script>
 
-<?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+</body>
+</html>
