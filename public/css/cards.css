@@ -1,0 +1,114 @@
+/**
+ * CARDS.CSS - Cards Reutilizáveis
+ * Cards de produtos, categorias, etc.
+ */
+
+/* ========== CARD DE PRODUTO ========== */
+.cardapio-product-card {
+    background: white;
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    border: 2px solid transparent;
+}
+
+.cardapio-product-card:hover {
+    border-color: var(--accent-color, #ea580c);
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.15);
+}
+
+.cardapio-product-card:active {
+    transform: scale(0.98);
+}
+
+.cardapio-product-image-wrapper {
+    width: 90px;
+    height: 90px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #f3f4f6;
+}
+
+.cardapio-product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cardapio-product-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d1d5db;
+}
+
+.cardapio-product-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-right: 40px;
+}
+
+.cardapio-product-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-dark, #1f2937);
+    margin: 0 0 4px 0;
+    line-height: 1.3;
+}
+
+.cardapio-product-description {
+    font-size: 0.75rem;
+    color: var(--text-light, #6b7280);
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.cardapio-product-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.cardapio-product-price {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--accent-color, #ea580c);
+}
+
+.cardapio-add-btn {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-color, #ea580c);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cardapio-add-btn:hover {
+    background: var(--accent-color, #ea580c);
+    color: white;
+}

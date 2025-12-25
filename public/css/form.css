@@ -1,0 +1,176 @@
+/**
+ * FORM.CSS - Inputs, Botões e Selects
+ * Componentes de formulário reutilizáveis
+ */
+
+/* ========== INPUTS ========== */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--text-dark, #1f2937);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #9ca3af;
+}
+
+/* ========== CHECKBOX E RADIO ========== */
+input[type="checkbox"],
+input[type="radio"] {
+    accent-color: var(--accent-color, #ea580c);
+    cursor: pointer;
+}
+
+/* ========== BOTÕES GENÉRICOS ========== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--primary-color, #2563eb);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover, #1d4ed8);
+    transform: translateY(-1px);
+}
+
+.btn-accent {
+    background: var(--accent-color, #ea580c);
+    color: white;
+}
+
+.btn-accent:hover {
+    background: var(--accent-hover, #dc5309);
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--border-color, #e5e7eb);
+    color: var(--text-dark, #1f2937);
+}
+
+.btn-outline:hover {
+    border-color: var(--primary-color, #2563eb);
+    color: var(--primary-color, #2563eb);
+}
+
+.btn-danger {
+    background: var(--danger-color, #ef4444);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+}
+
+.btn-lg {
+    padding: 16px 32px;
+    font-size: 1rem;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+/* ========== BOTÃO ÍCONE ========== */
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 10px;
+    background: #f3f4f6;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-light, #6b7280);
+}
+
+.btn-icon:hover {
+    background: var(--border-color, #e5e7eb);
+    color: var(--text-dark, #1f2937);
+}
+
+/* ========== SELECT ========== */
+.form-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color, #e5e7eb);
+    border-radius: 10px;
+    background: white;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border 0.3s;
+    cursor: pointer;
+}
+
+.form-select:focus {
+    border-color: var(--primary-color, #2563eb);
+}
+
+/* ========== FORM GROUP ========== */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light, #6b7280);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color, #e5e7eb);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color, #2563eb);
+}
+
+.form-control.is-invalid {
+    border-color: var(--danger-color, #ef4444);
+}
+
+.form-error {
+    font-size: 0.75rem;
+    color: var(--danger-color, #ef4444);
+    margin-top: 4px;
+}

@@ -5,19 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title><?= htmlspecialchars($restaurant['name']) ?> - Cardápio</title>
     
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/pdv.css?v=<?= time() ?>">
+    <!-- CSS Modular - Cardápio Público -->
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/base.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cards.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/modals.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/form.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cart.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio.css?v=<?= time() ?>">
+    
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        /* ========== LAYOUT FLEX CORRETO (conforme técnico) ========== */
-        * { box-sizing: border-box; }
-        
+        /* ========== LAYOUT FLEX MOBILE ========== */
         html, body { 
             height: 100%;
-            margin: 0; 
-            padding: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
             overflow: hidden; /* Scroll NÃO fica no body */
         }
         
@@ -41,36 +42,22 @@
         }
         
         /* Header - tamanho fixo, não encolhe */
-        .cardapio-header {
-            flex-shrink: 0;
-        }
+        .cardapio-header { flex-shrink: 0; }
         
         /* Busca - tamanho fixo */
-        .cardapio-search-container {
-            flex-shrink: 0;
-        }
+        .cardapio-search-container { flex-shrink: 0; }
         
         /* Categorias - tamanho fixo */
-        .cardapio-categories {
-            flex-shrink: 0;
-        }
+        .cardapio-categories { flex-shrink: 0; }
         
         /* Lista de produtos - ELEMENTO QUE SCROLLA */
         .cardapio-products {
             flex: 1;
-            min-height: 0; /* ESSENCIAL para flex */
+            min-height: 0;
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             background: transparent;
-            padding-bottom: 80px; /* Chrome/Android */
-        }
-        
-        /* Ajuste EXCLUSIVO para Safari iOS */
-        @supports (-webkit-touch-callout: none) {
-            .cardapio-products {
-                padding-bottom: calc(80px + env(safe-area-inset-bottom));
-            }
         }
         
         .sidebar { display: none !important; }

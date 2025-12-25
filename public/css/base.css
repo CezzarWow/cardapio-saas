@@ -1,0 +1,78 @@
+/**
+ * BASE.CSS - Reset + Variáveis Globais
+ * Carregado em TODAS as páginas
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ========== VARIÁVEIS GLOBAIS ========== */
+:root {
+    /* Cores primárias */
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+
+    /* Cores de fundo */
+    --bg-color: #f3f4f6;
+    --sidebar-bg: #111827;
+
+    /* Cores de texto */
+    --text-dark: #1f2937;
+    --text-light: #6b7280;
+
+    /* Bordas */
+    --border-color: #e5e7eb;
+
+    /* Status */
+    --success-bg: #dcfce7;
+    --success-text: #15803d;
+    --danger-color: #ef4444;
+
+    /* Carrinho/Cardápio */
+    --accent-color: #ea580c;
+    --accent-hover: #dc5309;
+}
+
+/* ========== RESET GLOBAL ========== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ========== TIPOGRAFIA BASE ========== */
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-dark);
+    line-height: 1.5;
+}
+
+/* ========== ACESSIBILIDADE ========== */
+:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* ========== SCROLLBAR CUSTOM ========== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
