@@ -34,6 +34,6 @@ class MenuController {
         // -----------------------------------------------
 
         // 3. Se estiver tudo OK (Ativo), carrega o cardápio
-        require __DIR__ . '/../../views/menu.php';
+        require __DIR__ . '/../../views/cardapio_publico.php';
     }
 }

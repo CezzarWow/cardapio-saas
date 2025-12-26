@@ -117,8 +117,8 @@
 /* ========== CATEGORIAS ========== */
 .cardapio-categories {
     display: flex;
-    gap: 8px;
-    padding: 16px;
+    gap: 6px;
+    padding: 10px 16px;
     overflow-x: auto;
     background: white;
     scrollbar-width: none;
@@ -130,18 +130,18 @@
 }
 
 .cardapio-category-btn {
-    padding: 10px 20px;
+    padding: 8px 14px;
     background: #f3f4f6;
     border: none;
-    border-radius: 20px;
-    font-size: 0.75rem;
+    border-radius: 16px;
+    font-size: 0.7rem;
     font-weight: 700;
     white-space: nowrap;
     cursor: pointer;
     transition: all 0.3s;
     color: var(--text-light, #6b7280);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
 }
 
 .cardapio-category-btn.active {
@@ -174,21 +174,25 @@
 
 /* ========== PRODUTOS ========== */
 .cardapio-products {
-    padding: 0 16px;
-    /* Padding bottom com safe-area para iOS */
-    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+    padding: 16px 16px 0 16px;
+    /* Padding bottom com safe-area para Safari iOS */
+    padding-bottom: calc(120px + env(safe-area-inset-bottom));
 }
 
 .cardapio-category-section {
-    margin-bottom: 32px;
+    margin-bottom: 12px;
 }
 
 .cardapio-category-title {
-    font-size: 1.2rem;
-    font-weight: 800;
+    font-size: 0.95rem;
+    font-weight: 700;
     color: var(--text-dark, #1f2937);
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+}
+
+.cardapio-category-title svg {
+    display: none;
 }

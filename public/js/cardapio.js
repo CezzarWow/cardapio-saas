@@ -282,24 +282,19 @@ function closeCartModal() {
 
 // ========== PRÓXIMA ETAPA: BEBIDAS E MOLHOS ==========
 function goToCheckout() {
-    console.log('[CARDÁPIO] goToCheckout chamado');
     const cartModal = document.getElementById('cartModal');
     const suggestionsModal = document.getElementById('suggestionsModal');
-
-    console.log('[CARDÁPIO] cartModal existe:', !!cartModal);
-    console.log('[CARDÁPIO] suggestionsModal existe:', !!suggestionsModal);
 
     // Fecha o carrinho
     if (cartModal) {
         cartModal.classList.remove('show');
     }
 
-    // Abre sugestões imediatamente
+    // Abre sugestões e sincroniza carrinho
     if (suggestionsModal) {
         suggestionsModal.classList.add('show');
+        updateSuggestionsCartDisplay(); // Sincroniza os valores do carrinho
         setTimeout(() => lucide.createIcons(), 100);
-    } else {
-        console.error('[CARDÁPIO] suggestionsModal NÃO encontrado!');
     }
 }
 
@@ -331,20 +326,14 @@ function addDrinkToCart(id, name, price, image) {
 
     cart.push(cartItem);
     updateCartDisplay();
+    updateSuggestionsCartDisplay();
 
-    // Feedback visual
+    // Animação simples de pulse no botão
     const btn = document.querySelector(`.suggestion-drink-btn[data-id="${id}"]`);
     if (btn) {
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i data-lucide="check" size="16"></i> Adicionado!';
-        btn.style.background = '#10b981';
-        setTimeout(() => {
-            btn.innerHTML = originalText;
-            btn.style.background = '';
-            lucide.createIcons();
-        }, 1500);
+        btn.classList.add('btn-pulse');
+        setTimeout(() => btn.classList.remove('btn-pulse'), 300);
     }
-    lucide.createIcons();
 }
 
 // Adicionar molho ao carrinho (como item avulso)
@@ -362,35 +351,215 @@ function addSauceToCart(id, name, price) {
 
     cart.push(cartItem);
     updateCartDisplay();
+    updateSuggestionsCartDisplay();
 
-    // Feedback visual
+    // Animação simples de pulse no botão
     const btn = document.querySelector(`.suggestion-sauce-btn[data-id="${id}"]`);
     if (btn) {
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i data-lucide="check" size="16"></i>';
-        btn.style.background = '#10b981';
-        setTimeout(() => {
-            btn.innerHTML = originalText;
-            btn.style.background = '';
-            lucide.createIcons();
-        }, 1500);
+        btn.classList.add('btn-pulse');
+        setTimeout(() => btn.classList.remove('btn-pulse'), 300);
     }
+}
+
+// Atualizar display do carrinho na tela de sugestões
+function updateSuggestionsCartDisplay() {
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const totalPrice = cart.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+
+    const countEl = document.getElementById('suggestionsCartCount');
+    const totalEl = document.getElementById('suggestionsCartTotal');
+
+    if (countEl) countEl.textContent = totalItems + ' ' + (totalItems === 1 ? 'item' : 'itens');
+    if (totalEl) totalEl.textContent = formatCurrency(totalPrice);
+}
+
+// Ir para tela de resumo do pedido
+function finalizarPedido() {
+    closeSuggestionsModal();
+    openOrderReviewModal();
+}
+
+// ========== MODAL DE RESUMO DO PEDIDO ==========
+function openOrderReviewModal() {
+    const modal = document.getElementById('orderReviewModal');
+    if (modal) {
+        modal.classList.add('show');
+        renderOrderReviewItems();
+        updateOrderReviewTotal();
+        setTimeout(() => lucide.createIcons(), 100);
+    }
+}
+
+function closeOrderReviewModal() {
+    document.getElementById('orderReviewModal').classList.remove('show');
+    // Volta para sugestões
+    openSuggestionsModal();
+}
+
+function renderOrderReviewItems() {
+    const container = document.getElementById('orderReviewItems');
+    if (!container) return;
+
+    if (cart.length === 0) {
+        container.innerHTML = `
+            <div class="order-review-empty">
+                <i data-lucide="shopping-bag" size="48"></i>
+                <p>Seu pedido está vazio</p>
+            </div>
+        `;
+        lucide.createIcons();
+        return;
+    }
+
+    let html = '';
+    cart.forEach(item => {
+        html += `
+            <div class="order-review-item">
+                <div class="order-review-item-qty">${item.quantity}x</div>
+                <div class="order-review-item-info">
+                    <p class="order-review-item-name">${item.name}</p>
+                    ${item.additionals.length > 0 ? `
+                        <p class="order-review-item-extras">+ ${item.additionals.map(a => a.name).join(', ')}</p>
+                    ` : ''}
+                    ${item.observation ? `
+                        <p class="order-review-item-obs">Obs: ${item.observation}</p>
+                    ` : ''}
+                </div>
+                <div class="order-review-item-actions">
+                    <span class="order-review-item-price">${formatCurrency(item.unitPrice * item.quantity)}</span>
+                    <button class="order-review-remove-btn" onclick="removeFromOrderReview(${item.id})">
+                        <i data-lucide="trash-2" size="14"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function updateOrderReviewTotal() {
+    const totalPrice = cart.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+    const totalEl = document.getElementById('orderReviewTotal');
+    if (totalEl) totalEl.textContent = formatCurrency(totalPrice);
+}
+
+// Remover item da tela de resumo
+function removeFromOrderReview(itemId) {
+    cart = cart.filter(item => item.id !== itemId);
+    updateCartDisplay();
+    renderOrderReviewItems();
+    updateOrderReviewTotal();
+
+    // Se carrinho ficou vazio, volta para cardápio
+    if (cart.length === 0) {
+        setTimeout(() => {
+            document.getElementById('orderReviewModal').classList.remove('show');
+        }, 500);
+    }
+
     lucide.createIcons();
 }
 
-// Finalizar pedido (por enquanto só mostra mensagem)
-function finalizarPedido() {
-    closeSuggestionsModal();
+// ========== MODAL DE PAGAMENTO ==========
+let selectedPaymentMethod = null;
 
-    // Calcular total
+function goToPayment() {
+    document.getElementById('orderReviewModal').classList.remove('show');
+    openPaymentModal();
+}
+
+function openPaymentModal() {
+    const modal = document.getElementById('paymentModal');
+    if (modal) {
+        modal.classList.add('show');
+        updatePaymentTotal();
+        setTimeout(() => lucide.createIcons(), 100);
+    }
+}
+
+function closePaymentModal() {
+    document.getElementById('paymentModal').classList.remove('show');
+    // Volta para resumo
+    openOrderReviewModal();
+}
+
+function updatePaymentTotal() {
+    const totalPrice = cart.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+    const totalEl = document.getElementById('paymentTotalValue');
+    if (totalEl) totalEl.textContent = formatCurrency(totalPrice);
+}
+
+function selectPaymentMethod(method) {
+    selectedPaymentMethod = method;
+
+    // Mostra/esconde campo de troco
+    const changeContainer = document.getElementById('changeContainer');
+    if (changeContainer) {
+        changeContainer.style.display = method === 'dinheiro' ? 'block' : 'none';
+    }
+}
+
+function sendOrder() {
+    const name = document.getElementById('customerName').value.trim();
+    const address = document.getElementById('customerAddress').value.trim();
+    const number = document.getElementById('customerNumber').value.trim();
+    const neighborhood = document.getElementById('customerNeighborhood').value.trim();
+    const obs = document.getElementById('customerObs').value.trim();
+    const changeAmount = document.getElementById('changeAmount').value.trim();
+
+    // Validações
+    if (!name) {
+        alert('Por favor, preencha seu nome.');
+        return;
+    }
+    if (!address) {
+        alert('Por favor, preencha o endereço.');
+        return;
+    }
+    if (!selectedPaymentMethod) {
+        alert('Por favor, selecione a forma de pagamento.');
+        return;
+    }
+
     const totalPrice = cart.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
 
-    // Mostrar confirmação
-    alert('🎉 Pedido recebido!\n\nTotal: ' + formatCurrency(totalPrice) + '\n\n(Próximas etapas serão implementadas em breve)');
+    // Montar mensagem
+    let msg = '🎉 Pedido enviado!\n\n' +
+        'Nome: ' + name + '\n' +
+        'Endereço: ' + address + ', ' + number + '\n' +
+        'Bairro: ' + neighborhood + '\n' +
+        'Pagamento: ' + selectedPaymentMethod.toUpperCase();
 
-    // Limpar carrinho
+    if (selectedPaymentMethod === 'dinheiro' && changeAmount) {
+        msg += ' (Troco: ' + changeAmount + ')';
+    }
+
+    msg += '\nTotal: ' + formatCurrency(totalPrice);
+
+    if (obs) {
+        msg += '\nObs: ' + obs;
+    }
+
+    msg += '\n\n(Integração com WhatsApp/backend será implementada)';
+
+    alert(msg);
+
+    // Limpar carrinho e fechar
     cart = [];
+    selectedPaymentMethod = null;
     updateCartDisplay();
+    document.getElementById('paymentModal').classList.remove('show');
+
+    // Limpar campos
+    document.getElementById('customerName').value = '';
+    document.getElementById('customerAddress').value = '';
+    document.getElementById('customerNumber').value = '';
+    document.getElementById('customerNeighborhood').value = '';
+    document.getElementById('customerObs').value = '';
+    document.getElementById('changeAmount').value = '';
+    document.getElementById('changeContainer').style.display = 'none';
+    document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => radio.checked = false);
 }
 
 // ========== UTILITÁRIOS ==========

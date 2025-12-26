@@ -1,0 +1,71 @@
+/**
+ * PDV-CART.CSS - Carrinho Lateral Desktop
+ * Carrinho do PDV admin (diferente do carrinho flutuante mobile)
+ */
+
+/* ========== SIDEBAR DO CARRINHO ========== */
+.cart-sidebar {
+    width: 450px;
+    background: white;
+    border-left: 1px solid var(--border-color, #e5e7eb);
+    display: flex;
+    flex-direction: column;
+    z-index: 20;
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.05);
+}
+
+/* ========== HEADER ========== */
+.cart-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9fafb;
+}
+
+.cart-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-dark, #1f2937);
+}
+
+/* ========== CARRINHO VAZIO ========== */
+.cart-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light, #6b7280);
+    gap: 1rem;
+}
+
+/* ========== FOOTER ========== */
+.cart-footer {
+    padding: 1.5rem;
+    background: #f9fafb;
+    border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.total-label {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-dark, #1f2937);
+}
+
+.total-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary-color, #2563eb);
+}

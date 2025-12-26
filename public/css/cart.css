@@ -9,10 +9,9 @@
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
-    /* Posição universal: Chrome soma 0, Safari soma safe-area */
-    bottom: calc(7px + env(safe-area-inset-bottom));
+    /* Posição com safe-area para iPhone */
+    bottom: calc(18px + env(safe-area-inset-bottom));
     padding: 14px 24px;
-    padding-bottom: calc(14px + env(safe-area-inset-bottom));
     background: var(--accent-color, #ea580c);
     color: white;
     border: none;

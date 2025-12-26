@@ -6,12 +6,12 @@
 /* ========== CARD DE PRODUTO ========== */
 .cardapio-product-card {
     background: white;
-    border-radius: 16px;
-    padding: 12px;
-    margin-bottom: 12px;
+    border-radius: 12px;
+    padding: 8px;
+    margin-bottom: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     display: flex;
-    gap: 12px;
+    gap: 8px;
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
@@ -19,8 +19,7 @@
 }
 
 .cardapio-product-card:hover {
-    border-color: var(--accent-color, #ea580c);
-    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .cardapio-product-card:active {
@@ -28,9 +27,9 @@
 }
 
 .cardapio-product-image-wrapper {
-    width: 90px;
-    height: 90px;
-    border-radius: 12px;
+    width: 65px;
+    height: 65px;
+    border-radius: 8px;
     overflow: hidden;
     flex-shrink: 0;
     background: #f3f4f6;

@@ -1,0 +1,329 @@
+/**
+ * STOCK.CSS - Estoque e Adicionais
+ * Tabelas, filtros e item chips do sistema de estoque
+ */
+
+/* ========== BREADCRUMB ========== */
+.breadcrumb {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-bottom: 15px;
+}
+
+.breadcrumb a {
+    color: var(--primary-color, #2563eb);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+/* ========== STICKY TABS ========== */
+.sticky-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stock-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.stock-tab {
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.stock-tab.active {
+    background: var(--primary-color, #2563eb);
+    color: white;
+}
+
+.stock-tab:not(.active) {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.stock-tab:not(.active):hover {
+    background: #e5e7eb;
+}
+
+/* ========== CATEGORY CHIPS ========== */
+.category-chips-container {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.category-chips {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+}
+
+.category-chips::-webkit-scrollbar {
+    height: 6px;
+}
+
+.category-chips::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+}
+
+.category-chip {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    background: #f3f4f6;
+    color: #6b7280;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-size: 0.9rem;
+}
+
+.category-chip:hover {
+    background: #e5e7eb;
+}
+
+.category-chip.active {
+    background: var(--primary-color, #2563eb);
+    color: white;
+}
+
+/* ========== TABELA DE ESTOQUE ========== */
+.stock-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.stock-table-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.stock-table-container thead {
+    background: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.stock-table-container th {
+    padding: 12px 15px;
+    text-align: left;
+    color: #6b7280;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.stock-table-container tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.15s;
+}
+
+.stock-table-container tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+.stock-table-container tbody tr:hover {
+    background: #f0f4ff;
+}
+
+.stock-table-container td {
+    padding: 12px 15px;
+    color: #1f2937;
+}
+
+/* ========== AÇÕES DA TABELA ========== */
+.stock-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn-stock-action {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-stock-edit {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.btn-stock-edit:hover {
+    background: #e5e7eb;
+}
+
+.btn-stock-delete {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.btn-stock-delete:hover {
+    background: #fecaca;
+}
+
+/* ========== SEARCH ========== */
+.stock-search-container {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stock-search-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 10px 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border 0.2s;
+}
+
+.stock-search-input:focus {
+    outline: none;
+    border-color: var(--primary-color, #2563eb);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* ========== INDICADORES ========== */
+.stock-indicators {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.stock-indicator {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* ========== ITEM CHIPS (ADICIONAIS) ========== */
+.item-chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 5px 0;
+}
+
+.item-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #bae6fd;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.item-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+    border-color: #7dd3fc;
+}
+
+.item-chip-name {
+    font-weight: 600;
+    color: #0c4a6e;
+}
+
+.item-chip-price {
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.item-chip-price.paid {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.item-chip-price.free {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.item-chip-unlink {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: #fef2f2;
+    color: #dc2626;
+    border-radius: 50%;
+    text-decoration: none;
+    transition: all 0.2s;
+    margin-left: 4px;
+}
+
+.item-chip-unlink:hover {
+    background: #fecaca;
+    transform: scale(1.1);
+}
+
+/* ========== GROUP CARDS ========== */
+.group-card-header {
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.group-card-body {
+    padding: 20px;
+    min-height: 60px;
+}
+
+.group-card-empty {
+    color: #9ca3af;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 20px;
+    background: #fafafa;
+    border-radius: 8px;
+    border: 2px dashed #e5e7eb;
+}

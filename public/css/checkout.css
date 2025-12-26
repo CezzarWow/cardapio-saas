@@ -1,0 +1,719 @@
+/**
+ * CHECKOUT.CSS - Fluxo de Finalização
+ * Sugestões, formulário do cliente e pagamento
+ */
+
+/* ========== HEADER DE SUGESTÕES ========== */
+.cardapio-suggestions-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 20px 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    background: white;
+}
+
+.cardapio-suggestions-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.cardapio-back-btn {
+    width: 36px;
+    height: 36px;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1f2937;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.cardapio-back-btn:hover {
+    background: #e5e7eb;
+}
+
+.cardapio-suggestions-modal .cardapio-modal-body {
+    padding-top: 24px;
+    /* Espaço extra para não ficar atrás do footer fixo */
+    padding-bottom: calc(140px + env(safe-area-inset-bottom));
+}
+
+/* ========== SEÇÕES DE SUGESTÕES ========== */
+.suggestion-section {
+    margin-bottom: 24px;
+}
+
+.suggestion-section-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px 0;
+}
+
+.suggestion-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.suggestion-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.suggestion-item:hover {
+    background: #fafafa;
+}
+
+.suggestion-item-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.suggestion-item-image {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.suggestion-item-image-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+}
+
+.suggestion-item-image-placeholder.sauce {
+    background: #fed7aa;
+    color: var(--accent-color, #ea580c);
+}
+
+.suggestion-item-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.suggestion-item-price {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent-color, #ea580c);
+    margin: 2px 0 0 0;
+}
+
+.suggestion-drink-btn,
+.suggestion-sauce-btn {
+    width: 36px;
+    height: 36px;
+    background: var(--accent-color, #ea580c);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.suggestion-drink-btn:hover,
+.suggestion-sauce-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Animação de pulse quando adiciona */
+.suggestion-drink-btn.btn-pulse,
+.suggestion-sauce-btn.btn-pulse {
+    animation: btnPulse 0.3s ease;
+}
+
+@keyframes btnPulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.3);
+        background: #10b981;
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.suggestion-empty {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.85rem;
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 12px;
+}
+
+/* ========== CARRINHO FLUTUANTE NA TELA DE SUGESTÕES ========== */
+.suggestions-cart-btn {
+    /* O botão herda do .cardapio-floating-cart-btn mas fica verde */
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4) !important;
+    /* Sem animação de entrada */
+    animation: none !important;
+    /* Subir um pouco mais nessa tela */
+    bottom: calc(25px + env(safe-area-inset-bottom)) !important;
+}
+
+.suggestions-cart-btn:active {
+    transform: translateX(-50%) scale(0.98);
+}
+
+/* ========== MODAL DE RESUMO DO PEDIDO ========== */
+.order-review-modal .cardapio-modal-body {
+    padding: 16px;
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}
+
+.order-review-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.order-review-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.order-review-item-qty {
+    background: var(--accent-color, #ea580c);
+    color: white;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.order-review-item-info {
+    flex: 1;
+}
+
+.order-review-item-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-dark, #1f2937);
+    margin: 0 0 2px 0;
+}
+
+.order-review-item-extras {
+    font-size: 0.75rem;
+    color: var(--accent-color, #ea580c);
+    margin: 0 0 2px 0;
+}
+
+.order-review-item-obs {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-style: italic;
+    margin: 0;
+}
+
+.order-review-item-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.order-review-item-price {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-dark, #1f2937);
+}
+
+.order-review-remove-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.order-review-remove-btn:hover {
+    background: #fee2e2;
+}
+
+.order-review-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+    text-align: center;
+}
+
+.order-review-empty p {
+    margin: 12px 0 0 0;
+    font-size: 0.9rem;
+}
+
+/* Botão Finalizar (azul) */
+.order-finalize-btn {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.4) !important;
+    animation: none !important;
+    bottom: calc(25px + env(safe-area-inset-bottom)) !important;
+}
+
+/* ========== MODAL DE PAGAMENTO ========== */
+.payment-modal .cardapio-modal-body {
+    padding: 16px;
+    padding-bottom: calc(120px + env(safe-area-inset-bottom));
+}
+
+/* Total do Pedido (compacto) */
+.payment-total-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.payment-total-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.payment-total-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: white;
+}
+
+.payment-section {
+    margin-bottom: 20px;
+}
+
+.payment-section-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-dark, #1f2937);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px 0;
+}
+
+.payment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.payment-input {
+    padding: 14px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border 0.2s;
+    background: white;
+}
+
+.payment-input:focus {
+    border-color: var(--accent-color, #ea580c);
+}
+
+.payment-row {
+    display: flex;
+    gap: 10px;
+}
+
+.payment-row .payment-input:first-child {
+    flex: 1;
+    max-width: 100px;
+}
+
+.payment-row .payment-input:last-child {
+    flex: 2;
+}
+
+/* Botão Enviar Pedido (verde) */
+.send-order-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4) !important;
+    animation: none !important;
+    bottom: calc(25px + env(safe-area-inset-bottom)) !important;
+}
+
+/* Textarea de observação */
+.payment-textarea {
+    resize: none;
+    min-height: 60px;
+}
+
+/* ========== FORMAS DE PAGAMENTO COM RADIO ========== */
+.payment-methods-list {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}
+
+.payment-method-option {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.payment-method-option:hover {
+    border-color: #d1d5db;
+}
+
+.payment-method-option input[type="radio"] {
+    display: none;
+}
+
+.payment-method-check {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #d1d5db;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    order: 3;
+}
+
+.payment-method-option input[type="radio"]:checked~.payment-method-check {
+    border-color: var(--accent-color, #ea580c);
+    background: var(--accent-color, #ea580c);
+}
+
+.payment-method-option input[type="radio"]:checked~.payment-method-check::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 50%;
+}
+
+.payment-method-option input[type="radio"]:checked {
+    /* Borda laranja quando selecionado */
+}
+
+.payment-method-option:has(input:checked) {
+    border-color: var(--accent-color, #ea580c);
+    background: #fff7ed;
+}
+
+.payment-method-option input[type="radio"]:checked~.payment-method-label {
+    font-weight: 700;
+    color: var(--accent-color, #ea580c);
+}
+
+.payment-method-icon {
+    font-size: 1.2rem;
+}
+
+.payment-method-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark, #1f2937);
+}
+
+/* Campo de Troco */
+.change-container {
+    margin-top: 12px;
+    padding: 12px;
+    background: #fef9c3;
+    border-radius: 10px;
+    border: 1px solid #facc15;
+}
+
+.change-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #854d0e;
+    margin-bottom: 8px;
+}
+
+.change-container .payment-input {
+    background: white;
+}
+
+/* ========== FORMULÁRIO DO CLIENTE (legado) ========== */
+.customer-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-input {
+    padding: 14px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.form-input:focus {
+    border-color: var(--accent-color, #ea580c);
+}
+
+.form-row {
+    display: flex;
+    gap: 12px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+/* ========== OPÇÕES DE ENTREGA ========== */
+.delivery-options {
+    display: flex;
+    gap: 10px;
+}
+
+.delivery-option {
+    flex: 1;
+    cursor: pointer;
+}
+
+.delivery-option input {
+    display: none;
+}
+
+.delivery-option-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 12px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.delivery-option-content span {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6b7280;
+}
+
+.delivery-option input:checked+.delivery-option-content {
+    background: #fff7ed;
+    border-color: var(--accent-color, #ea580c);
+}
+
+.delivery-option input:checked+.delivery-option-content span {
+    color: var(--accent-color, #ea580c);
+}
+
+/* ========== MODAL DE PAGAMENTO ========== */
+.payment-total-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.payment-total-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.payment-total-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: white;
+}
+
+.payment-methods-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 16px 0;
+}
+
+.payment-methods {
+    display: flex;
+    gap: 12px;
+}
+
+.payment-method-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 16px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.payment-method-btn:hover {
+    border-color: var(--accent-color, #ea580c);
+    background: #fff7ed;
+}
+
+.payment-method-btn.selected {
+    background: #fff7ed;
+    border-color: var(--accent-color, #ea580c);
+    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.2);
+}
+
+.payment-method-icon {
+    font-size: 2rem;
+}
+
+.payment-method-btn span {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+/* ========== BOTÃO FINALIZAR ========== */
+.cardapio-finish-btn {
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cardapio-finish-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.cardapio-finish-btn:active {
+    transform: translateY(0);
+}
+
+/* ========== FOOTER DE SUGESTÕES (FIXO NA TELA) ========== */
+.suggestions-footer {
+    box-sizing: border-box;
+    position: fixed;
+    left: 0;
+    right: 0;
+    /* Chrome: soma 0, Safari: soma safe-area */
+    bottom: calc(0px + env(safe-area-inset-bottom));
+    padding: 16px 20px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    border-top: 2px solid #f3f4f6;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1100;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* Safari iOS - valores específicos */
+@supports (-webkit-touch-callout: none) {
+    .suggestions-footer {
+        bottom: 0;
+        padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    }
+}
+
+.suggestions-cart-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.suggestions-cart-icon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-dark, #1f2937);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.suggestions-cart-icon svg {
+    color: var(--accent-color, #ea580c);
+}
+
+.suggestions-cart-total {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--accent-color, #ea580c);
+}

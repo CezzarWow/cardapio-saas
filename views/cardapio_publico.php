@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title><?= htmlspecialchars($restaurant['name']) ?> - Cardápio</title>
     
     <!-- CSS Modular - Cardápio Público -->
@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/form.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cart.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/checkout.css?v=<?= time() ?>">
     
     <script src="https://unpkg.com/lucide@latest"></script>
     
@@ -20,6 +21,7 @@
         html, body { 
             height: 100%;
             overflow: hidden; /* Scroll NÃO fica no body */
+            background: transparent !important;
         }
         
         /* Container principal - 100vh flex column */
@@ -38,7 +40,9 @@
             display: flex;
             flex-direction: column;
             min-height: 0;
-            background: transparent;
+            background: #f3f4f6;
+            /* Pega a área do safe-area */
+            padding-bottom: env(safe-area-inset-bottom);
         }
         
         /* Header - tamanho fixo, não encolhe */
@@ -378,12 +382,121 @@
             </div>
         </div>
         
-        <div class="cardapio-cart-footer">
-            <button class="cardapio-checkout-btn" onclick="finalizarPedido()">
-                Finalizar Pedido
-                <i data-lucide="arrow-right" size="18"></i>
+        <!-- Carrinho flutuante igual da tela principal -->
+        <button id="suggestionsFloatingCart" class="cardapio-floating-cart-btn suggestions-cart-btn show" onclick="finalizarPedido()">
+            <i data-lucide="shopping-cart" size="20"></i>
+            <span id="suggestionsCartTotal">R$ 0,00</span>
+            <i data-lucide="arrow-right" size="18"></i>
+        </button>
+    </div>
+</div>
+
+<!-- MODAL DE RESUMO DO PEDIDO (CONFIRA SEU PEDIDO) -->
+<div id="orderReviewModal" class="cardapio-modal">
+    <div class="cardapio-modal-content fullscreen order-review-modal">
+        <div class="cardapio-suggestions-header">
+            <button class="cardapio-back-btn" onclick="closeOrderReviewModal()">
+                <i data-lucide="arrow-left" size="20"></i>
             </button>
+            <h2>📋 Confira seu Pedido</h2>
         </div>
+        
+        <div class="cardapio-modal-body">
+            <div id="orderReviewItems" class="order-review-items">
+                <!-- Itens serão inseridos via JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Carrinho flutuante para finalizar -->
+        <button id="finalizeOrderBtn" class="cardapio-floating-cart-btn order-finalize-btn show" onclick="goToPayment()">
+            <i data-lucide="credit-card" size="20"></i>
+            <span id="orderReviewTotal">R$ 0,00</span>
+            <span>Finalizar</span>
+        </button>
+    </div>
+</div>
+
+<!-- MODAL DE PAGAMENTO -->
+<div id="paymentModal" class="cardapio-modal">
+    <div class="cardapio-modal-content fullscreen payment-modal">
+        <div class="cardapio-suggestions-header">
+            <button class="cardapio-back-btn" onclick="closePaymentModal()">
+                <i data-lucide="arrow-left" size="20"></i>
+            </button>
+            <h2>💳 Pagamento</h2>
+        </div>
+        
+        <div class="cardapio-modal-body">
+            <!-- Total do Pedido -->
+            <div class="payment-total-box">
+                <span class="payment-total-label">Total do Pedido</span>
+                <span id="paymentTotalValue" class="payment-total-value">R$ 0,00</span>
+            </div>
+            
+            <!-- Dados do Cliente -->
+            <div class="payment-section">
+                <h3 class="payment-section-title">
+                    <i data-lucide="user" size="18"></i>
+                    Seus Dados
+                </h3>
+                
+                <div class="payment-form">
+                    <input type="text" id="customerName" class="payment-input" placeholder="Seu nome">
+                    
+                    <input type="text" id="customerAddress" class="payment-input" placeholder="Endereço (rua)">
+                    
+                    <div class="payment-row">
+                        <input type="text" id="customerNumber" class="payment-input" placeholder="Nº">
+                        <input type="text" id="customerNeighborhood" class="payment-input" placeholder="Bairro">
+                    </div>
+                    
+                    <textarea id="customerObs" class="payment-input payment-textarea" placeholder="Observações (opcional)" rows="2"></textarea>
+                </div>
+            </div>
+            
+            <!-- Forma de Pagamento -->
+            <div class="payment-section">
+                <h3 class="payment-section-title">
+                    <i data-lucide="wallet" size="18"></i>
+                    Forma de Pagamento
+                </h3>
+                
+                <div class="payment-methods-list">
+                    <label class="payment-method-option" data-method="dinheiro">
+                        <input type="radio" name="paymentMethod" value="dinheiro" onchange="selectPaymentMethod('dinheiro')">
+                        <span class="payment-method-check"></span>
+                        <span class="payment-method-icon">💵</span>
+                        <span class="payment-method-label">Dinheiro</span>
+                    </label>
+                    
+                    <label class="payment-method-option" data-method="cartao">
+                        <input type="radio" name="paymentMethod" value="cartao" onchange="selectPaymentMethod('cartao')">
+                        <span class="payment-method-check"></span>
+                        <span class="payment-method-icon">💳</span>
+                        <span class="payment-method-label">Cartão</span>
+                    </label>
+                    
+                    <label class="payment-method-option" data-method="pix">
+                        <input type="radio" name="paymentMethod" value="pix" onchange="selectPaymentMethod('pix')">
+                        <span class="payment-method-check"></span>
+                        <span class="payment-method-icon">📱</span>
+                        <span class="payment-method-label">PIX</span>
+                    </label>
+                </div>
+                
+                <!-- Campo de Troco (só aparece se dinheiro) -->
+                <div id="changeContainer" class="change-container" style="display: none;">
+                    <label class="change-label">Troco para quanto?</label>
+                    <input type="text" id="changeAmount" class="payment-input" placeholder="Ex: R$ 50,00">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Botão Enviar Pedido -->
+        <button id="sendOrderBtn" class="cardapio-floating-cart-btn send-order-btn show" onclick="sendOrder()">
+            <i data-lucide="send" size="20"></i>
+            <span>Enviar Pedido</span>
+        </button>
     </div>
 </div>
 

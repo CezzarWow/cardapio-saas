@@ -217,8 +217,7 @@
 }
 
 .cardapio-additional-item:hover {
-    border-color: #fef3c7;
-    background: #fffbeb;
+    background: #fafafa;
 }
 
 .cardapio-additional-item-info {
