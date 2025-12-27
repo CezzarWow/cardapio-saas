@@ -95,7 +95,7 @@
         </header>
 
         <!-- BUSCA -->
-        <div class="cardapio-search-container">
+        <div class="cardapio-search-container" style="display: none;">
             <div class="cardapio-search-box">
                 <i data-lucide="search" size="16" class="cardapio-search-icon"></i>
                 <input 
@@ -402,6 +402,30 @@
         </div>
         
         <div class="cardapio-modal-body">
+            <!-- Tipo de Pedido -->
+            <div class="order-type-section">
+                <label class="order-type-option" data-method="local">
+                    <input type="radio" name="orderType" value="local" onchange="selectOrderType('local')">
+                    <span class="order-type-check"></span>
+                    <span class="order-type-icon">🍽️</span>
+                    <span class="order-type-label">Local</span>
+                </label>
+                
+                <label class="order-type-option" data-method="retirada">
+                    <input type="radio" name="orderType" value="retirada" onchange="selectOrderType('retirada')">
+                    <span class="order-type-check"></span>
+                    <span class="order-type-icon">🛍️</span>
+                    <span class="order-type-label">Retirada</span>
+                </label>
+                
+                <label class="order-type-option" data-method="entrega">
+                    <input type="radio" name="orderType" value="entrega" onchange="selectOrderType('entrega')" checked>
+                    <span class="order-type-check"></span>
+                    <span class="order-type-icon">🚗</span>
+                    <span class="order-type-label">Entrega</span>
+                </label>
+            </div>
+            
             <div id="orderReviewItems" class="order-review-items">
                 <!-- Itens serão inseridos via JavaScript -->
             </div>
@@ -441,16 +465,19 @@
                 </h3>
                 
                 <div class="payment-form">
-                    <input type="text" id="customerName" class="payment-input" placeholder="Seu nome">
+                    <input type="text" id="customerName" class="payment-input" placeholder="Seu nome *" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
                     
-                    <input type="text" id="customerAddress" class="payment-input" placeholder="Endereço (rua)">
+                    <input type="text" id="customerAddress" class="payment-input" placeholder="Endereço (rua) *" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
                     
-                    <div class="payment-row">
-                        <input type="text" id="customerNumber" class="payment-input" placeholder="Nº">
-                        <input type="text" id="customerNeighborhood" class="payment-input" placeholder="Bairro">
+                    <div class="payment-number-row">
+                        <input type="text" id="customerNumber" class="payment-input payment-number-input" placeholder="Nº *" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
+                        <button type="button" class="no-number-btn" onclick="toggleNoNumber()">
+                            <span>Sem nº</span>
+                        </button>
+                        <input type="text" id="customerNeighborhood" class="payment-input payment-neighborhood-input" placeholder="Bairro" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
                     </div>
                     
-                    <textarea id="customerObs" class="payment-input payment-textarea" placeholder="Observações (opcional)" rows="2"></textarea>
+                    <textarea id="customerObs" class="payment-input payment-textarea" placeholder="Observações (opcional)" rows="2" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"></textarea>
                 </div>
             </div>
             
@@ -484,10 +511,13 @@
                     </label>
                 </div>
                 
+                <!-- Observação sobre o pagamento -->
+                <textarea id="paymentNote" class="payment-input payment-note-input payment-textarea" placeholder="Caso seja mais de 1 tipo de pagamento, escreva aqui" rows="2" style="margin-top: 8px;" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"></textarea>
+                
                 <!-- Campo de Troco (só aparece se dinheiro) -->
                 <div id="changeContainer" class="change-container" style="display: none;">
                     <label class="change-label">Troco para quanto?</label>
-                    <input type="text" id="changeAmount" class="payment-input" placeholder="Ex: R$ 50,00">
+                    <input type="text" id="changeAmount" class="payment-input" placeholder="Ex: R$ 50,00" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
                 </div>
             </div>
         </div>

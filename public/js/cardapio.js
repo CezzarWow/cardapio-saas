@@ -43,6 +43,81 @@ function initializeEventListeners() {
             }
         });
     });
+
+    // Mover cursor para o final ao clicar em inputs de texto
+    document.addEventListener('focus', function (e) {
+        if (e.target.classList.contains('payment-input') ||
+            e.target.classList.contains('payment-textarea')) {
+            // Move o cursor para o final do texto
+            const length = e.target.value.length;
+            e.target.setSelectionRange(length, length);
+        }
+    }, true);
+
+    // Também ao clicar (para garantir mesmo com duplo clique)
+    document.addEventListener('click', function (e) {
+        if (e.target.classList.contains('payment-input') ||
+            e.target.classList.contains('payment-textarea')) {
+            // Usar timeout para garantir que execute depois do comportamento padrão
+            setTimeout(() => {
+                const length = e.target.value.length;
+                e.target.setSelectionRange(length, length);
+            }, 0);
+        }
+    }, true);
+
+    // Formatação de moeda para o campo de troco (digita da direita para esquerda)
+    const changeAmountInput = document.getElementById('changeAmount');
+    if (changeAmountInput) {
+        changeAmountInput.value = 'R$ 0,00';
+
+        changeAmountInput.addEventListener('focus', function () {
+            this.select();
+
+            // Rolar o container do modal para o final (para o campo ficar visível acima do teclado)
+            setTimeout(() => {
+                const modalBody = document.querySelector('.payment-modal .cardapio-modal-body');
+                if (modalBody) {
+                    modalBody.scrollTo({
+                        top: modalBody.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 500); // Delay maior para garantir que o teclado abriu completamente
+        });
+
+        changeAmountInput.addEventListener('keydown', function (e) {
+            // Permitir apenas números, backspace, delete, tab e enter
+            if (e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Tab' || e.key === 'Enter' ||
+                e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.blur();
+                }
+                return;
+            }
+
+            // Bloquear tudo que não seja número
+            if (!/^\d$/.test(e.key)) {
+                e.preventDefault();
+                return;
+            }
+        });
+
+        changeAmountInput.addEventListener('input', function (e) {
+            let value = this.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+
+            if (value === '') {
+                value = '0';
+            }
+
+            // Converte para número e divide por 100 (centavos)
+            const numValue = parseInt(value) / 100;
+
+            // Formata como moeda
+            this.value = 'R$ ' + numValue.toFixed(2).replace('.', ',');
+        });
+    }
 }
 
 // ========== BUSCA ==========
@@ -463,8 +538,16 @@ function removeFromOrderReview(itemId) {
 
 // ========== MODAL DE PAGAMENTO ==========
 let selectedPaymentMethod = null;
+let selectedOrderType = 'entrega'; // Pré-selecionado como padrão
+let hasNoNumber = false;
 
 function goToPayment() {
+    // Validar se tipo de pedido foi selecionado
+    if (!selectedOrderType) {
+        alert('Por favor, selecione o tipo de pedido.');
+        return;
+    }
+
     document.getElementById('orderReviewModal').classList.remove('show');
     openPaymentModal();
 }
@@ -500,6 +583,26 @@ function selectPaymentMethod(method) {
     }
 }
 
+function selectOrderType(type) {
+    selectedOrderType = type;
+}
+
+function toggleNoNumber() {
+    hasNoNumber = !hasNoNumber;
+    const input = document.getElementById('customerNumber');
+    const btn = document.querySelector('.no-number-btn');
+
+    if (hasNoNumber) {
+        input.value = 'S/N';
+        input.disabled = true;
+        btn.classList.add('active');
+    } else {
+        input.value = '';
+        input.disabled = false;
+        btn.classList.remove('active');
+    }
+}
+
 function sendOrder() {
     const name = document.getElementById('customerName').value.trim();
     const address = document.getElementById('customerAddress').value.trim();
@@ -517,6 +620,10 @@ function sendOrder() {
         alert('Por favor, preencha o endereço.');
         return;
     }
+    if (!number && !hasNoNumber) {
+        alert('Por favor, preencha o número ou selecione "Sem nº".');
+        return;
+    }
     if (!selectedPaymentMethod) {
         alert('Por favor, selecione a forma de pagamento.');
         return;
@@ -526,6 +633,7 @@ function sendOrder() {
 
     // Montar mensagem
     let msg = '🎉 Pedido enviado!\n\n' +
+        'Tipo: ' + selectedOrderType.toUpperCase() + '\n' +
         'Nome: ' + name + '\n' +
         'Endereço: ' + address + ', ' + number + '\n' +
         'Bairro: ' + neighborhood + '\n' +
@@ -548,6 +656,8 @@ function sendOrder() {
     // Limpar carrinho e fechar
     cart = [];
     selectedPaymentMethod = null;
+    selectedOrderType = 'entrega';
+    hasNoNumber = false;
     updateCartDisplay();
     document.getElementById('paymentModal').classList.remove('show');
 
@@ -560,6 +670,7 @@ function sendOrder() {
     document.getElementById('changeAmount').value = '';
     document.getElementById('changeContainer').style.display = 'none';
     document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => radio.checked = false);
+    document.querySelectorAll('input[name="orderType"]').forEach(radio => radio.checked = false);
 }
 
 // ========== UTILITÁRIOS ==========
