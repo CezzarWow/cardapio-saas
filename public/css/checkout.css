@@ -3,6 +3,12 @@
  * Sugestões, formulário do cliente e pagamento
  */
 
+/* ========== VARIÁVEIS CSS ========== */
+:root {
+    --send-btn-height: 64px;
+    --send-btn-gap: 12px;
+}
+
 /* ========== HEADER DE SUGESTÕES ========== */
 .cardapio-suggestions-header {
     display: flex;
@@ -374,16 +380,42 @@
 
 /* ========== MODAL DE PAGAMENTO ========== */
 .payment-modal .cardapio-modal-body {
+    background: white;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    /* ⚠️ IMPORTANTE: Substituir 73px pelo valor medido no Safari Remote Inspector
+       Comando: const header = document.querySelector('.payment-modal .cardapio-suggestions-header');
+                console.log('headerHeight', Math.ceil(header?.getBoundingClientRect().height || 0)); */
+    height: calc(100svh - 73px);
+    max-height: calc(100svh - 73px);
     padding: 6px 10px 10px 10px;
-    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+    /* Padding simples - botão agora é parte do conteúdo */
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
 }
+
+/* Fallback para navegadores que não suportam svh */
+@supports not (height: calc(100svh - 73px)) {
+    .payment-modal .cardapio-modal-body {
+        height: calc(100vh - 73px);
+        max-height: calc(100vh - 73px);
+    }
+}
+
+/* Ajuste quando campo de troco está visível - não precisa mais */
+/* .payment-modal.has-change .cardapio-modal-body {
+    padding-bottom: calc(
+        var(--send-btn-height) +
+        8px +
+        env(safe-area-inset-bottom)
+    );
+} */
 
 /* Total do Pedido (compacto) */
 .payment-total-box {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 23px 14px;
+    padding: 14px 14px;
     background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
     border-radius: 10px;
     margin-bottom: 3px;
@@ -401,9 +433,30 @@
     color: white;
 }
 
+/* Aviso de tipo de pedido (retirada/local) */
+.order-type-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #dbeafe;
+    border: 1px solid #93c5fd;
+    border-radius: 10px;
+    margin-top: 8px;
+    margin-bottom: 3px;
+    color: #1e40af;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.order-type-alert i {
+    flex-shrink: 0;
+    color: #3b82f6;
+}
+
 .payment-section {
     margin-top: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 0;
 }
 
 .payment-section-title {
@@ -441,7 +494,9 @@
 .payment-note-input {
     width: 100%;
     padding: 8px 12px;
-    resize: none;
+    font-size: 0.8rem;
+    resize: vertical;
+    margin-bottom: 0 !important;
 }
 
 .payment-row {
@@ -452,19 +507,25 @@
 /* Row especial para número com botão "Sem nº" */
 .payment-number-row {
     display: flex;
-    gap: 8px;
+    gap: 6px;
+    /* Reduzido de 8px para caber melhor */
     align-items: center;
     max-width: 100%;
     box-sizing: border-box;
 }
 
-.payment-number-input {
-    flex: 1;
-    min-width: 0;
+.payment-number-row .payment-input:first-child {
+    flex: 0 0 85px;
+    width: 85px;
+    max-width: none;
 }
 
-.payment-neighborhood-input {
-    flex: 0 0 40px;
+.payment-number-row .payment-input:last-child {
+    flex: 1;
+    /* Mudado de flex: 2 para flex: 1 simples */
+    width: 0;
+    /* Truque fundamental do Flexbox para evitar overflow */
+    min-width: 0;
 }
 
 .no-number-btn {
@@ -498,21 +559,32 @@
     color: #9ca3af;
 }
 
-.payment-row .payment-input:first-child {
-    flex: 1;
-    max-width: 100px;
+.payment-number-row .payment-input:first-child {
+    flex: 0 0 85px;
+    /* Tamanho fixo e seguro para Safari/Chrome */
+    width: 85px;
+    /* Reforço para navegadores antigos */
+    max-width: none;
 }
 
-.payment-row .payment-input:last-child {
+.payment-number-row .payment-input:last-child {
     flex: 2;
 }
 
-/* Botão Enviar Pedido (verde) */
+/* Botão Enviar Pedido (verde) - parte do fluxo normal do conteúdo */
 .send-order-btn {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    display: flex !important;
+    width: auto;
+    height: 52px;
+    margin: 24px auto 0 auto;
     background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
     box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4) !important;
     animation: none !important;
-    bottom: calc(18px + env(safe-area-inset-bottom)) !important;
 }
 
 /* Textarea de observação */
@@ -531,16 +603,20 @@
 .payment-method-option {
     flex: 1;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 2px;
-    padding: 4px 2px;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 6px;
+    /* Aumentado para 14px */
     background: white;
     border: 2px solid #e5e7eb;
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
     text-align: center;
+    font-weight: 700;
+    /* Texto mais forte */
 }
 
 .payment-method-option:hover {
@@ -593,21 +669,66 @@
 
 .payment-method-icon {
     font-size: 0.95rem;
+    line-height: 1;
 }
 
 .payment-method-label {
     font-size: 0.65rem;
     font-weight: 600;
     color: var(--text-dark, #1f2937);
+    line-height: 1;
 }
 
 /* Campo de Troco */
 .change-container {
-    margin-top: 12px;
-    padding: 12px;
+    margin-top: 8px;
+    margin-bottom: 0;
+    padding: 8px;
     background: #fef9c3;
     border-radius: 10px;
     border: 1px solid #facc15;
+}
+
+/* Modo compacto específico para o resumo (reduz 25% altura) */
+.change-container.summary-mode {
+    padding: 2px 8px;
+    /* Reduzido de 8px */
+    margin-top: 4px;
+    /* Reduzido de 8px */
+}
+
+/* Modo Resumo do Troco */
+.change-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 2px;
+}
+
+.change-summary-text {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #854d0e;
+}
+
+.btn-edit-change {
+    background: transparent;
+    border: 1px solid #eab308;
+    /* Laranja/Amarelo */
+    color: #a16207;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-edit-change:hover {
+    background: rgba(234, 179, 8, 0.1);
 }
 
 .change-label {
@@ -615,11 +736,138 @@
     font-size: 0.8rem;
     font-weight: 600;
     color: #854d0e;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
-.change-container .payment-input {
+.change-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.change-amount-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.no-change-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 10px;
     background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-dark, #1f2937);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btn-confirm-change {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #10b981;
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.btn-confirm-change:active {
+    transform: scale(0.95);
+}
+
+/* Modo Compacto (Zoom Out / Fit to Screen) */
+/* Modo Compacto (Zoom Out / Fit to Screen) */
+/* Modo Compacto (Zoom Out / Fit to Screen) */
+.payment-modal.compact-layout .cardapio-modal-body {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.payment-modal.compact-layout .payment-section {
+    margin-top: 4px;
+    margin-bottom: 0;
+}
+
+.payment-modal.compact-layout .payment-section-title {
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+}
+
+.payment-modal.compact-layout .payment-form {
+    gap: 10px;
+}
+
+.payment-modal.compact-layout .payment-input {
+    padding: 10px 10px;
+    font-size: 0.9rem;
+    height: auto;
+}
+
+.payment-modal.compact-layout .payment-number-row .payment-input {
+    padding: 10px 10px;
+}
+
+.payment-modal.compact-layout .payment-methods-list {
+    gap: 10px;
+    display: flex;
+}
+
+.payment-modal.compact-layout .payment-method-option {
+    padding: 20px 6px;
+    /* Aumentado verticalmente */
+    font-weight: 700;
+}
+
+.payment-modal.compact-layout .payment-method-icon {
+    font-size: 1.1rem;
+    /* Ícone levemente maior */
+}
+
+.payment-modal.compact-layout .change-container {
+    margin-top: 8px;
+    padding: 8px;
+}
+
+/* Reduzir ícones no modo compacto */
+.payment-modal.compact-layout .payment-section-title i {
+    width: 18px;
+    height: 18px;
+}
+
+/* Ajuste específico para garantir que o botão Enviar fique visível sem scroll */
+.payment-modal.compact-layout .send-order-btn {
+    margin-top: 20px;
+    height: 48px;
+    /*inda menor */
+}
+
+
+.no-change-btn:hover {
+    border-color: #d1d5db;
+}
+
+.no-change-btn.active {
+    background: var(--accent-color, #ea580c);
+    border-color: var(--accent-color, #ea580c);
+    color: white;
+}
+
+.change-amount-input:disabled {
+    background: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
 }
 
 /* ========== FORMULÁRIO DO CLIENTE (legado) ========== */

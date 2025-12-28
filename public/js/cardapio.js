@@ -69,22 +69,120 @@ function initializeEventListeners() {
     // Formatação de moeda para o campo de troco (digita da direita para esquerda)
     const changeAmountInput = document.getElementById('changeAmount');
     if (changeAmountInput) {
+        changeAmountInput.addEventListener('input', function (e) {
+            // Remove tudo que não é dígito
+            let value = e.target.value.replace(/\D/g, '');
+            if (value === '') {
+                e.target.value = '';
+                return;
+            }
+
+            // Converte para centavos e formata
+            value = (parseInt(value) / 100).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+
+            e.target.value = value;
+        });
+    }
+
+    // Máscara de Telefone (XX) XXXXX-XXXX
+    const phoneInput = document.getElementById('customerPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function (e) {
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+            e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
+    }
+
+    // Lógica para scroll e visualViewport (Global para todos os inputs)
+    function getModalBody() {
+        return document.querySelector('.payment-modal .cardapio-modal-body');
+    }
+
+    function adjustPaddingForKeyboard() {
+        const modalBody = getModalBody();
+        if (!modalBody) return;
+
+        const vv = window.visualViewport;
+        const keyboardHeight = vv ? Math.max(0, window.innerHeight - vv.height) : 0;
+        const basePad = 60; // Aumentado para garantir scroll confortável
+        modalBody.style.paddingBottom = `${basePad + keyboardHeight}px`;
+    }
+
+    function ensureVisible(inputEl) {
+        const modalBody = getModalBody();
+        if (!modalBody) return;
+        const elRect = inputEl.getBoundingClientRect();
+        const bodyRect = modalBody.getBoundingClientRect();
+
+        const hiddenBy = elRect.bottom - bodyRect.bottom;
+        if (hiddenBy > 0) {
+            modalBody.scrollTop = modalBody.scrollTop + hiddenBy + 16;
+            return;
+        }
+
+        try {
+            inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (e) {
+            modalBody.scrollTop = modalBody.scrollHeight;
+        }
+    }
+
+    // Aplica o handler robusto a TODOS os inputs do modal
+    const allPaymentInputs = document.querySelectorAll('.payment-input');
+    allPaymentInputs.forEach(input => {
+        input.addEventListener('focus', function () {
+            if (this.id === 'changeAmount') this.select();
+
+            if (window.visualViewport) {
+                adjustPaddingForKeyboard();
+                ensureVisible(this);
+
+                const onVV = () => {
+                    adjustPaddingForKeyboard();
+                    // Garante que o scroll aconteça APÓS o padding ser aplicado visualmente
+                    requestAnimationFrame(() => requestAnimationFrame(() => ensureVisible(this)));
+                };
+                window.visualViewport.addEventListener('resize', onVV);
+                window.visualViewport.addEventListener('scroll', onVV);
+
+                // Polling agressivo durante a animação (aprox 400ms)
+                let attempts = 0;
+                const interval = setInterval(() => {
+                    ensureVisible(this);
+                    attempts++;
+                    if (attempts > 8) clearInterval(interval);
+                }, 50);
+
+                setTimeout(() => {
+                    try {
+                        clearInterval(interval);
+                        window.visualViewport.removeEventListener('resize', onVV);
+                        window.visualViewport.removeEventListener('scroll', onVV);
+                    } catch (e) { }
+                }, 1500);
+            } else {
+                setTimeout(() => {
+                    try { this.scrollIntoView({ block: 'center' }); } catch (e) { }
+                    setTimeout(() => {
+                        const modalBody = getModalBody();
+                        if (modalBody) modalBody.scrollTop = modalBody.scrollHeight;
+                    }, 200);
+                }, 140);
+            }
+            requestAnimationFrame(() => requestAnimationFrame(() => ensureVisible(this)));
+        });
+    });
+
+    // Lógica antiga (será limpa no próximo passo)
+
+    if (changeAmountInput) {
         changeAmountInput.value = 'R$ 0,00';
 
-        changeAmountInput.addEventListener('focus', function () {
-            this.select();
 
-            // Rolar o container do modal para o final (para o campo ficar visível acima do teclado)
-            setTimeout(() => {
-                const modalBody = document.querySelector('.payment-modal .cardapio-modal-body');
-                if (modalBody) {
-                    modalBody.scrollTo({
-                        top: modalBody.scrollHeight,
-                        behavior: 'smooth'
-                    });
-                }
-            }, 500); // Delay maior para garantir que o teclado abriu completamente
-        });
+
 
         changeAmountInput.addEventListener('keydown', function (e) {
             // Permitir apenas números, backspace, delete, tab e enter
@@ -112,11 +210,47 @@ function initializeEventListeners() {
             }
 
             // Converte para número e divide por 100 (centavos)
-            const numValue = parseInt(value) / 100;
+            let numValue = parseInt(value) / 100;
+
+            // Limite de R$ 200,00
+            if (numValue > 200) {
+                numValue = 200;
+            }
 
             // Formata como moeda
             this.value = 'R$ ' + numValue.toFixed(2).replace('.', ',');
         });
+    }
+}
+
+// ========== FUNÇÃO DE SCROLL AUTOMÁTICO PARA CAMPO DE TROCO ==========
+function scrollToChangeAmount() {
+    const modalBody = document.querySelector('.payment-modal .cardapio-modal-body');
+    const changeContainer = document.getElementById('changeContainer');
+    const changeInput = document.getElementById('changeAmount');
+
+    if (!modalBody || !changeContainer) return;
+
+    // garante que o elemento existe e já foi renderizado
+    const elRect = changeContainer.getBoundingClientRect();
+    const bodyRect = modalBody.getBoundingClientRect();
+
+    const hiddenBy = elRect.bottom - bodyRect.bottom;
+
+    if (hiddenBy > 0) {
+        // Rolar diretamente sem smooth para garantir que funcione
+        modalBody.scrollTop = modalBody.scrollTop + hiddenBy + 16;
+    } else {
+        // centraliza levemente para UX melhor
+        modalBody.scrollTo({
+            top: modalBody.scrollTop + (elRect.top - bodyRect.top) - 80,
+            behavior: 'smooth'
+        });
+    }
+
+    // Opcional: focar o input depois do scroll (pode ser removido se abrir teclado indesejado)
+    if (changeInput) {
+        setTimeout(() => changeInput.focus(), 150);
     }
 }
 
@@ -557,7 +691,51 @@ function openPaymentModal() {
     if (modal) {
         modal.classList.add('show');
         updatePaymentTotal();
+
+        // Configurar campos baseados no tipo de pedido
+        updatePaymentFieldsByOrderType();
+
         setTimeout(() => lucide.createIcons(), 100);
+    }
+}
+
+// Atualiza visibilidade dos campos baseado no tipo de pedido
+function updatePaymentFieldsByOrderType() {
+    const orderType = selectedOrderType; // 'entrega', 'retirada', ou 'local'
+    const isDelivery = orderType === 'entrega';
+
+    // Elementos
+    const alert = document.getElementById('orderTypeAlert');
+    const alertText = document.getElementById('orderTypeAlertText');
+    const phoneInput = document.getElementById('customerPhone');
+    const changeContainer = document.getElementById('changeContainer');
+
+    // Pegar elementos delivery-only EXCETO o changeContainer (ele tem lógica própria)
+    const deliveryOnlyElements = Array.from(document.querySelectorAll('.delivery-only'))
+        .filter(el => el.id !== 'changeContainer');
+
+    if (isDelivery) {
+        // ENTREGA: oculta aviso, mostra campos de endereço
+        // Telefone SEMPRE visível (para todos os tipos)
+        if (alert) alert.style.display = 'none';
+        deliveryOnlyElements.forEach(el => el.style.display = '');
+
+        // changeContainer continua com lógica própria (só aparece se dinheiro)
+        // Não alteramos o display dele aqui
+    } else {
+        // RETIRADA/LOCAL: mostra aviso e telefone, oculta campos de endereço
+        const typeText = orderType === 'retirada' ? '🛍️ RETIRADA' : '🍽️ LOCAL';
+        const messageText = orderType === 'retirada'
+            ? 'Você escolheu RETIRADA. Pagamento no local.'
+            : 'Você escolheu comer no LOCAL. Pagamento no local.';
+
+        if (alert) alert.style.display = 'flex';
+        if (alertText) alertText.textContent = messageText;
+        if (phoneInput) phoneInput.style.display = '';
+        deliveryOnlyElements.forEach(el => el.style.display = 'none');
+
+        // Em retirada/local, sempre oculta o changeContainer
+        if (changeContainer) changeContainer.style.display = 'none';
     }
 }
 
@@ -574,18 +752,160 @@ function updatePaymentTotal() {
 }
 
 function selectPaymentMethod(method) {
+    // Ao trocar, fecha teclado para evitar bugs de layout
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+        activeEl.blur();
+    }
+
     selectedPaymentMethod = method;
 
     // Mostra/esconde campo de troco
     const changeContainer = document.getElementById('changeContainer');
-    if (changeContainer) {
-        changeContainer.style.display = method === 'dinheiro' ? 'block' : 'none';
+    const modal = document.querySelector('.payment-modal');
+
+    if (changeContainer && modal) {
+        if (method === 'dinheiro') {
+            // Limpa estado anterior se houver
+            editChange();
+            const changeInput = document.getElementById('changeAmount');
+            if (changeInput) {
+                changeInput.value = 'R$ 0,00';
+                changeInput.disabled = false;
+            }
+            const noChangeBtn = document.querySelector('.no-change-btn');
+            if (noChangeBtn) noChangeBtn.classList.remove('active');
+            window.hasNoChange = false;
+
+            changeContainer.style.display = 'block';
+            modal.classList.add('has-change');
+
+            // Aguarda o DOM renderizar o bloco do troco
+            setTimeout(() => scrollToChangeAmount(), 80);
+            setTimeout(() => scrollToChangeAmount(), 250);
+        } else {
+            // Se saiu do dinheiro, também limpa para garantir estado novo ao voltar
+            editChange();
+
+            changeContainer.style.display = 'none';
+            modal.classList.remove('has-change');
+
+            const modalBody = document.querySelector('.payment-modal .cardapio-modal-body');
+            if (modalBody) {
+                modalBody.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
+        }
     }
 }
 
 function selectOrderType(type) {
     selectedOrderType = type;
 }
+
+function toggleNoChange() {
+    const input = document.getElementById('changeAmount');
+    const btn = document.querySelector('.no-change-btn');
+
+    window.hasNoChange = !window.hasNoChange;
+
+    if (window.hasNoChange) {
+        input.value = 'Sem troco';
+        input.disabled = true;
+        btn.classList.add('active');
+
+        // Ativa modo resumo imediatamente para "Sem troco"
+        confirmChange();
+    } else {
+        input.value = 'R$ 0,00';
+        input.disabled = false;
+        btn.classList.remove('active');
+    }
+}
+
+function confirmChange() {
+    // 1. Fecha o teclado
+    const activeEl = document.activeElement;
+    if (activeEl) activeEl.blur();
+
+    const input = document.getElementById('changeAmount');
+    const inputGroup = document.getElementById('changeInputGroup');
+    const summary = document.getElementById('changeSummary');
+    const summaryText = document.getElementById('changeSummaryText');
+    const modal = document.querySelector('.payment-modal');
+
+    // 2. Atualiza texto do resumo
+    let val = input.value;
+    if (!val || val === 'R$ 0,00') val = 'Sem troco';
+    // Se for "Sem troco", exibe só "Sem troco". Se for valor, "Troco: R$ XX"
+    if (val === 'Sem troco') {
+        summaryText.textContent = 'Sem troco';
+    } else {
+        summaryText.textContent = 'Troco: ' + val;
+    }
+
+    // 3. Troca interfaces
+    if (inputGroup) inputGroup.style.display = 'none';
+    if (summary) summary.style.display = 'flex';
+
+    // Adiciona classe para estilização compacta do container
+    const changeContainer = document.getElementById('changeContainer');
+    if (changeContainer) changeContainer.classList.add('summary-mode');
+
+    // 4. Ativa modo compacto no modal
+    if (modal) {
+        // modal.classList.add('compact-layout'); // Desabilitado a pedido do usuário
+
+        // Rolar para o TOPO (pedido do usuário) e limpar padding residual da teclado
+        setTimeout(() => {
+            const modalBody = modal.querySelector('.cardapio-modal-body');
+            if (modalBody) {
+                // Remove o padding extra que foi colocado para o teclado (60px+)
+                modalBody.style.paddingBottom = '0';
+                modalBody.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }, 100);
+    }
+}
+
+function editChange() {
+    const inputGroup = document.getElementById('changeInputGroup');
+    const summary = document.getElementById('changeSummary');
+    const modal = document.querySelector('.payment-modal');
+    const input = document.getElementById('changeAmount');
+    const changeContainer = document.getElementById('changeContainer');
+
+    // 1. Troca interfaces de volta
+    if (summary) summary.style.display = 'none';
+    if (inputGroup) inputGroup.style.display = 'block';
+
+    if (changeContainer) changeContainer.classList.remove('summary-mode');
+
+    // 2. Remove modo compacto
+    if (modal) {
+        modal.classList.remove('compact-layout');
+    }
+
+    // 3. Foca no input se não for "Sem troco"
+    if (input && !input.disabled) {
+        // Pequeno delay para a UI renderizar
+        setTimeout(() => {
+            input.focus();
+        }, 50);
+    }
+}
+
+// Resetar modo compacto se o usuário voltar a editar
+document.addEventListener('focus', function (e) {
+    if (e.target.closest('.payment-input')) {
+        const modal = document.querySelector('.payment-modal');
+        if (modal) {
+            modal.classList.remove('compact-layout');
+        }
+    }
+}, true);
 
 function toggleNoNumber() {
     hasNoNumber = !hasNoNumber;
