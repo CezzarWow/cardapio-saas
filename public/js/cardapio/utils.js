@@ -38,6 +38,27 @@ const Utils = {
         input.value = 'R$ ' + value;
     },
 
+    // Máscara de Telefone (11) 91234-5678
+    formatPhone: function (input) {
+        let value = input.value.replace(/\D/g, '');
+
+        // Limita a 11 dígitos
+        if (value.length > 11) value = value.slice(0, 11);
+
+        if (value.length > 10) {
+            // (11) 91234-5678
+            value = value.replace(/^(\d\d)(\d{5})(\d{4}).*/, '($1) $2-$3');
+        } else if (value.length > 6) {
+            // (11) 9123-5678 (fixo)
+            value = value.replace(/^(\d\d)(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+        } else if (value.length > 2) {
+            // (11) 9..
+            value = value.replace(/^(\d\d)(\d{0,5}).*/, '($1) $2');
+        }
+
+        input.value = value;
+    },
+
     // Inicializa ícones Lucide (se disponível)
     initIcons: function () {
         if (typeof lucide !== 'undefined') {

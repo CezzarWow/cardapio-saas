@@ -11,7 +11,22 @@ const CardapioCheckout = {
 
     init: function () {
         console.log('[Checkout] Inicializado');
-        // Listeners podem ser init aqui ou no main.js
+
+        // Inicializa Máscara de Telefone
+        const phoneInput = document.getElementById('customerPhone');
+        if (phoneInput) {
+            phoneInput.oninput = function () {
+                Utils.formatPhone(this);
+            };
+        }
+
+        // Listener para fechar modal de pagamento ao clicar fora
+        const modal = document.getElementById('paymentModal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) CardapioCheckout.closePayment();
+            });
+        }
     },
 
     // ==========================================
@@ -92,6 +107,7 @@ const CardapioCheckout = {
         const items = CardapioCart.items;
 
         items.forEach(item => {
+            // Container flex para alinhar preço e lixeira na mesma linha
             container.innerHTML += `
                 <div class="order-review-item">
                     <div class="order-review-item-qty">${item.quantity}x</div>
@@ -100,11 +116,14 @@ const CardapioCheckout = {
                         ${item.additionals.length ? `<div class="order-review-item-extras">+ ${item.additionals.map(a => a.name).join(', ')}</div>` : ''}
                         ${item.observation ? `<div class="order-review-item-obs">Obs: ${item.observation}</div>` : ''}
                     </div>
+                    
                     <div class="order-review-item-actions">
-                        <span class="order-review-item-price">${Utils.formatCurrency(item.unitPrice * item.quantity)}</span>
-                        <button class="order-review-remove-btn" onclick="CardapioCart.remove(${item.id}); CardapioCheckout.renderReviewItems();">
-                            <i data-lucide="trash-2" size="16"></i>
-                        </button>
+                        <div class="order-review-price-row">
+                            <span class="order-review-item-price">${Utils.formatCurrency(item.unitPrice * item.quantity)}</span>
+                            <button class="order-review-remove-icon-btn" onclick="CardapioCart.remove(${item.id}); CardapioCheckout.renderReviewItems();">
+                                <i data-lucide="trash-2" size="18"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
