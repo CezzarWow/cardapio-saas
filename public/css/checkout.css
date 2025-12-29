@@ -198,7 +198,15 @@
 /* ========== MODAL DE RESUMO DO PEDIDO ========== */
 .order-review-modal .cardapio-modal-body {
     padding: 12px;
-    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+    /* Fallback para navegadores que não suportam env() */
+    padding-bottom: 150px;
+}
+
+/* Override para navegadores modernos com suporte a env() */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .order-review-modal .cardapio-modal-body {
+        padding-bottom: calc(140px + env(safe-area-inset-bottom));
+    }
 }
 
 .order-review-items {
@@ -473,11 +481,11 @@
 .payment-form {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
 .payment-input {
-    padding: 10px 12px;
+    padding: 12px 14px;
     border: 2px solid #e5e7eb;
     border-radius: 10px;
     font-size: 0.85rem;
@@ -598,17 +606,21 @@
     display: flex;
     flex-direction: row;
     gap: 8px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .payment-method-option {
     flex: 1;
+    min-width: 0;
+    /* Permite encolher abaixo do conteúdo */
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
     gap: 6px;
     padding: 14px 6px;
-    /* Aumentado para 14px */
     background: white;
     border: 2px solid #e5e7eb;
     border-radius: 10px;
@@ -616,7 +628,7 @@
     transition: all 0.2s;
     text-align: center;
     font-weight: 700;
-    /* Texto mais forte */
+    box-sizing: border-box;
 }
 
 .payment-method-option:hover {
@@ -1078,4 +1090,180 @@
     font-size: 1.2rem;
     font-weight: 800;
     color: var(--accent-color, #ea580c);
+}
+
+/* ========== AJUSTES PARA TELAS MAIORES (iOS/Safari) ========== */
+@media (min-height: 750px) {
+    .payment-modal .cardapio-modal-body {
+        padding: 16px 20px 20px 20px;
+    }
+
+    .payment-total-box {
+        padding: 20px 18px;
+        margin-bottom: 12px;
+    }
+
+    .payment-total-value {
+        font-size: 1.8rem;
+    }
+
+    .payment-section {
+        margin-top: 16px;
+    }
+
+    .payment-section-title {
+        font-size: 1rem;
+        margin-bottom: 14px;
+    }
+
+    .payment-form {
+        gap: 14px;
+    }
+
+    .payment-input {
+        padding: 16px 18px;
+        font-size: 1rem;
+    }
+
+    .payment-methods-list {
+        gap: 14px;
+    }
+
+    .payment-method-option {
+        padding: 20px 12px;
+        font-size: 0.95rem;
+    }
+
+    .payment-method-icon {
+        font-size: 1.4rem;
+    }
+}
+
+/* ========== AJUSTES PARA TELAS MENORES (Android/Samsung) ========== */
+@media (max-height: 700px) {
+    .payment-modal .cardapio-modal-body {
+        padding: 4px 8px 6px 8px;
+    }
+
+    .payment-total-box {
+        padding: 10px 12px;
+        margin-bottom: 2px;
+    }
+
+    .payment-total-value {
+        font-size: 1.4rem;
+    }
+
+    .payment-section {
+        margin-top: 4px;
+    }
+
+    .payment-section-title {
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+    }
+
+    .payment-form {
+        gap: 6px;
+    }
+
+    .payment-input {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+
+    .payment-methods-list {
+        gap: 6px;
+    }
+
+    .payment-method-option {
+        padding: 10px 12px;
+    }
+
+    .change-container {
+        padding: 6px;
+        margin-top: 4px;
+    }
+
+    .change-input-row {
+        gap: 4px;
+    }
+
+    .change-amount-input {
+        padding: 8px 10px;
+    }
+
+    /* Espaço extra no Order Review para Samsung */
+    .order-review-modal .cardapio-modal-body {
+        padding-bottom: calc(160px + env(safe-area-inset-bottom));
+    }
+}
+
+/* ========== SAMSUNG INTERNET BROWSER FIX ========== */
+/* Bug: Samsung ignora padding-bottom para scroll interno */
+
+/* Spacer invisível - altura base mínima (Safari/Chrome ignoram) */
+/* Usado apenas no Order Review Modal */
+.modal-scroll-spacer {
+    width: 100%;
+    height: 1px;
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+/* Order Review: Samsung precisa de padding fixo maior */
+.samsung-browser .order-review-modal .cardapio-modal-body {
+    padding-bottom: 70px !important;
+}
+
+/* Payment Modal: NÃO MEXER - está funcionando com media query existente */
+/* O pagamento funciona porque o botão está dentro do body, não é fixed */
+
+/* ========== AJUSTE ESPECÍFICO PARA iOS/SAFARI ========== */
+/* Detecta suporte a recurso exclusivo do iOS Safari */
+@supports (-webkit-touch-callout: none) {
+    .payment-modal .cardapio-modal-body {
+        padding: 10px 14px 16px 14px;
+        /* Espaço levemente aumentado */
+    }
+
+    .payment-total-box {
+        padding: 14px 14px;
+        margin-bottom: 10px;
+        border-radius: 12px;
+    }
+
+    .payment-total-value {
+        font-size: 1.4rem;
+    }
+
+    .payment-section-title {
+        font-size: 1.05rem;
+        margin-top: 10px;
+        margin-bottom: 12px;
+    }
+
+    .payment-form {
+        gap: 10px;
+        /* Gap levemente maior */
+    }
+
+    .payment-input {
+        padding: 12px 12px;
+        font-size: 0.95rem;
+        border-radius: 10px;
+    }
+
+    .payment-methods-list {
+        gap: 8px;
+    }
+
+    .payment-method-option {
+        padding: 14px 6px;
+        border-radius: 12px;
+    }
+
+    .payment-method-icon {
+        font-size: 1.5rem;
+    }
 }

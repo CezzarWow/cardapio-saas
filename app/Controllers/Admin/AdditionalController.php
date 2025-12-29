@@ -55,7 +55,104 @@ class AdditionalController {
         $groups = $this->getGroupsWithItems($conn, $restaurantId);
         $allItems = $this->getGlobalItems($conn, $restaurantId);
 
+        // [NOVO] Busca categorias para o modal de vínculo em massa
+        $stmtCat = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :rid ORDER BY name ASC");
+        $stmtCat->execute(['rid' => $restaurantId]);
+        $categories = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
+
         require __DIR__ . '/../../../views/admin/additionals/index.php';
+    }
+
+    // ... (Métodos listItems, storeGroup, deleteGroup, createItem, storeItem, editItem, updateItem, deleteItem, linkItem, unlinkItem mantidos) ...
+
+    // ==========================================
+    // VÍNCULO EM MASSA (POR CATEGORIAS)
+    // ==========================================
+    
+    // AJAX: Retorna categorias que possuem VÍNCULO com o grupo
+    public function getLinkedCategories() {
+        $this->checkSession();
+        header('Content-Type: application/json');
+
+        $groupId = intval($_GET['group_id'] ?? 0);
+        $restaurantId = $_SESSION['loja_ativa_id'];
+
+        if ($groupId <= 0) {
+            echo json_encode([]);
+            exit;
+        }
+
+        $conn = Database::connect();
+        
+        // Estratégia: Se uma categoria tem produtos vinculados a este grupo, retorna o ID dela.
+        // (Pode ajustar para "Se > metada dos produtos", mas "pelo menos 1" é mais rápido e seguro pra UI)
+        $sql = "SELECT DISTINCT p.category_id 
+                FROM product_additional_relations par
+                JOIN products p ON par.product_id = p.id
+                WHERE par.group_id = :gid AND p.restaurant_id = :rid";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['gid' => $groupId, 'rid' => $restaurantId]);
+        
+        $linkedCategories = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        echo json_encode($linkedCategories);
+        exit;
+    }
+
+    // POST: Salva (Sincroniza) vínculos
+    public function linkCategory() {
+        $this->checkSession();
+        
+        $groupId = intval($_POST['group_id'] ?? 0);
+        $categoryIds = $_POST['category_ids'] ?? []; // Array de IDs MARCADOS
+        $restaurantId = $_SESSION['loja_ativa_id'];
+
+        if ($groupId > 0) {
+            $conn = Database::connect();
+
+            // 1. Verifica segurança
+            $stmtCheck = $conn->prepare("SELECT id FROM additional_groups WHERE id = :gid AND restaurant_id = :rid");
+            $stmtCheck->execute(['gid' => $groupId, 'rid' => $restaurantId]);
+            if (!$stmtCheck->fetch()) {
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=grupo_invalido');
+                exit;
+            }
+
+            // 2. Busca TODAS as categorias da loja para saber quais foram DESMARCADAS
+            $stmtAllCats = $conn->prepare("SELECT id FROM categories WHERE restaurant_id = :rid");
+            $stmtAllCats->execute(['rid' => $restaurantId]);
+            $allCategoryIds = $stmtAllCats->fetchAll(PDO::FETCH_COLUMN);
+
+            // Prepara Statements
+            $stmtGetProds = $conn->prepare("SELECT id FROM products WHERE category_id = :cid AND restaurant_id = :rid");
+            $stmtIns = $conn->prepare("INSERT IGNORE INTO product_additional_relations (product_id, group_id) VALUES (:pid, :gid)");
+            $stmtDel = $conn->prepare("DELETE FROM product_additional_relations WHERE product_id = :pid AND group_id = :gid");
+
+            // 3. Itera sobre TODAS as categorias
+            foreach ($allCategoryIds as $cid) {
+                // A categoria está na lista de Marcados?
+                if (in_array($cid, $categoryIds)) {
+                    // SIM: Vincular todos os produtos
+                    $stmtGetProds->execute(['cid' => $cid, 'rid' => $restaurantId]);
+                    $products = $stmtGetProds->fetchAll(PDO::FETCH_COLUMN);
+                    foreach ($products as $pid) {
+                        $stmtIns->execute(['pid' => $pid, 'gid' => $groupId]);
+                    }
+                } else {
+                    // NÃO: Desvincular todos os produtos (pois foi desmarcada ou nunca marcada)
+                    // AÇÃO DESTRUTIVA: Remove vínculo deste grupo para produtos desta categoria
+                    $stmtGetProds->execute(['cid' => $cid, 'rid' => $restaurantId]);
+                    $products = $stmtGetProds->fetchAll(PDO::FETCH_COLUMN);
+                    foreach ($products as $pid) {
+                        $stmtDel->execute(['pid' => $pid, 'gid' => $groupId]);
+                    }
+                }
+            }
+        }
+
+        header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=vinculo_sincronizado');
+        exit;
     }
 
     // ==========================================

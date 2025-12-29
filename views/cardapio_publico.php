@@ -212,7 +212,7 @@
                 <div id="additionalsList" class="cardapio-additionals-list">
                     <?php foreach ($additionalGroups as $group): ?>
                         <?php if (isset($additionalItems[$group['id']]) && count($additionalItems[$group['id']]) > 0): ?>
-                            <div class="cardapio-additional-group">
+                            <div class="cardapio-additional-group" data-group-id="<?= $group['id'] ?>">
                                 <p class="cardapio-additional-group-name"><?= htmlspecialchars($group['name']) ?></p>
                                 <?php foreach ($additionalItems[$group['id']] as $item): ?>
                                     <label class="cardapio-additional-item">
@@ -244,6 +244,7 @@
                     placeholder="Ex: Sem cebola, ponto da carne..."
                     enterkeyhint="done"
                     onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+                    onfocus="setTimeout(()=>{this.parentElement.scrollIntoView({behavior:'smooth',block:'end'})},400)"
                 ></textarea>
             </div>
         </div>
@@ -386,13 +387,13 @@
             </div>
         </div>
         
-        <!-- Carrinho flutuante igual da tela principal -->
-        <button id="suggestionsFloatingCart" class="cardapio-floating-cart-btn suggestions-cart-btn show" onclick="finalizarPedido()">
-            <i data-lucide="shopping-cart" size="20"></i>
-            <span id="suggestionsCartTotal">R$ 0,00</span>
-            <i data-lucide="arrow-right" size="18"></i>
-        </button>
     </div>
+    <!-- Botão fora do conteiner de conteúdo para não ser afetado pelo transform -->
+    <button id="suggestionsFloatingCart" class="cardapio-floating-cart-btn suggestions-cart-btn show" onclick="finalizarPedido()">
+        <i data-lucide="shopping-cart" size="20"></i>
+        <span id="suggestionsCartTotal">R$ 0,00</span>
+        <i data-lucide="arrow-right" size="18"></i>
+    </button>
 </div>
 
 <!-- MODAL DE RESUMO DO PEDIDO (CONFIRA SEU PEDIDO) -->
@@ -433,15 +434,18 @@
             <div id="orderReviewItems" class="order-review-items">
                 <!-- Itens serão inseridos via JavaScript -->
             </div>
+            
+            <!-- Spacer para Samsung Internet (bug de scroll com footer fixo) -->
+            <div class="modal-scroll-spacer"></div>
         </div>
         
-        <!-- Carrinho flutuante para finalizar -->
-        <button id="finalizeOrderBtn" class="cardapio-floating-cart-btn order-finalize-btn show" onclick="goToPayment()">
-            <i data-lucide="credit-card" size="20"></i>
-            <span id="orderReviewTotal">R$ 0,00</span>
-            <span>Finalizar</span>
-        </button>
     </div>
+    <!-- Botão fora do conteiner de conteúdo -->
+    <button id="finalizeOrderBtn" class="cardapio-floating-cart-btn order-finalize-btn show" onclick="goToPayment()">
+        <i data-lucide="credit-card" size="20"></i>
+        <span id="orderReviewTotal">R$ 0,00</span>
+        <span>Finalizar</span>
+    </button>
 </div>
 
 <!-- MODAL DE PAGAMENTO -->
@@ -525,9 +529,8 @@
                     </label>
                 </div>
                 
-                <!-- Campo de Troco (só aparece se dinheiro E entrega) -->
-                <!-- Campo de Troco (só aparece se dinheiro E entrega) -->
-                <div id="changeContainer" class="change-container delivery-only" style="display: none;">
+                <!-- Campo de Troco (só aparece se dinheiro) -->
+                <div id="changeContainer" class="change-container" style="display: none;">
                     
                     <!-- Modo Edição -->
                     <div id="changeInputGroup">
@@ -567,8 +570,45 @@
 </div>
 
 <script>
+    <?php
+    // Achata array de produtos para JS
+    $allProducts = [];
+    if (!empty($productsByCategory)) {
+        foreach ($productsByCategory as $cat => $prods) {
+            foreach ($prods as $p) {
+                // Garante que additionals seja array
+                if (empty($p['additionals'])) $p['additionals'] = [];
+                $allProducts[] = $p;
+            }
+        }
+    }
+    $jsProducts = json_encode($allProducts, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+    if ($jsProducts === false) $jsProducts = '[]'; // Fallback
+    ?>
+    
+    // Injeção Segura
+    const products = <?= $jsProducts ?>;
+    const PRODUCT_RELATIONS = <?= json_encode($productRelations ?? []) ?>;
     window.BASE_URL = '<?= BASE_URL ?>';
+
+    // Diagnóstico
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof openProductModal === 'undefined') {
+            console.error('CRITICAL: openProductModal not defined!');
+            alert('Erro: Sistema não carregou corretamente. Verifique o console.');
+        } else {
+            console.log('✅ Sistema inicializado. Produtos carregados:', products.length);
+        }
+    });
 </script>
+
+<!-- Scripts Modulares (Refatoração) -->
+<script src="<?= BASE_URL ?>/js/cardapio/utils.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio/cart.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio/modals.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio/checkout.js?v=<?= time() ?>"></script>
+
+<!-- Main Script (Listeners) -->
 <script src="<?= BASE_URL ?>/js/cardapio.js?v=<?= time() ?>"></script>
 <script>
     lucide.createIcons();

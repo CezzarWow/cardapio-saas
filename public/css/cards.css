@@ -107,7 +107,16 @@
     transition: all 0.2s;
 }
 
-.cardapio-add-btn:hover {
+/* Correção para hover não grudar no mobile */
+@media (hover: hover) {
+    .cardapio-add-btn:hover {
+        background: var(--accent-color, #ea580c);
+        color: white;
+    }
+}
+
+.cardapio-add-btn:active {
     background: var(--accent-color, #ea580c);
     color: white;
+    transform: scale(0.95);
 }

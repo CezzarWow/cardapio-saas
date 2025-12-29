@@ -479,6 +479,10 @@ if ($isEditingPaid && $editingOrderId) {
         const originalPaidTotal = <?= $originalPaidTotalFromDB ?? 0 ?>;
         const editingPaidOrderId = <?= $editingOrderId ?? 'null' ?>;
     </script>
+    <script src="<?= BASE_URL ?>/js/pdv/state.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/cart.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/tables.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/checkout.js?v=<?= time() ?>"></script>
     <script src="<?= BASE_URL ?>/js/pdv.js?v=<?= time() ?>"></script>
 
 <?php require __DIR__ . '/layout/footer.php'; ?>

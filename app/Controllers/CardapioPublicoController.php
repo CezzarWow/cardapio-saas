@@ -92,6 +92,17 @@ class CardapioPublicoController {
             $additionalItems[$group['id']] = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
         }
         
+        // [NOVO] Buscar relações Produto <-> Grupo de Adicionais
+        $stmtRelations = $conn->prepare("SELECT product_id, group_id FROM product_additional_relations");
+        $stmtRelations->execute();
+        $rawRelations = $stmtRelations->fetchAll(PDO::FETCH_ASSOC);
+
+        $productRelations = [];
+        foreach ($rawRelations as $rel) {
+            $productRelations[$rel['product_id']][] = $rel['group_id'];
+        }
+
+        
         // Renderizar view pública
         require __DIR__ . '/../../views/cardapio_publico.php';
     }

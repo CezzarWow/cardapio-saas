@@ -214,6 +214,17 @@ switch ($path) {
         (new \App\Controllers\Admin\AdditionalController())->unlinkItem();
         break;
 
+    case '/admin/loja/adicionais/vincular-categoria':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->linkCategory();
+        break;
+
+    // AJAX: Recuperar categorias vinculadas (para o modal)
+    case '/admin/loja/adicionais/get-linked-categories':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->getLinkedCategories();
+        break;
+
     // --- FINANCEIRO E CAIXA ---
     case '/admin/loja/caixa':
         require __DIR__ . '/../app/Controllers/Admin/CashierController.php';

@@ -25,23 +25,45 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                             <?php endforeach; ?>
                         </select>
                     </div>
+
+                    <!-- MULTI-SELECT CUSTOMIZADO -->
+                    <div style="flex: 1; position: relative;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Vincular Adicionais</label>
+                        
+                        <div class="custom-select-container" style="position: relative;">
+                            <div class="select-trigger" onclick="toggleSelect(this)" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                                <span class="trigger-text" style="color: #6b7280;">Selecione...</span>
+                                <i data-lucide="chevron-down" size="16" style="color: #9ca3af;"></i>
+                            </div>
+                            
+                            <div class="options-list" style="display: none; position: absolute; top: 105%; left: 0; right: 0; background: white; border: 1px solid #d1d5db; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 10; padding: 5px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                                <?php if (empty($additionalGroups)): ?>
+                                    <p style="color: #9ca3af; font-size: 0.9rem; padding: 8px; text-align: center; margin: 0;">Nenhum grupo cadastrado</p>
+                                <?php else: ?>
+                                    <?php foreach ($additionalGroups as $group): ?>
+                                        <label style="display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 4px; transition: background 0.1s;">
+                                            <input type="checkbox" name="additional_groups[]" value="<?= $group['id'] ?>" onchange="updateTriggerText(this)" style="width: 16px; height: 16px;">
+                                            <span style="font-size: 0.95rem; color: #374151;"><?= htmlspecialchars($group['name']) ?></span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px;">
                     <div style="flex: 1;">
                         <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Preço (R$)</label>
                         <input type="text" name="price" id="priceInput" required placeholder="0,00" 
                                style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1.1rem; font-weight: 600; text-align: right;">
                     </div>
-                </div>
-
-                <div>
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Descrição</label>
-                    <textarea name="description" rows="3" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-family: sans-serif;"></textarea>
-                </div>
-
-                <!-- [FASE 1] Campo de Estoque Inicial -->
-                <div>
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Estoque Inicial</label>
-                    <input type="number" name="stock" value="0" min="0" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
-                    <small style="color: #6b7280; font-size: 0.85rem;">Quantidade inicial em estoque</small>
+                    
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Estoque Inicial</label>
+                        <input type="number" name="stock" value="0" min="0" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
+                        <small style="color: #6b7280; font-size: 0.85rem;">Quantidade inicial em estoque</small>
+                    </div>
                 </div>
 
                 <div>
@@ -125,6 +147,46 @@ require __DIR__ . '/../panel/layout/sidebar.php';
         this.setSelectionRange(len, len);
     });
 })();
+
+// --- LÓGICA DO MULTI-SELECT CUSTOMIZADO ---
+function toggleSelect(el) {
+    const container = el.parentElement;
+    const list = container.querySelector('.options-list');
+    
+    // Fecha outros (se houver, no caso de multiplos selects)
+    document.querySelectorAll('.options-list').forEach(l => {
+        if (l !== list) l.style.display = 'none';
+    });
+
+    if (list.style.display === 'block') {
+        list.style.display = 'none';
+    } else {
+        list.style.display = 'block';
+    }
+}
+
+function updateTriggerText(checkbox) {
+    const container = checkbox.closest('.custom-select-container');
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+    const triggerText = container.querySelector('.trigger-text');
+    
+    if (checkedCount === 0) {
+        triggerText.textContent = 'Selecione...';
+        triggerText.style.color = '#6b7280';
+    } else {
+        triggerText.textContent = checkedCount + ' Selecionado(s)';
+        triggerText.style.color = '#1f2937';
+        triggerText.style.fontWeight = '600';
+    }
+}
+
+// Fechar ao clicar fora
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.custom-select-container')) {
+        document.querySelectorAll('.options-list').forEach(l => l.style.display = 'none');
+    }
+});
 </script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>

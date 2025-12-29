@@ -175,8 +175,20 @@
 /* ========== PRODUTOS ========== */
 .cardapio-products {
     padding: 16px 16px 0 16px;
-    /* Padding bottom com safe-area para Safari iOS */
-    padding-bottom: calc(120px + env(safe-area-inset-bottom));
+    /* Fallback para navegadores que não suportam env() (Samsung) */
+    padding-bottom: 130px;
+}
+
+/* Override para navegadores modernos com suporte a env() */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .cardapio-products {
+        padding-bottom: calc(120px + env(safe-area-inset-bottom));
+    }
+}
+
+/* Samsung Internet: padding extra garantido */
+.samsung-browser .cardapio-products {
+    padding-bottom: 180px !important;
 }
 
 .cardapio-category-section {

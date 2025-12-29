@@ -36,9 +36,14 @@ class StockController {
         $conn = Database::connect();
 
         // Precisa listar as categorias para o <select>
-        $stmt = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :rid");
+        $stmt = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :rid ORDER BY name");
         $stmt->execute(['rid' => $_SESSION['loja_ativa_id']]);
         $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // [NOVO] Busca Grupos de Adicionais disponíveis
+        $stmtGroups = $conn->prepare("SELECT * FROM additional_groups WHERE restaurant_id = :rid ORDER BY name");
+        $stmtGroups->execute(['rid' => $_SESSION['loja_ativa_id']]);
+        $additionalGroups = $stmtGroups->fetchAll(PDO::FETCH_ASSOC);
 
         require __DIR__ . '/../../../views/admin/stock/create.php';
     }
@@ -55,6 +60,9 @@ class StockController {
         
         // [FASE 1] Estoque vem do formulário (padrão 0 se vazio)
         $stock = isset($_POST['stock']) && $_POST['stock'] !== '' ? intval($_POST['stock']) : 0;
+        
+        // Arrays de grupos selecionados
+        $selectedGroups = $_POST['additional_groups'] ?? [];
 
         // --- Lógica de Upload de Imagem ---
         $imageName = null;
@@ -79,6 +87,15 @@ class StockController {
             'img' => $imageName,
             'stock' => $stock
         ]);
+        
+        // [NOVO] Salvar Vínculos
+        $newProductId = $conn->lastInsertId();
+        if ($newProductId && !empty($selectedGroups)) {
+            $stmtIns = $conn->prepare("INSERT INTO product_additional_relations (product_id, group_id) VALUES (:pid, :gid)");
+            foreach ($selectedGroups as $gid) {
+                $stmtIns->execute(['pid' => $newProductId, 'gid' => $gid]);
+            }
+        }
 
         header('Location: ../produtos');
     }
@@ -117,6 +134,16 @@ class StockController {
         $stmtCat->execute(['rid' => $_SESSION['loja_ativa_id']]);
         $categories = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
 
+        // [NOVO] Busca Grupos de Adicionais disponíveis
+        $stmtGroups = $conn->prepare("SELECT * FROM additional_groups WHERE restaurant_id = :rid ORDER BY name");
+        $stmtGroups->execute(['rid' => $_SESSION['loja_ativa_id']]);
+        $additionalGroups = $stmtGroups->fetchAll(PDO::FETCH_ASSOC);
+
+        // [NOVO] Busca Grupos já vinculados ao produto
+        $stmtLinked = $conn->prepare("SELECT group_id FROM product_additional_relations WHERE product_id = :pid");
+        $stmtLinked->execute(['pid' => $id]);
+        $linkedGroups = $stmtLinked->fetchAll(PDO::FETCH_COLUMN);
+
         require __DIR__ . '/../../../views/admin/stock/edit.php';
     }
 
@@ -131,6 +158,9 @@ class StockController {
         $description = $_POST['description'] ?? '';
         $stock = isset($_POST['stock']) && $_POST['stock'] !== '' ? intval($_POST['stock']) : 0;
         $restaurant_id = $_SESSION['loja_ativa_id'];
+        
+        // Arrays de grupos selecionados
+        $selectedGroups = $_POST['additional_groups'] ?? [];
 
         $conn = Database::connect();
 
@@ -173,6 +203,19 @@ class StockController {
             'id' => $id,
             'rid' => $restaurant_id
         ]);
+
+        // [NOVO] Atualiza Vínculos com Adicionais
+        // 1. Limpa anteriores
+        $stmtDel = $conn->prepare("DELETE FROM product_additional_relations WHERE product_id = :pid");
+        $stmtDel->execute(['pid' => $id]);
+
+        // 2. Insere novos
+        if (!empty($selectedGroups)) {
+            $stmtIns = $conn->prepare("INSERT INTO product_additional_relations (product_id, group_id) VALUES (:pid, :gid)");
+            foreach ($selectedGroups as $gid) {
+                $stmtIns->execute(['pid' => $id, 'gid' => $gid]);
+            }
+        }
 
         header('Location: ../produtos');
     }
