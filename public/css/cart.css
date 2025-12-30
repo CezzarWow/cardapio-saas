@@ -122,23 +122,42 @@
     margin: 4px 0;
 }
 
-.cardapio-cart-item-remove {
-    font-size: 0.7rem;
-    color: var(--danger-color, #ef4444);
-    font-weight: 700;
-    text-transform: uppercase;
-    background: none;
-    border: none;
-    cursor: pointer;
-    margin-top: 4px;
-    padding: 0;
+/* ========== AÇÕES DO ITEM (PREÇO + REMOVER) ========== */
+.cardapio-cart-item-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    margin-left: 10px;
 }
 
 .cardapio-cart-item-price {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--text-dark, #1f2937);
-    margin-left: 16px;
+}
+
+.cardapio-cart-remove-icon-btn {
+    background: #fee2e2;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.cardapio-cart-remove-icon-btn:hover {
+    background: #fecaca;
+    transform: scale(1.05);
+}
+
+.cardapio-cart-remove-icon-btn:active {
+    transform: scale(0.95);
 }
 
 /* ========== CARRINHO VAZIO ========== */

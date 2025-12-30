@@ -452,7 +452,7 @@
 <div id="paymentModal" class="cardapio-modal">
     <div class="cardapio-modal-content fullscreen payment-modal">
         <div class="cardapio-suggestions-header">
-            <button class="cardapio-back-btn" onclick="closePaymentModal()">
+            <button class="cardapio-back-btn" onclick="CardapioCheckout.backToReview()">
                 <i data-lucide="arrow-left" size="20"></i>
             </button>
             <h2>💳 Pagamento</h2>

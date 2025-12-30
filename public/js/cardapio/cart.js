@@ -149,13 +149,16 @@ const CardapioCart = {
                         ${item.observation ? `
                             <p class="cardapio-cart-item-obs">Obs: ${item.observation}</p>
                         ` : ''}
-                        <button class="cardapio-cart-item-remove" onclick="CardapioCart.remove(${item.id})">
-                            Remover
+                    </div>
+                    
+                    <div class="cardapio-cart-item-actions">
+                        <span class="cardapio-cart-item-price">
+                            ${Utils.formatCurrency(item.unitPrice * item.quantity)}
+                        </span>
+                        <button class="cardapio-cart-remove-icon-btn" onclick="CardapioCart.remove(${item.id})">
+                            <i data-lucide="trash-2" size="18"></i>
                         </button>
                     </div>
-                    <span class="cardapio-cart-item-price">
-                        ${Utils.formatCurrency(item.unitPrice * item.quantity)}
-                    </span>
                 </div>
             `;
         });
