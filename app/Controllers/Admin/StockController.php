@@ -97,7 +97,7 @@ class StockController {
             }
         }
 
-        header('Location: ../produtos');
+        header('Location: ../produtos?success=criado');
     }
 
     // 4. DELETAR
@@ -110,7 +110,7 @@ class StockController {
         $stmt = $conn->prepare("DELETE FROM products WHERE id = :id AND restaurant_id = :rid");
         $stmt->execute(['id' => $id, 'rid' => $_SESSION['loja_ativa_id']]);
 
-        header('Location: ../produtos');
+        header('Location: ../produtos?success=deletado');
     }
 
     // 5. TELA DE EDITAR (Formulário) [FASE 1]
@@ -217,7 +217,7 @@ class StockController {
             }
         }
 
-        header('Location: ../produtos');
+        header('Location: ../produtos?success=atualizado');
     }
 
     private function checkSession() {

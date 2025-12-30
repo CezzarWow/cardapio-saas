@@ -15,6 +15,7 @@ foreach ($products as $p) {
 ?>
 
 <main class="main-content">
+    <?php require __DIR__ . '/../panel/layout/messages.php'; ?>
     <div style="padding: 2rem; width: 100%; overflow-y: auto;">
         
         <!-- Breadcrumb (dentro do main) -->

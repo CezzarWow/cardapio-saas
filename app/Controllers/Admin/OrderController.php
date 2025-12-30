@@ -20,9 +20,7 @@ class OrderController {
         $conn = Database::connect();
 
         // 🛑 1. SEGURANÇA: Verifica se o CAIXA está ABERTO antes de qualquer coisa
-        $stmtCaixa = $conn->prepare("SELECT id FROM cash_registers WHERE restaurant_id = :rid AND status = 'aberto'");
-        $stmtCaixa->execute(['rid' => $restaurant_id]);
-        $caixa = $stmtCaixa->fetch(PDO::FETCH_ASSOC);
+        $caixa = $this->getCaixaAberto($conn, $restaurant_id);
 
         if (!$caixa) {
             echo json_encode(['success' => false, 'message' => 'O Caixa está FECHADO! Abra o caixa para vender. 🔒']);
@@ -188,9 +186,7 @@ class OrderController {
         $conn = Database::connect();
         
         // 🛑 VERIFICA CAIXA (Segurança também no fechamento de mesa)
-        $stmtCaixa = $conn->prepare("SELECT id FROM cash_registers WHERE restaurant_id = :rid AND status = 'aberto'");
-        $stmtCaixa->execute(['rid' => $restaurant_id]);
-        $caixa = $stmtCaixa->fetch(PDO::FETCH_ASSOC);
+        $caixa = $this->getCaixaAberto($conn, $restaurant_id);
 
         if (!$caixa) {
             echo json_encode(['success' => false, 'message' => 'Caixa FECHADO! Não é possível receber o pagamento.']);
@@ -277,9 +273,7 @@ class OrderController {
         $conn = Database::connect();
         
         // 🛑 VERIFICA CAIXA
-        $stmtCaixa = $conn->prepare("SELECT id FROM cash_registers WHERE restaurant_id = :rid AND status = 'aberto'");
-        $stmtCaixa->execute(['rid' => $restaurant_id]);
-        $caixa = $stmtCaixa->fetch(PDO::FETCH_ASSOC);
+        $caixa = $this->getCaixaAberto($conn, $restaurant_id);
 
         if (!$caixa) {
             echo json_encode(['success' => false, 'message' => 'Caixa FECHADO! Abra o caixa para receber.']);
@@ -654,5 +648,15 @@ class OrderController {
             $conn->rollBack();
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Helper: Retorna o caixa aberto ou null se não existir
+     * Centraliza verificação que se repete em vários métodos
+     */
+    private function getCaixaAberto($conn, $restaurantId) {
+        $stmt = $conn->prepare("SELECT id FROM cash_registers WHERE restaurant_id = :rid AND status = 'aberto'");
+        $stmt->execute(['rid' => $restaurantId]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 }

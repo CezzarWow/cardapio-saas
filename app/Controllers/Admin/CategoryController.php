@@ -37,7 +37,7 @@ class CategoryController {
             ]);
         }
 
-        header('Location: ' . BASE_URL . '/admin/loja/categorias');
+        header('Location: ' . BASE_URL . '/admin/loja/categorias?success=criado');
         exit;
     }
 
@@ -77,7 +77,7 @@ class CategoryController {
             ]);
         }
 
-        header('Location: ' . BASE_URL . '/admin/loja/categorias');
+        header('Location: ' . BASE_URL . '/admin/loja/categorias?success=atualizado');
         exit;
     }
     
@@ -96,7 +96,7 @@ class CategoryController {
             ]);
         }
         
-        header('Location: ' . BASE_URL . '/admin/loja/categorias');
+        header('Location: ' . BASE_URL . '/admin/loja/categorias?success=deletado');
         exit;
     }
 
