@@ -114,6 +114,11 @@ switch ($path) {
         (new \App\Controllers\Admin\CardapioController())->deleteCombo();
         break;
 
+    case '/admin/loja/cardapio/combo/status':
+        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
+        (new \App\Controllers\Admin\CardapioController())->toggleComboStatus();
+        break;
+
     // --- GESTÃO DE ESTOQUE (PRODUTOS) ---
     case '/admin/loja/produtos':
         require __DIR__ . '/../app/Controllers/Admin/StockController.php';

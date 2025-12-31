@@ -61,6 +61,58 @@ class CardapioController {
         $stmtCombos->execute(['rid' => $restaurantId]);
         $combos = $stmtCombos->fetchAll(PDO::FETCH_ASSOC);
 
+        // [NOVO] Buscar itens dos combos para exibir na lista
+        if (!empty($combos)) {
+            $comboIds = array_column($combos, 'id');
+            $inQuery = implode(',', array_fill(0, count($comboIds), '?'));
+            
+            $stmtItems = $conn->prepare("
+                SELECT ci.combo_id, p.name, p.price 
+                FROM combo_items ci
+                JOIN products p ON ci.product_id = p.id
+                WHERE ci.combo_id IN ($inQuery)
+            ");
+            $stmtItems->execute($comboIds);
+            $allItems = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+
+            // Agrupar itens por combo
+            $itemsByCombo = [];
+            foreach ($allItems as $item) {
+                $itemsByCombo[$item['combo_id']][] = $item;
+            }
+
+            // Processar dados para a view
+            foreach ($combos as &$combo) {
+                $items = $itemsByCombo[$combo['id']] ?? [];
+                $counts = [];
+                $originalPrice = 0;
+
+                foreach ($items as $it) {
+                    $name = $it['name'];
+                    $counts[$name] = ($counts[$name] ?? 0) + 1;
+                    $originalPrice += floatval($it['price']);
+                }
+
+                // Formatar lista: "2 X-Burger + 1 Coca"
+                $descParts = [];
+                foreach ($counts as $name => $qty) {
+                    $descParts[] = ($qty > 1 ? "{$qty} " : "") . $name;
+                }
+                
+                $combo['items_description'] = implode(" + ", $descParts);
+                $combo['original_price'] = $originalPrice;
+                
+                // Calcular desconto
+                if ($originalPrice > 0) {
+                    $discount = (($originalPrice - $combo['price']) / $originalPrice) * 100;
+                    $combo['discount_percent'] = round($discount);
+                } else {
+                    $combo['discount_percent'] = 0;
+                }
+            }
+            unset($combo); // Quebra referência
+        }
+
         // [ETAPA 3] Buscar todos os produtos para destaques
         $stmtProducts = $conn->prepare("
             SELECT p.*, c.name as category_name 
@@ -477,6 +529,35 @@ class CardapioController {
              ->execute(['id' => $id, 'rid' => $restaurantId]);
 
         header('Location: ' . BASE_URL . '/admin/loja/cardapio?success=combo_deletado');
+        exit;
+    }
+
+    /**
+     * [AJAX] Alterna status do combo
+     */
+    public function toggleComboStatus() {
+        $this->checkSession();
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = intval($data['id'] ?? 0);
+        $active = !empty($data['active']) ? 1 : 0;
+        
+        if (!$id) {
+            echo json_encode(['success' => false, 'error' => 'ID inválido']);
+            exit;
+        }
+
+        $conn = Database::connect();
+        $restaurantId = $_SESSION['loja_ativa_id'];
+
+        $stmt = $conn->prepare("UPDATE combos SET is_active = :active WHERE id = :id AND restaurant_id = :rid");
+        $result = $stmt->execute([
+            'active' => $active,
+            'id' => $id,
+            'rid' => $restaurantId
+        ]);
+
+        echo json_encode(['success' => $result]);
         exit;
     }
 

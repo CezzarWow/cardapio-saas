@@ -1173,3 +1173,46 @@ window.CardapioAdmin = {
 document.addEventListener('DOMContentLoaded', () => {
     window.CardapioAdmin.init();
 });
+
+// Função global para toggle de combo
+window.toggleComboActive = function (id, isActive) {
+    fetch('admin/loja/cardapio/combo/status', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            id: id,
+            active: isActive
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Status atualizado');
+            } else {
+                alert('Erro ao atualizar status: ' + (data.error || 'Desconhecido'));
+                const checkbox = document.querySelector(`input[onchange*="${id}"]`);
+                if (checkbox) checkbox.checked = !isActive;
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro de conexão');
+            const checkbox = document.querySelector(`input[onchange*="${id}"]`);
+            if (checkbox) checkbox.checked = !isActive;
+        });
+};
+
+// Função de máscara monetária (ex: 5000 -> 50,00)
+window.formatCurrency = function (input) {
+    let value = input.value.replace(/\D/g, '');
+    if (value === '') {
+        input.value = '';
+        return;
+    }
+    value = (parseInt(value) / 100).toFixed(2) + '';
+    value = value.replace('.', ',');
+    value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+    input.value = value;
+};
