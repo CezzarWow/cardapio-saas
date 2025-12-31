@@ -1,243 +1,106 @@
 <?php 
 /**
- * ═══════════════════════════════════════════════════════════════════════════
- * LOCALIZAÇÃO: views/admin/cardapio/index.php
- * ═══════════════════════════════════════════════════════════════════════════
+ * ============================================
+ * ADMIN CARDÁPIO - PÁGINA PRINCIPAL
+ * Arquivo: views/admin/cardapio/index.php
+ * ============================================
  */
 
 require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php'; 
+require __DIR__ . '/../panel/layout/sidebar.php';
 ?>
 
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin.css?v=<?= time() ?>">
+
 <main class="main-content">
-    <div class="cardapio-container">
+    <?php require __DIR__ . '/../panel/layout/messages.php'; ?>
+    
+    <div class="cardapio-admin-container">
         
-        <!-- HEADER DO CARDÁPIO -->
-        <header class="cardapio-header">
-            <div class="cardapio-header-content">
-                <div class="cardapio-brand">
-                    <?php if (!empty($restaurant['logo'])): ?>
-                        <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($restaurant['logo']) ?>" alt="Logo" class="cardapio-logo">
-                    <?php else: ?>
-                        <div class="cardapio-logo-placeholder">
-                            <i data-lucide="utensils" size="28"></i>
-                        </div>
-                    <?php endif; ?>
-                    <div>
-                        <h1 class="cardapio-title"><?= htmlspecialchars($restaurant['name']) ?></h1>
-                        <p class="cardapio-subtitle">Faça seu pedido</p>
-                    </div>
-                </div>
-                <div class="cardapio-info">
-                    <p class="cardapio-delivery-time">30-45 min</p>
-                </div>
-            </div>
-        </header>
-
-        <!-- BUSCA -->
-        <div class="cardapio-search-container">
-            <div class="cardapio-search-box">
-                <i data-lucide="search" size="16" class="cardapio-search-icon"></i>
-                <input 
-                    type="text" 
-                    id="cardapioSearchInput" 
-                    placeholder="O que você procura?" 
-                    class="cardapio-search-input"
-                >
+        <!-- Header -->
+        <div class="cardapio-admin-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+                <h1 class="cardapio-admin-title">Configurações do Cardápio</h1>
+                <p class="cardapio-admin-subtitle">Configure como seu cardápio web funciona</p>
             </div>
         </div>
 
-        <!-- CATEGORIAS -->
-        <div class="cardapio-categories">
-            <button class="cardapio-category-btn active" data-category="todos">
-                Todos
-            </button>
-            <?php foreach ($categories as $category): ?>
-                <button class="cardapio-category-btn" data-category="<?= htmlspecialchars($category['name']) ?>">
-                    <?= htmlspecialchars($category['name']) ?>
+        <!-- Formulário (inicia aqui para incluir o botão Salvar na linha das abas) -->
+        <form method="POST" action="<?= BASE_URL ?>/admin/loja/cardapio/salvar" onsubmit="return window.CardapioAdmin.validateForm()">
+        
+        <!-- Abas + Ações (mesma linha) -->
+        <div class="cardapio-admin-tabs" style="justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="cardapio-admin-tab-btn active" data-tab="operacao">
+                    <i data-lucide="settings"></i>
+                    <span>Operação</span>
                 </button>
-            <?php endforeach; ?>
+                <button type="button" class="cardapio-admin-tab-btn" data-tab="horarios">
+                    <i data-lucide="calendar"></i>
+                    <span>Horários</span>
+                </button>
+                <button type="button" class="cardapio-admin-tab-btn" data-tab="delivery">
+                    <i data-lucide="truck"></i>
+                    <span>Delivery</span>
+                </button>
+                <button type="button" class="cardapio-admin-tab-btn" data-tab="pagamentos">
+                    <i data-lucide="credit-card"></i>
+                    <span>Pagamentos</span>
+                </button>
+                <button type="button" class="cardapio-admin-tab-btn" data-tab="promocoes">
+                    <i data-lucide="tag"></i>
+                    <span>Promoções</span>
+                </button>
+            </div>
+            
+            <!-- Ações à direita -->
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <a href="<?= BASE_URL ?>/cardapio/<?= htmlspecialchars($restaurantSlug) ?>" 
+                   target="_blank" 
+                   class="cardapio-admin-btn" 
+                   style="background: white; border: 1px solid #e2e8f0; color: #2563eb; padding: 10px 16px;">
+                    <i data-lucide="external-link"></i>
+                    Ver Cardápio
+                </a>
+                
+                <button type="submit" class="cardapio-admin-btn cardapio-admin-btn-primary" style="padding: 10px 16px;">
+                    <i data-lucide="save"></i>
+                    Salvar
+                </button>
+            </div>
         </div>
 
-        <!-- LISTA DE PRODUTOS -->
-        <div class="cardapio-products">
-            <?php foreach ($productsByCategory as $categoryName => $products): ?>
-                <div class="cardapio-category-section" data-category-name="<?= htmlspecialchars($categoryName) ?>">
-                    <h2 class="cardapio-category-title">
-                        <i data-lucide="package" size="20"></i>
-                        <?= htmlspecialchars($categoryName) ?>
-                    </h2>
-                    
-                    <?php foreach ($products as $product): ?>
-                        <div 
-                            class="cardapio-product-card" 
-                            data-product-id="<?= $product['id'] ?>"
-                            data-product-name="<?= htmlspecialchars($product['name']) ?>"
-                            data-product-price="<?= number_format($product['price'], 2, '.', '') ?>"
-                            data-product-description="<?= htmlspecialchars($product['description'] ?? '') ?>"
-                            data-product-image="<?= htmlspecialchars($product['image'] ?? '') ?>"
-                            data-product-category="<?= htmlspecialchars($categoryName) ?>"
-                        >
-                            <div class="cardapio-product-image-wrapper">
-                                <?php if (!empty($product['image'])): ?>
-                                    <img 
-                                        src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($product['image']) ?>" 
-                                        alt="<?= htmlspecialchars($product['name']) ?>"
-                                        class="cardapio-product-image"
-                                    >
-                                <?php else: ?>
-                                    <div class="cardapio-product-image-placeholder">
-                                        <i data-lucide="image" size="24"></i>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <div class="cardapio-product-info">
-                                <h3 class="cardapio-product-name"><?= htmlspecialchars($product['name']) ?></h3>
-                                <p class="cardapio-product-description"><?= htmlspecialchars($product['description'] ?? '') ?></p>
-                                <div class="cardapio-product-footer">
-                                    <span class="cardapio-product-price">R$ <?= number_format($product['price'], 2, ',', '.') ?></span>
-                                </div>
-                            </div>
-                            
-                            <button class="cardapio-add-btn" onclick="openProductModal(<?= $product['id'] ?>)">
-                                <i data-lucide="plus" size="16"></i>
-                            </button>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endforeach; ?>
-        </div>
+
+            <!-- Aba Operação (antiga WhatsApp + Status) -->
+            <div class="cardapio-admin-tab-content active" id="tab-operacao">
+                <?php require __DIR__ . '/partials/_tab_whatsapp.php'; ?>
+            </div>
+
+            <!-- Aba Horários -->
+            <div class="cardapio-admin-tab-content" id="tab-horarios">
+                <?php require __DIR__ . '/partials/_tab_horarios.php'; ?>
+            </div>
+
+            <!-- Aba Delivery -->
+            <div class="cardapio-admin-tab-content" id="tab-delivery">
+                <?php require __DIR__ . '/partials/_tab_delivery.php'; ?>
+            </div>
+
+            <!-- Aba Pagamentos -->
+            <div class="cardapio-admin-tab-content" id="tab-pagamentos">
+                <?php require __DIR__ . '/partials/_tab_pagamentos.php'; ?>
+            </div>
+
+            <!-- Aba Promoções -->
+            <div class="cardapio-admin-tab-content" id="tab-promocoes">
+                <?php require __DIR__ . '/partials/_tab_promocoes.php'; ?>
+            </div>
+
+        </form>
 
     </div>
 </main>
 
-<!-- MODAL DE PRODUTO -->
-<div id="productModal" class="cardapio-modal">
-    <div class="cardapio-modal-content">
-        <div class="cardapio-modal-image-wrapper" id="modalImageWrapper">
-            <img id="modalProductImage" src="" alt="" class="cardapio-modal-image">
-            <button class="cardapio-modal-close" onclick="closeProductModal()">
-                <i data-lucide="chevron-left" size="20"></i>
-            </button>
-        </div>
-        
-        <div class="cardapio-modal-body">
-            <div class="cardapio-modal-header">
-                <h2 id="modalProductName" class="cardapio-modal-title"></h2>
-                <span id="modalProductPrice" class="cardapio-modal-price"></span>
-            </div>
-            
-            <p id="modalProductDescription" class="cardapio-modal-description"></p>
-            
-            <!-- Quantidade -->
-            <div class="cardapio-quantity-control">
-                <span class="cardapio-quantity-label">Quantidade</span>
-                <div class="cardapio-quantity-buttons">
-                    <button class="cardapio-qty-btn" onclick="decreaseQuantity()">
-                        <i data-lucide="minus" size="16"></i>
-                    </button>
-                    <span id="modalQuantity" class="cardapio-quantity-value">1</span>
-                    <button class="cardapio-qty-btn" onclick="increaseQuantity()">
-                        <i data-lucide="plus" size="16"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Adicionais -->
-            <div id="modalAdditionals" class="cardapio-additionals">
-                <h4 class="cardapio-additionals-title">Extras</h4>
-                <div id="additionalsList" class="cardapio-additionals-list">
-                    <?php foreach ($additionalGroups as $group): ?>
-                        <?php if (isset($additionalItems[$group['id']]) && count($additionalItems[$group['id']]) > 0): ?>
-                            <div class="cardapio-additional-group">
-                                <p class="cardapio-additional-group-name"><?= htmlspecialchars($group['name']) ?></p>
-                                <?php foreach ($additionalItems[$group['id']] as $item): ?>
-                                    <label class="cardapio-additional-item">
-                                        <div class="cardapio-additional-item-info">
-                                            <input 
-                                                type="checkbox" 
-                                                class="cardapio-additional-checkbox"
-                                                data-additional-id="<?= $item['id'] ?>"
-                                                data-additional-name="<?= htmlspecialchars($item['name']) ?>"
-                                                data-additional-price="<?= number_format($item['price'], 2, '.', '') ?>"
-                                            >
-                                            <span class="cardapio-additional-name"><?= htmlspecialchars($item['name']) ?></span>
-                                        </div>
-                                        <span class="cardapio-additional-price">+R$ <?= number_format($item['price'], 2, ',', '.') ?></span>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            
-            <!-- Observações -->
-            <div class="cardapio-observations">
-                <h4 class="cardapio-observations-title">Observações</h4>
-                <textarea 
-                    id="modalObservation" 
-                    class="cardapio-observations-textarea"
-                    placeholder="Ex: Sem cebola, ponto da carne..."
-                ></textarea>
-            </div>
-        </div>
-        
-        <div class="cardapio-modal-footer">
-            <button class="cardapio-add-cart-btn" onclick="addToCart()">
-                <span>Adicionar</span>
-                <span id="modalTotalPrice">R$ 0,00</span>
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- CARRINHO FLUTUANTE -->
-<div id="floatingCart" class="cardapio-floating-cart">
-    <div class="cardapio-cart-summary">
-        <div class="cardapio-cart-count">
-            <i data-lucide="shopping-bag" size="18"></i>
-            <span id="cartCount">0 itens</span>
-        </div>
-        <span id="cartTotal" class="cardapio-cart-total">R$ 0,00</span>
-    </div>
-    <button class="cardapio-view-cart-btn" onclick="openCartModal()">
-        Ver Pedido
-        <i data-lucide="arrow-right" size="18"></i>
-    </button>
-</div>
-
-<!-- MODAL DO CARRINHO -->
-<div id="cartModal" class="cardapio-modal cardapio-cart-modal">
-    <div class="cardapio-modal-content cardapio-cart-modal-content">
-        <div class="cardapio-cart-header">
-            <h2>Seu Pedido</h2>
-            <button class="cardapio-modal-close-round" onclick="closeCartModal()">
-                <i data-lucide="x" size="20"></i>
-            </button>
-        </div>
-        
-        <div class="cardapio-cart-body" id="cartItemsContainer">
-            <!-- Itens serão inseridos via JavaScript -->
-        </div>
-        
-        <div class="cardapio-cart-footer">
-            <div class="cardapio-cart-total-row">
-                <span class="cardapio-cart-total-label">Total:</span>
-                <span id="cartModalTotal" class="cardapio-cart-total-value">R$ 0,00</span>
-            </div>
-            <button class="cardapio-checkout-btn" onclick="goToCheckout()">
-                Próxima Etapa
-                <i data-lucide="arrow-right" size="18"></i>
-            </button>
-        </div>
-    </div>
-</div>
-
-<script>
-    window.BASE_URL = '<?= BASE_URL ?>';
-</script>
-<script src="<?= BASE_URL ?>/js/cardapio.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin.js?v=<?= time() ?>"></script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>

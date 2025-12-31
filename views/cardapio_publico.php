@@ -89,9 +89,27 @@
                     </div>
                 </div>
                 <div class="cardapio-info">
-                    <p class="cardapio-delivery-time">30-45 min</p>
+                    <p class="cardapio-delivery-time"><?= ($cardapioConfig['delivery_time_min'] ?? 30) ?>-<?= ($cardapioConfig['delivery_time_max'] ?? 45) ?> min</p>
                 </div>
             </div>
+            
+            <?php if (!($cardapioConfig['is_open_now'] ?? true)): ?>
+            <!-- Banner Loja Fechada -->
+            <div style="background: linear-gradient(90deg, #fca5a5 0%, #f87171 100%); color: #7f1d1d; padding: 12px 20px; text-align: center; font-weight: 600; font-size: 0.95rem;">
+                <span style="margin-right: 8px;">🔒</span>
+                <?php 
+                    $reason = $cardapioConfig['closed_reason'] ?? '';
+                    if ($reason === 'outside_hours' && ($cardapioConfig['today_hours'] ?? null)) {
+                        $hours = $cardapioConfig['today_hours'];
+                        echo "Fechado agora. Abrimos às " . substr($hours['open_time'], 0, 5);
+                    } elseif ($reason === 'day_closed') {
+                        echo "Não abrimos hoje. Volte amanhã!";
+                    } else {
+                        echo htmlspecialchars($cardapioConfig['closed_message'] ?? 'Estamos fechados no momento');
+                    }
+                ?>
+            </div>
+            <?php endif; ?>
         </header>
 
         <!-- BUSCA -->
@@ -121,6 +139,44 @@
 
         <!-- LISTA DE PRODUTOS -->
         <div class="cardapio-products">
+            
+            <?php if (!empty($combos)): ?>
+            <!-- [ETAPA 3] SEÇÃO DE COMBOS -->
+            <div class="cardapio-category-section" data-category-name="combos" style="margin-bottom: 20px;">
+                <h2 class="cardapio-category-title" style="background: linear-gradient(90deg, #f59e0b, #d97706); color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+                    <i data-lucide="package-plus" size="20"></i>
+                    🔥 Combos Especiais
+                </h2>
+                
+                <?php foreach ($combos as $combo): ?>
+                <div class="cardapio-product-card cardapio-card-combo">
+                    <div class="cardapio-badge cardapio-badge-combo">COMBO</div>
+                    <div class="cardapio-product-image-wrapper">
+                        <?php if (!empty($combo['image'])): ?>
+                            <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($combo['image']) ?>" alt="<?= htmlspecialchars($combo['name']) ?>" class="cardapio-product-image">
+                        <?php else: ?>
+                            <div class="cardapio-product-image-placeholder placeholder-combo">
+                                <i data-lucide="package" size="40"></i>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="cardapio-product-info">
+                        <h3 class="cardapio-product-name"><?= htmlspecialchars($combo['name']) ?></h3>
+                        <p class="cardapio-product-description"><?= htmlspecialchars($combo['description'] ?? '') ?></p>
+                        <?php if (!empty($combo['products_list'])): ?>
+                        <p class="cardapio-product-includes">
+                            <strong>Inclui:</strong> <?= htmlspecialchars($combo['products_list']) ?>
+                        </p>
+                        <?php endif; ?>
+                        <p class="cardapio-product-price price-combo">
+                            R$ <?= number_format($combo['price'], 2, ',', '.') ?>
+                        </p>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+
             <?php foreach ($productsByCategory as $categoryName => $products): ?>
                 <div class="cardapio-category-section" data-category-name="<?= htmlspecialchars($categoryName) ?>">
                     <h2 class="cardapio-category-title">
@@ -130,7 +186,7 @@
                     
                     <?php foreach ($products as $product): ?>
                         <div 
-                            class="cardapio-product-card" 
+                            class="cardapio-product-card <?= !empty($product['is_featured']) ? 'cardapio-card-featured' : '' ?>" 
                             data-product-id="<?= $product['id'] ?>"
                             data-product-name="<?= htmlspecialchars($product['name']) ?>"
                             data-product-price="<?= number_format($product['price'], 2, '.', '') ?>"
@@ -139,6 +195,10 @@
                             data-product-category="<?= htmlspecialchars($categoryName) ?>"
                             onclick="openProductModal(<?= $product['id'] ?>)" style="cursor: pointer;"
                         >
+                            <?php if (!empty($product['is_featured'])): ?>
+                                <div class="cardapio-badge cardapio-badge-featured">DESTAQUE</div>
+                            <?php endif; ?>
+                            
                             <div class="cardapio-product-image-wrapper">
                                 <?php if (!empty($product['image'])): ?>
                                     <img 
@@ -590,6 +650,22 @@
     const products = <?= $jsProducts ?>;
     const PRODUCT_RELATIONS = <?= json_encode($productRelations ?? []) ?>;
     window.BASE_URL = '<?= BASE_URL ?>';
+    
+    // [ETAPA 1.1] Configurações do cardápio admin
+    window.CARDAPIO_CONFIG = {
+        isOpen: <?= ($cardapioConfig['is_open'] ?? 1) ? 'true' : 'false' ?>,
+        deliveryEnabled: <?= ($cardapioConfig['delivery_enabled'] ?? 1) ? 'true' : 'false' ?>,
+        pickupEnabled: <?= ($cardapioConfig['pickup_enabled'] ?? 1) ? 'true' : 'false' ?>,
+        dineInEnabled: <?= ($cardapioConfig['dine_in_enabled'] ?? 1) ? 'true' : 'false' ?>,
+        deliveryFee: <?= floatval($cardapioConfig['delivery_fee'] ?? 5) ?>,
+        minOrderValue: <?= floatval($cardapioConfig['min_order_value'] ?? 20) ?>,
+        acceptCash: <?= ($cardapioConfig['accept_cash'] ?? 1) ? 'true' : 'false' ?>,
+        acceptCredit: <?= ($cardapioConfig['accept_credit'] ?? 1) ? 'true' : 'false' ?>,
+        acceptDebit: <?= ($cardapioConfig['accept_debit'] ?? 1) ? 'true' : 'false' ?>,
+        acceptPix: <?= ($cardapioConfig['accept_pix'] ?? 1) ? 'true' : 'false' ?>,
+        whatsappNumber: '<?= htmlspecialchars($cardapioConfig['whatsapp_number'] ?? '') ?>',
+        closedMessage: '<?= htmlspecialchars($cardapioConfig['closed_message'] ?? 'Estamos fechados no momento') ?>'
+    };
 
     // Diagnóstico
     document.addEventListener('DOMContentLoaded', () => {
@@ -598,6 +674,7 @@
             alert('Erro: Sistema não carregou corretamente. Verifique o console.');
         } else {
             console.log('✅ Sistema inicializado. Produtos carregados:', products.length);
+            console.log('✅ Configs do cardápio:', window.CARDAPIO_CONFIG);
         }
     });
 </script>
@@ -614,5 +691,84 @@
     lucide.createIcons();
 </script>
 
+    <!-- CSS para Etapa 4 (Badges) -->
+    <style>
+    /* Badges */
+    .cardapio-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        font-size: 0.70rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+        color: white;
+        text-transform: uppercase;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 10;
+        letter-spacing: 0.5px;
+    }
+
+    .cardapio-badge-combo {
+        background: #f59e0b;
+    }
+
+    .cardapio-badge-featured {
+        background: #ef4444;
+    }
+
+    .cardapio-card-combo {
+        border: 2px solid #f59e0b;
+        background: #fffbeb;
+    }
+
+    .price-combo {
+        color: #d97706;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    .placeholder-combo {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        color: #d97706;
+    }
+
+    .cardapio-product-includes {
+        font-size: 0.8rem; 
+        color: #6b7280; 
+        margin-top: 4px; 
+        line-height: 1.3;
+    }
+
+    .cardapio-card-featured {
+        border: 1px solid #fecaca;
+        background: #fef2f2;
+    }
+    
+    /* Smooth Scroll no Modal */
+    .cardapio-modal-content {
+        scroll-behavior: smooth;
+    }
+    </style>
+
+    <script>
+    // [ETAPA 4] Micro UX - Wrapper para compatibilidade
+    function openProductModal(productId) {
+        // Usa CardapioModals (módulo refatorado)
+        if (window.CardapioModals) {
+            window.CardapioModals.openProduct(productId);
+            
+            // UX: Scroll suave pro topo da imagem (se modal abrir)
+            setTimeout(() => {
+                const modalImg = document.querySelector('#modalProductImage');
+                if (modalImg && modalImg.offsetParent) {
+                    modalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+        } else {
+            console.error('[Cardápio] CardapioModals não carregado!');
+        }
+    }
+    </script>
 </body>
 </html>

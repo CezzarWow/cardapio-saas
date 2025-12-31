@@ -82,6 +82,36 @@ switch ($path) {
         (new \App\Controllers\Admin\CardapioController())->index();
         break;
 
+    case '/admin/loja/cardapio/salvar':
+        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
+        (new \App\Controllers\Admin\CardapioController())->update();
+        break;
+
+    // --- COMBOS (ETAPA 3) ---
+    case '/admin/loja/cardapio/combo/novo':
+        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
+        (new \App\Controllers\Admin\CardapioController())->comboForm();
+        break;
+
+    case '/admin/loja/cardapio/combo/salvar':
+        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
+        (new \App\Controllers\Admin\CardapioController())->storeCombo();
+        break;
+
+    case '/admin/loja/cardapio/combo/editar':
+        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
+        (new \App\Controllers\Admin\CardapioController())->editCombo();
+        break;
+
+    case '/admin/loja/cardapio/combo/atualizar':
+        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
+        (new \App\Controllers\Admin\CardapioController())->updateCombo();
+        break;
+
+    case '/admin/loja/cardapio/combo/deletar':
+        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
+        (new \App\Controllers\Admin\CardapioController())->deleteCombo();
+        break;
 
     // --- GESTÃO DE ESTOQUE (PRODUTOS) ---
     case '/admin/loja/produtos':
@@ -407,6 +437,12 @@ switch ($path) {
     case '/admin/loja/vendas/reabrir':
         require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
         (new \App\Controllers\Admin\SalesController())->reactivateTable();
+        break;
+
+    // --- ROTA PÚBLICA: CARDÁPIO POR SLUG (/cardapio/{slug}) ---
+    case (preg_match('/^\\/cardapio\\/([a-zA-Z0-9_-]+)$/', $path, $mSlug) ? true : false):
+        require __DIR__ . '/../app/Controllers/CardapioPublicoController.php';
+        (new \App\Controllers\CardapioPublicoController())->showBySlug($mSlug[1]);
         break;
 
     // --- ROTA PÚBLICA: CARDÁPIO POR ID (para acesso pelo celular) ---
