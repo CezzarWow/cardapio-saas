@@ -43,10 +43,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                     <i data-lucide="truck"></i>
                     <span>Delivery</span>
                 </button>
-                <button type="button" class="cardapio-admin-tab-btn" data-tab="pagamentos">
-                    <i data-lucide="credit-card"></i>
-                    <span>Pagamentos</span>
-                </button>
+
                 <button type="button" class="cardapio-admin-tab-btn" data-tab="promocoes">
                     <i data-lucide="tag"></i>
                     <span>Promoções</span>
@@ -63,7 +60,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                     Ver Cardápio
                 </a>
                 
-                <button type="submit" class="cardapio-admin-btn cardapio-admin-btn-primary" style="padding: 10px 16px;">
+                <button type="submit" class="cardapio-admin-btn cardapio-admin-btn-primary cardapio-admin-btn-save" style="padding: 10px 16px;">
                     <i data-lucide="save"></i>
                     Salvar
                 </button>
@@ -86,10 +83,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                 <?php require __DIR__ . '/partials/_tab_delivery.php'; ?>
             </div>
 
-            <!-- Aba Pagamentos -->
-            <div class="cardapio-admin-tab-content" id="tab-pagamentos">
-                <?php require __DIR__ . '/partials/_tab_pagamentos.php'; ?>
-            </div>
+
 
             <!-- Aba Promoções -->
             <div class="cardapio-admin-tab-content" id="tab-promocoes">
@@ -102,5 +96,17 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 </main>
 
 <script src="<?= BASE_URL ?>/js/cardapio-admin.js?v=<?= time() ?>"></script>
+
+<script>
+    // Limpar parâmetros da URL (evita mensagem repetida ao dar F5)
+    if (window.history.replaceState) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('success') || url.searchParams.has('error')) {
+            url.searchParams.delete('success');
+            url.searchParams.delete('error');
+            window.history.replaceState({path: url.href}, '', url.href);
+        }
+    }
+</script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>

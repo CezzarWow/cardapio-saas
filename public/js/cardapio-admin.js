@@ -17,6 +17,7 @@ window.CardapioAdmin = {
         this.initToggles();
         this.initValidation();
         this.initLoader();
+        this.initPixMask();
 
         // [ETAPA 5] Aplicar máscara inicial no telefone (se já tiver valor do banco)
         const waInput = document.getElementById('whatsapp_number');
@@ -89,7 +90,12 @@ window.CardapioAdmin = {
             if (waInput) waInput.disabled = false;
 
             // [CRÍTICO] Habilitar campos Delivery para garantir envio no POST
-            document.querySelectorAll('.delivery-field').forEach(f => f.disabled = false);
+            document.querySelectorAll('.delivery-field input, .delivery-field select').forEach(f => f.disabled = false);
+
+            // [CRÍTICO] Habilitar campos Status e Pagamentos para garantir envio
+            document.querySelectorAll('.status-field input, .status-field select').forEach(f => f.disabled = false);
+            document.querySelectorAll('.pagamentos-field input, .pagamentos-field select').forEach(f => f.disabled = false);
+            document.querySelectorAll('.whatsapp-field input, .whatsapp-field select, .whatsapp-field textarea').forEach(f => f.disabled = false);
 
             // Mostra loader
             const originalText = btnSave.innerHTML;
@@ -445,6 +451,203 @@ window.CardapioAdmin = {
         if (btnApply) btnApply.style.display = 'none';
 
         if (window.lucide) lucide.createIcons();
+    },
+
+    /**
+     * [NOVO] Salva configurações automaticamente
+     */
+    saveSettings() {
+        const form = document.querySelector('form');
+        const btnSave = document.querySelector('.cardapio-admin-btn-save');
+
+        if (form && btnSave) {
+            // Feedback visual no botão Salvar principal
+            const originalText = btnSave.innerHTML;
+            btnSave.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Salvando...';
+            btnSave.disabled = true;
+
+            // Dispara validação e submit
+            if (this.validateForm()) {
+                // Habilitar campos críticos (já feito no submit listener, mas reforçando)
+                document.querySelectorAll('input:disabled, select:disabled, textarea:disabled').forEach(f => f.disabled = false);
+                form.submit();
+            } else {
+                // Se falhar validação, restaura botão
+                btnSave.innerHTML = originalText;
+                btnSave.disabled = false;
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+    },
+
+    /**
+     * [NOVO] Adiciona mensagem do WhatsApp na lista específica
+     * @param {string} type 'before' ou 'after'
+     */
+    addWhatsappMessage(type) {
+        const container = document.getElementById(`whatsapp-list-${type}`);
+        if (!container) return;
+
+        const div = document.createElement('div');
+        div.className = 'cardapio-admin-message-row';
+        div.style.cssText = 'gap: 6px; margin-bottom: 6px; display: flex; align-items: center; width: 100%;';
+
+        div.innerHTML = `
+            <textarea class="cardapio-admin-input cardapio-admin-textarea" 
+                      name="whatsapp_data[${type}][]" 
+                      rows="2"
+                      style="padding: 6px 10px; font-size: 0.85rem; background-color: #f8fafc; border: 1px solid #cbd5e1; width: 100%; min-height: 48px; resize: none;"
+                      placeholder="Nova mensagem..."></textarea>
+            <button type="button" class="cardapio-admin-btn" 
+                    style="background: #fee2e2; color: #ef4444; padding: 0; width: 32px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" 
+                    onclick="this.parentElement.remove()">
+                <i data-lucide="trash-2" size="14"></i>
+            </button>
+        `;
+
+        container.appendChild(div);
+        if (window.lucide) lucide.createIcons();
+
+        // Foca no novo input
+        const textarea = div.querySelector('textarea');
+        if (textarea) textarea.focus();
+    },
+
+
+
+    /**
+     * [NOVO] Toggle Editar/Aplicar/Cancelar para cards
+     */
+    toggleCardEdit(cardName, action = 'toggle') {
+        const fields = document.querySelectorAll(`.${cardName}-field`);
+        const btnEdit = document.getElementById(`btn_edit_${cardName}`);
+        const btnCancel = document.getElementById(`btn_cancel_${cardName}`);
+
+        if (!fields.length || !btnEdit) return;
+
+        // Verificar estado atual
+        const firstField = fields[0];
+        const isLocked = firstField.style.pointerEvents === 'none';
+
+        // Ação: cancelar = forçar bloqueio
+        const shouldUnlock = (action === 'toggle') ? isLocked : false;
+
+        if (shouldUnlock) {
+            // DESBLOQUEAR (Editar)
+            fields.forEach(f => {
+                f.style.opacity = '1';
+                f.style.pointerEvents = 'auto';
+                f.querySelectorAll('input, select, textarea').forEach(input => {
+                    input.disabled = false;
+                    input.style.backgroundColor = 'white';
+                });
+            });
+
+            // Mudar botão para "Aplicar" (verde)
+            btnEdit.innerHTML = '<i data-lucide="check" size="14"></i> Aplicar';
+            btnEdit.style.background = '#22c55e';
+            btnEdit.style.color = 'white';
+
+            // Mostrar botão Cancelar
+            if (btnCancel) btnCancel.style.display = 'inline-flex';
+        } else {
+            // BLOQUEAR (Aplicar ou Cancelar)
+
+            // Se for APLICAR (não cancel), salva antes de travar visualmente
+            if (action !== 'cancel') {
+                btnEdit.innerHTML = '<i data-lucide="loader-2" size="14" class="spin"></i> Salvando...';
+                this.saveSettings();
+                return; // O submit vai recarregar a página
+            }
+
+            fields.forEach(f => {
+                f.style.opacity = '0.7';
+                f.style.pointerEvents = 'none';
+                f.querySelectorAll('input, select, textarea').forEach(input => {
+                    input.disabled = true;
+                    input.style.backgroundColor = '#f8fafc';
+                });
+            });
+
+            // Mudar botão para "Editar" (cinza)
+            btnEdit.innerHTML = '<i data-lucide="pencil" size="14"></i> Editar';
+            btnEdit.style.background = '#e2e8f0';
+            btnEdit.style.color = '#475569';
+
+            // Esconder botão Cancelar
+            if (btnCancel) btnCancel.style.display = 'none';
+        }
+
+        if (window.lucide) lucide.createIcons();
+    },
+
+    /**
+     * Cancela edição de um card (reverte e trava)
+     */
+    cancelCardEdit(cardName) {
+        // Recarrega a página para reverter os valores (simples e seguro)
+        // Alternativa: armazenar valores originais e restaurar
+        this.toggleCardEdit(cardName, 'cancel');
+    },
+
+    /**
+     * [NOVO] Máscaras Dinâmicas para PIX
+     */
+    initPixMask() {
+        const pixKey = document.getElementById('pix_key');
+        const pixType = document.getElementById('pix_key_type');
+
+        if (!pixKey || !pixType) return;
+
+        const applyMask = () => {
+            const type = pixType.value;
+            let value = pixKey.value;
+
+            if (type === 'cpf') value = this.maskCPF(value);
+            else if (type === 'cnpj') value = this.maskCNPJ(value);
+            else if (type === 'telefone') value = this.maskPhoneValue(value);
+
+            pixKey.value = value;
+        };
+
+        pixKey.addEventListener('input', applyMask);
+
+        pixType.addEventListener('change', () => {
+            pixKey.value = ''; // Limpa ao mudar o tipo
+            pixKey.focus();
+        });
+    },
+
+    maskCPF(v) {
+        v = v.replace(/\D/g, "");
+        v = v.replace(/(\d{3})(\d)/, "$1.$2");
+        v = v.replace(/(\d{3})(\d)/, "$1.$2");
+        v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+        return v.substring(0, 14);
+    },
+
+    maskCNPJ(v) {
+        v = v.replace(/\D/g, "");
+        v = v.replace(/^(\d{2})(\d)/, "$1.$2");
+        v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+        v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
+        v = v.replace(/(\d{4})(\d)/, "$1-$2");
+        return v.substring(0, 18);
+    },
+
+    maskPhoneValue(v) {
+        v = v.replace(/\D/g, "");
+        if (v.length > 11) v = v.slice(0, 11);
+
+        if (v.length > 10) {
+            return v.replace(/^(\d{2})(\d{1})(\d{4})(\d{4}).*/, '($1) $2 $3-$4');
+        } else if (v.length > 5) {
+            return v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+        } else if (v.length > 2) {
+            return v.replace(/^(\d{2})(\d{0,5}).*/, '($1) $2');
+        } else {
+            return v.replace(/^(\d*)/, '($1');
+        }
     }
 };
 

@@ -123,21 +123,32 @@ class CardapioController {
         $minOrderValue = str_replace(',', '.', $_POST['min_order_value'] ?? '20');
         $minOrderValue = preg_replace('/[^\d.]/', '', $minOrderValue);
 
-        // WhatsApp (Ajuste [ETAPA 5]: Mensagens Ilimitadas)
-        $whatsappMessages = $_POST['whatsapp_messages'] ?? [];
-        if (!is_array($whatsappMessages)) {
-            // Fallback para legado ou string simples
-            $whatsappMessages = [$whatsappMessages];
+        // WhatsApp (Ajuste [ETAPA 6]: Listas Dinâmicas Antes/Depois)
+        $whatsappData = $_POST['whatsapp_data'] ?? null;
+        
+        if ($whatsappData && is_array($whatsappData)) {
+            // Estrutura Nova: {before: [], after: []}
+            $finalMessages = [
+                'before' => array_values(array_filter($whatsappData['before'] ?? [], fn($m) => !empty(trim($m)))),
+                'after' => array_values(array_filter($whatsappData['after'] ?? [], fn($m) => !empty(trim($m))))
+            ];
+            $jsonMessages = json_encode($finalMessages, JSON_UNESCAPED_UNICODE);
+        } else {
+            // Legado (Array Simples ou String)
+            $whatsappMessages = $_POST['whatsapp_messages'] ?? [];
+            if (!is_array($whatsappMessages)) {
+                $whatsappMessages = [$whatsappMessages];
+            }
+            $whatsappMessages = array_values(array_filter($whatsappMessages, fn($m) => !empty(trim($m))));
+            $jsonMessages = json_encode($whatsappMessages, JSON_UNESCAPED_UNICODE);
         }
-        // Limpa vazios e reindexa
-        $whatsappMessages = array_values(array_filter($whatsappMessages, fn($m) => !empty(trim($m))));
 
         // Coleta dados do formulário
         $data = [
             // WhatsApp
             'whatsapp_enabled' => isset($_POST['whatsapp_enabled']) ? 1 : 0,
             'whatsapp_number' => preg_replace('/\D/', '', $_POST['whatsapp_number'] ?? ''),
-            'whatsapp_message' => json_encode($whatsappMessages, JSON_UNESCAPED_UNICODE), // Salva como JSON
+            'whatsapp_message' => $jsonMessages,
             
             // Operação
             'is_open' => isset($_POST['is_open']) ? 1 : 0,
@@ -156,10 +167,10 @@ class CardapioController {
             'pickup_enabled' => isset($_POST['pickup_enabled']) ? 1 : 0,
             'dine_in_enabled' => isset($_POST['dine_in_enabled']) ? 1 : 0,
             
-            // Pagamentos
+            // Pagamentos (accept_card grava em credit e debit para compatibilidade)
             'accept_cash' => isset($_POST['accept_cash']) ? 1 : 0,
-            'accept_credit' => isset($_POST['accept_credit']) ? 1 : 0,
-            'accept_debit' => isset($_POST['accept_debit']) ? 1 : 0,
+            'accept_credit' => isset($_POST['accept_card']) ? 1 : 0,
+            'accept_debit' => isset($_POST['accept_card']) ? 1 : 0,
             'accept_pix' => isset($_POST['accept_pix']) ? 1 : 0,
             'pix_key' => trim($_POST['pix_key'] ?? ''),
             'pix_key_type' => $_POST['pix_key_type'] ?? 'telefone',

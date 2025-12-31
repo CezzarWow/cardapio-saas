@@ -27,6 +27,67 @@ const CardapioCheckout = {
                 if (e.target === modal) CardapioCheckout.closePayment();
             });
         }
+
+        // Valida Tipo de Pedido Inicial (caso Entrega esteja desabilitado)
+        setTimeout(() => {
+            const currentRadio = document.querySelector(`input[name="orderType"][value="${CardapioCheckout.selectedOrderType}"]`);
+            if (!currentRadio || currentRadio.disabled) {
+                const enabledRadio = document.querySelector('input[name="orderType"]:not([disabled])');
+                if (enabledRadio) {
+                    CardapioCheckout.setOrderType(enabledRadio.value);
+                }
+            }
+        }, 100);
+    },
+
+    // ==========================================
+    // SELECIONAR TIPO DE PEDIDO
+    // ==========================================
+    // ==========================================
+    // LÓGICA DE TAXAS E TOTAIS
+    // ==========================================
+    getDeliveryFee: function () {
+        if (this.selectedOrderType !== 'entrega') return 0;
+        const config = window.cardapioConfig || {};
+        return parseFloat(config.delivery_fee || 0);
+    },
+
+    getFinalTotal: function () {
+        const cartTotal = CardapioCart.getTotals().value;
+        const fee = this.getDeliveryFee();
+        return cartTotal + fee;
+    },
+
+    updateTotals: function () {
+        const fee = this.getDeliveryFee();
+        const total = this.getFinalTotal();
+        const feeRow = document.getElementById('deliveryFeeRow');
+
+        // Atualiza Linha da Taxa (Review Modal)
+        if (feeRow) {
+            // Mostra apenas se tem taxa E é entrega
+            // Se taxa for 0, mas for entrega, opcionalmente mostra "Grátis" ou esconde.
+            // O usuário pediu pra mostrar o valor. Se for 0, mostra R$ 0,00 ou Grátis?
+            // Vou mostrar valor normal.
+            if (this.selectedOrderType === 'entrega' && fee > 0) {
+                feeRow.style.display = 'flex';
+                const elDiv = document.getElementById('deliveryFeeValue');
+                if (elDiv) elDiv.innerText = Utils.formatCurrency(fee);
+            } else {
+                feeRow.style.display = 'none';
+            }
+        }
+
+        // Atualiza Total Visual em todos os lugares
+        const totalFormatted = Utils.formatCurrency(total);
+
+        const reviewTotal = document.getElementById('orderReviewTotal');
+        if (reviewTotal) reviewTotal.innerText = totalFormatted;
+
+        const paymentTotal = document.getElementById('paymentTotalValue');
+        if (paymentTotal) paymentTotal.innerText = totalFormatted;
+
+        // Atualiza também o botão flutuante principal se estiver visível (opcional, mas bom pra consistência)
     },
 
     // ==========================================
@@ -42,33 +103,25 @@ const CardapioCheckout = {
 
         // Atualiza campos visíveis
         this.updateFieldsVisibility();
+
+        // Atualiza Totais (Taxas mudam)
+        this.updateTotals();
     },
 
     updateFieldsVisibility: function () {
-        const addressGroup = document.getElementById('addressGroup'); // Container endereço
-        const numberGroup = document.getElementById('numberGroup'); // Container número
-        // Nota: IDs dos grupos podem precisar ser adicionados no PHP se não existirem
-        // O código original controla por classes ou inline styles.
-        // Vamos manter a lógica original de "Alerta" e validação por enquanto, 
-        // e assumir que o CSS cuida do resto ou implementar lógica de esconder.
-
-        // No original, updatePaymentFieldsByOrderType fazia isso. Vamos portar.
-
         const type = this.selectedOrderType;
         const msgLocal = document.getElementById('msgLocal');
         const msgRetirada = document.getElementById('msgRetirada');
-        const deliveryFields = document.getElementById('deliveryFields');
 
         if (msgLocal) msgLocal.style.display = (type === 'local') ? 'block' : 'none';
         if (msgRetirada) msgRetirada.style.display = (type === 'retirada') ? 'block' : 'none';
 
         // Campos de entrega (Endereço, Bairro, Número)
-        // Classe usada no HTML é 'delivery-only'
         document.querySelectorAll('.delivery-only').forEach(el => {
             el.style.display = (type === 'entrega') ? '' : 'none';
         });
 
-        // Label do Número muda?
+        // Label do Número muda
         const numLabel = document.querySelector('label[for="customerNumber"]');
         if (numLabel) {
             if (type === 'local') numLabel.textContent = 'Mesa / Comanda';
@@ -87,10 +140,7 @@ const CardapioCheckout = {
         }
 
         this.renderReviewItems();
-
-        // Atualiza total
-        const totals = CardapioCart.getTotals();
-        document.getElementById('orderReviewTotal').innerText = Utils.formatCurrency(totals.value); // float btn
+        this.updateTotals(); // Garante cálculo correto ao abrir
 
         document.getElementById('orderReviewModal').classList.add('show');
     },
@@ -126,9 +176,9 @@ const CardapioCheckout = {
         });
         Utils.initIcons();
 
-        // Atualiza total se remover
-        const totals = CardapioCart.getTotals();
-        document.getElementById('orderReviewTotal').innerText = Utils.formatCurrency(totals.value);
+        // Atualiza total se remover e re-renderizar
+        this.updateTotals();
+
         if (items.length === 0) this.closeOrderReview();
     },
 
@@ -137,11 +187,7 @@ const CardapioCheckout = {
     // ==========================================
     goToPayment: function () {
         this.closeOrderReview();
-
-        // Atualiza Total no Modal de Pagamento
-        const totals = CardapioCart.getTotals();
-        const paymentTotal = document.getElementById('paymentTotalValue');
-        if (paymentTotal) paymentTotal.textContent = Utils.formatCurrency(totals.value);
+        this.updateTotals(); // Garante total atualizado no modal pagamento
 
         // RESET: Esconde o card de troco (só aparece ao selecionar Dinheiro)
         const changeContainer = document.getElementById('changeContainer');
@@ -317,38 +363,85 @@ const CardapioCheckout = {
 
         const totals = CardapioCart.getTotals();
 
-        // Montar mensagem
-        let msg = '🎉 Pedido enviado!\n\n' +
-            'Tipo: ' + this.selectedOrderType.toUpperCase() + '\n' +
-            'Nome: ' + name + '\n';
+        // Montar mensagem para o WhatsApp (Lógica Nova)
+        // Recupera mensagens configuradas globalmente (via PHP)
+        const config = window.cardapioConfig || {};
+        const whatsappNumber = (config.whatsapp_number || '').replace(/\D/g, ''); // Remove não dígitos
+
+        // Recupera array de mensagens (índice 0 = antes, 1 = depois)
+        let msgBefore = 'Olá! Gostaria de fazer um pedido:';
+        let msgAfter = 'Aguardo a confirmação.';
+
+        try {
+            if (config.whatsapp_message) {
+                const parsed = JSON.parse(config.whatsapp_message);
+
+                // Formato Novo { before: [], after: [] }
+                if (parsed && (typeof parsed === 'object') && (parsed.before || parsed.after)) {
+                    if (Array.isArray(parsed.before) && parsed.before.length > 0) {
+                        msgBefore = parsed.before.join('\n');
+                    }
+                    if (Array.isArray(parsed.after) && parsed.after.length > 0) {
+                        msgAfter = parsed.after.join('\n');
+                    }
+                }
+                // Formato Legado [msg1, msg2]
+                else if (Array.isArray(parsed)) {
+                    if (parsed.length > 0 && parsed[0]) msgBefore = parsed[0];
+                    if (parsed.length > 1 && parsed[1]) msgAfter = parsed[1];
+                }
+            }
+        } catch (e) {
+            console.warn('Erro ao decodificar mensagens do WhatsApp', e);
+        }
+
+
+        // Monta o Corpo do Pedido
+        let orderSummary = '*NOVO PEDIDO*\n\n' +
+            '👤 *Nome:* ' + name + '\n';
 
         if (this.selectedOrderType === 'entrega') {
-            msg += 'Endereço: ' + address + ', ' + number + '\n' +
-                'Bairro: ' + neighborhood + '\n';
+            orderSummary += '📍 *Entrega:* ' + address + ', ' + number + '\n' +
+                '🏘️ *Bairro:* ' + neighborhood + '\n';
         } else {
-            msg += 'Número/Mesa: ' + number + '\n';
+            const label = (this.selectedOrderType === 'local') ? 'Mesa/Comanda' : 'Retirada';
+            orderSummary += '🏪 *' + label + ':* ' + number + '\n';
         }
 
-        msg += 'Pagamento: ' + this.selectedPaymentMethod.toUpperCase();
-
-        if (this.selectedPaymentMethod === 'dinheiro' && changeAmount) {
-            msg += ' (Troco: ' + changeAmount + ')';
-        }
-
-        msg += '\nTotal: ' + Utils.formatCurrency(totals.value);
-
-        if (obs) msg += '\nObs: ' + obs;
-
-        // Itens
-        msg += '\n\nItens:\n';
+        orderSummary += '\n🛒 *ITENS:*\n';
         CardapioCart.items.forEach(item => {
-            msg += `${item.quantity}x ${item.name} ` +
-                (item.additionals.length ? `(+${item.additionals.length} add)` : '') + '\n';
+            orderSummary += `• ${item.quantity}x ${item.name} ` +
+                (item.additionals.length ? `(${item.additionals.map(a => a.name).join(', ')})` : '') + '\n';
+            if (item.observation) orderSummary += `  _Obs: ${item.observation}_\n`;
         });
 
-        msg += '\n\n(Integração com WhatsApp/backend será implementada)';
 
-        alert(msg);
+
+        // Adiciona Taxa de Entrega se houver
+        const fee = this.getDeliveryFee();
+        if (this.selectedOrderType === 'entrega' && fee > 0) {
+            orderSummary += '🛵 *Taxa de Entrega:* ' + Utils.formatCurrency(fee) + '\n';
+        }
+
+        orderSummary += '\n💰 *Total Final:* ' + Utils.formatCurrency(this.getFinalTotal()) + '\n';
+        orderSummary += '💳 *Pagamento:* ' + this.selectedPaymentMethod.toUpperCase();
+
+        if (this.selectedPaymentMethod === 'dinheiro' && changeAmount) {
+            orderSummary += ' (Troco para: ' + changeAmount + ')';
+        }
+
+        if (obs) orderSummary += '\n📝 *Obs Geral:* ' + obs;
+
+        // Monta Mensagem Final Completa
+        const finalMessage = `${msgBefore}\n\n${orderSummary}\n\n${msgAfter}`;
+
+        // Envia para o WhatsApp
+        if (whatsappNumber) {
+            const url = `https://wa.me/55${whatsappNumber}?text=${encodeURIComponent(finalMessage)}`;
+            window.open(url, '_blank');
+        } else {
+            alert('Número do WhatsApp não configurado!\n\n' + finalMessage);
+        }
 
         this.reset();
     },

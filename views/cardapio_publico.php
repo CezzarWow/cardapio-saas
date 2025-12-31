@@ -65,6 +65,16 @@
         }
         
         .sidebar { display: none !important; }
+
+        /* Opções desabilitadas */
+        .disabled-option {
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(100%);
+            background-color: #f1f5f9;
+            cursor: not-allowed;
+            border-color: #cbd5e1;
+        }
     </style>
 </head>
 <body>
@@ -88,28 +98,35 @@
                         <p class="cardapio-subtitle">Faça seu pedido</p>
                     </div>
                 </div>
-                <div class="cardapio-info">
-                    <p class="cardapio-delivery-time"><?= ($cardapioConfig['delivery_time_min'] ?? 30) ?>-<?= ($cardapioConfig['delivery_time_max'] ?? 45) ?> min</p>
+                <div class="cardapio-info" style="display: flex; flex-direction: column; gap: 6px; width: max-content;">
+                    <p class="cardapio-delivery-time" style="display: flex; align-items: center; justify-content: center; margin: 0; white-space: nowrap;">
+                        <i data-lucide="clock" size="14" style="margin-right: 6px;"></i>
+                        <?= ($cardapioConfig['delivery_time_min'] ?? 30) ?>-<?= ($cardapioConfig['delivery_time_max'] ?? 45) ?> min
+                    </p>
+                    
+                    <?php if ($cardapioConfig['is_open_now'] ?? true): ?>
+                        <div style="display: flex; align-items: center; justify-content: center; padding: 4px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; background: #dcfce7; color: #16a34a; width: 100%; box-sizing: border-box;">
+                            <span style="width: 6px; height: 6px; background: currentColor; border-radius: 50%; margin-right: 6px; flex-shrink: 0;"></span>
+                            Aberto
+                        </div>
+                    <?php else: ?>
+                        <div style="display: flex; align-items: center; justify-content: center; padding: 4px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; background: #fee2e2; color: #dc2626; width: 100%; box-sizing: border-box;">
+                            <span style="width: 6px; height: 6px; background: currentColor; border-radius: 50%; margin-right: 6px; flex-shrink: 0;"></span>
+                            <?php 
+                                $reason = $cardapioConfig['closed_reason'] ?? '';
+                                if ($reason === 'outside_hours' && ($cardapioConfig['today_hours'] ?? null)) {
+                                    $hours = $cardapioConfig['today_hours'];
+                                    echo "Abre " . substr($hours['open_time'], 0, 5);
+                                } elseif ($reason === 'day_closed') {
+                                    echo "Fechado hoje";
+                                } else {
+                                    echo "Fechado";
+                                }
+                            ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
-            
-            <?php if (!($cardapioConfig['is_open_now'] ?? true)): ?>
-            <!-- Banner Loja Fechada -->
-            <div style="background: linear-gradient(90deg, #fca5a5 0%, #f87171 100%); color: #7f1d1d; padding: 12px 20px; text-align: center; font-weight: 600; font-size: 0.95rem;">
-                <span style="margin-right: 8px;">🔒</span>
-                <?php 
-                    $reason = $cardapioConfig['closed_reason'] ?? '';
-                    if ($reason === 'outside_hours' && ($cardapioConfig['today_hours'] ?? null)) {
-                        $hours = $cardapioConfig['today_hours'];
-                        echo "Fechado agora. Abrimos às " . substr($hours['open_time'], 0, 5);
-                    } elseif ($reason === 'day_closed') {
-                        echo "Não abrimos hoje. Volte amanhã!";
-                    } else {
-                        echo htmlspecialchars($cardapioConfig['closed_message'] ?? 'Estamos fechados no momento');
-                    }
-                ?>
-            </div>
-            <?php endif; ?>
         </header>
 
         <!-- BUSCA -->
@@ -469,26 +486,34 @@
         <div class="cardapio-modal-body">
             <!-- Tipo de Pedido -->
             <div class="order-type-section">
-                <label class="order-type-option" data-method="local">
-                    <input type="radio" name="orderType" value="local" onchange="selectOrderType('local')">
+                <label class="order-type-option <?= ($cardapioConfig['dine_in_enabled'] ?? 1) ? '' : 'disabled-option' ?>" data-method="local">
+                    <input type="radio" name="orderType" value="local" onchange="selectOrderType('local')" <?= ($cardapioConfig['dine_in_enabled'] ?? 1) ? '' : 'disabled' ?>>
                     <span class="order-type-check"></span>
                     <span class="order-type-icon">🍽️</span>
                     <span class="order-type-label">Local</span>
                 </label>
                 
-                <label class="order-type-option" data-method="retirada">
-                    <input type="radio" name="orderType" value="retirada" onchange="selectOrderType('retirada')">
+                <label class="order-type-option <?= ($cardapioConfig['pickup_enabled'] ?? 1) ? '' : 'disabled-option' ?>" data-method="retirada">
+                    <input type="radio" name="orderType" value="retirada" onchange="selectOrderType('retirada')" <?= ($cardapioConfig['pickup_enabled'] ?? 1) ? '' : 'disabled' ?>>
                     <span class="order-type-check"></span>
                     <span class="order-type-icon">🛍️</span>
                     <span class="order-type-label">Retirada</span>
                 </label>
                 
-                <label class="order-type-option" data-method="entrega">
-                    <input type="radio" name="orderType" value="entrega" onchange="selectOrderType('entrega')" checked>
+                <label class="order-type-option <?= ($cardapioConfig['delivery_enabled'] ?? 1) ? '' : 'disabled-option' ?>" data-method="entrega">
+                    <input type="radio" name="orderType" value="entrega" onchange="selectOrderType('entrega')" <?= ($cardapioConfig['delivery_enabled'] ?? 1) ? 'checked' : 'disabled' ?>>
                     <span class="order-type-check"></span>
                     <span class="order-type-icon">🚗</span>
                     <span class="order-type-label">Entrega</span>
                 </label>
+            </div>
+
+            <!-- Taxa de Entrega (Dinâmica) -->
+            <div id="deliveryFeeRow" style="display: none; background: #fffbeb; color: #b45309; padding: 10px; margin: 10px 0; border-radius: 8px; font-size: 0.9rem; align-items: center; justify-content: space-between; border: 1px solid #fcd34d;">
+                <span style="display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="bike" size="16"></i> Taxa de Entrega
+                </span>
+                <span id="deliveryFeeValue" style="font-weight: 600;">R$ 0,00</span>
             </div>
             
             <div id="orderReviewItems" class="order-review-items">
@@ -567,22 +592,22 @@
                 </h3>
                 
                 <div class="payment-methods-list">
-                    <label class="payment-method-option" data-method="dinheiro">
-                        <input type="radio" name="paymentMethod" value="dinheiro" onchange="selectPaymentMethod('dinheiro')">
+                    <label class="payment-method-option <?= ($cardapioConfig['accept_cash'] ?? 1) ? '' : 'disabled-option' ?>" data-method="dinheiro">
+                        <input type="radio" name="paymentMethod" value="dinheiro" onchange="selectPaymentMethod('dinheiro')" <?= ($cardapioConfig['accept_cash'] ?? 1) ? '' : 'disabled' ?>>
                         <span class="payment-method-check"></span>
                         <span class="payment-method-icon">💵</span>
                         <span class="payment-method-label">Dinheiro</span>
                     </label>
                     
-                    <label class="payment-method-option" data-method="cartao">
-                        <input type="radio" name="paymentMethod" value="cartao" onchange="selectPaymentMethod('cartao')">
+                    <label class="payment-method-option <?= ($cardapioConfig['accept_credit'] ?? 1) ? '' : 'disabled-option' ?>" data-method="cartao">
+                        <input type="radio" name="paymentMethod" value="cartao" onchange="selectPaymentMethod('cartao')" <?= ($cardapioConfig['accept_credit'] ?? 1) ? '' : 'disabled' ?>>
                         <span class="payment-method-check"></span>
                         <span class="payment-method-icon">💳</span>
                         <span class="payment-method-label">Cartão</span>
                     </label>
                     
-                    <label class="payment-method-option" data-method="pix">
-                        <input type="radio" name="paymentMethod" value="pix" onchange="selectPaymentMethod('pix')">
+                    <label class="payment-method-option <?= ($cardapioConfig['accept_pix'] ?? 1) ? '' : 'disabled-option' ?>" data-method="pix">
+                        <input type="radio" name="paymentMethod" value="pix" onchange="selectPaymentMethod('pix')" <?= ($cardapioConfig['accept_pix'] ?? 1) ? '' : 'disabled' ?>>
                         <span class="payment-method-check"></span>
                         <span class="payment-method-icon">💠</span>
                         <span class="payment-method-label">PIX</span>
@@ -752,6 +777,9 @@
     </style>
 
     <script>
+    // Configurações Globais (para acesso no JS)
+    window.cardapioConfig = <?= json_encode($cardapioConfig) ?>;
+    
     // [ETAPA 4] Micro UX - Wrapper para compatibilidade
     function openProductModal(productId) {
         // Usa CardapioModals (módulo refatorado)

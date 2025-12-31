@@ -152,28 +152,67 @@ class CardapioPublicoController {
         $dayOfWeek = (int) date('w'); // 0=Dom, 1=Seg, ..., 6=Sab
         $currentTime = date('H:i:s');
         
+        // Busca horário de HOJE
         $stmtHour = $conn->prepare("SELECT * FROM business_hours WHERE restaurant_id = :rid AND day_of_week = :day");
         $stmtHour->execute(['rid' => $restaurantId, 'day' => $dayOfWeek]);
         $todayHour = $stmtHour->fetch(PDO::FETCH_ASSOC);
 
-        // Determinar se está aberto (lógica automática)
-        $isOpenNow = true; // Assume aberto por padrão
-        $closedReason = '';
+        // Busca horário de ONTEM (para checar se estamos na madrugada de ontem)
+        $yesterdayDay = ($dayOfWeek - 1 < 0) ? 6 : $dayOfWeek - 1;
+        $stmtYesterday = $conn->prepare("SELECT * FROM business_hours WHERE restaurant_id = :rid AND day_of_week = :day");
+        $stmtYesterday->execute(['rid' => $restaurantId, 'day' => $yesterdayDay]);
+        $yesterdayHour = $stmtYesterday->fetch(PDO::FETCH_ASSOC);
 
-        // 1. Override manual (is_open = 0)
+        // Determinar se está aberto (lógica automática com suporte a madrugada)
+        $isOpenNow = false; 
+        $closedReason = 'outside_hours';
+
+        // 1. Override manual (is_open = 0 no config) -> Prioridade máxima (BLOQUEIO TOTAL)
         if (!($cardapioConfig['is_open'] ?? 1)) {
-            $isOpenNow = false;
-            $closedReason = 'manual';
-        }
-        // 2. Dia fechado na configuração
-        elseif ($todayHour && !$todayHour['is_open']) {
-            $isOpenNow = false;
-            $closedReason = 'day_closed';
-        }
-        // 3. Fora do horário de funcionamento
-        elseif ($todayHour && ($currentTime < $todayHour['open_time'] || $currentTime > $todayHour['close_time'])) {
-            $isOpenNow = false;
-            $closedReason = 'outside_hours';
+            // Renderiza tela de bloqueio e para
+            require __DIR__ . '/../../views/loja_fechada.php';
+            return;
+        } else {
+            // ... lógica de horário normal (badge) ...
+            $isOpenByToday = false;
+            $isOpenByYesterday = false;
+
+            // A) Checa horário de HOJE
+            if ($todayHour && $todayHour['is_open']) {
+                $open = $todayHour['open_time'];
+                $close = $todayHour['close_time'];
+                
+                if ($close < $open) {
+                    // Vira a noite (ex: 18:00 as 02:00) -> Aberto se passou das 18:00
+                    if ($currentTime >= $open) $isOpenByToday = true;
+                } else {
+                    // Normal (ex: 08:00 as 22:00)
+                    if ($currentTime >= $open && $currentTime <= $close) $isOpenByToday = true;
+                }
+            }
+
+            // B) Checa horário de ONTEM (madrugada)
+            if ($yesterdayHour && $yesterdayHour['is_open']) {
+                $yOpen = $yesterdayHour['open_time'];
+                $yClose = $yesterdayHour['close_time'];
+                
+                // Se ontem virou a noite (close < open), então a madrugada de hoje até yClose pertence a ontem
+                if ($yClose < $yOpen) {
+                    if ($currentTime <= $yClose) $isOpenByYesterday = true;
+                }
+            }
+
+            if ($isOpenByToday || $isOpenByYesterday) {
+                $isOpenNow = true;
+                $closedReason = '';
+            } else {
+                // Se fechado, definir motivo
+                if ($todayHour && !$todayHour['is_open']) {
+                    $closedReason = 'day_closed';
+                } else {
+                    $closedReason = 'outside_hours';
+                }
+            }
         }
 
         // Sobrescreve is_open no config para a view usar
