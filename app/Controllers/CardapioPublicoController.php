@@ -30,13 +30,11 @@ class CardapioPublicoController {
             exit;
         }
         
-        // Buscar categorias com produtos
+        // Buscar categorias ordenadas (Inclui sistema: featured, combos)
         $stmtCategories = $conn->prepare("
-            SELECT DISTINCT c.* 
-            FROM categories c
-            INNER JOIN products p ON p.category_id = c.id
-            WHERE c.restaurant_id = :rid
-            ORDER BY c.name ASC
+            SELECT * FROM categories 
+            WHERE restaurant_id = :rid AND is_active = 1
+            ORDER BY COALESCE(sort_order, 999) ASC, name ASC
         ");
         $stmtCategories->execute(['rid' => $restaurantId]);
         $categories = $stmtCategories->fetchAll(PDO::FETCH_ASSOC);
@@ -51,7 +49,9 @@ class CardapioPublicoController {
                 p.image,
                 p.stock,
                 c.id as category_id,
-                c.name as category_name
+                c.name as category_name,
+                c.category_type,
+                c.sort_order as category_order
             FROM products p
             LEFT JOIN categories c ON p.category_id = c.id
             WHERE p.restaurant_id = :rid

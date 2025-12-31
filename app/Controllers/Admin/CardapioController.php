@@ -77,7 +77,11 @@ class CardapioController {
         $stmtRestaurant->execute(['rid' => $restaurantId]);
         $restaurantSlug = $stmtRestaurant->fetchColumn() ?: $restaurantId;
 
+        // [SYSTEM CATEGORIES] Verificar e criar categorias de sistema (Combos e Destaques)
+        $this->ensureSystemCategories($conn, $restaurantId);
+
         // [DESTAQUES] Buscar categorias ordenadas por sort_order
+        // Agora inclui 'category_type' para identificar Destaques e Combos
         $stmtCategories = $conn->prepare("
             SELECT * FROM categories 
             WHERE restaurant_id = :rid 
@@ -468,6 +472,40 @@ class CardapioController {
         if (!isset($_SESSION['loja_ativa_id'])) {
             header('Location: ' . BASE_URL . '/admin');
             exit;
+        }
+    }
+
+    /**
+     * Garante que as categorias de sistema existam
+     */
+    private function ensureSystemCategories($conn, $restaurantId) {
+        $systemTypes = [
+            'combos' => [
+                'name' => '🔥 Combos', 
+                'default_order' => -10
+            ],
+            'featured' => [
+                'name' => '⭐ Destaques', 
+                'default_order' => -5
+            ]
+        ];
+
+        $stmtCheck = $conn->prepare("SELECT id FROM categories WHERE restaurant_id = :rid AND category_type = :type");
+        $stmtInsert = $conn->prepare("
+            INSERT INTO categories (restaurant_id, name, category_type, sort_order, is_active) 
+            VALUES (:rid, :name, :type, :order, 1)
+        ");
+
+        foreach ($systemTypes as $type => $info) {
+            $stmtCheck->execute(['rid' => $restaurantId, 'type' => $type]);
+            if (!$stmtCheck->fetch()) {
+                $stmtInsert->execute([
+                    'rid' => $restaurantId,
+                    'name' => $info['name'],
+                    'type' => $type,
+                    'order' => $info['default_order']
+                ]);
+            }
         }
     }
 }

@@ -148,7 +148,7 @@
                 Todos
             </button>
             <?php foreach ($categories as $category): ?>
-                <button class="cardapio-category-btn" data-category="<?= htmlspecialchars($category['name']) ?>">
+                <button class="cardapio-category-btn" data-category="<?= $category['id'] ?>">
                     <?= htmlspecialchars($category['name']) ?>
                 </button>
             <?php endforeach; ?>
@@ -157,94 +157,133 @@
         <!-- LISTA DE PRODUTOS -->
         <div class="cardapio-products">
             
-            <?php if (!empty($combos)): ?>
-            <!-- [ETAPA 3] SEÇÃO DE COMBOS -->
-            <div class="cardapio-category-section" data-category-name="combos" style="margin-bottom: 20px;">
-                <h2 class="cardapio-category-title" style="background: linear-gradient(90deg, #f59e0b, #d97706); color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
-                    <i data-lucide="package-plus" size="20"></i>
-                    🔥 Combos Especiais
-                </h2>
-                
-                <?php foreach ($combos as $combo): ?>
-                <div class="cardapio-product-card cardapio-card-combo">
-                    <div class="cardapio-badge cardapio-badge-combo">COMBO</div>
-                    <div class="cardapio-product-image-wrapper">
-                        <?php if (!empty($combo['image'])): ?>
-                            <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($combo['image']) ?>" alt="<?= htmlspecialchars($combo['name']) ?>" class="cardapio-product-image">
-                        <?php else: ?>
-                            <div class="cardapio-product-image-placeholder placeholder-combo">
-                                <i data-lucide="package" size="40"></i>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    <div class="cardapio-product-info">
-                        <h3 class="cardapio-product-name"><?= htmlspecialchars($combo['name']) ?></h3>
-                        <p class="cardapio-product-description"><?= htmlspecialchars($combo['description'] ?? '') ?></p>
-                        <?php if (!empty($combo['products_list'])): ?>
-                        <p class="cardapio-product-includes">
-                            <strong>Inclui:</strong> <?= htmlspecialchars($combo['products_list']) ?>
-                        </p>
-                        <?php endif; ?>
-                        <p class="cardapio-product-price price-combo">
-                            R$ <?= number_format($combo['price'], 2, ',', '.') ?>
-                        </p>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
-
-            <?php foreach ($productsByCategory as $categoryName => $products): ?>
-                <div class="cardapio-category-section" data-category-name="<?= htmlspecialchars($categoryName) ?>">
-                    <h2 class="cardapio-category-title">
-                        <i data-lucide="package" size="20"></i>
-                        <?= htmlspecialchars($categoryName) ?>
-                    </h2>
+            <?php foreach ($categories as $category): ?>
+                <?php 
+                    $catType = $category['category_type'] ?? 'default';
+                    $catName = $category['name'];
+                    $catId = $category['id'];
                     
-                    <?php foreach ($products as $product): ?>
-                        <div 
-                            class="cardapio-product-card <?= !empty($product['is_featured']) ? 'cardapio-card-featured' : '' ?>" 
-                            data-product-id="<?= $product['id'] ?>"
-                            data-product-name="<?= htmlspecialchars($product['name']) ?>"
-                            data-product-price="<?= number_format($product['price'], 2, '.', '') ?>"
-                            data-product-description="<?= htmlspecialchars($product['description'] ?? '') ?>"
-                            data-product-image="<?= htmlspecialchars($product['image'] ?? '') ?>"
-                            data-product-category="<?= htmlspecialchars($categoryName) ?>"
-                            onclick="openProductModal(<?= $product['id'] ?>)" style="cursor: pointer;"
-                        >
-                            <?php if (!empty($product['is_featured'])): ?>
-                                <div class="cardapio-badge cardapio-badge-featured">DESTAQUE</div>
-                            <?php endif; ?>
-                            
+                    // RENDERIZAÇÃO: COMBOS
+                    if ($catType === 'combos' && !empty($combos)): 
+                ?>
+                    <div class="cardapio-category-section" data-category-id="<?= $catId ?>" style="margin-bottom: 20px;">
+                        <h2 class="cardapio-category-title" style="background: linear-gradient(90deg, #f59e0b, #d97706); color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+                            <i data-lucide="package-plus" size="20"></i>
+                            <?= htmlspecialchars($catName) ?>
+                        </h2>
+                        
+                        <?php foreach ($combos as $combo): ?>
+                        <div class="cardapio-product-card cardapio-card-combo">
+                            <div class="cardapio-badge cardapio-badge-combo">COMBO</div>
                             <div class="cardapio-product-image-wrapper">
-                                <?php if (!empty($product['image'])): ?>
-                                    <img 
-                                        src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($product['image']) ?>" 
-                                        alt="<?= htmlspecialchars($product['name']) ?>"
-                                        class="cardapio-product-image"
-                                        loading="lazy"
-                                    >
+                                <?php if (!empty($combo['image'])): ?>
+                                    <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($combo['image']) ?>" alt="<?= htmlspecialchars($combo['name']) ?>" class="cardapio-product-image">
                                 <?php else: ?>
-                                    <div class="cardapio-product-image-placeholder">
-                                        <i data-lucide="image" size="24"></i>
+                                    <div class="cardapio-product-image-placeholder placeholder-combo">
+                                        <i data-lucide="package" size="40"></i>
                                     </div>
                                 <?php endif; ?>
                             </div>
-                            
                             <div class="cardapio-product-info">
-                                <h3 class="cardapio-product-name"><?= htmlspecialchars($product['name']) ?></h3>
-                                <p class="cardapio-product-description"><?= htmlspecialchars($product['description'] ?? '') ?></p>
-                                <div class="cardapio-product-footer">
-                                    <span class="cardapio-product-price">R$ <?= number_format($product['price'], 2, ',', '.') ?></span>
-                                </div>
+                                <h3 class="cardapio-product-name"><?= htmlspecialchars($combo['name']) ?></h3>
+                                <p class="cardapio-product-description"><?= htmlspecialchars($combo['description'] ?? '') ?></p>
+                                <?php if (!empty($combo['products_list'])): ?>
+                                <p class="cardapio-product-includes">
+                                    <strong>Inclui:</strong> <?= htmlspecialchars($combo['products_list']) ?>
+                                </p>
+                                <?php endif; ?>
+                                <p class="cardapio-product-price price-combo">
+                                    R$ <?= number_format($combo['price'], 2, ',', '.') ?>
+                                </p>
                             </div>
-                            
-                            <button class="cardapio-add-btn">
-                                <i data-lucide="plus" size="16"></i>
-                            </button>
                         </div>
-                    <?php endforeach; ?>
-                </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                <?php 
+                    // RENDERIZAÇÃO: DESTAQUES
+                    elseif ($catType === 'featured' && !empty($featuredProducts)): 
+                ?>
+                    <div class="cardapio-category-section" data-category-id="<?= $catId ?>">
+                        <h2 class="cardapio-category-title" style="color: #ca8a04;">
+                            <i data-lucide="star" size="20" style="color: #eab308; fill: #eab308;"></i>
+                            <?= htmlspecialchars($catName) ?>
+                        </h2>
+                        
+                        <?php foreach ($featuredProducts as $product): ?>
+                            <!-- Renderiza produto normalmente, mas vindo da lista de destaques -->
+                            <?php include 'partials/product_card.php'; // Se existisse partial, mas vou replicar codigo por enquanto para garantir funcionamento ?>
+                            <div 
+                                class="cardapio-product-card cardapio-card-featured" 
+                                data-product-id="<?= $product['id'] ?>"
+                                data-product-name="<?= htmlspecialchars($product['name']) ?>"
+                                data-product-price="<?= number_format($product['price'], 2, '.', '') ?>"
+                                onclick="openProductModal(<?= $product['id'] ?>)" style="cursor: pointer;"
+                            >
+                                <div class="cardapio-badge cardapio-badge-featured">DESTAQUE</div>
+                                
+                                <div class="cardapio-product-image-wrapper">
+                                    <?php if (!empty($product['image'])): ?>
+                                        <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($product['image']) ?>" class="cardapio-product-image" loading="lazy">
+                                    <?php else: ?>
+                                        <div class="cardapio-product-image-placeholder"><i data-lucide="image" size="24"></i></div>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <div class="cardapio-product-info">
+                                    <h3 class="cardapio-product-name"><?= htmlspecialchars($product['name']) ?></h3>
+                                    <p class="cardapio-product-description"><?= htmlspecialchars($product['description'] ?? '') ?></p>
+                                    <div class="cardapio-product-footer">
+                                        <span class="cardapio-product-price">R$ <?= number_format($product['price'], 2, ',', '.') ?></span>
+                                    </div>
+                                </div>
+                                <button class="cardapio-add-btn"><i data-lucide="plus" size="16"></i></button>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                <?php 
+                    // RENDERIZAÇÃO: CATEGORIAS PADRÃO
+                    elseif ($catType === 'default' && !empty($productsByCategory[$catName])): 
+                ?>
+                    <div class="cardapio-category-section" data-category-id="<?= $catId ?>">
+                        <h2 class="cardapio-category-title">
+                            <i data-lucide="package" size="20"></i>
+                            <?= htmlspecialchars($catName) ?>
+                        </h2>
+                        
+                        <?php foreach ($productsByCategory[$catName] as $product): ?>
+                            <div 
+                                class="cardapio-product-card <?= !empty($product['is_featured']) ? 'cardapio-card-featured' : '' ?>" 
+                                data-product-id="<?= $product['id'] ?>"
+                                data-product-name="<?= htmlspecialchars($product['name']) ?>"
+                                data-product-price="<?= number_format($product['price'], 2, '.', '') ?>"
+                                onclick="openProductModal(<?= $product['id'] ?>)" style="cursor: pointer;"
+                            >
+                                <?php if (!empty($product['is_featured'])): ?>
+                                    <div class="cardapio-badge cardapio-badge-featured">DESTAQUE</div>
+                                <?php endif; ?>
+                                
+                                <div class="cardapio-product-image-wrapper">
+                                    <?php if (!empty($product['image'])): ?>
+                                        <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($product['image']) ?>" class="cardapio-product-image" loading="lazy">
+                                    <?php else: ?>
+                                        <div class="cardapio-product-image-placeholder"><i data-lucide="image" size="24"></i></div>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <div class="cardapio-product-info">
+                                    <h3 class="cardapio-product-name"><?= htmlspecialchars($product['name']) ?></h3>
+                                    <p class="cardapio-product-description"><?= htmlspecialchars($product['description'] ?? '') ?></p>
+                                    <div class="cardapio-product-footer">
+                                        <span class="cardapio-product-price">R$ <?= number_format($product['price'], 2, ',', '.') ?></span>
+                                    </div>
+                                </div>
+                                <button class="cardapio-add-btn"><i data-lucide="plus" size="16"></i></button>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             <?php endforeach; ?>
         </div>
 

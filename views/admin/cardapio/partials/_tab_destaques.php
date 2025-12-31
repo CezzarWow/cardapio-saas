@@ -30,10 +30,29 @@
             <div class="cardapio-admin-destaques-category-list-scroll">
                 <div class="cardapio-admin-destaques-category-list" id="categoryList">
                     <?php foreach ($categories as $index => $category): ?>
-                    <div class="cardapio-admin-destaques-category-row" data-category-id="<?= $category['id'] ?>">
+                    <?php 
+                        $isSystem = in_array($category['category_type'] ?? 'default', ['featured', 'combos']);
+                        $icon = 'folder';
+                        $color = '#64748b';
+                        $label = $category['name'];
+
+                        if (($category['category_type'] ?? '') === 'featured') {
+                            $icon = 'star';
+                            $color = '#eab308';
+                        } elseif (($category['category_type'] ?? '') === 'combos') {
+                            $icon = 'flame';
+                            $color = '#ef4444';
+                        }
+                    ?>
+                    <div class="cardapio-admin-destaques-category-row" data-category-id="<?= $category['id'] ?>" style="<?= $isSystem ? 'background-color: #f8fafc;' : '' ?>">
                         <div class="cardapio-admin-destaques-category-info">
-                            <i data-lucide="folder" style="width: 18px; height: 18px; color: #64748b;"></i>
-                            <span class="cardapio-admin-destaques-category-name"><?= htmlspecialchars($category['name']) ?></span>
+                            <i data-lucide="<?= $icon ?>" style="width: 18px; height: 18px; color: <?= $color ?>;"></i>
+                            <span class="cardapio-admin-destaques-category-name" style="<?= $isSystem ? 'font-weight: 600; color: #1e293b;' : '' ?>">
+                                <?= htmlspecialchars($label) ?>
+                                <?php if($isSystem): ?>
+                                    <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 400; margin-left: 6px;">(Sistema)</span>
+                                <?php endif; ?>
+                            </span>
                         </div>
                         
                         <div class="cardapio-admin-destaques-category-actions">
