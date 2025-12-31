@@ -48,6 +48,7 @@ class CardapioPublicoController {
                 p.price,
                 p.image,
                 p.stock,
+                p.is_featured,
                 c.id as category_id,
                 c.name as category_name,
                 c.category_type,
@@ -80,17 +81,50 @@ class CardapioPublicoController {
 
         // [ETAPA 3] Buscar combos ativos
         $stmtCombos = $conn->prepare("
-            SELECT c.*, 
-                   GROUP_CONCAT(p.name SEPARATOR ', ') as products_list
-            FROM combos c
-            LEFT JOIN combo_items ci ON ci.combo_id = c.id
-            LEFT JOIN products p ON p.id = ci.product_id
-            WHERE c.restaurant_id = :rid AND c.is_active = 1
-            GROUP BY c.id
-            ORDER BY c.display_order ASC, c.name ASC
+            SELECT * FROM combos 
+            WHERE restaurant_id = :rid AND is_active = 1
+            ORDER BY display_order ASC, name ASC
         ");
         $stmtCombos->execute(['rid' => $restaurantId]);
         $combos = $stmtCombos->fetchAll(PDO::FETCH_ASSOC);
+
+        // Buscar itens dos combos com configurações de adicionais
+        if (!empty($combos)) {
+            $comboIds = array_column($combos, 'id');
+            // Proteção para array vazio
+            if (!empty($comboIds)) {
+                $inQuery = implode(',', array_fill(0, count($comboIds), '?'));
+                
+                $stmtComboItems = $conn->prepare("
+                    SELECT 
+                        ci.combo_id,
+                        ci.allow_additionals,
+                        p.id as product_id,
+                        p.name as product_name,
+                        p.image as product_image
+                    FROM combo_items ci
+                    JOIN products p ON p.id = ci.product_id
+                    WHERE ci.combo_id IN ($inQuery)
+                    ORDER BY p.name ASC
+                ");
+                $stmtComboItems->execute($comboIds);
+                $comboItems = $stmtComboItems->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Agrupar itens por combo
+                $itemsByCombo = [];
+                foreach ($comboItems as $item) {
+                    $cid = $item['combo_id'];
+                    if (!isset($itemsByCombo[$cid])) $itemsByCombo[$cid] = [];
+                    $itemsByCombo[$cid][] = $item;
+                }
+                
+                // Injetar itens nos combos
+                foreach ($combos as &$combo) {
+                    $combo['items'] = $itemsByCombo[$combo['id']] ?? [];
+                    $combo['products_list'] = implode(', ', array_column($combo['items'], 'product_name'));
+                }
+            }
+        }
         
         // Buscar grupos de adicionais
         $stmtAdditionalGroups = $conn->prepare("

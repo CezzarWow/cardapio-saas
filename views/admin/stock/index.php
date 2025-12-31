@@ -91,9 +91,11 @@ foreach ($products as $p) {
                     📂 Todas
                 </button>
                 <?php foreach ($categories as $cat): ?>
-                    <button class="category-chip" data-category="<?= htmlspecialchars($cat['name']) ?>">
-                        <?= htmlspecialchars($cat['name']) ?>
-                    </button>
+                    <?php if (!in_array($cat['category_type'] ?? 'default', ['featured', 'combos'])): ?>
+                        <button class="category-chip" data-category="<?= htmlspecialchars($cat['name']) ?>">
+                            <?= htmlspecialchars($cat['name']) ?>
+                        </button>
+                    <?php endif; ?>
                 <?php endforeach; ?>
             </div>
         </div>

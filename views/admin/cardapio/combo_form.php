@@ -109,17 +109,31 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
                 <div style="max-height: 300px; overflow-y: auto;">
                     <?php foreach ($products as $product): ?>
                     <div class="cardapio-admin-toggle-row" style="padding: 8px 0;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <input type="checkbox" 
-                                   name="products[]" 
-                                   value="<?= $product['id'] ?>"
-                                   id="prod_<?= $product['id'] ?>"
-                                   <?= in_array($product['id'], $comboProducts ?? []) ? 'checked' : '' ?>
-                                   style="width: 18px; height: 18px;">
-                            <label for="prod_<?= $product['id'] ?>" style="cursor: pointer;">
-                                <span style="font-weight: 500;"><?= htmlspecialchars($product['name']) ?></span>
-                                <span style="color: #6b7280; font-size: 0.85rem;"> - R$ <?= number_format($product['price'], 2, ',', '.') ?></span>
-                            </label>
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" 
+                                       name="products[]" 
+                                       value="<?= $product['id'] ?>"
+                                       id="prod_<?= $product['id'] ?>"
+                                       <?= in_array($product['id'], $comboProducts ?? []) ? 'checked' : '' ?>
+                                       style="width: 18px; height: 18px;">
+                                <label for="prod_<?= $product['id'] ?>" style="cursor: pointer;">
+                                    <span style="font-weight: 500;"><?= htmlspecialchars($product['name']) ?></span>
+                                    <span style="color: #6b7280; font-size: 0.85rem;"> - R$ <?= number_format($product['price'], 2, ',', '.') ?></span>
+                                </label>
+                            </div>
+                            
+                            <!-- Toggle Permitir Adicionais -->
+                            <div class="allow-additionals-toggle" style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 0.85rem; color: #64748b;">Permitir adicionais</span>
+                                <label class="cardapio-admin-toggle" style="transform: scale(0.8);">
+                                    <input type="checkbox" 
+                                           name="allow_additionals[<?= $product['id'] ?>]" 
+                                           value="1"
+                                           <?= (isset($comboItemsSettings[$product['id']]['allow_additionals']) && $comboItemsSettings[$product['id']]['allow_additionals'] == 0) ? '' : 'checked' ?>>
+                                    <span class="cardapio-admin-toggle-slider"></span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                     <?php endforeach; ?>

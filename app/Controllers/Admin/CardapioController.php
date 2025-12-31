@@ -364,10 +364,13 @@ class CardapioController {
 
         // Inserir produtos do combo
         $products = $_POST['products'] ?? [];
+        $allowAdditionals = $_POST['allow_additionals'] ?? [];
+        
         if (!empty($products)) {
-            $stmtItem = $conn->prepare("INSERT INTO combo_items (combo_id, product_id) VALUES (:cid, :pid)");
+            $stmtItem = $conn->prepare("INSERT INTO combo_items (combo_id, product_id, allow_additionals) VALUES (:cid, :pid, :allow)");
             foreach ($products as $pid) {
-                $stmtItem->execute(['cid' => $comboId, 'pid' => $pid]);
+                $allow = isset($allowAdditionals[$pid]) ? 1 : 0;
+                $stmtItem->execute(['cid' => $comboId, 'pid' => $pid, 'allow' => $allow]);
             }
         }
 
@@ -395,10 +398,20 @@ class CardapioController {
             exit;
         }
 
-        // Buscar produtos do combo
-        $stmtItems = $conn->prepare("SELECT product_id FROM combo_items WHERE combo_id = :cid");
+        // Buscar produtos do combo com configurações
+        $stmtItems = $conn->prepare("SELECT product_id, allow_additionals FROM combo_items WHERE combo_id = :cid");
         $stmtItems->execute(['cid' => $id]);
-        $comboProducts = $stmtItems->fetchAll(PDO::FETCH_COLUMN);
+        $rawItems = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+        
+        $comboProducts = [];
+        $comboItemsSettings = [];
+        
+        foreach ($rawItems as $item) {
+            $comboProducts[] = $item['product_id'];
+            $comboItemsSettings[$item['product_id']] = [
+                'allow_additionals' => $item['allow_additionals']
+            ];
+        }
 
         // Buscar produtos
         $stmt = $conn->prepare("SELECT * FROM products WHERE restaurant_id = :rid ORDER BY name");
@@ -436,10 +449,13 @@ class CardapioController {
         $conn->prepare("DELETE FROM combo_items WHERE combo_id = :cid")->execute(['cid' => $id]);
         
         $products = $_POST['products'] ?? [];
+        $allowAdditionals = $_POST['allow_additionals'] ?? [];
+        
         if (!empty($products)) {
-            $stmtItem = $conn->prepare("INSERT INTO combo_items (combo_id, product_id) VALUES (:cid, :pid)");
+            $stmtItem = $conn->prepare("INSERT INTO combo_items (combo_id, product_id, allow_additionals) VALUES (:cid, :pid, :allow)");
             foreach ($products as $pid) {
-                $stmtItem->execute(['cid' => $id, 'pid' => $pid]);
+                $allow = isset($allowAdditionals[$pid]) ? 1 : 0;
+                $stmtItem->execute(['cid' => $id, 'pid' => $pid, 'allow' => $allow]);
             }
         }
 

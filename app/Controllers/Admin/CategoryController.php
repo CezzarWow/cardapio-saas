@@ -89,6 +89,18 @@ class CategoryController {
 
         if ($id > 0) {
             $conn = Database::connect();
+            
+            // Verifica se é categoria de sistema (não pode ser deletada)
+            $checkStmt = $conn->prepare("SELECT category_type FROM categories WHERE id = :id AND restaurant_id = :rid");
+            $checkStmt->execute(['id' => $id, 'rid' => $restaurantId]);
+            $category = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($category && in_array($category['category_type'], ['featured', 'combos'])) {
+                // Categoria de sistema - não pode excluir
+                header('Location: ' . BASE_URL . '/admin/loja/categorias?error=' . urlencode('Categorias de sistema não podem ser excluídas.'));
+                exit;
+            }
+            
             $stmt = $conn->prepare("DELETE FROM categories WHERE id = :id AND restaurant_id = :rid");
             $stmt->execute([
                 'id' => $id,

@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/modals.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cart.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin.css?v=<?= time() ?>">
     
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>

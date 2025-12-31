@@ -27,8 +27,32 @@ class RestaurantController {
             $sql = "INSERT INTO restaurants (user_id, name, slug) VALUES (1, :name, :slug)";
             $stmt = $conn->prepare($sql);
             $stmt->execute(['name' => $name, 'slug' => $slug]);
+            
+            // Pega o ID do restaurante recém-criado
+            $restaurantId = $conn->lastInsertId();
+            
+            // ========================================
+            // CRIA AUTOMATICAMENTE AS CATEGORIAS DE SISTEMA
+            // ========================================
+            $systemCategories = [
+                ['name' => 'Destaques', 'type' => 'featured', 'order' => 1],
+                ['name' => 'Combos', 'type' => 'combos', 'order' => 2],
+            ];
+            
+            $catSql = "INSERT INTO categories (restaurant_id, name, category_type, sort_order, is_active) 
+                       VALUES (:rid, :name, :type, :sort_order, 1)";
+            $catStmt = $conn->prepare($catSql);
+            
+            foreach ($systemCategories as $cat) {
+                $catStmt->execute([
+                    'rid' => $restaurantId,
+                    'name' => $cat['name'],
+                    'type' => $cat['type'],
+                    'sort_order' => $cat['order']
+                ]);
+            }
 
-            echo "<h1>✅ Sucesso!</h1><p>Restaurante <strong>$name</strong> criado.</p>";
+            echo "<h1>✅ Sucesso!</h1><p>Restaurante <strong>$name</strong> criado com categorias de sistema.</p>";
             echo "<a href='../../admin'>Voltar ao Painel</a>";
 
         } catch (\PDOException $e) {

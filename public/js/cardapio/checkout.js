@@ -162,7 +162,21 @@ const CardapioCheckout = {
                     <div class="order-review-item-qty">${item.quantity}x</div>
                     <div class="order-review-item-info">
                         <div class="order-review-item-name">${item.name}</div>
-                        ${item.additionals.length ? `<div class="order-review-item-extras">+ ${item.additionals.map(a => a.name).join(', ')}</div>` : ''}
+                        
+                        ${item.isCombo && item.products ? `
+                            <div class="order-review-combo-details" style="font-size: 0.85rem; color: #666; margin-top: 2px;">
+                                ${item.products.map(p => `
+                                    <div>
+                                        <span>• ${p.name}</span>
+                                        ${p.additionals && p.additionals.length > 0 ? `
+                                            <span style="font-size: 0.8rem; color: #888;">(+ ${p.additionals.map(a => a.name).join(', ')})</span>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+
+                        ${!item.isCombo && item.additionals && item.additionals.length > 0 ? `<div class="order-review-item-extras">+ ${item.additionals.map(a => a.name).join(', ')}</div>` : ''}
                         ${item.observation ? `<div class="order-review-item-obs">Obs: ${item.observation}</div>` : ''}
                     </div>
                     <div class="order-review-item-actions">
@@ -496,7 +510,12 @@ try {
 window.selectOrderType = (t) => CardapioCheckout.setOrderType(t);
 window.openOrderReviewModal = () => CardapioCheckout.openOrderReview();
 window.closeOrderReviewModal = () => CardapioCheckout.closeOrderReview();
-window.finalizarPedido = () => CardapioCheckout.openOrderReview(); // Alias
+window.finalizarPedido = () => {
+    CardapioCheckout.openOrderReview();
+    if (typeof closeSuggestionsModal === 'function') {
+        setTimeout(() => closeSuggestionsModal(), 100); // Small delay for smooth transition
+    }
+};
 window.goToPayment = () => CardapioCheckout.goToPayment();
 window.closePaymentModal = () => CardapioCheckout.closePayment();
 window.sendOrder = () => CardapioCheckout.sendOrder();

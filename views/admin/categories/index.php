@@ -85,27 +85,41 @@ $totalCategories = count($categories);
                         </tr>
                     </thead>
                     <tbody id="categoriesTable">
-                        <?php foreach ($categories as $cat): ?>
+                        <?php 
+                        // Separar categorias de sistema das normais para exibir no topo
+                        $systemCategories = array_filter($categories, fn($c) => in_array($c['category_type'] ?? 'default', ['featured', 'combos']));
+                        $normalCategories = array_filter($categories, fn($c) => !in_array($c['category_type'] ?? 'default', ['featured', 'combos']));
+                        $sortedCategories = array_merge($systemCategories, $normalCategories);
+                        ?>
+                        <?php foreach ($sortedCategories as $cat): ?>
+                        <?php 
+                            $isSystemCategory = in_array($cat['category_type'] ?? 'default', ['featured', 'combos']);
+                        ?>
                         <tr class="category-row" data-name="<?= strtolower(htmlspecialchars($cat['name'])) ?>">
                             <td>
                                 <div style="display: flex; align-items: center; gap: 10px;">
-                                    <i data-lucide="tag" size="16" style="color: #2563eb;"></i>
+                                    <i data-lucide="tag" size="16" style="color: <?= $isSystemCategory ? '#f59e0b' : '#2563eb' ?>;"></i>
                                     <span style="font-weight: 500; color: #1f2937;"><?= htmlspecialchars($cat['name']) ?></span>
+                                    <?php if ($isSystemCategory): ?>
+                                        <span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600;">Sistema</span>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                             <td>
-                                <div class="stock-actions">
+                                <div class="stock-actions" style="justify-content: flex-start;">
                                     <a href="<?= BASE_URL ?>/admin/loja/categorias/editar?id=<?= $cat['id'] ?>" 
                                        class="btn-stock-action btn-stock-edit">
                                         <i data-lucide="pencil" size="14"></i>
                                         Editar
                                     </a>
-                                    <a href="<?= BASE_URL ?>/admin/loja/categorias/deletar?id=<?= $cat['id'] ?>" 
-                                       onclick="return confirm('Excluir a categoria &quot;<?= htmlspecialchars($cat['name']) ?>&quot;?')"
-                                       class="btn-stock-action btn-stock-delete">
-                                        <i data-lucide="trash-2" size="14"></i>
-                                        Excluir
-                                    </a>
+                                    <?php if (!$isSystemCategory): ?>
+                                        <a href="<?= BASE_URL ?>/admin/loja/categorias/deletar?id=<?= $cat['id'] ?>" 
+                                           onclick="return confirm('Excluir a categoria &quot;<?= htmlspecialchars($cat['name']) ?>&quot;?')"
+                                           class="btn-stock-action btn-stock-delete">
+                                            <i data-lucide="trash-2" size="14"></i>
+                                            Excluir
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>

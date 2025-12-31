@@ -50,6 +50,8 @@ body {
     background-color: var(--bg-color);
     color: var(--text-dark);
     line-height: 1.5;
+    touch-action: manipulation;
+    /* Desabilita double-tap-to-zoom em mobile */
 }
 
 /* ========== ACESSIBILIDADE ========== */

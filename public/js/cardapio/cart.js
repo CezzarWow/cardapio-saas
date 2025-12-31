@@ -72,6 +72,22 @@ const CardapioCart = {
         }
     },
 
+    // Adicionar combo
+    addCombo: function (id, name, price, image) {
+        const item = {
+            id: Date.now() + Math.random(),
+            productId: 'combo_' + id,
+            name: name,
+            basePrice: price,
+            quantity: 1,
+            additionals: [],
+            observation: '',
+            unitPrice: price,
+            isCombo: true
+        };
+        this.add(item);
+    },
+
     // Remover item
     remove: function (itemId) {
         this.items = this.items.filter(item => item.id !== itemId);
@@ -141,11 +157,26 @@ const CardapioCart = {
                 <div class="cardapio-cart-item">
                     <div class="cardapio-cart-item-info">
                         <p class="cardapio-cart-item-name">${item.quantity}x ${item.name}</p>
-                        ${item.additionals.length > 0 ? `
+                        
+                        ${item.isCombo && item.products ? `
+                            <div class="cardapio-cart-combo-details" style="font-size: 0.85rem; color: #666; margin-top: 4px; padding-left: 8px; border-left: 2px solid #eee;">
+                                ${item.products.map(p => `
+                                    <div>
+                                        <span>• ${p.name}</span>
+                                        ${p.additionals && p.additionals.length > 0 ? `
+                                            <span style="font-size: 0.8rem; color: #888;">(+ ${p.additionals.map(a => a.name).join(', ')})</span>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+
+                        ${!item.isCombo && item.additionals && item.additionals.length > 0 ? `
                             <p class="cardapio-cart-item-additionals">
                                 Extras: ${item.additionals.map(a => a.name).join(', ')}
                             </p>
                         ` : ''}
+                        
                         ${item.observation ? `
                             <p class="cardapio-cart-item-obs">Obs: ${item.observation}</p>
                         ` : ''}
@@ -197,6 +228,7 @@ try {
 window.addToCartDirect = (id, name, price, img) => CardapioCart.addDirect(id, name, price, img);
 window.addDrinkToCart = (id, name, price, img) => CardapioCart.addDrink(id, name, price, img);
 window.addSauceToCart = (id, name, price) => CardapioCart.addSauce(id, name, price);
+window.addComboToCart = (id, name, price, img) => CardapioCart.addCombo(id, name, price, img);
 window.removeFromCart = (id) => CardapioCart.remove(id);
 window.updateCartDisplay = () => CardapioCart.updateUI();
 window.updateSuggestionsCartDisplay = () => CardapioCart.updateUI();

@@ -28,22 +28,24 @@ function initializeEventListeners() {
     // 1. Scroll e Ajustes de Viewport (Mantido do original)
     // Esses hacks são específicos para Safari iOS e teclados virtuais
 
-    // Monitora redimensionamento (teclado virtual)
-    if (window.visualViewport) {
+    // Monitora redimensionamento (teclado virtual) - só se a função existir
+    if (window.visualViewport && typeof onVV === 'function') {
         window.visualViewport.addEventListener('resize', onVV);
         window.visualViewport.addEventListener('scroll', onVV);
     }
 
-    // Ajuste de padding para inputs quando focados
-    document.querySelectorAll('input, textarea').forEach(input => {
-        input.addEventListener('focus', () => {
-            adjustPaddingForKeyboard(true);
-            ensureVisible(input);
+    // Ajuste de padding para inputs quando focados - só se as funções existirem
+    if (typeof adjustPaddingForKeyboard === 'function' && typeof ensureVisible === 'function') {
+        document.querySelectorAll('input, textarea').forEach(input => {
+            input.addEventListener('focus', () => {
+                adjustPaddingForKeyboard(true);
+                ensureVisible(input);
+            });
+            input.addEventListener('blur', () => {
+                adjustPaddingForKeyboard(false);
+            });
         });
-        input.addEventListener('blur', () => {
-            adjustPaddingForKeyboard(false);
-        });
-    });
+    }
 
     // 2. Busca e Filtros
     const searchInput = document.getElementById('cardapioSearchInput'); // ID corrigido conforme HTML
@@ -53,12 +55,31 @@ function initializeEventListeners() {
 
     // 3. Listeners de Categoria
     const categoryButtons = document.querySelectorAll('.cardapio-category-btn');
+    console.log('[MAIN] Botões de categoria encontrados:', categoryButtons.length);
+
     categoryButtons.forEach(btn => {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
             const category = this.getAttribute('data-category');
+            console.log('[MAIN] Clique na categoria:', category);
             filterByCategory(category);
         });
     });
+
+    // Fallback: Event Delegation (caso os listeners diretos não funcionem)
+    const categoriesContainer = document.querySelector('.cardapio-categories');
+    if (categoriesContainer) {
+        categoriesContainer.addEventListener('click', function (e) {
+            const btn = e.target.closest('.cardapio-category-btn');
+            if (btn) {
+                e.preventDefault();
+                const category = btn.getAttribute('data-category');
+                console.log('[DELEGATION] Clique na categoria:', category);
+                filterByCategory(category);
+            }
+        });
+    }
 }
 
 // ... (Funções de UI mantidas) ...
@@ -93,31 +114,27 @@ function handleSearch(e) {
 }
 
 function filterByCategory(categoryName) {
+    console.log('[FILTER] Filtrando por categoria:', categoryName);
+
     const sections = document.querySelectorAll('.cardapio-category-section');
     const buttons = document.querySelectorAll('.cardapio-category-btn');
 
-    // Visual botões
+    // Visual botões - Simplificado
     buttons.forEach(btn => {
-        if (btn.getAttribute('data-category') === categoryName) { // Comparação exata ou lógica de 'todos'
-            btn.classList.add('active');
-        } else if (categoryName === 'todos' && btn.getAttribute('data-category') === 'todos') {
+        const btnCategory = btn.getAttribute('data-category');
+        if (btnCategory === categoryName) {
             btn.classList.add('active');
         } else {
             btn.classList.remove('active');
         }
     });
 
-    // Fallback: se clicou em um botão que não é 'todos', remove active do 'todos'
-    if (categoryName !== 'todos') {
-        const btnTodos = document.querySelector('.cardapio-category-btn[data-category="todos"]');
-        if (btnTodos) btnTodos.classList.remove('active');
-    }
-
     // Filtra seções
     sections.forEach(sec => {
         const secId = sec.getAttribute('data-category-id');
+        console.log('[FILTER] Seção:', secId, '| Categoria clicada:', categoryName);
 
-        // Se for 'todos', mostra tudo. Se não, mostra só se o nome bater.
+        // Se for 'todos', mostra tudo. Se não, mostra só se o ID bater.
         if (categoryName === 'todos' || secId === categoryName) {
             sec.style.display = 'block';
         } else {
@@ -144,9 +161,16 @@ function initAddButtons() {
             // Busca o ID do pai
             const card = this.closest('.cardapio-product-card');
             if (card) {
-                const id = card.getAttribute('data-product-id');
-                if (id) {
-                    if (window.openProductModal) window.openProductModal(id);
+                const productId = card.getAttribute('data-product-id');
+                const comboId = card.getAttribute('data-combo-id');
+
+                if (productId) {
+                    if (window.openProductModal) window.openProductModal(productId);
+                } else if (comboId) {
+                    // Suporte a Combos
+                    if (window.CardapioModals && CardapioModals.openCombo) {
+                        CardapioModals.openCombo(comboId);
+                    }
                 }
             }
         });

@@ -17,6 +17,11 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
+        /* ========== ANTI-ZOOM MOBILE ========== */
+        * {
+            touch-action: manipulation;
+        }
+        
         /* ========== LAYOUT FLEX MOBILE ========== */
         html, body { 
             height: 100%;
@@ -148,9 +153,15 @@
                 Todos
             </button>
             <?php foreach ($categories as $category): ?>
-                <button class="cardapio-category-btn" data-category="<?= $category['id'] ?>">
-                    <?= htmlspecialchars($category['name']) ?>
-                </button>
+                <?php 
+                    $catType = $category['category_type'] ?? 'default';
+                    // Mostra categorias normais E combos (não mostra featured)
+                    if ($catType === 'default' || $catType === 'combos'): 
+                ?>
+                    <button class="cardapio-category-btn" data-category="<?= $category['id'] ?>">
+                        <?= htmlspecialchars($category['name']) ?>
+                    </button>
+                <?php endif; ?>
             <?php endforeach; ?>
         </div>
 
@@ -167,13 +178,19 @@
                     if ($catType === 'combos' && !empty($combos)): 
                 ?>
                     <div class="cardapio-category-section" data-category-id="<?= $catId ?>" style="margin-bottom: 20px;">
-                        <h2 class="cardapio-category-title" style="background: linear-gradient(90deg, #f59e0b, #d97706); color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
-                            <i data-lucide="package-plus" size="20"></i>
+                        <h2 class="cardapio-category-title" style="display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(90deg, #f59e0b, #d97706); color: white; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; font-size: 0.95rem;">
+                            <i data-lucide="package-plus" size="16"></i>
                             <?= htmlspecialchars($catName) ?>
                         </h2>
                         
                         <?php foreach ($combos as $combo): ?>
-                        <div class="cardapio-product-card cardapio-card-combo">
+                        <div class="cardapio-product-card cardapio-card-combo"
+                            data-combo-id="<?= $combo['id'] ?>"
+                            data-combo-name="<?= htmlspecialchars($combo['name']) ?>"
+                            data-combo-price="<?= number_format($combo['price'], 2, '.', '') ?>"
+                            onclick="CardapioModals.openCombo(<?= $combo['id'] ?>)" 
+                            style="cursor: pointer;"
+                        >
                             <div class="cardapio-badge cardapio-badge-combo">COMBO</div>
                             <div class="cardapio-product-image-wrapper">
                                 <?php if (!empty($combo['image'])): ?>
@@ -192,10 +209,11 @@
                                     <strong>Inclui:</strong> <?= htmlspecialchars($combo['products_list']) ?>
                                 </p>
                                 <?php endif; ?>
-                                <p class="cardapio-product-price price-combo">
-                                    R$ <?= number_format($combo['price'], 2, ',', '.') ?>
-                                </p>
+                                <div class="cardapio-product-footer">
+                                    <span class="cardapio-product-price price-combo">R$ <?= number_format($combo['price'], 2, ',', '.') ?></span>
+                                </div>
                             </div>
+                            <button class="cardapio-add-btn"><i data-lucide="plus" size="16"></i></button>
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -205,14 +223,13 @@
                     elseif ($catType === 'featured' && !empty($featuredProducts)): 
                 ?>
                     <div class="cardapio-category-section" data-category-id="<?= $catId ?>">
-                        <h2 class="cardapio-category-title" style="color: #ca8a04;">
-                            <i data-lucide="star" size="20" style="color: #eab308; fill: #eab308;"></i>
+                        <h2 class="cardapio-category-title" style="display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(90deg, #ef4444, #dc2626); color: white; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; font-size: 0.95rem;">
+                            <i data-lucide="star" size="16" style="fill: white;"></i>
                             <?= htmlspecialchars($catName) ?>
                         </h2>
                         
                         <?php foreach ($featuredProducts as $product): ?>
-                            <!-- Renderiza produto normalmente, mas vindo da lista de destaques -->
-                            <?php include 'partials/product_card.php'; // Se existisse partial, mas vou replicar codigo por enquanto para garantir funcionamento ?>
+                            <!-- Card de produto destaque -->
                             <div 
                                 class="cardapio-product-card cardapio-card-featured" 
                                 data-product-id="<?= $product['id'] ?>"
@@ -220,7 +237,6 @@
                                 data-product-price="<?= number_format($product['price'], 2, '.', '') ?>"
                                 onclick="openProductModal(<?= $product['id'] ?>)" style="cursor: pointer;"
                             >
-                                <div class="cardapio-badge cardapio-badge-featured">DESTAQUE</div>
                                 
                                 <div class="cardapio-product-image-wrapper">
                                     <?php if (!empty($product['image'])): ?>
@@ -247,23 +263,19 @@
                     elseif ($catType === 'default' && !empty($productsByCategory[$catName])): 
                 ?>
                     <div class="cardapio-category-section" data-category-id="<?= $catId ?>">
-                        <h2 class="cardapio-category-title">
-                            <i data-lucide="package" size="20"></i>
+                        <h2 class="cardapio-category-title" style="display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(90deg, #ea580c, #c2410c); color: white; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; font-size: 0.95rem;">
+                            <i data-lucide="package" size="16"></i>
                             <?= htmlspecialchars($catName) ?>
                         </h2>
                         
                         <?php foreach ($productsByCategory[$catName] as $product): ?>
                             <div 
-                                class="cardapio-product-card <?= !empty($product['is_featured']) ? 'cardapio-card-featured' : '' ?>" 
+                                class="cardapio-product-card" 
                                 data-product-id="<?= $product['id'] ?>"
                                 data-product-name="<?= htmlspecialchars($product['name']) ?>"
                                 data-product-price="<?= number_format($product['price'], 2, '.', '') ?>"
                                 onclick="openProductModal(<?= $product['id'] ?>)" style="cursor: pointer;"
                             >
-                                <?php if (!empty($product['is_featured'])): ?>
-                                    <div class="cardapio-badge cardapio-badge-featured">DESTAQUE</div>
-                                <?php endif; ?>
-                                
                                 <div class="cardapio-product-image-wrapper">
                                     <?php if (!empty($product['image'])): ?>
                                         <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($product['image']) ?>" class="cardapio-product-image" loading="lazy">
@@ -369,6 +381,67 @@
             <button class="cardapio-add-cart-btn" onclick="addToCart()">
                 <span>Adicionar</span>
                 <span id="modalTotalPrice">R$ 0,00</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE COMBOS (NOVO) -->
+<div id="comboModal" class="cardapio-modal">
+    <div class="cardapio-modal-content">
+        <div class="cardapio-modal-image-wrapper">
+            <img id="modalComboImage" src="" alt="" class="cardapio-modal-image">
+            <button class="cardapio-modal-close" onclick="CardapioModals.closeCombo()">
+                <i data-lucide="chevron-left" size="20"></i>
+            </button>
+        </div>
+        
+        <div class="cardapio-modal-body">
+            <div class="cardapio-modal-header">
+                <h2 id="modalComboName" class="cardapio-modal-title"></h2>
+                <span id="modalComboPrice" class="cardapio-modal-price"></span>
+            </div>
+            
+            <p id="modalComboDescription" class="cardapio-modal-description"></p>
+            
+            <!-- Quantidade -->
+            <div class="cardapio-quantity-control" style="margin-top: 15px; margin-bottom: 15px;">
+                <span class="cardapio-quantity-label">Quantidade</span>
+                <div class="cardapio-quantity-buttons">
+                    <button class="cardapio-qty-btn" onclick="CardapioModals.decreaseComboQty()">
+                        <i data-lucide="minus" size="16"></i>
+                    </button>
+                    <span id="modalComboQuantity" class="cardapio-quantity-value">1</span>
+                    <button class="cardapio-qty-btn" onclick="CardapioModals.increaseComboQty()">
+                        <i data-lucide="plus" size="16"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Lista de Produtos do Combo (Colapsáveis) -->
+            <div id="comboProductsContainer" class="combo-products-container" style="margin-top: 20px;">
+                <!-- Preenchido via JS -->
+            </div>
+            
+
+            
+            <!-- Observações -->
+            <div class="cardapio-observations" style="margin-top: 30px;">
+                <h4 class="cardapio-observations-title">Observações do Combo</h4>
+                <textarea 
+                    id="modalComboObservation" 
+                    class="cardapio-observations-textarea"
+                    placeholder="Ex: Sem cebola no lanche, coca gelada..."
+                    enterkeyhint="done"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+                ></textarea>
+            </div>
+        </div>
+        
+        <div class="cardapio-modal-footer">
+            <button class="cardapio-add-cart-btn" onclick="CardapioModals.addComboToCart()">
+                <span>Adicionar Combo</span>
+                <span id="modalComboTotalPrice">R$ 0,00</span>
             </button>
         </div>
     </div>
@@ -712,6 +785,7 @@
     
     // Injeção Segura
     const products = <?= $jsProducts ?>;
+    const combos = <?= json_encode($combos ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
     const PRODUCT_RELATIONS = <?= json_encode($productRelations ?? []) ?>;
     window.BASE_URL = '<?= BASE_URL ?>';
     
