@@ -67,7 +67,7 @@
     </a>
 </div>
 
-<!-- Card Destaques -->
+<!-- Card Destaques - Redirecionamento -->
 <div class="cardapio-admin-card">
     <div class="cardapio-admin-card-header">
         <i data-lucide="star"></i>
@@ -76,28 +76,11 @@
 
     <div class="cardapio-admin-hint" style="margin-bottom: 1rem;">
         <i data-lucide="info" style="width: 14px; height: 14px; display: inline;"></i>
-        Produtos destacados aparecem no topo do cardápio.
+        Para gerenciar produtos em destaque, use a aba <strong>"Destaques"</strong>.
     </div>
 
-    <?php if (!empty($allProducts)): ?>
-    <div style="max-height: 400px; overflow-y: auto;">
-        <?php foreach ($allProducts as $product): ?>
-        <div class="cardapio-admin-toggle-row" style="padding: 10px 0;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-weight: 500; color: #374151;"><?= htmlspecialchars($product['name']) ?></span>
-                <span style="font-size: 0.8rem; color: #6b7280;">(<?= htmlspecialchars($product['category_name'] ?? 'Sem categoria') ?>)</span>
-            </div>
-            <label class="cardapio-admin-toggle">
-                <input type="checkbox" 
-                       name="featured[<?= $product['id'] ?>]" 
-                       value="1"
-                       <?= ($product['is_featured'] ?? 0) ? 'checked' : '' ?>>
-                <span class="cardapio-admin-toggle-slider"></span>
-            </label>
-        </div>
-        <?php endforeach; ?>
-    </div>
-    <?php else: ?>
-    <p style="color: #64748b; text-align: center; padding: 20px;">Nenhum produto cadastrado.</p>
-    <?php endif; ?>
+    <button type="button" class="cardapio-admin-btn cardapio-admin-btn-secondary" style="width: 100%; justify-content: center;" onclick="document.querySelector('[data-tab=destaques]').click()">
+        <i data-lucide="star"></i>
+        Ir para Aba Destaques
+    </button>
 </div>

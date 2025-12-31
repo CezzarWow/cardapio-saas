@@ -67,7 +67,7 @@ class CardapioController {
             FROM products p 
             LEFT JOIN categories c ON p.category_id = c.id 
             WHERE p.restaurant_id = :rid 
-            ORDER BY c.name, p.name
+            ORDER BY c.sort_order ASC, c.name ASC, p.display_order ASC, p.name ASC
         ");
         $stmtProducts->execute(['rid' => $restaurantId]);
         $allProducts = $stmtProducts->fetchAll(PDO::FETCH_ASSOC);
@@ -76,6 +76,25 @@ class CardapioController {
         $stmtRestaurant = $conn->prepare("SELECT slug FROM restaurants WHERE id = :rid");
         $stmtRestaurant->execute(['rid' => $restaurantId]);
         $restaurantSlug = $stmtRestaurant->fetchColumn() ?: $restaurantId;
+
+        // [DESTAQUES] Buscar categorias ordenadas por sort_order
+        $stmtCategories = $conn->prepare("
+            SELECT * FROM categories 
+            WHERE restaurant_id = :rid 
+            ORDER BY COALESCE(sort_order, 999) ASC, name ASC
+        ");
+        $stmtCategories->execute(['rid' => $restaurantId]);
+        $categories = $stmtCategories->fetchAll(PDO::FETCH_ASSOC);
+
+        // [DESTAQUES] Agrupar produtos por categoria
+        $productsByCategory = [];
+        foreach ($allProducts as $product) {
+            $catName = $product['category_name'] ?? 'Sem categoria';
+            if (!isset($productsByCategory[$catName])) {
+                $productsByCategory[$catName] = [];
+            }
+            $productsByCategory[$catName][] = $product;
+        }
 
         // Renderiza a view
         require __DIR__ . '/../../../views/admin/cardapio/index.php';
@@ -239,6 +258,52 @@ class CardapioController {
             }
         }
 
+        // [DESTAQUES] Salvar prioridade/ordem das categorias
+        $categoryOrder = $_POST['category_order'] ?? [];
+        if (!empty($categoryOrder)) {
+            $stmtCatOrder = $conn->prepare("UPDATE categories SET sort_order = :order WHERE id = :cid AND restaurant_id = :rid");
+            foreach ($categoryOrder as $catId => $order) {
+                $stmtCatOrder->execute([
+                    'order' => intval($order),
+                    'cid' => intval($catId),
+                    'rid' => $restaurantId
+                ]);
+            }
+        }
+
+        // [DESTAQUES] Salvar estado de habilitação das categorias
+        // Primeiro, desabilita todas as categorias do restaurante
+        $conn->prepare("UPDATE categories SET is_active = 0 WHERE restaurant_id = :rid")
+             ->execute(['rid' => $restaurantId]);
+        
+        // Depois, habilita as selecionadas
+        $categoryEnabled = $_POST['category_enabled'] ?? [];
+        if (!empty($categoryEnabled)) {
+            $stmtCatEnabled = $conn->prepare("UPDATE categories SET is_active = 1 WHERE id = :cid AND restaurant_id = :rid");
+            foreach (array_keys($categoryEnabled) as $catId) {
+                $stmtCatEnabled->execute(['cid' => intval($catId), 'rid' => $restaurantId]);
+            }
+        }
+
+        // [DESTAQUES] Salvar ordem dos produtos
+        $productOrder = $_POST['product_order'] ?? [];
+        
+        // DEBUG: SEMPRE salva o que está sendo recebido
+        $debugContent = "product_order recebido:\n";
+        $debugContent .= empty($productOrder) ? "VAZIO!" : print_r($productOrder, true);
+        file_put_contents($_SERVER['DOCUMENT_ROOT'] . '/cardapio-saas/debug_order.txt', $debugContent);
+        
+        if (!empty($productOrder)) {
+            $stmtProdOrder = $conn->prepare("UPDATE products SET display_order = :order WHERE id = :pid AND restaurant_id = :rid");
+            foreach ($productOrder as $prodId => $order) {
+                $stmtProdOrder->execute([
+                    'order' => intval($order),
+                    'pid' => intval($prodId),
+                    'rid' => $restaurantId
+                ]);
+            }
+        }
+
         // Log da ação
         if (class_exists('\App\Core\Logger')) {
             \App\Core\Logger::info('Configurações do cardápio atualizadas', [
@@ -246,7 +311,7 @@ class CardapioController {
             ]);
         }
 
-        header('Location: ' . BASE_URL . '/admin/loja/cardapio?success=salvo');
+        header('Location: ' . BASE_URL . '/admin/loja/cardapio?success=salvo#destaques');
         exit;
     }
 

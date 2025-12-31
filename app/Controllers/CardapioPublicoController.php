@@ -55,7 +55,7 @@ class CardapioPublicoController {
             FROM products p
             LEFT JOIN categories c ON p.category_id = c.id
             WHERE p.restaurant_id = :rid
-            ORDER BY p.display_order ASC, c.name ASC, p.name ASC
+            ORDER BY COALESCE(c.sort_order, 999) ASC, c.name ASC, p.display_order ASC, p.name ASC
         ");
         $stmtProducts->execute(['rid' => $restaurantId]);
         $allProducts = $stmtProducts->fetchAll(PDO::FETCH_ASSOC);

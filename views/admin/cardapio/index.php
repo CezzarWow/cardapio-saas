@@ -26,7 +26,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
         </div>
 
         <!-- Formulário (inicia aqui para incluir o botão Salvar na linha das abas) -->
-        <form method="POST" action="<?= BASE_URL ?>/admin/loja/cardapio/salvar" onsubmit="return window.CardapioAdmin.validateForm()">
+        <form id="formCardapio" method="POST" action="<?= BASE_URL ?>/admin/loja/cardapio/salvar" onsubmit="return window.CardapioAdmin.validateForm()">
         
         <!-- Abas + Ações (mesma linha) -->
         <div class="cardapio-admin-tabs" style="justify-content: space-between; align-items: center;">
@@ -47,6 +47,10 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                 <button type="button" class="cardapio-admin-tab-btn" data-tab="promocoes">
                     <i data-lucide="tag"></i>
                     <span>Promoções</span>
+                </button>
+                <button type="button" class="cardapio-admin-tab-btn" data-tab="destaques">
+                    <i data-lucide="star"></i>
+                    <span>Destaques</span>
                 </button>
             </div>
             
@@ -88,6 +92,11 @@ require __DIR__ . '/../panel/layout/sidebar.php';
             <!-- Aba Promoções -->
             <div class="cardapio-admin-tab-content" id="tab-promocoes">
                 <?php require __DIR__ . '/partials/_tab_promocoes.php'; ?>
+            </div>
+
+            <!-- Aba Destaques -->
+            <div class="cardapio-admin-tab-content" id="tab-destaques">
+                <?php require __DIR__ . '/partials/_tab_destaques.php'; ?>
             </div>
 
         </form>
