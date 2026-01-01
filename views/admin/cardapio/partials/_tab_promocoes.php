@@ -14,8 +14,8 @@
                 <i data-lucide="package-plus" size="24"></i>
             </div>
             <div>
-                <h3 class="cardapio-admin-card-title" style="font-size: 1.1rem; color: #1e293b;">Criar Novo Combo</h3>
-                <p style="font-size: 0.85rem; color: #64748b; margin: 0;">Configure sua oferta especial em uma única tela.</p>
+                <h3 id="comboFormTitle" class="cardapio-admin-card-title" style="font-size: 1.1rem; color: #1e293b;">Criar Novo Combo</h3>
+                <p id="comboFormSubtitle" style="font-size: 0.85rem; color: #64748b; margin: 0;">Configure sua oferta especial em uma única tela.</p>
             </div>
         </div>
     </div>
@@ -85,6 +85,20 @@
                 </div>
             </div>
 
+        </div>
+
+        <!-- Lista Resumo de Itens do Combo (visível apenas no modo edição) -->
+        <div id="comboItemsSummary" style="display: none; margin-top: 20px; padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="font-size: 0.95rem; font-weight: 600; color: #166534; margin: 0; display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="package-check" size="18"></i>
+                    Itens do Combo
+                </h4>
+                <button type="button" onclick="CardapioAdmin.clearComboItems()" style="font-size: 0.75rem; color: #dc2626; background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                    <i data-lucide="trash-2" size="14"></i> Limpar
+                </button>
+            </div>
+            <ul id="comboItemsList" style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px;"></ul>
         </div>
 
         <hr style="margin: 30px 0; border-color: #e2e8f0;">
@@ -169,11 +183,15 @@
             <?php endif; ?>
         </div>
 
-        <!-- Botão Salvar (Fixo e Grande) -->
-        <div style="margin-top: 30px; display: flex; justify-content: flex-end;">
-            <button type="button" class="cardapio-admin-btn cardapio-admin-btn-primary" onclick="CardapioAdmin.saveCombo()" style="padding: 12px 30px; font-size: 1rem;">
+        <!-- Botões Salvar/Cancelar -->
+        <div style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" id="btnCancelCombo" class="cardapio-admin-btn" onclick="CardapioAdmin.cancelComboEdit()" style="padding: 12px 20px; font-size: 1rem; background: #f1f5f9; color: #475569; display: none;">
+                <i data-lucide="x"></i>
+                Cancelar
+            </button>
+            <button type="button" id="btnSaveCombo" class="cardapio-admin-btn cardapio-admin-btn-primary" onclick="CardapioAdmin.saveCombo()" style="padding: 12px 30px; font-size: 1rem;">
                 <i data-lucide="save"></i>
-                Salvar Promoção
+                <span id="btnSaveComboText">Salvar Promoção</span>
             </button>
         </div>
     </div>
@@ -250,7 +268,7 @@
 
                             <div style="display: flex; gap: 8px;">
                                 <button type="button" class="cardapio-admin-btn-icon" style="color: #475569; padding: 4px; background: transparent; border: none; cursor: pointer;" 
-                                        onclick="location.href='<?= BASE_URL ?>/admin/loja/cardapio/combo/editar?id=<?= $combo['id'] ?>'" title="Editar">
+                                        onclick="CardapioAdmin.loadComboForEdit(<?= $combo['id'] ?>)" title="Editar">
                                     <i data-lucide="pencil" size="18"></i>
                                 </button>
                                 <button type="button" class="cardapio-admin-btn-icon" style="color: #ef4444; padding: 4px; background: transparent; border: none; cursor: pointer;" 

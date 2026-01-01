@@ -432,6 +432,7 @@ class CardapioController {
 
     /**
      * [ETAPA 3] Exibe formulário de edição
+     * Suporta resposta JSON para edição in-place via AJAX
      */
     public function editCombo() {
         $this->checkSession();
@@ -439,6 +440,7 @@ class CardapioController {
         $restaurantId = $_SESSION['loja_ativa_id'];
 
         $id = intval($_GET['id'] ?? 0);
+        $isAjax = isset($_GET['json']) && $_GET['json'] == '1';
 
         // Buscar combo
         $stmt = $conn->prepare("SELECT * FROM combos WHERE id = :id AND restaurant_id = :rid");
@@ -446,32 +448,69 @@ class CardapioController {
         $combo = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$combo) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Combo não encontrado']);
+                exit;
+            }
             header('Location: ' . BASE_URL . '/admin/loja/cardapio?error=combo_nao_encontrado');
             exit;
         }
 
-        // Buscar produtos do combo com configurações
-        $stmtItems = $conn->prepare("SELECT product_id, allow_additionals FROM combo_items WHERE combo_id = :cid");
+        // Buscar produtos do combo com configurações e nomes
+        $stmtItems = $conn->prepare("
+            SELECT ci.product_id, ci.allow_additionals, p.name as product_name, p.price as product_price
+            FROM combo_items ci
+            JOIN products p ON p.id = ci.product_id
+            WHERE ci.combo_id = :cid
+        ");
         $stmtItems->execute(['cid' => $id]);
         $rawItems = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
         
         $comboProducts = [];
         $comboItemsSettings = [];
+        $comboItemsDetails = []; // Para a lista resumo com nomes
         
         foreach ($rawItems as $item) {
-            $comboProducts[] = $item['product_id'];
-            $comboItemsSettings[$item['product_id']] = [
+            $pid = $item['product_id'];
+            $comboProducts[] = $pid;
+            $comboItemsSettings[$pid] = [
                 'allow_additionals' => $item['allow_additionals']
             ];
+            
+            // Contabiliza quantidade por produto (pode haver duplicatas)
+            if (!isset($comboItemsDetails[$pid])) {
+                $comboItemsDetails[$pid] = [
+                    'id' => $pid,
+                    'name' => $item['product_name'],
+                    'price' => $item['product_price'],
+                    'qty' => 0,
+                    'allow_additionals' => $item['allow_additionals']
+                ];
+            }
+            $comboItemsDetails[$pid]['qty']++;
         }
 
-        // Buscar produtos
+        // Se for requisição AJAX, retorna JSON
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'combo' => $combo,
+                'items' => array_values($comboItemsDetails), // Lista com qty agrupada
+                'settings' => $comboItemsSettings
+            ]);
+            exit;
+        }
+
+        // Buscar produtos para a view de formulário tradicional
         $stmt = $conn->prepare("SELECT * FROM products WHERE restaurant_id = :rid ORDER BY name");
         $stmt->execute(['rid' => $restaurantId]);
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         require __DIR__ . '/../../../views/admin/cardapio/combo_form.php';
     }
+
 
     /**
      * [ETAPA 3] Atualiza combo
