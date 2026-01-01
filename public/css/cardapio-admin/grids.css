@@ -1,0 +1,43 @@
+/**
+ * ============================================
+ * CARDÁPIO ADMIN - Grids
+ * Arquivo: public/css/cardapio-admin/grids.css
+ * ============================================
+ */
+
+/* ========== GRID DE CAMPOS ========== */
+.cardapio-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.cardapio-admin-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.cardapio-admin-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.cardapio-admin-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+@media (min-width: 1400px) {
+    .cardapio-admin-grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1400px) {
+    .cardapio-admin-grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1800px) {
+    .cardapio-admin-container {
+        max-width: 1800px;
+    }
+}

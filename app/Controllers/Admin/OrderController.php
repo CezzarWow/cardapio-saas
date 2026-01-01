@@ -1,4 +1,15 @@
 <?php
+/**
+ * ============================================
+ * ORDER CONTROLLER
+ * Gerencia pedidos, mesas, comandas e pagamentos
+ * 
+ * DECISÃO TÉCNICA (2026-01-01):
+ * Analisado em FASE 1 — NÃO modularizado.
+ * Motivo: 8 de 10 métodos usam transactions.
+ * Mover para Service quebraria rollback/commit.
+ * ============================================
+ */
 namespace App\Controllers\Admin;
 
 use App\Core\Database;

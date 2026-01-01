@@ -88,7 +88,7 @@ const PDVCart = {
                     <div style="flex: 1;">
                         <div style="font-weight: 600; font-size: 0.9rem; color: #1f2937;">${item.name}</div>
                         <div style="font-size: 0.8rem; color: #6b7280;">
-                            ${item.quantity}x R$ ${item.formatMoney(item.price)}
+                            ${item.quantity}x R$ ${PDVCart.formatMoney(item.price)}
                         </div>
                     </div>
                     <div style="display: flex; gap: 5px; align-items: center;">

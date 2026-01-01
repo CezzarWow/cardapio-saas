@@ -1,0 +1,24 @@
+/**
+ * ============================================
+ * CARDÁPIO ADMIN - Responsive (Media Queries Mobile)
+ * Arquivo: public/css/cardapio-admin/responsive.css
+ * IMPORTANTE: Este arquivo deve ser carregado POR ÚLTIMO!
+ * ============================================
+ */
+
+/* ========== RESPONSIVO ========== */
+@media (max-width: 640px) {
+    .cardapio-admin-tabs {
+        flex-direction: column;
+    }
+
+    .cardapio-admin-tab-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .cardapio-admin-grid-2,
+    .cardapio-admin-grid-3 {
+        grid-template-columns: 1fr;
+    }
+}

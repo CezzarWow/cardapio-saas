@@ -1,0 +1,38 @@
+/**
+ * ============================================
+ * CARDÁPIO ADMIN - Cards/Seções
+ * Arquivo: public/css/cardapio-admin/cards.css
+ * ============================================
+ */
+
+/* ========== CARDS/SEÇÕES ========== */
+.cardapio-admin-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+}
+
+.cardapio-admin-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.cardapio-admin-card-header i {
+    color: #2563eb;
+    width: 20px;
+    height: 20px;
+}
+
+.cardapio-admin-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}

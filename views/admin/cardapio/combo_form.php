@@ -12,7 +12,17 @@ $isEdit = isset($combo) && $combo;
 $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
 ?>
 
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin.css?v=<?= time() ?>">
+<!-- Cardápio Admin - CSS Modular -->
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/base.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/tabs.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/cards.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/forms.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/toggles.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/grids.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/buttons.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/utilities.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/featured.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/responsive.css?v=<?= time() ?>">
 
 <main class="main-content">
     <?php require __DIR__ . '/../panel/layout/messages.php'; ?>

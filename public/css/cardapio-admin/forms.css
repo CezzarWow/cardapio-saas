@@ -1,0 +1,141 @@
+/**
+ * ============================================
+ * CARDÁPIO ADMIN - Forms (Formulários)
+ * Arquivo: public/css/cardapio-admin/forms.css
+ * ============================================
+ */
+
+/* ========== FORMULÁRIOS ========== */
+.cardapio-admin-form-group {
+    margin-bottom: 1.25rem;
+}
+
+.cardapio-admin-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.cardapio-admin-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.cardapio-admin-input,
+.cardapio-admin-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.cardapio-admin-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.cardapio-admin-input::placeholder {
+    color: #9ca3af;
+}
+
+.cardapio-admin-input-small {
+    width: 120px;
+}
+
+/* Input Group (WhatsApp) */
+.cardapio-input-group {
+    display: flex;
+}
+
+.cardapio-input-group .cardapio-admin-input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    width: 240px;
+    /* Tamanho fixo para telefone */
+    flex-shrink: 0;
+    background-color: #f8fafc;
+    /* Padrão (travado) */
+    border-right: none;
+    position: relative;
+    z-index: 2;
+}
+
+.cardapio-input-group .cardapio-admin-input:focus {
+    z-index: 3;
+}
+
+.cardapio-input-group .cardapio-admin-input:not(:disabled) {
+    background-color: white;
+    /* Habilitado */
+}
+
+.cardapio-input-group-btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    padding: 10px 16px;
+    border: 1px solid #d1d5db;
+    background: #e2e8f0;
+    color: #475569;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+}
+
+.cardapio-input-group-btn:hover {
+    background: #cbd5e1;
+}
+
+.cardapio-input-group-btn.active {
+    background: #22c55e;
+    color: white;
+    border-color: #22c55e;
+}
+
+.cardapio-admin-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.cardapio-admin-hint {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 5px;
+}
+
+/* ========== WHATSAPP MESSAGES (Contador Automático) ========== */
+#whatsapp-messages-container {
+    counter-reset: whatsapp-msg;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    /* Espaço maior entre blocos */
+    margin-bottom: 1rem;
+}
+
+.cardapio-admin-message-row {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    padding-top: 24px;
+    /* Espaço para o título "Mensagem X" */
+    counter-increment: whatsapp-msg;
+}
+
+.cardapio-admin-message-row::before {
+    content: "Mensagem " counter(whatsapp-msg);
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}

@@ -1,0 +1,515 @@
+/**
+ * ============================================
+ * CARDÁPIO ADMIN - Featured (Destaques)
+ * Arquivo: public/css/cardapio-admin/featured.css
+ * ============================================
+ */
+
+/* ========== ABA DESTAQUES ========== */
+.cardapio-admin-destaques-container {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.cardapio-admin-destaques-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Categorias - Lista de Prioridades */
+.cardapio-admin-destaques-category-list-scroll {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.cardapio-admin-destaques-category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cardapio-admin-destaques-category-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.cardapio-admin-destaques-category-row:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.cardapio-admin-destaques-category-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cardapio-admin-destaques-category-name {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.cardapio-admin-destaques-category-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cardapio-admin-destaques-arrows {
+    display: flex;
+    gap: 4px;
+}
+
+.cardapio-admin-destaques-arrow-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.cardapio-admin-destaques-arrow-btn:hover:not(:disabled) {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: white;
+}
+
+.cardapio-admin-destaques-arrow-btn:hover:not(:disabled) svg {
+    color: white;
+}
+
+.cardapio-admin-destaques-arrow-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.cardapio-admin-destaques-category-order {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cardapio-admin-destaques-category-order label {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.cardapio-admin-destaques-order-input {
+    width: 70px;
+    text-align: center;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+/* Produtos - Sistema de Abas */
+.cardapio-admin-destaques-content-wrapper {
+    position: relative;
+    transition: opacity 0.3s;
+}
+
+.cardapio-admin-destaques-content-wrapper.disabled-overlay {
+    opacity: 0.7;
+    pointer-events: none;
+    filter: grayscale(0.5);
+}
+
+.cardapio-admin-destaques-tabs {
+    display: flex;
+    gap: 6px;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 1rem;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+}
+
+/* Botões Editar/Salvar */
+.cardapio-admin-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cardapio-admin-btn-edit {
+    padding: 6px 12px;
+    background: #e2e8f0;
+    color: #475569;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.cardapio-admin-btn-edit:hover {
+    background: #cbd5e1;
+    color: #1e293b;
+}
+
+.cardapio-admin-save-group {
+    display: flex;
+    gap: 8px;
+}
+
+.cardapio-admin-btn-cancel {
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.cardapio-admin-btn-save {
+    padding: 6px 12px;
+    background: #16a34a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Drag and Drop Styles */
+.cardapio-admin-destaques-product-card[draggable="true"] {
+    cursor: grab;
+}
+
+.cardapio-admin-destaques-product-card[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.cardapio-admin-destaques-product-card.dragging {
+    opacity: 0.5;
+    background: #e2e8f0;
+    border: 2px dashed #94a3b8;
+}
+
+.cardapio-admin-destaques-product-card.drag-over {
+    border-top: 2px solid #2563eb;
+}
+
+.cardapio-admin-destaques-tab-btn {
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #64748b;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.cardapio-admin-destaques-tab-btn:hover {
+    color: #2563eb;
+    background: #f1f5f9;
+}
+
+.cardapio-admin-destaques-tab-btn.active {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+    background: #eff6ff;
+}
+
+.cardapio-admin-destaques-tab-contents {
+    min-height: 200px;
+}
+
+.cardapio-admin-destaques-tab-content {
+    display: none;
+}
+
+.cardapio-admin-destaques-tab-content.active {
+    display: block;
+}
+
+.cardapio-admin-destaques-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.cardapio-admin-destaques-product-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.cardapio-admin-destaques-product-card:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.cardapio-admin-destaques-product-card.featured {
+    background: #fef9c3;
+    border-color: #fde047;
+}
+
+.cardapio-admin-destaques-product-card .cardapio-admin-destaques-product-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.cardapio-admin-destaques-product-card .cardapio-admin-destaques-product-info>div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cardapio-admin-destaques-highlight-btn {
+    padding: 6px 12px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #64748b;
+    transition: all 0.2s;
+}
+
+.cardapio-admin-destaques-highlight-btn:hover {
+    background: #eab308;
+    border-color: #eab308;
+    color: white;
+}
+
+.cardapio-admin-destaques-highlight-btn.active {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+}
+
+.cardapio-admin-destaques-highlight-btn.active:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+}
+
+.cardapio-admin-destaques-empty {
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+    padding: 40px 20px;
+}
+
+/* DEPRECATED */
+.cardapio-admin-destaques-products-list {
+    display: none;
+}
+
+/* Preview */
+.cardapio-admin-destaques-preview {
+    position: sticky;
+    top: 20px;
+}
+
+.cardapio-admin-destaques-preview-notice {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.cardapio-admin-destaques-preview-section {
+    margin-bottom: 1rem;
+}
+
+.cardapio-admin-destaques-preview-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 8px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.cardapio-admin-destaques-preview-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+    color: #4b5563;
+    border-radius: 4px;
+}
+
+.cardapio-admin-destaques-preview-item.featured {
+    background: #fef9c3;
+}
+
+.cardapio-admin-destaques-preview-item .price {
+    color: #059669;
+    font-weight: 500;
+}
+
+.cardapio-admin-destaques-preview-empty {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    font-style: italic;
+    padding: 8px;
+    text-align: center;
+}
+
+/* === Botões Editar/Salvar/Cancelar === */
+.cardapio-admin-edit-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cardapio-admin-btn-edit,
+.cardapio-admin-btn-save,
+.cardapio-admin-btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.cardapio-admin-btn-edit {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.cardapio-admin-btn-edit:hover {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+}
+
+.cardapio-admin-btn-save {
+    background: #2563eb;
+    color: white;
+}
+
+.cardapio-admin-btn-save:hover {
+    background: #1d4ed8;
+}
+
+.cardapio-admin-btn-cancel {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.cardapio-admin-btn-cancel:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.cardapio-admin-save-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Hints alternados */
+.view-hint {
+    display: inline;
+}
+
+.edit-hint {
+    display: none;
+}
+
+/* Overlay desabilitado */
+.cardapio-admin-destaques-content-wrapper.disabled-overlay {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.cardapio-admin-destaques-content-wrapper.disabled-overlay::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    cursor: not-allowed;
+}
+
+/* === Drag and Drop === */
+.cardapio-admin-destaques-drag-handle {
+    cursor: grab;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.cardapio-admin-destaques-product-card:hover .cardapio-admin-destaques-drag-handle {
+    opacity: 1;
+}
+
+.cardapio-admin-destaques-product-card.dragging {
+    opacity: 0.5;
+    transform: scale(0.98);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cardapio-admin-destaques-product-card.drag-over {
+    border: 2px dashed #2563eb;
+    background: #eff6ff;
+}
+
+/* Responsivo */
+@media (max-width: 1024px) {
+    .cardapio-admin-destaques-container {
+        grid-template-columns: 1fr;
+    }
+
+    .cardapio-admin-destaques-preview {
+        position: static;
+    }
+}
