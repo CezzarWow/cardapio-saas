@@ -1,0 +1,48 @@
+/**
+ * ============================================
+ * DELIVERY CSS — Base
+ * Prefixo: .delivery-*
+ * ============================================
+ */
+
+/* Container Principal */
+.delivery-container {
+    padding: 2rem;
+    width: 100%;
+    min-height: 100vh;
+    background: #f8fafc;
+}
+
+/* Header */
+.delivery-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.delivery-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.delivery-title i {
+    color: #f59e0b;
+}
+
+/* Contador de pedidos */
+.delivery-counter {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}

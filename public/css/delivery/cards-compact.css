@@ -1,0 +1,211 @@
+/**
+ * ============================================
+ * DELIVERY CSS — Cards Compactos (Reformulado)
+ * Visual polido com bordas e hover
+ * ============================================
+ */
+
+/* Card Compacto */
+.delivery-card-compact {
+    background: white;
+    border-radius: 12px;
+    padding: 14px 16px;
+    border: 2px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.delivery-card-compact:hover {
+    border-color: #94a3b8;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Indicador de status (barra lateral) */
+.delivery-card-compact::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    border-radius: 12px 0 0 12px;
+    background: #e2e8f0;
+}
+
+/* Estados por status */
+.delivery-card-compact--novo::before {
+    background: linear-gradient(180deg, #3b82f6, #2563eb);
+}
+
+.delivery-card-compact--preparo::before {
+    background: linear-gradient(180deg, #8b5cf6, #7c3aed);
+}
+
+.delivery-card-compact--rota::before {
+    background: linear-gradient(180deg, #22c55e, #16a34a);
+}
+
+.delivery-card-compact--novo {
+    border-color: #bfdbfe;
+}
+
+.delivery-card-compact--preparo {
+    border-color: #ddd6fe;
+}
+
+.delivery-card-compact--rota {
+    border-color: #bbf7d0;
+}
+
+.delivery-card-compact--entregue::before {
+    background: linear-gradient(180deg, #059669, #047857);
+}
+
+.delivery-card-compact--entregue {
+    border-color: #a7f3d0;
+    opacity: 0.8;
+}
+
+.delivery-card-compact--cancelado::before {
+    background: linear-gradient(180deg, #dc2626, #b91c1c);
+}
+
+.delivery-card-compact--cancelado {
+    border-color: #fecaca;
+    opacity: 0.7;
+}
+
+.delivery-card-compact--novo:hover {
+    border-color: #3b82f6;
+}
+
+.delivery-card-compact--preparo:hover {
+    border-color: #8b5cf6;
+}
+
+.delivery-card-compact--rota:hover {
+    border-color: #22c55e;
+}
+
+/* Header do card */
+.delivery-card-compact-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-left: 8px;
+}
+
+.delivery-card-compact-id {
+    font-weight: 800;
+    color: #1e293b;
+    font-size: 1.1rem;
+}
+
+.delivery-card-compact-time {
+    font-size: 0.8rem;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+}
+
+/* Info principal */
+.delivery-card-compact-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.delivery-card-compact-customer {
+    font-weight: 600;
+    color: #334155;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.delivery-card-compact-total {
+    font-weight: 800;
+    color: #059669;
+    font-size: 1.05rem;
+}
+
+/* Ações */
+.delivery-card-compact-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.delivery-card-compact-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.delivery-card-compact-btn:hover {
+    transform: scale(1.02);
+}
+
+.delivery-card-compact-btn:active {
+    transform: scale(0.98);
+}
+
+.delivery-card-compact-btn--primary {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    color: white;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+}
+
+.delivery-card-compact-btn--cancel {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 2px solid #fecaca;
+    flex: 0;
+    padding: 10px 12px;
+}
+
+.delivery-card-compact-btn--cancel:hover {
+    background: #fee2e2;
+    border-color: #dc2626;
+}
+
+/* Cores dos botões por status */
+.delivery-card-compact--novo .delivery-card-compact-btn--primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
+}
+
+.delivery-card-compact--preparo .delivery-card-compact-btn--primary {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    box-shadow: 0 2px 6px rgba(8, 145, 178, 0.3);
+}
+
+.delivery-card-compact--rota .delivery-card-compact-btn--primary {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+}

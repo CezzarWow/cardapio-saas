@@ -1,0 +1,176 @@
+/**
+ * ============================================
+ * DELIVERY CSS — Layout Kanban (Reformulado)
+ * Visual polido com bordas e contornos
+ * ============================================
+ */
+
+/* Container Kanban */
+.delivery-kanban {
+    display: flex;
+    gap: 24px;
+    min-height: calc(100vh - 220px);
+    align-items: flex-start;
+    padding: 10px;
+}
+
+/* Coluna individual */
+.delivery-column {
+    flex: 1;
+    min-width: 250px;
+    max-width: 400px;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 240px);
+    overflow: hidden;
+}
+
+/* Header da coluna */
+.delivery-column-header {
+    padding: 18px 20px;
+    border-bottom: 2px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.delivery-column-title {
+    font-weight: 800;
+    font-size: 1rem;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.delivery-column-count {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    min-width: 32px;
+    text-align: center;
+}
+
+/* Cores por status — Headers */
+.delivery-column--novo .delivery-column-header {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-bottom-color: #93c5fd;
+}
+
+.delivery-column--novo .delivery-column-count {
+    background: #3b82f6;
+    color: white;
+}
+
+.delivery-column--novo .delivery-column-title {
+    color: #1e40af;
+}
+
+.delivery-column--preparo .delivery-column-header {
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+    border-bottom-color: #d8b4fe;
+}
+
+.delivery-column--preparo .delivery-column-count {
+    background: #8b5cf6;
+    color: white;
+}
+
+.delivery-column--preparo .delivery-column-title {
+    color: #6b21a8;
+}
+
+.delivery-column--rota .delivery-column-header {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    border-bottom-color: #86efac;
+}
+
+.delivery-column--rota .delivery-column-count {
+    background: #22c55e;
+    color: white;
+}
+
+.delivery-column--rota .delivery-column-title {
+    color: #166534;
+}
+
+/* Entregue */
+.delivery-column--entregue .delivery-column-header {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border-bottom-color: #6ee7b7;
+}
+
+.delivery-column--entregue .delivery-column-count {
+    background: #059669;
+    color: white;
+}
+
+.delivery-column--entregue .delivery-column-title {
+    color: #047857;
+}
+
+/* Cancelado */
+.delivery-column--cancelado .delivery-column-header {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-bottom-color: #f87171;
+}
+
+.delivery-column--cancelado .delivery-column-count {
+    background: #dc2626;
+    color: white;
+}
+
+.delivery-column--cancelado .delivery-column-title {
+    color: #b91c1c;
+}
+
+/* Body da coluna (scrollável) */
+.delivery-column-body {
+    padding: 16px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #f8fafc;
+}
+
+/* Scrollbar estilizada */
+.delivery-column-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.delivery-column-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.delivery-column-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+/* Coluna vazia */
+.delivery-column-empty {
+    text-align: center;
+    padding: 50px 20px;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.delivery-column-empty i {
+    opacity: 0.4;
+}

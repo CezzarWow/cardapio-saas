@@ -77,6 +77,21 @@ switch ($path) {
         (new \App\Controllers\Admin\DeliveryController())->index();
         break;
 
+    case '/admin/loja/delivery/status':
+        require __DIR__ . '/../app/Controllers/Admin/DeliveryController.php';
+        (new \App\Controllers\Admin\DeliveryController())->updateStatus();
+        break;
+
+    case '/admin/loja/delivery/list':
+        require __DIR__ . '/../app/Controllers/Admin/DeliveryController.php';
+        (new \App\Controllers\Admin\DeliveryController())->list();
+        break;
+
+    case '/admin/loja/delivery/details':
+        require __DIR__ . '/../app/Controllers/Admin/DeliveryController.php';
+        (new \App\Controllers\Admin\DeliveryController())->getOrderDetails();
+        break;
+
     // --- CARDÁPIO WEB ---
     case '/admin/loja/cardapio':
         require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';

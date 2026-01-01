@@ -1,0 +1,85 @@
+/**
+ * ============================================
+ * DELIVERY CSS — Estados Visuais
+ * Prefixo: .delivery-*
+ * ============================================
+ */
+
+/* Badges de Status */
+.delivery-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Estado: Novo */
+.delivery-badge--novo {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.delivery-card--novo {
+    border-left-color: #3b82f6;
+}
+
+/* Estado: Aceito */
+.delivery-badge--aceito {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.delivery-card--aceito {
+    border-left-color: #f59e0b;
+}
+
+/* Estado: Em Preparo */
+.delivery-badge--preparo {
+    background: #fae8ff;
+    color: #86198f;
+}
+
+.delivery-card--preparo {
+    border-left-color: #d946ef;
+}
+
+/* Estado: Em Rota */
+.delivery-badge--rota {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.delivery-card--rota {
+    border-left-color: #22c55e;
+}
+
+/* Estado: Entregue */
+.delivery-badge--entregue {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.delivery-card--entregue {
+    border-left-color: #10b981;
+    opacity: 0.7;
+}
+
+/* Estado: Cancelado */
+.delivery-badge--cancelado {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.delivery-card--cancelado {
+    border-left-color: #ef4444;
+    opacity: 0.6;
+}
+
+/* Texto do status */
+.delivery-status-text {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 4px;
+}
