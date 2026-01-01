@@ -159,6 +159,13 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
     </div>
 </main>
 
-<script src="<?= BASE_URL ?>/js/cardapio-admin.js?v=<?= time() ?>"></script>
+<!-- Cardapio Admin - Modular Scripts (v2.0) -->
+<script src="<?= BASE_URL ?>/js/cardapio-admin/utils.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/pix.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/whatsapp.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/forms.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/combos.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/featured.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/index.js?v=<?= time() ?>"></script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>
