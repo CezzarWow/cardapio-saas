@@ -14,7 +14,19 @@ $dayName = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábad
 
 // Calcula totais
 $totalPedidos = count($orders);
-$totalValor = array_sum(array_column($orders, 'total'));
+$totalValor = 0;     // Somente Entregues
+$totalCancelado = 0; // Somente Cancelados
+
+foreach ($orders as $order) {
+    $st = $order['status'] ?? 'novo';
+    $val = floatval($order['total'] ?? 0);
+    
+    if ($st === 'entregue') {
+        $totalValor += $val;
+    } elseif ($st === 'cancelado') {
+        $totalCancelado += $val;
+    }
+}
 
 // Status labels
 $statusLabels = [
@@ -33,6 +45,8 @@ $statusLabels = [
 .history-container { padding: 15px; }
 .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
 .history-title { font-size: 1.3rem; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+
+/* Navegação antiga (pode ser removida futuramente, mas mantendo para segurança) */
 .history-nav { display: flex; gap: 8px; }
 .history-nav a { padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: all 0.2s; font-size: 0.9rem; }
 .history-nav a.active { background: #1e293b; color: white; }
@@ -70,34 +84,37 @@ $statusLabels = [
                 <i data-lucide="history"></i>
                 Histórico
             </h1>
-            <div class="history-nav">
-                <a href="<?= BASE_URL ?>/admin/loja/delivery">📊 Kanban</a>
-                <a href="<?= BASE_URL ?>/admin/loja/delivery/history" class="active">📋 Histórico</a>
-            </div>
         </div>
+
+        <!-- Abas Unificadas (Filtros) -->
+        <?php require __DIR__ . '/partials/filters.php'; ?>
 
         <!-- Barra superior: Filtro + Período + Totais -->
         <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; align-items: stretch;">
             
-            <!-- Filtro de data -->
-            <form class="history-filter" method="GET" style="margin-bottom: 0; flex: 0 0 auto;">
-                <label for="date">📅</label>
-                <input type="date" name="date" id="date" value="<?= $selectedDate ?>">
+            <!-- 1. Filtro de data -->
+            <form class="history-filter" method="GET" style="margin-bottom: 0; flex: 1; min-width: 200px; justify-content: center;">
+                <label for="date" style="margin-right: -5px;">📅</label>
+                <input type="date" name="date" id="date" value="<?= $selectedDate ?>" style="width: auto;">
                 <button type="submit">Buscar</button>
             </form>
 
+            <!-- 2. Pedidos -->
+            <div class="history-summary-card" style="margin-bottom: 0; flex: 1; min-width: 150px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span style="color: #64748b; font-weight: 600;">Pedidos:</span>
+                <span style="font-size: 1.3rem; font-weight: 800; color: #1e293b;"><?= $totalPedidos ?></span>
+            </div>
 
+            <!-- 3. Valor Total (Entregue) -->
+            <div class="history-summary-card" style="margin-bottom: 0; flex: 1; min-width: 180px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span style="color: #64748b; font-weight: 600;">Receita:</span>
+                <span style="font-size: 1.3rem; font-weight: 800; color: #059669;">R$ <?= number_format($totalValor, 2, ',', '.') ?></span>
+            </div>
 
-            <!-- Resumo (inline horizontal) -->
-            <div style="display: flex; gap: 10px; flex: 1;">
-                <div class="history-summary-card" style="margin-bottom: 0; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span style="color: #64748b; font-weight: 600;">Pedidos:</span>
-                    <span style="font-size: 1.3rem; font-weight: 800; color: #1e293b;"><?= $totalPedidos ?></span>
-                </div>
-                <div class="history-summary-card" style="margin-bottom: 0; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span style="color: #64748b; font-weight: 600;">Valor Total:</span>
-                    <span style="font-size: 1.3rem; font-weight: 800; color: #059669;">R$ <?= number_format($totalValor, 2, ',', '.') ?></span>
-                </div>
+            <!-- 4. Valor Cancelado -->
+            <div class="history-summary-card" style="margin-bottom: 0; flex: 1; min-width: 180px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span style="color: #64748b; font-weight: 600;">Cancelado:</span>
+                <span style="font-size: 1.3rem; font-weight: 800; color: #dc2626;">R$ <?= number_format($totalCancelado, 2, ',', '.') ?></span>
             </div>
         </div>
 

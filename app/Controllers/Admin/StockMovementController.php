@@ -42,6 +42,20 @@ class StockMovementController {
             $params['cat'] = $categoryFilter;
         }
 
+        // Filtro por Data (Início)
+        $startDate = $_GET['start_date'] ?? '';
+        if (!empty($startDate)) {
+            $sql .= " AND m.created_at >= :start";
+            $params['start'] = $startDate . ' 00:00:00';
+        }
+
+        // Filtro por Data (Fim)
+        $endDate = $_GET['end_date'] ?? '';
+        if (!empty($endDate)) {
+            $sql .= " AND m.created_at <= :end";
+            $params['end'] = $endDate . ' 23:59:59';
+        }
+
         $sql .= " ORDER BY m.created_at DESC LIMIT 100";
         
         $stmt = $conn->prepare($sql);

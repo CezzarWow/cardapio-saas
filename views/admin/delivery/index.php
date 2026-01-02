@@ -59,7 +59,15 @@ $statusFilter = $_GET['status'] ?? null;
     console.log('[Delivery] Kanban carregado');
     console.log('[Delivery] Pedidos:', <?= count($orders ?? []) ?>);
     
+    
     if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    // Auto-filtro se vier da URL (ex: do histórico)
+    const urlParams = new URLSearchParams(window.location.search);
+    const statusParam = urlParams.get('status');
+    if(statusParam && window.DeliveryTabs) {
+        DeliveryTabs.filter(statusParam);
+    }
 </script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>

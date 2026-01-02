@@ -221,8 +221,9 @@ switch ($path) {
         break;
 
     case '/admin/loja/adicionais/itens':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->listItems();
+        // Redireciona para a página principal que agora contém as abas
+        header('Location: ' . BASE_URL . '/admin/loja/adicionais');
+        exit;
         break;
 
     case '/admin/loja/adicionais/grupo/salvar':
@@ -235,25 +236,28 @@ switch ($path) {
         (new \App\Controllers\Admin\AdditionalController())->deleteGroup();
         break;
 
-    case '/admin/loja/adicionais/item/novo':
+
+
+
+
+    case '/admin/loja/adicionais/item/salvar-modal':
         require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->createItem();
+        (new \App\Controllers\Admin\AdditionalController())->storeItemWithGroups();
         break;
 
-    case '/admin/loja/adicionais/item/salvar':
+    case '/admin/loja/adicionais/item/atualizar-modal':
         require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->storeItem();
+        (new \App\Controllers\Admin\AdditionalController())->updateItemWithGroups();
         break;
 
-    case '/admin/loja/adicionais/item/editar':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->editItem();
+    case '/admin/loja/adicionais/get-item-data':
+        require_once __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->getItemData();
         break;
 
-    case '/admin/loja/adicionais/item/atualizar':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->updateItem();
-        break;
+
+
+
 
     case '/admin/loja/adicionais/item/deletar':
         require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';

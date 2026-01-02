@@ -74,25 +74,26 @@
 /* ========== TOGGLE VISUALIZAÇÃO ========== */
 .stock-view-toggle {
     display: inline-flex;
-    gap: 4px;
-    background: #f1f5f9;
-    padding: 4px;
-    border-radius: 8px;
+    gap: 6px;
+    background: #f8fafc;
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
 }
 
 .stock-view-btn {
-    padding: 8px 16px;
+    padding: 8px 20px;
     border: none;
     background: transparent;
-    border-radius: 6px;
+    border-radius: 8px;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     color: #64748b;
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .stock-view-btn:hover {
@@ -101,9 +102,11 @@
 }
 
 .stock-view-btn.active {
-    background: white;
-    color: #2563eb;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: #2563eb;
+    /* Azul Royal */
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+    transform: translateY(-1px);
 }
 
 /* ========== GRID DE CARDS ========== */

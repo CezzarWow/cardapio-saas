@@ -82,6 +82,16 @@ foreach ($movements as $m) {
         <div class="stock-search-container" style="padding: 15px 20px;">
             <form method="GET" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: end;">
                 <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151; font-size: 0.85rem;">Data Início</label>
+                    <input type="date" name="start_date" value="<?= htmlspecialchars($_GET['start_date'] ?? '') ?>" 
+                           class="stock-search-input" style="min-width: 140px; padding: 10px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151; font-size: 0.85rem;">Data Fim</label>
+                    <input type="date" name="end_date" value="<?= htmlspecialchars($_GET['end_date'] ?? '') ?>" 
+                           class="stock-search-input" style="min-width: 140px; padding: 10px;">
+                </div>
+                <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151; font-size: 0.85rem;">Produto</label>
                     <select name="product" class="stock-search-input" style="min-width: 200px;">
                         <option value="">Todos os produtos</option>
@@ -102,7 +112,7 @@ foreach ($movements as $m) {
                 <button type="submit" class="btn-stock-action" style="background: #2563eb; color: white; padding: 10px 20px;">
                     <i data-lucide="filter" size="14"></i> Filtrar
                 </button>
-                <?php if ($productFilter || $categoryFilter): ?>
+                <?php if ($productFilter || $categoryFilter || !empty($_GET['start_date']) || !empty($_GET['end_date'])): ?>
                     <a href="<?= BASE_URL ?>/admin/loja/movimentacoes" class="btn-stock-action btn-stock-edit" style="padding: 10px 20px;">
                         Limpar
                     </a>

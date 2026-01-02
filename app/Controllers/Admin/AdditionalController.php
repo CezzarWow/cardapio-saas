@@ -158,23 +158,12 @@ class AdditionalController {
     // ==========================================
     // CATÁLOGO GLOBAL DE ITENS
     // ==========================================
-    public function listItems() {
-        $this->checkSession();
-        $conn = Database::connect();
-        $restaurantId = $_SESSION['loja_ativa_id'];
+    // ==========================================
+    // CATÁLOGO GLOBAL DE ITENS (Descontinuado - Redirecionado para index)
+    // ==========================================
+    // public function listItems() { ... } Removido em favor da view unificada
         
-        $items = $this->getGlobalItems($conn, $restaurantId);
-        
-        // Conta em quantos grupos cada item está
-        foreach ($items as &$item) {
-            $stmt = $conn->prepare("SELECT COUNT(*) as total FROM additional_group_items WHERE item_id = :id");
-            $stmt->execute(['id' => $item['id']]);
-            $item['groups_count'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-        }
-        unset($item);
 
-        require __DIR__ . '/../../../views/admin/additionals/items.php';
-    }
 
     // ==========================================
     // GRUPOS - CRUD
@@ -184,19 +173,52 @@ class AdditionalController {
         $this->checkSession();
         
         $name = trim($_POST['name'] ?? '');
+        $itemIds = $_POST['item_ids'] ?? []; // Array de IDs de itens para vincular
         $restaurantId = $_SESSION['loja_ativa_id'];
 
         if (!empty($name)) {
             $conn = Database::connect();
-            $stmt = $conn->prepare("INSERT INTO additional_groups (restaurant_id, name, required) VALUES (:rid, :name, 0)");
-            $stmt->execute([
-                'rid' => $restaurantId,
-                'name' => $name
-            ]);
-        }
+            
+            try {
+                $conn->beginTransaction();
 
-        header('Location: ' . BASE_URL . '/admin/loja/adicionais');
-        exit;
+                // 1. Criar Grupo
+                $stmt = $conn->prepare("INSERT INTO additional_groups (restaurant_id, name, required) VALUES (:rid, :name, 0)");
+                $stmt->execute([
+                    'rid' => $restaurantId,
+                    'name' => $name
+                ]);
+                $groupId = $conn->lastInsertId();
+
+                // 2. Vincular Itens Selecionados
+                if (!empty($itemIds) && is_array($itemIds)) {
+                    $sqlLink = "INSERT INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)";
+                    $stmtLink = $conn->prepare($sqlLink);
+
+                    foreach ($itemIds as $iid) {
+                        // Verifica se o item pertence à loja
+                        $checkItem = $conn->prepare("SELECT id FROM additionals WHERE id = :iid AND restaurant_id = :rid");
+                        $checkItem->execute(['iid' => $iid, 'rid' => $restaurantId]);
+                        
+                        if ($checkItem->fetch()) {
+                            $stmtLink->execute(['gid' => $groupId, 'iid' => $iid]);
+                        }
+                    }
+                }
+
+                $conn->commit();
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=grupo_criado');
+                exit;
+
+            } catch (Exception $e) {
+                $conn->rollBack();
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=erro_criar_grupo');
+                exit;
+            }
+        } else {
+             header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=nome_obrigatorio');
+             exit;
+        }
     }
 
     public function deleteGroup() {
@@ -219,73 +241,9 @@ class AdditionalController {
     // ITENS GLOBAIS - CRUD
     // ==========================================
 
-    public function createItem() {
-        $this->checkSession();
-        require __DIR__ . '/../../../views/admin/additionals/item_form.php';
-    }
 
-    public function storeItem() {
-        $this->checkSession();
-        
-        $name = trim($_POST['name'] ?? '');
-        $price = floatval(str_replace(',', '.', $_POST['price'] ?? 0));
-        $restaurantId = $_SESSION['loja_ativa_id'];
 
-        if (!empty($name)) {
-            $conn = Database::connect();
-            $stmt = $conn->prepare("INSERT INTO additional_items (restaurant_id, name, price) VALUES (:rid, :name, :price)");
-            $stmt->execute([
-                'rid' => $restaurantId,
-                'name' => $name,
-                'price' => $price
-            ]);
-        }
 
-        header('Location: ' . BASE_URL . '/admin/loja/adicionais/itens');
-        exit;
-    }
-
-    public function editItem() {
-        $this->checkSession();
-        $conn = Database::connect();
-        $restaurantId = $_SESSION['loja_ativa_id'];
-
-        $id = intval($_GET['id'] ?? 0);
-        
-        $stmt = $conn->prepare("SELECT * FROM additional_items WHERE id = :id AND restaurant_id = :rid");
-        $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
-        $item = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$item) {
-            header('Location: ' . BASE_URL . '/admin/loja/adicionais/itens');
-            exit;
-        }
-
-        require __DIR__ . '/../../../views/admin/additionals/item_form.php';
-    }
-
-    public function updateItem() {
-        $this->checkSession();
-        
-        $id = intval($_POST['id'] ?? 0);
-        $name = trim($_POST['name'] ?? '');
-        $price = floatval(str_replace(',', '.', $_POST['price'] ?? 0));
-        $restaurantId = $_SESSION['loja_ativa_id'];
-
-        if ($id > 0 && !empty($name)) {
-            $conn = Database::connect();
-            $stmt = $conn->prepare("UPDATE additional_items SET name = :name, price = :price WHERE id = :id AND restaurant_id = :rid");
-            $stmt->execute([
-                'name' => $name,
-                'price' => $price,
-                'id' => $id,
-                'rid' => $restaurantId
-            ]);
-        }
-
-        header('Location: ' . BASE_URL . '/admin/loja/adicionais/itens');
-        exit;
-    }
 
     public function deleteItem() {
         $this->checkSession();
@@ -386,6 +344,190 @@ class AdditionalController {
 
         header('Location: ' . BASE_URL . '/admin/loja/adicionais');
         exit;
+    }
+
+    // ==========================================
+    // MÉTODO PARA SALVAR ITEM + VÍNCULOS (MODAL)
+    // ==========================================
+    public function storeItemWithGroups() {
+        $this->checkSession();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $name = trim($_POST['name'] ?? '');
+            
+            // Tratamento de Moeda BR (1.200,50 -> 1200.50)
+            $priceRaw = $_POST['price'] ?? '0';
+            $priceRaw = str_replace('.', '', $priceRaw); // Remove ponto de milhar
+            $priceRaw = str_replace(',', '.', $priceRaw); // Troca vírgula por ponto
+            $price = floatval($priceRaw);
+
+            $groupIds = $_POST['group_ids'] ?? []; // Array de IDs de grupos
+            $restaurantId = $_SESSION['loja_ativa_id'];
+            
+            if (empty($name)) {
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=nome_obrigatorio');
+                exit;
+            }
+
+            $conn = Database::connect();
+            
+            try {
+                // Iniciar transação para garantir integridade
+                $conn->beginTransaction();
+
+                // 1. Inserir Item
+                $stmt = $conn->prepare("INSERT INTO additional_items (restaurant_id, name, price) VALUES (:rid, :name, :price)");
+                $stmt->execute([
+                    'rid' => $restaurantId,
+                    'name' => $name,
+                    'price' => $price
+                ]);
+                $itemId = $conn->lastInsertId();
+
+                // 2. Vincular aos Grupos Selecionados
+                if (!empty($groupIds) && is_array($groupIds)) {
+                    $sqlLink = "INSERT INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)";
+                    $stmtLink = $conn->prepare($sqlLink);
+
+                    foreach ($groupIds as $gid) {
+                        // Verificar se grupo pertence à loja (segurança)
+                        $checkGroup = $conn->prepare("SELECT id FROM additional_groups WHERE id = :gid AND restaurant_id = :rid");
+                        $checkGroup->execute(['gid' => $gid, 'rid' => $restaurantId]);
+                        
+                        if ($checkGroup->fetch()) {
+                            $stmtLink->execute(['gid' => $gid, 'iid' => $itemId]);
+                        }
+                    }
+                }
+
+                $conn->commit();
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=item_criado');
+                exit;
+
+            } catch (Exception $e) {
+                $conn->rollBack();
+                // Logar erro se necessário
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=erro_banco');
+                exit;
+            }
+        }
+    }
+
+    // ==========================================
+    // MÉTODO PARA ATUALIZAR ITEM + VÍNCULOS (MODAL)
+    // ==========================================
+    public function updateItemWithGroups() {
+        $this->checkSession();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = intval($_POST['id'] ?? 0);
+            $name = trim($_POST['name'] ?? '');
+            
+            // Tratamento de Moeda BR
+            $priceRaw = $_POST['price'] ?? '0';
+            $priceRaw = str_replace('.', '', $priceRaw);
+            $priceRaw = str_replace(',', '.', $priceRaw);
+            $price = floatval($priceRaw);
+
+            $groupIds = $_POST['group_ids'] ?? [];
+            $restaurantId = $_SESSION['loja_ativa_id'];
+            
+            if ($id <= 0 || empty($name)) {
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=dados_invalidos');
+                exit;
+            }
+
+            $conn = Database::connect();
+            
+            try {
+                $conn->beginTransaction();
+
+                // 1. Atualizar Item
+                $stmt = $conn->prepare("UPDATE additional_items SET name = :name, price = :price WHERE id = :id AND restaurant_id = :rid");
+                $stmt->execute([
+                    'name' => $name,
+                    'price' => $price,
+                    'id' => $id,
+                    'rid' => $restaurantId
+                ]);
+
+                // 2. Sincronizar Grupos (Remove todos e reinsere os selecionados)
+                // Remove atuais
+                $stmtDel = $conn->prepare("DELETE FROM additional_group_items WHERE item_id = :iid");
+                $stmtDel->execute(['iid' => $id]);
+
+                // Insere novos
+                if (!empty($groupIds) && is_array($groupIds)) {
+                    $sqlLink = "INSERT INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)";
+                    $stmtLink = $conn->prepare($sqlLink);
+
+                    foreach ($groupIds as $gid) {
+                        $checkGroup = $conn->prepare("SELECT id FROM additional_groups WHERE id = :gid AND restaurant_id = :rid");
+                        $checkGroup->execute(['gid' => $gid, 'rid' => $restaurantId]);
+                        
+                        if ($checkGroup->fetch()) {
+                            $stmtLink->execute(['gid' => $gid, 'iid' => $id]);
+                        }
+                    }
+                }
+
+                $conn->commit();
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=item_atualizado');
+                exit;
+
+            } catch (Exception $e) {
+                $conn->rollBack();
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=erro_atualizar_item');
+                exit;
+            }
+        }
+    }
+
+    // ==========================================
+    // API: DADOS DO ITEM (AJAX)
+    // ==========================================
+    public function getItemData() {
+        header('Content-Type: application/json');
+
+        try {
+            $this->checkSession();
+            $id = intval($_GET['id'] ?? 0);
+            $restaurantId = $_SESSION['loja_ativa_id'];
+
+            if ($id <= 0) {
+                echo json_encode(['error' => 'ID inválido']);
+                exit;
+            }
+
+            $conn = Database::connect();
+            
+            // Dados do Item
+            $stmt = $conn->prepare("SELECT * FROM additional_items WHERE id = :id AND restaurant_id = :rid");
+            $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
+            $item = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$item) {
+                echo json_encode(['error' => 'Item não encontrado']);
+                exit;
+            }
+
+            // Grupos Vinculados
+            $stmtGroups = $conn->prepare("SELECT group_id FROM additional_group_items WHERE item_id = :id");
+            $stmtGroups->execute(['id' => $id]);
+            $groupIds = $stmtGroups->fetchAll(PDO::FETCH_COLUMN);
+
+            echo json_encode([
+                'item' => $item,
+                'groups' => $groupIds
+            ]);
+            exit;
+
+        } catch (\Throwable $e) {
+            // Captura Erros Fatais e Exceptions
+            http_response_code(500);
+            echo json_encode(['error' => 'Erro no Servidor: ' . $e->getMessage()]);
+            exit;
+        }
     }
 
     // ==========================================
