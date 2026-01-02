@@ -50,4 +50,8 @@
     <button type="button" class="delivery-filter-btn" data-status="cancelado" onclick="DeliveryTabs.filter('cancelado')">
         ❌ Cancelado
     </button>
+    
+    <a href="<?= BASE_URL ?>/admin/loja/delivery/history" class="delivery-filter-btn">
+        📋 Histórico
+    </a>
 </div>

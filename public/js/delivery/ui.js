@@ -11,9 +11,41 @@ const DeliveryUI = {
     currentOrder: null,
 
     /**
-     * Abre modal de detalhes
+     * Abre modal de detalhes (aceita objeto ou ID)
      */
-    openDetailsModal: function (orderData) {
+    openDetailsModal: async function (orderDataOrId) {
+        // Se recebeu apenas ID, busca dados da API
+        if (typeof orderDataOrId === 'number' || typeof orderDataOrId === 'string') {
+            try {
+                const response = await fetch(BASE_URL + '/admin/loja/delivery/details?id=' + orderDataOrId);
+                if (!response.ok) throw new Error('Erro ao buscar pedido');
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.message || 'Erro ao buscar pedido');
+                }
+
+                // Monta objeto com dados do pedido + itens
+                const orderData = {
+                    ...result.order,
+                    items: result.items || []
+                };
+
+                this.showDetailsModal(orderData);
+            } catch (e) {
+                console.error('[Delivery] Erro ao buscar detalhes:', e);
+                alert('Erro ao carregar detalhes do pedido');
+            }
+        } else {
+            // Recebeu objeto completo
+            this.showDetailsModal(orderDataOrId);
+        }
+    },
+
+    /**
+     * Exibe modal com dados do pedido
+     */
+    showDetailsModal: function (orderData) {
         this.currentOrder = orderData;
 
         const modal = document.getElementById('deliveryDetailsModal');
@@ -24,7 +56,7 @@ const DeliveryUI = {
         document.getElementById('modal-client-name').textContent = orderData.client_name || 'Não identificado';
         document.getElementById('modal-client-phone').textContent = orderData.client_phone || '--';
         document.getElementById('modal-address').textContent = orderData.client_address || 'Endereço não informado';
-        document.getElementById('modal-total').textContent = 'R$ ' + parseFloat(orderData.total).toFixed(2).replace('.', ',');
+        document.getElementById('modal-total').textContent = 'R$ ' + parseFloat(orderData.total || 0).toFixed(2).replace('.', ',');
         document.getElementById('modal-time').textContent = orderData.created_at || '--';
         document.getElementById('modal-payment').textContent = orderData.payment_method || 'Não informado';
 

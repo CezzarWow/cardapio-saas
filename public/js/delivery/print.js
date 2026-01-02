@@ -217,6 +217,126 @@ const DeliveryPrint = {
         window.print();
 
         this.closeModal();
+    },
+
+    /**
+     * Imprime ficha completa diretamente (sem modal)
+     */
+    printComplete: function (orderData) {
+        if (!orderData) {
+            alert('Dados do pedido não disponíveis');
+            return;
+        }
+
+        const printArea = document.getElementById('print-area');
+        if (!printArea) {
+            alert('Área de impressão não encontrada');
+            return;
+        }
+
+        // Gera HTML da ficha completa
+        const html = this.generateCompleteSlipHTML(orderData);
+        printArea.innerHTML = html;
+        window.print();
+    },
+
+    /**
+     * Gera HTML da ficha COMPLETA (todas as informações)
+     */
+    generateCompleteSlipHTML: function (order) {
+        const restaurantName = order.restaurant_name || 'Restaurante';
+        const restaurantPhone = order.restaurant_phone || '';
+        const clientName = order.client_name || 'Não identificado';
+        const clientPhone = order.client_phone || '--';
+        const clientAddress = order.client_address || 'Endereço não informado';
+        const neighborhood = order.neighborhood || '';
+        const observations = order.observations || '';
+        const paymentMethod = order.payment_method || 'Não informado';
+        const changeFor = order.change_for || '';
+        const total = parseFloat(order.total || 0).toFixed(2).replace('.', ',');
+        const date = order.created_at ? new Date(order.created_at).toLocaleString('pt-BR') : '--';
+        const items = order.items || [];
+
+        let itemsHTML = '';
+        if (items.length > 0) {
+            items.forEach(item => {
+                const subtotal = (item.quantity * item.price).toFixed(2).replace('.', ',');
+                itemsHTML += `
+                    <tr>
+                        <td style="padding: 6px 0; border-bottom: 1px dashed #ccc;">${item.quantity}x ${item.name}</td>
+                        <td style="padding: 6px 0; border-bottom: 1px dashed #ccc; text-align: right;">R$ ${subtotal}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            itemsHTML = '<tr><td colspan="2" style="color: #999;">Sem itens</td></tr>';
+        }
+
+        let changeHTML = '';
+        if (paymentMethod.toLowerCase() === 'dinheiro' && changeFor) {
+            changeHTML = `
+                <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; font-weight: bold; text-align: center;">
+                    💵 TROCO PARA: R$ ${parseFloat(changeFor).toFixed(2).replace('.', ',')}
+                </div>
+            `;
+        }
+
+        let obsHTML = '';
+        if (observations) {
+            obsHTML = `
+                <div style="margin-top: 10px; padding: 10px; background: #f8f8f8; border-radius: 4px;">
+                    <strong>📝 Obs:</strong> ${observations}
+                </div>
+            `;
+        }
+
+        return `
+            <div style="font-family: 'Courier New', monospace; width: 280px; padding: 10px; font-size: 12px;">
+                <!-- Cabeçalho -->
+                <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px;">
+                    <h2 style="margin: 0; font-size: 18px;">${restaurantName}</h2>
+                    ${restaurantPhone ? `<div style="font-size: 11px; color: #666;">${restaurantPhone}</div>` : ''}
+                    <div style="margin-top: 8px; font-size: 16px; font-weight: bold;">PEDIDO #${order.id}</div>
+                    <div style="font-size: 10px; color: #666;">${date}</div>
+                </div>
+
+                <!-- Cliente e Endereço -->
+                <div style="border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">📞 CLIENTE</div>
+                    <div>${clientName}</div>
+                    <div style="color: #666;">${clientPhone}</div>
+                    <div style="margin-top: 8px; font-weight: bold;">📍 ENDEREÇO</div>
+                    <div>${clientAddress}</div>
+                    ${neighborhood ? `<div style="color: #666;">${neighborhood}</div>` : ''}
+                </div>
+
+                <!-- Itens -->
+                <div style="border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
+                    <div style="font-weight: bold; margin-bottom: 8px;">🛒 ITENS</div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        ${itemsHTML}
+                    </table>
+                </div>
+
+                <!-- Total e Pagamento -->
+                <div style="border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
+                        <span>TOTAL:</span>
+                        <span>R$ ${total}</span>
+                    </div>
+                    <div style="margin-top: 8px; font-weight: bold;">💳 PAGAMENTO</div>
+                    <div>${paymentMethod}</div>
+                    ${changeHTML}
+                </div>
+
+                ${obsHTML}
+
+                <!-- Rodapé -->
+                <div style="text-align: center; margin-top: 15px; font-size: 10px; color: #666;">
+                    Obrigado pela preferência!
+                </div>
+            </div>
+        `;
     }
 };
 

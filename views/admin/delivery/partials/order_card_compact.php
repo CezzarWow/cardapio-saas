@@ -65,7 +65,7 @@ $orderJson = htmlspecialchars(json_encode([
             </button>
         <?php endif; ?>
 
-        <?php if (in_array($status, ['novo', 'aceito'])): ?>
+        <?php if (in_array($status, ['novo', 'preparo', 'rota'])): ?>
             <button class="delivery-card-compact-btn delivery-card-compact-btn--cancel"
                     onclick="DeliveryUI.openCancelModal(<?= $order['id'] ?>)">
                 <i data-lucide="x" style="width: 14px; height: 14px;"></i>

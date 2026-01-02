@@ -92,6 +92,11 @@ switch ($path) {
         (new \App\Controllers\Admin\DeliveryController())->getOrderDetails();
         break;
 
+    case '/admin/loja/delivery/history':
+        require __DIR__ . '/../app/Controllers/Admin/DeliveryController.php';
+        (new \App\Controllers\Admin\DeliveryController())->history();
+        break;
+
     // --- CARDÁPIO WEB ---
     case '/admin/loja/cardapio':
         require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';

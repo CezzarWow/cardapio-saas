@@ -112,6 +112,112 @@ class DeliveryController {
         }
     }
 
+    // ============================================
+    // HISTÓRICO DE PEDIDOS
+    // ============================================
+
+    /**
+     * Exibe histórico de pedidos por dia operacional
+     * GET /admin/loja/delivery/history?date=YYYY-MM-DD
+     */
+    public function history() {
+        $this->checkSession();
+        
+        $restaurant_id = $_SESSION['loja_ativa_id'];
+        $selectedDate = $_GET['date'] ?? date('Y-m-d');
+        
+        // Busca pedidos do dia operacional
+        $result = $this->fetchOrdersByOperationalDay($restaurant_id, $selectedDate);
+        
+        $orders = $result['orders'];
+        $businessHour = $result['business_hour'];
+        $periodStart = $result['period_start'];
+        $periodEnd = $result['period_end'];
+        
+        require __DIR__ . '/../../../views/admin/delivery/history.php';
+    }
+
+    /**
+     * Busca pedidos respeitando o dia operacional (horário de funcionamento)
+     */
+    private function fetchOrdersByOperationalDay($restaurant_id, $date) {
+        $orders = [];
+        $businessHour = null;
+        $periodStart = null;
+        $periodEnd = null;
+        
+        try {
+            $conn = Database::connect();
+            
+            // Calcula o dia da semana (0=Dom, 6=Sáb)
+            $dayOfWeek = date('w', strtotime($date));
+            
+            // Busca horário de funcionamento do dia
+            $stmtHour = $conn->prepare("
+                SELECT * FROM business_hours 
+                WHERE restaurant_id = :rid AND day_of_week = :day
+            ");
+            $stmtHour->execute(['rid' => $restaurant_id, 'day' => $dayOfWeek]);
+            $businessHour = $stmtHour->fetch(\PDO::FETCH_ASSOC);
+            
+            // Se não encontrou ou está fechado, retorna vazio
+            if (!$businessHour || !$businessHour['is_open']) {
+                return [
+                    'orders' => [],
+                    'business_hour' => $businessHour,
+                    'period_start' => null,
+                    'period_end' => null
+                ];
+            }
+            
+            $openTime = $businessHour['open_time'];
+            $closeTime = $businessHour['close_time'];
+            
+            // Monta os timestamps de início e fim
+            $periodStart = $date . ' ' . $openTime . ':00';
+            
+            // Se fechamento < abertura, fecha no dia seguinte
+            if ($closeTime < $openTime) {
+                $nextDay = date('Y-m-d', strtotime($date . ' +1 day'));
+                $periodEnd = $nextDay . ' ' . $closeTime . ':00';
+            } else {
+                $periodEnd = $date . ' ' . $closeTime . ':00';
+            }
+            
+            // Busca pedidos do período
+            $sql = "
+                SELECT o.id, o.total, o.status, o.created_at, o.payment_method,
+                       c.name as client_name, 
+                       c.phone as client_phone
+                FROM orders o
+                LEFT JOIN clients c ON o.client_id = c.id
+                WHERE o.restaurant_id = :rid 
+                  AND o.order_type = 'delivery'
+                  AND o.created_at >= :start
+                  AND o.created_at < :end
+                ORDER BY o.created_at DESC
+            ";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([
+                'rid' => $restaurant_id,
+                'start' => $periodStart,
+                'end' => $periodEnd
+            ]);
+            $orders = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+        } catch (\Exception $e) {
+            $orders = [];
+        }
+        
+        return [
+            'orders' => $orders,
+            'business_hour' => $businessHour,
+            'period_start' => $periodStart,
+            'period_end' => $periodEnd
+        ];
+    }
+
     /**
      * Retorna detalhes completos do pedido (para modal e impressão)
      * GET /admin/loja/delivery/details?id=X
@@ -188,7 +294,7 @@ class DeliveryController {
     private const ALLOWED_TRANSITIONS = [
         'novo'    => ['preparo', 'cancelado'],
         'preparo' => ['rota', 'cancelado'],
-        'rota'    => ['entregue'],
+        'rota'    => ['entregue', 'cancelado'],
     ];
 
     /**
