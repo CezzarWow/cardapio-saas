@@ -5,17 +5,13 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 $totalCategories = count($categories);
 ?>
 
+<!-- CSS Estoque v2 (modernização) -->
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/stock-v2.css">
+
 <main class="main-content">
     <?php require __DIR__ . '/../panel/layout/messages.php'; ?>
     <div style="padding: 2rem; width: 100%; overflow-y: auto;">
         
-        <!-- Breadcrumb -->
-        <div class="breadcrumb">
-            <a href="<?= BASE_URL ?>/admin">Painel</a> › 
-            <span>Estoque</span> › 
-            <strong>Categorias</strong>
-        </div>
-
         <!-- Header -->
         <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <h1 style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">Categorias</h1>

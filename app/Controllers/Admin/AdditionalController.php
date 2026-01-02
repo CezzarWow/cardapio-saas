@@ -332,6 +332,38 @@ class AdditionalController {
         exit;
     }
 
+    // [NOVO] Vincular múltiplos itens de uma vez
+    public function linkMultipleItems() {
+        $this->checkSession();
+        
+        $groupId = intval($_POST['group_id'] ?? 0);
+        $itemIds = $_POST['item_ids'] ?? []; // Array de IDs selecionados
+        $restaurantId = $_SESSION['loja_ativa_id'];
+
+        if ($groupId > 0 && !empty($itemIds)) {
+            $conn = Database::connect();
+            
+            // Verifica se grupo pertence à loja
+            $stmt = $conn->prepare("SELECT id FROM additional_groups WHERE id = :gid AND restaurant_id = :rid");
+            $stmt->execute(['gid' => $groupId, 'rid' => $restaurantId]);
+            
+            if ($stmt->fetch()) {
+                $stmtIns = $conn->prepare("INSERT IGNORE INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)");
+                
+                foreach ($itemIds as $itemId) {
+                    $itemId = intval($itemId);
+                    if ($itemId > 0) {
+                        $stmtIns->execute(['gid' => $groupId, 'iid' => $itemId]);
+                    }
+                }
+            }
+        }
+
+        header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=itens_vinculados');
+        exit;
+    }
+
+
     public function unlinkItem() {
         $this->checkSession();
         

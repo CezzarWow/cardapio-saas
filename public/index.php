@@ -270,6 +270,11 @@ switch ($path) {
         (new \App\Controllers\Admin\AdditionalController())->unlinkItem();
         break;
 
+    case '/admin/loja/adicionais/vincular-multiplos':
+        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->linkMultipleItems();
+        break;
+
     case '/admin/loja/adicionais/vincular-categoria':
         require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
         (new \App\Controllers\Admin\AdditionalController())->linkCategory();

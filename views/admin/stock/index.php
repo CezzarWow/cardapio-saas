@@ -14,17 +14,13 @@ foreach ($products as $p) {
 }
 ?>
 
+<!-- CSS Estoque v2 (modernização) -->
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/stock-v2.css">
+
 <main class="main-content">
     <?php require __DIR__ . '/../panel/layout/messages.php'; ?>
     <div style="padding: 2rem; width: 100%; overflow-y: auto;">
         
-        <!-- Breadcrumb (dentro do main) -->
-        <div class="breadcrumb">
-            <a href="<?= BASE_URL ?>/admin">Painel</a> › 
-            <span>Estoque</span> › 
-            <strong>Produtos</strong>
-        </div>
-
         <!-- Header com título e botão -->
         <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <h1 style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">Gerenciar Estoque</h1>
@@ -54,34 +50,33 @@ foreach ($products as $p) {
             </div>
         </div>
 
-        <!-- Indicadores -->
-        <div class="stock-indicators">
-            <div class="stock-indicator">
-                <div style="background: #dbeafe; padding: 10px; border-radius: 8px;">
-                    <i data-lucide="package" size="24" style="color: #2563eb;"></i>
-                </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #1f2937;"><?= $totalProducts ?></div>
-                    <div style="font-size: 0.85rem; color: #6b7280;">Produtos cadastrados</div>
-                </div>
-            </div>
-            
-            <div class="stock-indicator">
-                <div style="background: <?= $criticalStock > 0 ? '#fef3c7' : '#d1fae5' ?>; padding: 10px; border-radius: 8px;">
-                    <i data-lucide="alert-triangle" size="24" style="color: <?= $criticalStock > 0 ? '#d97706' : '#059669' ?>;"></i>
-                </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: <?= $criticalStock > 0 ? '#d97706' : '#059669' ?>;"><?= $criticalStock ?></div>
-                    <div style="font-size: 0.85rem; color: #6b7280;">Estoque crítico (≤ <?= $STOCK_CRITICAL_LIMIT ?>)</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Busca -->
-        <div class="stock-search-container">
+        <!-- Busca + Indicadores na mesma linha -->
+        <div class="stock-search-container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <input type="text" id="searchProduct" placeholder="🔍 Buscar produto por nome..." 
-                   class="stock-search-input" style="width: 100%; max-width: 400px;"
+                   class="stock-search-input" style="width: 100%; max-width: 350px;"
                    oninput="filterProducts()">
+            
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="background: #dbeafe; padding: 6px; border-radius: 6px;">
+                        <i data-lucide="package" style="width: 18px; height: 18px; color: #2563eb;"></i>
+                    </div>
+                    <div>
+                        <span style="font-weight: 700; color: #1f2937;"><?= $totalProducts ?></span>
+                        <span style="font-size: 0.8rem; color: #6b7280;"> produtos</span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="background: <?= $criticalStock > 0 ? '#fecaca' : '#fef3c7' ?>; padding: 6px; border-radius: 6px;">
+                        <i data-lucide="alert-triangle" style="width: 18px; height: 18px; color: <?= $criticalStock > 0 ? '#dc2626' : '#d97706' ?>;"></i>
+                    </div>
+                    <div>
+                        <span style="font-weight: 700; color: <?= $criticalStock > 0 ? '#dc2626' : '#d97706' ?>;"><?= $criticalStock ?></span>
+                        <span style="font-size: 0.8rem; color: #6b7280;"> críticos</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Chips de Categorias (usando $categories do controller) -->
@@ -100,79 +95,63 @@ foreach ($products as $p) {
             </div>
         </div>
 
-        <!-- Tabela de Produtos -->
-        <div class="stock-table-container">
-            <table id="productsTable">
-                <thead>
-                    <tr>
-                        <th style="width: 70px;">Imagem</th>
-                        <th>Produto</th>
-                        <th>Categoria</th>
-                        <th>Preço</th>
-                        <th style="text-align: center;">Estoque</th>
-                        <th style="text-align: center; width: 180px;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($products)): ?>
-                        <tr><td colspan="6" style="padding: 2rem; text-align: center; color: #999;">Nenhum produto cadastrado.</td></tr>
+        <!-- Grid de Cards -->
+        <div id="stock-cards-view" class="stock-products-grid stock-fade-in">
+            <?php if (empty($products)): ?>
+                <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: #999;">
+                    Nenhum produto cadastrado.
+                </div>
+            <?php else: ?>
+                <?php foreach ($products as $prod): ?>
+                <?php 
+                    $stock = intval($prod['stock']);
+                    $isCritical = $stock <= $STOCK_CRITICAL_LIMIT;
+                    $isNegative = $stock < 0;
+                    $stockClass = $isNegative ? 'stock-product-card-stock--danger' : ($isCritical ? 'stock-product-card-stock--warning' : 'stock-product-card-stock--ok');
+                ?>
+                <div class="stock-product-card product-row" 
+                     data-name="<?= strtolower($prod['name']) ?>" 
+                     data-category="<?= htmlspecialchars($prod['category_name']) ?>">
+                    
+                    <!-- Imagem (altura reduzida) -->
+                    <?php if($prod['image']): ?>
+                        <img src="<?= BASE_URL ?>/uploads/<?= $prod['image'] ?>" 
+                             style="width: 100%; height: 140px; object-fit: cover; border-radius: 12px 12px 0 0;"
+                             alt="<?= htmlspecialchars($prod['name']) ?>">
                     <?php else: ?>
-                        <?php foreach ($products as $prod): ?>
-                        <?php 
-                            $stock = intval($prod['stock']);
-                            $isCritical = $stock <= $STOCK_CRITICAL_LIMIT;
-                            $isNegative = $stock < 0;
-                        ?>
-                        <tr class="product-row" 
-                            data-name="<?= strtolower($prod['name']) ?>" 
-                            data-category="<?= htmlspecialchars($prod['category_name']) ?>">
-                            <td>
-                                <?php if($prod['image']): ?>
-                                    <img src="<?= BASE_URL ?>/uploads/<?= $prod['image'] ?>" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
-                                <?php else: ?>
-                                    <div style="width: 50px; height: 50px; background: #eee; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999;">
-                                        <i data-lucide="image"></i>
-                                    </div>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <strong style="color: #1f2937;"><?= htmlspecialchars($prod['name']) ?></strong><br>
-                                <small style="color: #6b7280;"><?= htmlspecialchars(substr($prod['description'] ?? '', 0, 30)) ?>...</small>
-                            </td>
-                            <td>
-                                <span style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: 600;">
-                                    <?= htmlspecialchars($prod['category_name']) ?>
-                                </span>
-                            </td>
-                            <td style="font-weight: bold; color: #2563eb;">R$ <?= number_format($prod['price'], 2, ',', '.') ?></td>
-                            <td style="text-align: center;">
-                                <span style="padding: 4px 12px; border-radius: 15px; font-size: 0.85rem; font-weight: 600;
-                                    background: <?= $isNegative ? '#fecaca' : ($isCritical ? '#fef3c7' : '#d1fae5') ?>;
-                                    color: <?= $isNegative ? '#dc2626' : ($isCritical ? '#d97706' : '#059669') ?>;">
-                                    <?= $stock ?>
-                                </span>
-                            </td>
-                            <td>
-                                <div class="stock-actions">
-                                    <a href="<?= BASE_URL ?>/admin/loja/produtos/editar?id=<?= $prod['id'] ?>" 
-                                       class="btn-stock-action btn-stock-edit">
-                                        <i data-lucide="pencil" size="14"></i>
-                                        Editar
-                                    </a>
-                                    <a href="<?= BASE_URL ?>/admin/loja/produtos/deletar?id=<?= $prod['id'] ?>" 
-                                       onclick="return confirm('Tem certeza que deseja apagar este produto?')"
-                                       class="btn-stock-action btn-stock-delete">
-                                        <i data-lucide="trash-2" size="14"></i>
-                                        Excluir
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
+                        <div style="width: 100%; height: 140px; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+                            <i data-lucide="image" style="width: 40px; height: 40px;"></i>
+                        </div>
                     <?php endif; ?>
-                </tbody>
-            </table>
+                    
+                    <!-- Corpo -->
+                    <div class="stock-product-card-body">
+                        <div class="stock-product-card-name"><?= htmlspecialchars($prod['name']) ?></div>
+                        <span class="stock-product-card-category"><?= htmlspecialchars($prod['category_name']) ?></span>
+                        
+                        <div class="stock-product-card-footer">
+                            <span class="stock-product-card-price">R$ <?= number_format($prod['price'], 2, ',', '.') ?></span>
+                            <span class="stock-product-card-stock <?= $stockClass ?>"><?= $stock ?></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Ações -->
+                    <div class="stock-product-card-actions">
+                        <a href="<?= BASE_URL ?>/admin/loja/produtos/editar?id=<?= $prod['id'] ?>" class="btn-edit">
+                            <i data-lucide="pencil" style="width: 14px; height: 14px;"></i>
+                            Editar
+                        </a>
+                        <a href="javascript:void(0)" 
+                           onclick="openDeleteModal(<?= $prod['id'] ?>, '<?= htmlspecialchars(addslashes($prod['name'])) ?>')" class="btn-delete">
+                            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                            Excluir
+                        </a>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
+
     </div>
 </main>
 
@@ -197,6 +176,7 @@ function filterProducts() {
     });
 }
 
+
 // Event listeners para chips de categoria
 document.querySelectorAll('.category-chip').forEach(chip => {
     chip.addEventListener('click', function() {
@@ -211,6 +191,43 @@ document.querySelectorAll('.category-chip').forEach(chip => {
         // Aplica filtro
         filterProducts();
     });
+});
+</script>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 2rem; border-radius: 16px; width: 100%; max-width: 400px; margin: 20px; text-align: center;">
+        <div style="width: 60px; height: 60px; background: #fef2f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+            <i data-lucide="trash-2" style="width: 28px; height: 28px; color: #dc2626;"></i>
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Excluir Produto</h3>
+        <p style="color: #6b7280; margin-bottom: 1.5rem;">Tem certeza que deseja excluir <strong id="deleteProductName"></strong>?</p>
+        <p style="color: #dc2626; font-size: 0.85rem; margin-bottom: 1.5rem;">⚠️ Esta ação não pode ser desfeita.</p>
+        
+        <div style="display: flex; gap: 10px;">
+            <button onclick="closeDeleteModal()" style="flex: 1; padding: 12px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                Cancelar
+            </button>
+            <a id="deleteConfirmBtn" href="#" style="flex: 1; padding: 12px; background: #dc2626; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                🗑️ Excluir
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function openDeleteModal(productId, productName) {
+    document.getElementById('deleteProductName').textContent = productName;
+    document.getElementById('deleteConfirmBtn').href = '<?= BASE_URL ?>/admin/loja/produtos/deletar?id=' + productId;
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
 });
 </script>
 

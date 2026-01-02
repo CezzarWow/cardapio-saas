@@ -6,16 +6,12 @@ $totalGroups = count($groups);
 $totalItems = count($allItems);
 ?>
 
+<!-- CSS Estoque v2 (modernização) -->
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/stock-v2.css">
+
 <main class="main-content">
     <div style="padding: 2rem; width: 100%; overflow-y: auto;">
         
-        <!-- Breadcrumb -->
-        <div class="breadcrumb">
-            <a href="<?= BASE_URL ?>/admin">Painel</a> › 
-            <span>Estoque</span> › 
-            <strong>Adicionais</strong>
-        </div>
-
         <!-- Header -->
         <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <h1 style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">Adicionais</h1>
@@ -51,34 +47,35 @@ $totalItems = count($allItems);
             </div>
         </div>
 
-        <!-- Indicadores -->
-        <div class="stock-indicators">
-            <div class="stock-indicator">
-                <div style="background: #dbeafe; padding: 10px; border-radius: 8px;">
-                    <i data-lucide="layers" size="24" style="color: #2563eb;"></i>
+        <!-- Busca + Indicadores na mesma linha -->
+        <div class="stock-search-container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <input type="text" id="searchGroups" placeholder="🔍 Buscar grupo..." 
+                   class="stock-search-input" style="width: 100%; max-width: 350px;"
+                   oninput="filterGroups(this.value)">
+            
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="background: #dbeafe; padding: 6px; border-radius: 6px;">
+                        <i data-lucide="layers" style="width: 18px; height: 18px; color: #2563eb;"></i>
+                    </div>
+                    <div>
+                        <span style="font-weight: 700; color: #1f2937;"><?= $totalGroups ?></span>
+                        <span style="font-size: 0.8rem; color: #6b7280;"> grupos</span>
+                    </div>
                 </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #1f2937;"><?= $totalGroups ?></div>
-                    <div style="font-size: 0.85rem; color: #6b7280;">Grupos</div>
-                </div>
-            </div>
-            <div class="stock-indicator">
-                <div style="background: #d1fae5; padding: 10px; border-radius: 8px;">
-                    <i data-lucide="package" size="24" style="color: #059669;"></i>
-                </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #059669;"><?= $totalItems ?></div>
-                    <div style="font-size: 0.85rem; color: #6b7280;">Itens cadastrados</div>
+                
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="background: #d1fae5; padding: 6px; border-radius: 6px;">
+                        <i data-lucide="package" style="width: 18px; height: 18px; color: #059669;"></i>
+                    </div>
+                    <div>
+                        <span style="font-weight: 700; color: #059669;"><?= $totalItems ?></span>
+                        <span style="font-size: 0.8rem; color: #6b7280;"> itens</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Busca -->
-        <div class="stock-search-container">
-            <input type="text" id="searchGroups" placeholder="🔍 Buscar grupo..." 
-                   class="stock-search-input" style="width: 100%; max-width: 400px;"
-                   oninput="filterGroups(this.value)">
-        </div>
 
         <!-- Lista de Grupos -->
         <?php if (empty($groups)): ?>
@@ -175,31 +172,49 @@ $totalItems = count($allItems);
     </div>
 </div>
 
-<!-- Modal de Vincular Item -->
+<!-- Modal de Vincular Itens (Multi-select) -->
 <div id="linkModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 450px; margin: 20px;">
-        <h3 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Vincular Item ao Grupo</h3>
+    <div style="background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 500px; margin: 20px;">
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Vincular Itens ao Grupo</h3>
         <p style="color: #6b7280; margin-bottom: 1.5rem;" id="linkGroupName">Grupo: </p>
         
-        <form action="<?= BASE_URL ?>/admin/loja/adicionais/vincular" method="POST">
+        <form action="<?= BASE_URL ?>/admin/loja/adicionais/vincular-multiplos" method="POST">
             <input type="hidden" name="group_id" id="linkGroupId">
             
             <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Selecione um Item</label>
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Selecione os Itens</label>
                 <?php if (empty($allItems)): ?>
                     <p style="color: #9ca3af; padding: 12px; background: #f9fafb; border-radius: 8px;">
                         Nenhum item cadastrado. <a href="<?= BASE_URL ?>/admin/loja/adicionais/itens" style="color: #2563eb;">Criar itens primeiro</a>
                     </p>
                 <?php else: ?>
-                    <select name="item_id" required style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem;">
-                        <option value="">Escolha um item...</option>
-                        <?php foreach ($allItems as $item): ?>
-                            <option value="<?= $item['id'] ?>">
-                                <?= htmlspecialchars($item['name']) ?> 
-                                (<?= $item['price'] > 0 ? '+R$ ' . number_format($item['price'], 2, ',', '.') : 'Grátis' ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    
+                    <!-- CUSTOM MULTI-SELECT -->
+                    <div class="custom-select-container-items" style="position: relative;">
+                        <input type="hidden" name="dummy" value="1">
+                        
+                        <div class="select-trigger-items" onclick="toggleItemsSelect(this)" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; background: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                            <span class="trigger-text-items" style="color: #6b7280;">Selecione os itens...</span>
+                            <i data-lucide="chevron-down" size="16" style="color: #9ca3af;"></i>
+                        </div>
+                        
+                        <div class="options-list-items" style="display: none; position: absolute; top: 105%; left: 0; right: 0; background: white; border: 1px solid #d1d5db; border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 10; padding: 5px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                            <?php foreach ($allItems as $item): ?>
+                                <label style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-radius: 6px; transition: background 0.1s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="item_ids[]" value="<?= $item['id'] ?>" onchange="updateItemsTriggerText()" style="width: 18px; height: 18px; accent-color: #10b981;">
+                                    <span style="flex: 1; font-size: 0.95rem; color: #374151;"><?= htmlspecialchars($item['name']) ?></span>
+                                    <span style="padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: <?= $item['price'] > 0 ? '#dbeafe' : '#d1fae5' ?>; color: <?= $item['price'] > 0 ? '#1d4ed8' : '#059669' ?>;">
+                                        <?= $item['price'] > 0 ? '+R$ ' . number_format($item['price'], 2, ',', '.') : 'Grátis' ?>
+                                    </span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <p style="margin-top: 8px; font-size: 0.85rem; color: #6b7280;">
+                        <i data-lucide="info" size="14" style="vertical-align: middle;"></i>
+                        Selecione um ou mais itens para vincular ao grupo.
+                    </p>
                 <?php endif; ?>
             </div>
 
@@ -209,7 +224,7 @@ $totalItems = count($allItems);
                 </button>
                 <?php if (!empty($allItems)): ?>
                 <button type="submit" style="flex: 1; padding: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                    Vincular
+                    Vincular Selecionados
                 </button>
                 <?php endif; ?>
             </div>
@@ -394,7 +409,63 @@ document.addEventListener('click', function(e) {
     if (!e.target.closest('.custom-select-container-cat')) {
         document.querySelectorAll('.options-list-cat').forEach(l => l.style.display = 'none');
     }
+    if (!e.target.closest('.custom-select-container-items')) {
+        document.querySelectorAll('.options-list-items').forEach(l => l.style.display = 'none');
+    }
 });
+
+// --- JS DO MULTI-SELECT DE ITENS ---
+function toggleItemsSelect(el) {
+    const container = el.parentElement;
+    const list = container.querySelector('.options-list-items');
+    
+    if (list.style.display === 'block') {
+        list.style.display = 'none';
+    } else {
+        list.style.display = 'block';
+    }
+}
+
+function updateItemsTriggerText() {
+    const container = document.querySelector('.custom-select-container-items');
+    if (!container) return;
+    
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+    const triggerText = container.querySelector('.trigger-text-items');
+    
+    if (checkedCount === 0) {
+        triggerText.textContent = 'Selecione os itens...';
+        triggerText.style.color = '#6b7280';
+        triggerText.style.fontWeight = '400';
+    } else {
+        triggerText.textContent = checkedCount + ' item(ns) selecionado(s)';
+        triggerText.style.color = '#1f2937';
+        triggerText.style.fontWeight = '600';
+    }
+}
+
+// Reset do modal de itens ao abrir
+const originalOpenLinkModal = openLinkModal;
+openLinkModal = function(groupId, groupName) {
+    originalOpenLinkModal(groupId, groupName);
+    
+    // Resetar checkboxes
+    const checkboxes = document.querySelectorAll('.options-list-items input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+    
+    // Resetar texto
+    const triggerText = document.querySelector('.trigger-text-items');
+    if (triggerText) {
+        triggerText.textContent = 'Selecione os itens...';
+        triggerText.style.color = '#6b7280';
+        triggerText.style.fontWeight = '400';
+    }
+    
+    // Fechar dropdown
+    const list = document.querySelector('.options-list-items');
+    if (list) list.style.display = 'none';
+};
 </script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>

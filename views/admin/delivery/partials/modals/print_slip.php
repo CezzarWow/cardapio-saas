@@ -5,7 +5,7 @@
  * ============================================
  */
 ?>
-<div id="deliveryPrintModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 320; align-items: center; justify-content: center;">
+<div id="deliveryPrintModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1100; align-items: center; justify-content: center;">
     <div style="background: white; width: 420px; max-width: 95%; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); max-height: 90vh; display: flex; flex-direction: column;">
         
         <!-- Header -->
@@ -14,8 +14,8 @@
             <button onclick="DeliveryPrint.closeModal()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">✕</button>
         </div>
 
-        <!-- Abas de seleção -->
-        <div style="display: flex; border-bottom: 1px solid #e2e8f0;">
+        <!-- Abas de seleção (escondidas quando tipo já é especificado) -->
+        <div id="print-tabs-container" style="display: flex; border-bottom: 1px solid #e2e8f0;">
             <button onclick="DeliveryPrint.showDeliverySlip()" id="tab-delivery" 
                     style="flex: 1; padding: 12px; background: #f8fafc; border: none; font-weight: 600; cursor: pointer; border-bottom: 3px solid #3b82f6; color: #1e293b;">
                 🛵 Motoboy

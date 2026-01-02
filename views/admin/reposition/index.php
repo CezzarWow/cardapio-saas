@@ -16,20 +16,15 @@ foreach ($products as $p) {
 
 ?>
 
+<!-- CSS Estoque v2 (modernização) -->
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/stock-v2.css">
+
 <main class="main-content">
     <div style="padding: 2rem; width: 100%; overflow-y: auto;">
         
-        <!-- Breadcrumb -->
-        <div class="breadcrumb">
-            <a href="<?= BASE_URL ?>/admin">Painel</a> › 
-            <span>Estoque</span> › 
-            <strong>Reposição</strong>
-        </div>
-
         <!-- Header -->
         <div style="margin-bottom: 20px;">
             <h1 style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">Reposição de Estoque</h1>
-            <p style="color: #6b7280; margin-top: 5px;">Ajuste a quantidade em estoque de forma operacional</p>
         </div>
 
         <!-- Sub-abas (STICKY) -->
@@ -53,33 +48,41 @@ foreach ($products as $p) {
             </div>
         </div>
 
-        <!-- Indicadores -->
-        <div class="stock-indicators">
-            <div class="stock-indicator">
-                <div style="background: #dbeafe; padding: 10px; border-radius: 8px;">
-                    <i data-lucide="package" size="24" style="color: #2563eb;"></i>
+        <!-- Busca + Indicadores na mesma linha -->
+        <div class="stock-search-container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <input type="text" id="searchProduct" placeholder="🔍 Buscar produto por nome..." 
+                   class="stock-search-input" style="width: 100%; max-width: 350px;"
+                   oninput="filterProducts()">
+            
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="background: #dbeafe; padding: 6px; border-radius: 6px;">
+                        <i data-lucide="package" style="width: 18px; height: 18px; color: #2563eb;"></i>
+                    </div>
+                    <div>
+                        <span style="font-weight: 700; color: #1f2937;"><?= $totalProducts ?></span>
+                        <span style="font-size: 0.8rem; color: #6b7280;"> produtos</span>
+                    </div>
                 </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #1f2937;"><?= $totalProducts ?></div>
-                    <div style="font-size: 0.85rem; color: #6b7280;">Produtos</div>
+                
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="background: #fef3c7; padding: 6px; border-radius: 6px;">
+                        <i data-lucide="alert-triangle" style="width: 18px; height: 18px; color: #d97706;"></i>
+                    </div>
+                    <div>
+                        <span style="font-weight: 700; color: #d97706;"><?= $criticalCount ?></span>
+                        <span style="font-size: 0.8rem; color: #6b7280;"> críticos</span>
+                    </div>
                 </div>
-            </div>
-            <div class="stock-indicator">
-                <div style="background: #fef3c7; padding: 10px; border-radius: 8px;">
-                    <i data-lucide="alert-triangle" size="24" style="color: #d97706;"></i>
-                </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #d97706;"><?= $criticalCount ?></div>
-                    <div style="font-size: 0.85rem; color: #6b7280;">Críticos</div>
-                </div>
-            </div>
-            <div class="stock-indicator">
-                <div style="background: #fecaca; padding: 10px; border-radius: 8px;">
-                    <i data-lucide="trending-down" size="24" style="color: #dc2626;"></i>
-                </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #dc2626;"><?= $negativeCount ?></div>
-                    <div style="font-size: 0.85rem; color: #6b7280;">Negativos</div>
+                
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="background: #fecaca; padding: 6px; border-radius: 6px;">
+                        <i data-lucide="trending-down" style="width: 18px; height: 18px; color: #dc2626;"></i>
+                    </div>
+                    <div>
+                        <span style="font-weight: 700; color: #dc2626;"><?= $negativeCount ?></span>
+                        <span style="font-size: 0.8rem; color: #6b7280;"> negativos</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -100,70 +103,66 @@ foreach ($products as $p) {
             </div>
         </div>
 
-        <!-- Tabela de Produtos -->
-        <div class="stock-table-container">
-            <table id="productsTable">
-                <thead>
-                    <tr>
-                        <th style="width: 70px;">Imagem</th>
-                        <th>Produto</th>
-                        <th style="text-align: center;">Estoque</th>
-                        <th style="text-align: center;">Status</th>
-                        <th style="text-align: center; width: 150px;">Ação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($products)): ?>
-                        <tr><td colspan="5" style="padding: 2rem; text-align: center; color: #999;">Nenhum produto cadastrado.</td></tr>
+        <!-- Grid de Cards -->
+        <div id="stock-cards-view" class="stock-products-grid stock-fade-in">
+            <?php if (empty($products)): ?>
+                <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: #999;">
+                    Nenhum produto cadastrado.
+                </div>
+            <?php else: ?>
+                <?php foreach ($products as $prod): ?>
+                <?php 
+                    $stock = intval($prod['stock']);
+                    $isCritical = $stock <= $STOCK_CRITICAL_LIMIT && $stock >= 0;
+                    $isNegative = $stock < 0;
+                    $isNormal = $stock > $STOCK_CRITICAL_LIMIT;
+                    $stockClass = $isNegative ? 'stock-product-card-stock--danger' : ($isCritical ? 'stock-product-card-stock--warning' : 'stock-product-card-stock--ok');
+                    $statusLabel = $isNegative ? 'Negativo' : ($isCritical ? 'Crítico' : 'Normal');
+                ?>
+                <div class="stock-product-card product-row" 
+                     data-id="<?= $prod['id'] ?>"
+                     data-name="<?= strtolower($prod['name']) ?>" 
+                     data-stock="<?= $stock ?>"
+                     data-category="<?= htmlspecialchars($prod['category_name']) ?>">
+                    
+                    <!-- Imagem (altura reduzida) -->
+                    <?php if($prod['image']): ?>
+                        <img src="<?= BASE_URL ?>/uploads/<?= $prod['image'] ?>" 
+                             style="width: 100%; height: 140px; object-fit: cover; border-radius: 12px 12px 0 0;"
+                             alt="<?= htmlspecialchars($prod['name']) ?>">
                     <?php else: ?>
-                        <?php foreach ($products as $prod): ?>
-                        <?php 
-                            $stock = intval($prod['stock']);
-                            $isCritical = $stock <= $STOCK_CRITICAL_LIMIT && $stock >= 0;
-                            $isNegative = $stock < 0;
-                            $isNormal = $stock > $STOCK_CRITICAL_LIMIT;
-                        ?>
-                        <tr class="product-row" 
-                            data-id="<?= $prod['id'] ?>"
-                            data-name="<?= htmlspecialchars($prod['name']) ?>"
-                            data-stock="<?= $stock ?>"
-                            data-category="<?= htmlspecialchars($prod['category_name']) ?>">
-                            <td>
-                                <?php if($prod['image']): ?>
-                                    <img src="<?= BASE_URL ?>/uploads/<?= $prod['image'] ?>" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
-                                <?php else: ?>
-                                    <div style="width: 50px; height: 50px; background: #eee; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999;">
-                                        <i data-lucide="image"></i>
-                                    </div>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <strong style="color: #1f2937;"><?= htmlspecialchars($prod['name']) ?></strong><br>
-                                <small style="color: #6b7280;"><?= htmlspecialchars($prod['category_name']) ?></small>
-                            </td>
-                            <td style="text-align: center;">
-                                <span id="stock-<?= $prod['id'] ?>" style="font-size: 1.25rem; font-weight: 700; color: <?= $isNegative ? '#dc2626' : ($isCritical ? '#d97706' : '#059669') ?>;">
-                                    <?= $stock ?>
-                                </span>
-                            </td>
-                            <td style="text-align: center;">
-                                <span style="padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 600;
-                                    background: <?= $isNegative ? '#fecaca' : ($isCritical ? '#fef3c7' : '#d1fae5') ?>;
-                                    color: <?= $isNegative ? '#dc2626' : ($isCritical ? '#d97706' : '#059669') ?>;">
-                                    <?= $isNegative ? 'Negativo' : ($isCritical ? 'Crítico' : 'Normal') ?>
-                                </span>
-                            </td>
-                            <td style="text-align: center;">
-                                <button onclick="openAdjustModal(<?= $prod['id'] ?>, '<?= htmlspecialchars(addslashes($prod['name'])) ?>', <?= $stock ?>)"
-                                        class="btn-stock-action" style="background: #2563eb; color: white;">
-                                    <i data-lucide="plus-minus" size="14"></i> Ajustar
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
+                        <div style="width: 100%; height: 140px; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+                            <i data-lucide="image" style="width: 40px; height: 40px;"></i>
+                        </div>
                     <?php endif; ?>
-                </tbody>
-            </table>
+                    
+                    <!-- Corpo -->
+                    <div class="stock-product-card-body">
+                        <div class="stock-product-card-name"><?= htmlspecialchars($prod['name']) ?></div>
+                        <span class="stock-product-card-category"><?= htmlspecialchars($prod['category_name']) ?></span>
+                        
+                        <div class="stock-product-card-footer">
+                            <span id="stock-<?= $prod['id'] ?>" class="stock-product-card-stock <?= $stockClass ?>" style="font-size: 1.1rem;">
+                                <?= $stock ?>
+                            </span>
+                            <span style="padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600;
+                                background: <?= $isNegative ? '#fecaca' : ($isCritical ? '#fef3c7' : '#d1fae5') ?>;
+                                color: <?= $isNegative ? '#dc2626' : ($isCritical ? '#d97706' : '#059669') ?>;">
+                                <?= $statusLabel ?>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Ação -->
+                    <div class="stock-product-card-actions">
+                        <button onclick="openAdjustModal(<?= $prod['id'] ?>, '<?= htmlspecialchars(addslashes($prod['name'])) ?>', <?= $stock ?>)"
+                                style="flex: 1; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; text-align: center; font-size: 0.9rem;">
+                            📦 Repor
+                        </button>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 </main>

@@ -151,6 +151,9 @@ $statusLabels = [
 <!-- Modal do Histórico -->
 <?php require __DIR__ . '/partials/modals/history_details.php'; ?>
 
+<!-- Modal de Impressão -->
+<?php require __DIR__ . '/partials/modals/print_slip.php'; ?>
+
 <!-- JS -->
 <script>
     const BASE_URL = '<?= BASE_URL ?>';

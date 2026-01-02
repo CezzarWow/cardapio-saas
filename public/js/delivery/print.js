@@ -20,8 +20,14 @@ const DeliveryPrint = {
 
         const modal = document.getElementById('deliveryPrintModal');
         const content = document.getElementById('print-slip-content');
+        const tabsContainer = document.getElementById('print-tabs-container');
 
         if (!modal || !content) return;
+
+        // Esconde as abas quando tipo já foi especificado (veio do modal de detalhes)
+        if (tabsContainer) {
+            tabsContainer.style.display = 'none';
+        }
 
         content.innerHTML = '<div style="padding: 40px; text-align: center; color: #64748b;">Carregando...</div>';
         modal.style.display = 'flex';
@@ -38,9 +44,14 @@ const DeliveryPrint = {
             this.currentOrderData = data.order;
             this.currentItemsData = data.items;
 
-            const html = type === 'kitchen'
-                ? this.generateKitchenSlipHTML(data.order, data.items)
-                : this.generateSlipHTML(data.order, data.items);
+            let html;
+            if (type === 'kitchen') {
+                html = this.generateKitchenSlipHTML(data.order, data.items);
+            } else if (type === 'complete') {
+                html = this.generateCompleteSlipHTML({ ...data.order, items: data.items });
+            } else {
+                html = this.generateSlipHTML(data.order, data.items);
+            }
             content.innerHTML = html;
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -242,10 +253,9 @@ const DeliveryPrint = {
 
     /**
      * Gera HTML da ficha COMPLETA (todas as informações)
+     * Usa o mesmo visual da ficha do Motoboy
      */
     generateCompleteSlipHTML: function (order) {
-        const restaurantName = order.restaurant_name || 'Restaurante';
-        const restaurantPhone = order.restaurant_phone || '';
         const clientName = order.client_name || 'Não identificado';
         const clientPhone = order.client_phone || '--';
         const clientAddress = order.client_address || 'Endereço não informado';
@@ -262,78 +272,57 @@ const DeliveryPrint = {
             items.forEach(item => {
                 const subtotal = (item.quantity * item.price).toFixed(2).replace('.', ',');
                 itemsHTML += `
-                    <tr>
-                        <td style="padding: 6px 0; border-bottom: 1px dashed #ccc;">${item.quantity}x ${item.name}</td>
-                        <td style="padding: 6px 0; border-bottom: 1px dashed #ccc; text-align: right;">R$ ${subtotal}</td>
-                    </tr>
+                    <div class="print-slip-item">
+                        <span>${item.quantity}x ${item.name}</span>
+                        <span>R$ ${subtotal}</span>
+                    </div>
                 `;
             });
         } else {
-            itemsHTML = '<tr><td colspan="2" style="color: #999;">Sem itens</td></tr>';
+            itemsHTML = '<div style="color: #999;">Sem itens</div>';
         }
 
         let changeHTML = '';
         if (paymentMethod.toLowerCase() === 'dinheiro' && changeFor) {
-            changeHTML = `
-                <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; font-weight: bold; text-align: center;">
-                    💵 TROCO PARA: R$ ${parseFloat(changeFor).toFixed(2).replace('.', ',')}
-                </div>
-            `;
-        }
-
-        let obsHTML = '';
-        if (observations) {
-            obsHTML = `
-                <div style="margin-top: 10px; padding: 10px; background: #f8f8f8; border-radius: 4px;">
-                    <strong>📝 Obs:</strong> ${observations}
-                </div>
-            `;
+            changeHTML = `<div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-radius: 4px; font-weight: bold;">💵 TROCO PARA: R$ ${parseFloat(changeFor).toFixed(2).replace('.', ',')}</div>`;
         }
 
         return `
-            <div style="font-family: 'Courier New', monospace; width: 280px; padding: 10px; font-size: 12px;">
-                <!-- Cabeçalho -->
-                <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px;">
-                    <h2 style="margin: 0; font-size: 18px;">${restaurantName}</h2>
-                    ${restaurantPhone ? `<div style="font-size: 11px; color: #666;">${restaurantPhone}</div>` : ''}
-                    <div style="margin-top: 8px; font-size: 16px; font-weight: bold;">PEDIDO #${order.id}</div>
+            <div class="print-slip">
+                <div class="print-slip-header">
+                    <h2>� FICHA DO PEDIDO</h2>
+                    <div>Pedido #${order.id}</div>
                     <div style="font-size: 10px; color: #666;">${date}</div>
                 </div>
 
-                <!-- Cliente e Endereço -->
-                <div style="border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
-                    <div style="font-weight: bold; margin-bottom: 5px;">📞 CLIENTE</div>
-                    <div>${clientName}</div>
-                    <div style="color: #666;">${clientPhone}</div>
-                    <div style="margin-top: 8px; font-weight: bold;">📍 ENDEREÇO</div>
-                    <div>${clientAddress}</div>
-                    ${neighborhood ? `<div style="color: #666;">${neighborhood}</div>` : ''}
+                <div class="print-slip-section">
+                    <h4>👤 Dados do Cliente:</h4>
+                    <div><strong>Nome:</strong> ${clientName}</div>
+                    <div><strong>Telefone:</strong> ${clientPhone}</div>
                 </div>
 
-                <!-- Itens -->
-                <div style="border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
-                    <div style="font-weight: bold; margin-bottom: 8px;">🛒 ITENS</div>
-                    <table style="width: 100%; border-collapse: collapse;">
-                        ${itemsHTML}
-                    </table>
-                </div>
-
-                <!-- Total e Pagamento -->
-                <div style="border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
-                        <span>TOTAL:</span>
-                        <span>R$ ${total}</span>
+                <div class="print-slip-section">
+                    <h4>� Endereço de Entrega:</h4>
+                    <div style="padding: 8px; background: #f5f5f5; border-radius: 4px;">
+                        ${clientAddress}
+                        ${neighborhood ? '<br><strong>Bairro:</strong> ' + neighborhood : ''}
                     </div>
-                    <div style="margin-top: 8px; font-weight: bold;">💳 PAGAMENTO</div>
-                    <div>${paymentMethod}</div>
+                    ${observations ? '<div style="margin-top: 8px; font-style: italic; color: #666;">📝 ' + observations + '</div>' : ''}
+                </div>
+
+                <div class="print-slip-section">
+                    <h4>📦 Itens:</h4>
+                    ${itemsHTML}
+                </div>
+
+                <div class="print-slip-section">
+                    <h4>💳 Pagamento:</h4>
+                    <div style="font-weight: bold; font-size: 14px;">${paymentMethod.toUpperCase()}</div>
                     ${changeHTML}
                 </div>
 
-                ${obsHTML}
-
-                <!-- Rodapé -->
-                <div style="text-align: center; margin-top: 15px; font-size: 10px; color: #666;">
-                    Obrigado pela preferência!
+                <div class="print-slip-total">
+                    TOTAL: R$ ${total}
                 </div>
             </div>
         `;

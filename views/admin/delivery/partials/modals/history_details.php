@@ -17,8 +17,8 @@
                 </div>
             </div>
             <button onclick="HistoryModal.close()" 
-                    style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 8px; color: #64748b;">
-                <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+                    style="background: rgba(100,116,139,0.1); border: none; cursor: pointer; padding: 8px 12px; border-radius: 8px; color: #64748b; font-size: 1.2rem; font-weight: bold;">
+                ✕
             </button>
         </div>
 
@@ -65,7 +65,7 @@
 
         <!-- Footer: Impressão Única -->
         <div style="padding: 16px 20px; border-top: 2px solid #e2e8f0; background: #f8fafc;">
-            <button onclick="DeliveryPrint.printComplete(HistoryModal.currentOrder)" 
+            <button onclick="DeliveryPrint.openModal(HistoryModal.currentOrder?.id, 'complete')" 
                     style="width: 100%; padding: 14px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem; box-shadow: 0 2px 8px rgba(59,130,246,0.3);">
                 🖨️ Imprimir Ficha Completa
             </button>
