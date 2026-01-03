@@ -98,9 +98,12 @@ const DeliveryPrint = {
     generateSlipHTML: function (order, items) {
         const clientName = order.client_name || 'Não identificado';
         const clientPhone = order.client_phone || '--';
-        const clientAddress = order.client_address || 'Endereço não informado';
-        const neighborhood = order.neighborhood || '';
-        const observations = order.observations || '';
+
+        let clientAddress = order.client_address || 'Endereço não informado';
+        if (order.client_number) clientAddress += ', ' + order.client_number;
+
+        const neighborhood = order.client_neighborhood || order.neighborhood || ''; // Tenta os dois
+        const observations = order.observation || order.observations || ''; // Tenta os dois (banco usa observation)
         const paymentMethod = order.payment_method || 'Não informado';
         const changeFor = order.change_for || '';
         const total = parseFloat(order.total || 0).toFixed(2).replace('.', ',');
@@ -146,7 +149,7 @@ const DeliveryPrint = {
                         ${clientAddress}
                         ${neighborhood ? '<br><strong>Bairro:</strong> ' + neighborhood : ''}
                     </div>
-                    ${observations ? '<div style="margin-top: 8px; font-style: italic; color: #666;">📝 ' + observations + '</div>' : ''}
+                    ${observations ? '<div style="margin-top: 8px; font-weight: bold; color: #000;">📝 ' + observations + '</div>' : ''}
                 </div>
 
                 <div class="print-slip-section">
@@ -258,9 +261,13 @@ const DeliveryPrint = {
     generateCompleteSlipHTML: function (order) {
         const clientName = order.client_name || 'Não identificado';
         const clientPhone = order.client_phone || '--';
-        const clientAddress = order.client_address || 'Endereço não informado';
-        const neighborhood = order.neighborhood || '';
-        const observations = order.observations || '';
+
+        let clientAddress = order.client_address || 'Endereço não informado';
+        if (order.client_number) clientAddress += ', ' + order.client_number;
+
+        const neighborhood = order.client_neighborhood || order.neighborhood || '';
+        const observations = order.observation || order.observations || '';
+
         const paymentMethod = order.payment_method || 'Não informado';
         const changeFor = order.change_for || '';
         const total = parseFloat(order.total || 0).toFixed(2).replace('.', ',');
@@ -290,7 +297,7 @@ const DeliveryPrint = {
         return `
             <div class="print-slip">
                 <div class="print-slip-header">
-                    <h2>� FICHA DO PEDIDO</h2>
+                    <h2>📋 FICHA DO PEDIDO</h2>
                     <div>Pedido #${order.id}</div>
                     <div style="font-size: 10px; color: #666;">${date}</div>
                 </div>
@@ -302,12 +309,12 @@ const DeliveryPrint = {
                 </div>
 
                 <div class="print-slip-section">
-                    <h4>� Endereço de Entrega:</h4>
+                    <h4>📍 Endereço de Entrega:</h4>
                     <div style="padding: 8px; background: #f5f5f5; border-radius: 4px;">
                         ${clientAddress}
                         ${neighborhood ? '<br><strong>Bairro:</strong> ' + neighborhood : ''}
                     </div>
-                    ${observations ? '<div style="margin-top: 8px; font-style: italic; color: #666;">📝 ' + observations + '</div>' : ''}
+                    ${observations ? '<div style="margin-top: 8px; font-weight: bold; color: #000;">📝 ' + observations + '</div>' : ''}
                 </div>
 
                 <div class="print-slip-section">

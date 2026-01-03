@@ -249,6 +249,8 @@ class DeliveryController {
                        c.name as client_name, 
                        c.phone as client_phone,
                        c.address as client_address,
+                       c.address_number as client_number,
+                       c.neighborhood as client_neighborhood,
                        r.name as restaurant_name,
                        r.phone as restaurant_phone
                 FROM orders o

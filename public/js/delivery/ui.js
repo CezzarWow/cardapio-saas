@@ -55,7 +55,37 @@ const DeliveryUI = {
         document.getElementById('modal-order-id').textContent = orderData.id;
         document.getElementById('modal-client-name').textContent = orderData.client_name || 'Não identificado';
         document.getElementById('modal-client-phone').textContent = orderData.client_phone || '--';
-        document.getElementById('modal-address').textContent = orderData.client_address || 'Endereço não informado';
+
+        // Formata endereço completo
+        let fullAddress = orderData.client_address || 'Endereço não informado';
+        if (orderData.client_number) fullAddress += ', ' + orderData.client_number;
+        if (orderData.client_neighborhood) fullAddress += ' - ' + orderData.client_neighborhood;
+
+        document.getElementById('modal-address').textContent = fullAddress;
+
+        // Observação do Pedido (Adicionar elemento se não existir no HTML, mas vamos injetar via JS)
+        const addressContainer = document.getElementById('modal-address').parentElement.parentElement;
+        let obsContainer = document.getElementById('modal-observation-container');
+
+        if (!obsContainer) {
+            obsContainer = document.createElement('div');
+            obsContainer.id = 'modal-observation-container';
+            obsContainer.style.marginBottom = '16px';
+            addressContainer.after(obsContainer);
+        }
+
+        if (orderData.observation) {
+            obsContainer.innerHTML = `
+                <h4 style="font-size: 0.8rem; color: #64748b; font-weight: 700; margin-bottom: 6px; text-transform: uppercase;">Observação</h4>
+                <div style="background: #fff7ed; padding: 12px; border-radius: 8px; border: 1px solid #ffedd5; color: #c2410c; font-size: 0.9rem;">
+                    ${orderData.observation}
+                </div>
+            `;
+            obsContainer.style.display = 'block';
+        } else {
+            obsContainer.style.display = 'none';
+        }
+
         document.getElementById('modal-total').textContent = 'R$ ' + parseFloat(orderData.total || 0).toFixed(2).replace('.', ',');
         document.getElementById('modal-time').textContent = orderData.created_at || '--';
         document.getElementById('modal-payment').textContent = orderData.payment_method || 'Não informado';

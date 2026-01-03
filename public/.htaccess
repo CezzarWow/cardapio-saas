@@ -1,9 +1,12 @@
-Options -MultiViews
 RewriteEngine On
 
-# Se o arquivo existir (uma imagem, um css), carrega ele direto
+# Redirecionar todo o tráfego para index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
 
-# Se não existir, manda para o index.php
-RewriteRule ^ index.php [QSA,L]
+# Permitir acesso a assets (CSS, JS, imagens)
+<FilesMatch "\.(css|js|jpg|jpeg|png|gif|svg|webp|woff|woff2|ttf|ico)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>

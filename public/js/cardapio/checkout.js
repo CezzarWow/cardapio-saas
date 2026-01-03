@@ -350,8 +350,9 @@ const CardapioCheckout = {
     // ==========================================
     // ENVIAR PEDIDO
     // ==========================================
-    sendOrder: function () {
+    sendOrder: async function () {
         const name = document.getElementById('customerName').value.trim();
+        const phone = document.getElementById('customerPhone')?.value.trim() || '';
         const address = document.getElementById('customerAddress').value.trim();
         const number = document.getElementById('customerNumber').value.trim();
         const neighborhood = document.getElementById('customerNeighborhood').value.trim();
@@ -376,88 +377,129 @@ const CardapioCheckout = {
         }
 
         const totals = CardapioCart.getTotals();
-
-        // Montar mensagem para o WhatsApp (Lógica Nova)
-        // Recupera mensagens configuradas globalmente (via PHP)
         const config = window.cardapioConfig || {};
-        const whatsappNumber = (config.whatsapp_number || '').replace(/\D/g, ''); // Remove não dígitos
+        const whatsappNumber = (config.whatsapp_number || '').replace(/\D/g, '');
+        const restaurantId = window.restaurantId || config.restaurant_id;
 
-        // Recupera array de mensagens (índice 0 = antes, 1 = depois)
-        let msgBefore = 'Olá! Gostaria de fazer um pedido:';
-        let msgAfter = 'Aguardo a confirmação.';
+        // Preparar dados para API
+        const deliveryFee = this.getDeliveryFee();
+        const orderData = {
+            restaurant_id: restaurantId,
+            customer_name: name,
+            customer_phone: phone,
+            customer_address: address,
+            customer_number: number,
+            customer_neighborhood: neighborhood,
+            order_type: this.selectedOrderType, // delivery, pickup, local
+            payment_method: this.selectedPaymentMethod,
+            change_amount: changeAmount,
+            observation: obs,
+            delivery_fee: deliveryFee,
+            items: CardapioCart.items.map(item => ({
+                product_id: item.productId || null,
+                name: item.name,
+                quantity: item.quantity,
+                unit_price: item.unitPrice,
+                observation: item.observation || '',
+                additionals: (item.additionals || []).map(add => ({
+                    id: add.id,
+                    name: add.name,
+                    price: add.price || 0
+                }))
+            }))
+        };
 
         try {
-            if (config.whatsapp_message) {
-                const parsed = JSON.parse(config.whatsapp_message);
+            // 1. Salvar no banco de dados primeiro
+            const response = await fetch(window.BASE_URL + '/api/order/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            });
 
-                // Formato Novo { before: [], after: [] }
-                if (parsed && (typeof parsed === 'object') && (parsed.before || parsed.after)) {
-                    if (Array.isArray(parsed.before) && parsed.before.length > 0) {
-                        msgBefore = parsed.before.join('\n');
-                    }
-                    if (Array.isArray(parsed.after) && parsed.after.length > 0) {
-                        msgAfter = parsed.after.join('\n');
-                    }
-                }
-                // Formato Legado [msg1, msg2]
-                else if (Array.isArray(parsed)) {
-                    if (parsed.length > 0 && parsed[0]) msgBefore = parsed[0];
-                    if (parsed.length > 1 && parsed[1]) msgAfter = parsed[1];
-                }
+            const result = await response.json();
+
+            if (!result.success) {
+                alert('Erro ao enviar pedido: ' + (result.message || 'Erro desconhecido'));
+                return;
             }
-        } catch (e) {
-            console.warn('Erro ao decodificar mensagens do WhatsApp', e);
+
+            // 2. Montar mensagem para WhatsApp
+            let msgBefore = 'Olá! Gostaria de fazer um pedido:';
+            let msgAfter = 'Aguardo a confirmação.';
+
+            try {
+                if (config.whatsapp_message) {
+                    const parsed = JSON.parse(config.whatsapp_message);
+                    if (parsed && (typeof parsed === 'object') && (parsed.before || parsed.after)) {
+                        if (Array.isArray(parsed.before) && parsed.before.length > 0) {
+                            msgBefore = parsed.before.join('\n');
+                        }
+                        if (Array.isArray(parsed.after) && parsed.after.length > 0) {
+                            msgAfter = parsed.after.join('\n');
+                        }
+                    } else if (Array.isArray(parsed)) {
+                        if (parsed.length > 0 && parsed[0]) msgBefore = parsed[0];
+                        if (parsed.length > 1 && parsed[1]) msgAfter = parsed[1];
+                    }
+                }
+            } catch (e) {
+                console.warn('Erro ao decodificar mensagens do WhatsApp', e);
+            }
+
+            // Monta o Corpo do Pedido
+            let orderSummary = '*NOVO PEDIDO*\n\n' +
+                '👤 *Nome:* ' + name + '\n';
+
+            if (this.selectedOrderType === 'entrega') {
+                orderSummary += '📍 *Entrega:* ' + address + ', ' + number + '\n' +
+                    '🏘️ *Bairro:* ' + neighborhood + '\n';
+            } else {
+                const label = (this.selectedOrderType === 'local') ? 'Mesa/Comanda' : 'Retirada';
+                orderSummary += '🏪 *' + label + ':* ' + number + '\n';
+            }
+
+            orderSummary += '\n🛒 *ITENS:*\n';
+            CardapioCart.items.forEach(item => {
+                orderSummary += `• ${item.quantity}x ${item.name} ` +
+                    (item.additionals.length ? `(${item.additionals.map(a => a.name).join(', ')})` : '') + '\n';
+                if (item.observation) orderSummary += `  _Obs: ${item.observation}_\n`;
+            });
+
+            // Adiciona Taxa de Entrega se houver
+            if (this.selectedOrderType === 'entrega' && deliveryFee > 0) {
+                orderSummary += '🛵 *Taxa de Entrega:* ' + Utils.formatCurrency(deliveryFee) + '\n';
+            }
+
+            orderSummary += '\n💰 *Total Final:* ' + Utils.formatCurrency(this.getFinalTotal()) + '\n';
+            orderSummary += '💳 *Pagamento:* ' + this.selectedPaymentMethod.toUpperCase();
+
+            if (this.selectedPaymentMethod === 'dinheiro' && changeAmount) {
+                orderSummary += ' (Troco para: ' + changeAmount + ')';
+            }
+
+            if (obs) orderSummary += '\n📝 *Obs Geral:* ' + obs;
+
+            // Monta Mensagem Final Completa
+            const finalMessage = `${msgBefore}\n\n${orderSummary}\n\n${msgAfter}`;
+
+            // 3. Envia para o WhatsApp
+            if (whatsappNumber) {
+                const url = `https://wa.me/55${whatsappNumber}?text=${encodeURIComponent(finalMessage)}`;
+                window.open(url, '_blank');
+                alert('Pedido enviado com sucesso! ✅\n\nSeu pedido foi registrado e aparecerá para o restaurante.');
+            } else {
+                // Se não tiver WhatsApp configurado, ainda mostra sucesso do salvamento
+                alert('Pedido registrado com sucesso! ✅\n\nO restaurante foi notificado.\n\n' +
+                    '(WhatsApp não configurado para este restaurante)');
+            }
+
+            this.reset();
+
+        } catch (error) {
+            console.error('Erro ao enviar pedido:', error);
+            alert('Erro de conexão ao enviar pedido. Por favor, tente novamente.');
         }
-
-
-        // Monta o Corpo do Pedido
-        let orderSummary = '*NOVO PEDIDO*\n\n' +
-            '👤 *Nome:* ' + name + '\n';
-
-        if (this.selectedOrderType === 'entrega') {
-            orderSummary += '📍 *Entrega:* ' + address + ', ' + number + '\n' +
-                '🏘️ *Bairro:* ' + neighborhood + '\n';
-        } else {
-            const label = (this.selectedOrderType === 'local') ? 'Mesa/Comanda' : 'Retirada';
-            orderSummary += '🏪 *' + label + ':* ' + number + '\n';
-        }
-
-        orderSummary += '\n🛒 *ITENS:*\n';
-        CardapioCart.items.forEach(item => {
-            orderSummary += `• ${item.quantity}x ${item.name} ` +
-                (item.additionals.length ? `(${item.additionals.map(a => a.name).join(', ')})` : '') + '\n';
-            if (item.observation) orderSummary += `  _Obs: ${item.observation}_\n`;
-        });
-
-
-
-        // Adiciona Taxa de Entrega se houver
-        const fee = this.getDeliveryFee();
-        if (this.selectedOrderType === 'entrega' && fee > 0) {
-            orderSummary += '🛵 *Taxa de Entrega:* ' + Utils.formatCurrency(fee) + '\n';
-        }
-
-        orderSummary += '\n💰 *Total Final:* ' + Utils.formatCurrency(this.getFinalTotal()) + '\n';
-        orderSummary += '💳 *Pagamento:* ' + this.selectedPaymentMethod.toUpperCase();
-
-        if (this.selectedPaymentMethod === 'dinheiro' && changeAmount) {
-            orderSummary += ' (Troco para: ' + changeAmount + ')';
-        }
-
-        if (obs) orderSummary += '\n📝 *Obs Geral:* ' + obs;
-
-        // Monta Mensagem Final Completa
-        const finalMessage = `${msgBefore}\n\n${orderSummary}\n\n${msgAfter}`;
-
-        // Envia para o WhatsApp
-        if (whatsappNumber) {
-            const url = `https://wa.me/55${whatsappNumber}?text=${encodeURIComponent(finalMessage)}`;
-            window.open(url, '_blank');
-        } else {
-            alert('Número do WhatsApp não configurado!\n\n' + finalMessage);
-        }
-
-        this.reset();
     },
 
     reset: function () {

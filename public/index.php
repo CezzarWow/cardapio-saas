@@ -25,6 +25,12 @@ $url_clean = parse_url($url, PHP_URL_PATH);
 $path = str_replace('/cardapio-saas/public', '', $url_clean);
 
 switch ($path) {
+    // --- ROTAS DE API (Cardápio Público) ---
+    case '/api/order/create':
+        require __DIR__ . '/../app/Controllers/Api/OrderApiController.php';
+        (new \App\Controllers\Api\OrderApiController())->create();
+        break;
+
     // --- ROTAS DO ADMIN GERAL (Dono do SaaS) ---
     case '/admin':
         (new DashboardController())->index();

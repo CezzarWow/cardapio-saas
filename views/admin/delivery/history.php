@@ -42,7 +42,7 @@ $statusLabels = [
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/base.css">
 
 <style>
-.history-container { padding: 15px; }
+.history-container { padding: 15px; width: 100%; box-sizing: border-box; }
 .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
 .history-title { font-size: 1.3rem; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px; }
 
@@ -66,13 +66,13 @@ $statusLabels = [
 .history-summary-value { font-size: 1.5rem; font-weight: 800; color: #1e293b; }
 .history-summary-label { font-size: 0.8rem; color: #64748b; }
 
-.history-table-wrapper { max-height: calc(100vh - 280px); overflow-y: auto; border-radius: 10px; border: 1px solid #e2e8f0; width: 100%; }
+.history-table-wrapper { max-height: calc(100vh - 280px); overflow-y: auto; border-radius: 10px; border: 1px solid #e2e8f0; width: 100%; min-height: calc(100vh - 280px); display: block; }
 .history-table { width: 100%; background: white; border-collapse: collapse; table-layout: fixed; }
 .history-table th { background: #f8fafc; padding: 12px 15px; text-align: left; font-weight: 700; color: #475569; font-size: 0.85rem; text-transform: uppercase; position: sticky; top: 0; }
 .history-table td { padding: 12px 15px; border-top: 1px solid #f1f5f9; font-size: 0.95rem; }
 .history-table tr:hover { background: #f8fafc; }
 .history-badge { padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
-.history-empty { text-align: center; padding: 50px; color: #94a3b8; background: white; }
+.history-empty { text-align: center; padding: 50px; color: #94a3b8; background: white; min-height: calc(100vh - 280px); width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; }
 </style>
 
 <main class="main-content">
