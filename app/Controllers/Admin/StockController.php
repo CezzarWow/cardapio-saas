@@ -4,6 +4,10 @@ namespace App\Controllers\Admin;
 use App\Core\Database;
 use PDO;
 
+// Helper de Conversão de Imagens
+require_once __DIR__ . '/../../Helpers/ImageConverter.php';
+use ImageConverter;
+
 class StockController {
 
     // 1. LISTAR PRODUTOS
@@ -64,13 +68,11 @@ class StockController {
         // Arrays de grupos selecionados
         $selectedGroups = $_POST['additional_groups'] ?? [];
 
-        // --- Lógica de Upload de Imagem ---
+        // --- Lógica de Upload de Imagem com Conversão WebP ---
         $imageName = null;
         if (!empty($_FILES['image']['name'])) {
-            $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-            $imageName = md5(time() . rand(0,9999)) . '.' . $ext; // Nome único
-            // Move para a pasta public/uploads
-            move_uploaded_file($_FILES['image']['tmp_name'], __DIR__ . '/../../../public/uploads/' . $imageName);
+            $uploadDir = __DIR__ . '/../../../public/uploads/';
+            $imageName = \ImageConverter::uploadAndConvert($_FILES['image'], $uploadDir, 85);
         }
 
         $conn = Database::connect();
@@ -174,12 +176,14 @@ class StockController {
             exit;
         }
 
-        // Lógica de Upload de Imagem (só se enviar nova)
+        // Lógica de Upload de Imagem com Conversão WebP (só se enviar nova)
         $imageName = $product['image']; // Mantém a atual
         if (!empty($_FILES['image']['name'])) {
-            $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-            $imageName = md5(time() . rand(0,9999)) . '.' . $ext;
-            move_uploaded_file($_FILES['image']['tmp_name'], __DIR__ . '/../../../public/uploads/' . $imageName);
+            $uploadDir = __DIR__ . '/../../../public/uploads/';
+            $newImage = \ImageConverter::uploadAndConvert($_FILES['image'], $uploadDir, 85);
+            if ($newImage) {
+                $imageName = $newImage;
+            }
         }
 
         // Atualiza o produto
