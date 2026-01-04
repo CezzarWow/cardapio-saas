@@ -93,7 +93,7 @@ if ($isEditingPaid && $editingOrderId) {
                                      onclick="addToCart(<?= $product['id'] ?>, '<?= addslashes($product['name']) ?>', <?= $product['price'] ?>)">
                                     
                                     <?php if (!empty($product['image'])): ?>
-                                        <img src="<?= BASE_URL ?>/uploads/<?= $product['image'] ?>" alt="<?= htmlspecialchars($product['name']) ?>" class="product-image">
+                                        <img src="<?= BASE_URL ?>/uploads/<?= $product['image'] ?>" alt="<?= htmlspecialchars($product['name']) ?>" class="product-image" loading="lazy">
                                     <?php else: ?>
                                         <div class="product-icon icon-orange">
                                             <?= strtoupper(substr($product['name'], 0, 1)) ?>

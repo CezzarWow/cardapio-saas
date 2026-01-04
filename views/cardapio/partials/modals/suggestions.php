@@ -41,7 +41,7 @@
                             <div class="suggestion-item">
                                 <div class="suggestion-item-info">
                                     <?php if (!empty($drink['image'])): ?>
-                                        <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($drink['image']) ?>" class="suggestion-item-image" alt="">
+                                        <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($drink['image']) ?>" class="suggestion-item-image" alt="" loading="lazy">
                                     <?php else: ?>
                                         <div class="suggestion-item-image-placeholder">
                                             <i data-lucide="cup-soda" size="20"></i>

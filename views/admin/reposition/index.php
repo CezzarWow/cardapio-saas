@@ -127,7 +127,7 @@ foreach ($products as $p) {
                     
                     <!-- Imagem (altura reduzida) -->
                     <?php if($prod['image']): ?>
-                        <img src="<?= BASE_URL ?>/uploads/<?= $prod['image'] ?>" 
+                        <img src="<?= BASE_URL ?>/uploads/<?= $prod['image'] ?>" loading="lazy" 
                              style="width: 100%; height: 140px; object-fit: cover; border-radius: 12px 12px 0 0;"
                              alt="<?= htmlspecialchars($prod['name']) ?>">
                     <?php else: ?>

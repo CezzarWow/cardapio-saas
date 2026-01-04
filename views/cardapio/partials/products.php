@@ -37,7 +37,7 @@
                     <div class="cardapio-badge cardapio-badge-combo">COMBO</div>
                     <div class="cardapio-product-image-wrapper">
                         <?php if (!empty($combo['image'])): ?>
-                            <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($combo['image']) ?>" alt="<?= htmlspecialchars($combo['name']) ?>" class="cardapio-product-image">
+                            <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($combo['image']) ?>" alt="<?= htmlspecialchars($combo['name']) ?>" class="cardapio-product-image" loading="lazy">
                         <?php else: ?>
                             <div class="cardapio-product-image-placeholder placeholder-combo">
                                 <i data-lucide="package" size="40"></i>

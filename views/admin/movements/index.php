@@ -146,7 +146,7 @@ foreach ($movements as $m) {
                             <td>
                                 <div style="display: flex; align-items: center; gap: 10px;">
                                     <?php if($mov['product_image']): ?>
-                                        <img src="<?= BASE_URL ?>/uploads/<?= $mov['product_image'] ?>" style="width: 35px; height: 35px; object-fit: cover; border-radius: 6px;">
+                                        <img src="<?= BASE_URL ?>/uploads/<?= $mov['product_image'] ?>" style="width: 35px; height: 35px; object-fit: cover; border-radius: 6px;" loading="lazy">
                                     <?php else: ?>
                                         <div style="width: 35px; height: 35px; background: #eee; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #999;">
                                             <i data-lucide="image" size="16"></i>
