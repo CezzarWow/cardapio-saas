@@ -135,17 +135,32 @@ class CardapioPublicoController {
         $stmtAdditionalGroups->execute(['rid' => $restaurantId]);
         $additionalGroups = $stmtAdditionalGroups->fetchAll(PDO::FETCH_ASSOC);
         
-        // Buscar itens via pivot
+        // Buscar itens de TODOS os grupos em UMA query (correção N+1)
         $additionalItems = [];
-        foreach ($additionalGroups as $group) {
-            $stmtItems = $conn->prepare("
-                SELECT ai.* FROM additional_items ai
-                INNER JOIN additional_group_items agi ON ai.id = agi.item_id
-                WHERE agi.group_id = :gid 
-                ORDER BY ai.name ASC
-            ");
-            $stmtItems->execute(['gid' => $group['id']]);
-            $additionalItems[$group['id']] = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+        if (!empty($additionalGroups)) {
+            $groupIds = array_column($additionalGroups, 'id');
+            
+            // Tratar caso de array vazio antes de montar IN(...)
+            if (!empty($groupIds)) {
+                $inQuery = implode(',', array_fill(0, count($groupIds), '?'));
+                
+                $stmtItems = $conn->prepare("
+                    SELECT ai.*, agi.group_id 
+                    FROM additional_items ai
+                    INNER JOIN additional_group_items agi ON ai.id = agi.item_id
+                    WHERE agi.group_id IN ($inQuery)
+                    ORDER BY ai.name ASC
+                ");
+                $stmtItems->execute($groupIds);
+                $allItems = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Agrupar em memória por group_id
+                foreach ($allItems as $item) {
+                    $gid = $item['group_id'];
+                    if (!isset($additionalItems[$gid])) $additionalItems[$gid] = [];
+                    $additionalItems[$gid][] = $item;
+                }
+            }
         }
         
         // [NOVO] Buscar relações Produto <-> Grupo de Adicionais
