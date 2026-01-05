@@ -4,7 +4,7 @@
  * Variáveis esperadas: $tables (array de mesas)
  */
 ?>
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1.2rem; margin-bottom: 3rem;">
     <?php foreach ($tables as $mesa): ?>
         <?php 
             $isOccupied = ($mesa['status'] == 'ocupada');
@@ -30,7 +30,7 @@
         ?>
 
         <div onclick="abrirMesa(<?= $mesa['id'] ?>, <?= $mesa['number'] ?>)" 
-             style="background: <?= $bg ?>; border: 2px solid <?= $border ?>; border-radius: 12px; cursor: pointer; transition: transform 0.1s; position: relative; overflow: hidden; height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+             style="background: <?= $bg ?>; border: 2px solid <?= $border ?>; border-radius: 10px; cursor: pointer; transition: transform 0.1s; position: relative; overflow: hidden; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
             
             <span style="font-size: 2.2rem; font-weight: 800; color: <?= $textColor ?>; line-height: 1;">
                 <?= $mesa['number'] ?>
