@@ -103,6 +103,11 @@ switch ($path) {
         (new \App\Controllers\Admin\DeliveryController())->history();
         break;
 
+    case '/admin/loja/delivery/send-to-table':
+        require __DIR__ . '/../app/Controllers/Admin/DeliveryController.php';
+        (new \App\Controllers\Admin\DeliveryController())->sendToTable();
+        break;
+
     // --- CARDÁPIO WEB ---
     case '/admin/loja/cardapio':
         require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';

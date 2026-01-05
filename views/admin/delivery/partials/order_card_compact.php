@@ -5,12 +5,28 @@
  */
 
 $status = $order['status'] ?? 'novo';
+$orderType = $order['order_type'] ?? 'delivery';
 
-$nextActions = [
-    'novo' => ['label' => 'Preparo', 'icon' => 'chef-hat'],
-    'preparo' => ['label' => 'Saiu', 'icon' => 'bike'],
-    'rota' => ['label' => 'Entregue', 'icon' => 'check-circle'],
-];
+// Ações diferentes para cada tipo de pedido
+if ($orderType === 'local') {
+    // Local: só aparece em "novo", depois vai para Mesas
+    $nextActions = [
+        'novo' => ['label' => 'Enviar p/ Mesa', 'icon' => 'utensils'],
+    ];
+} elseif ($orderType === 'pickup') {
+    $nextActions = [
+        'novo' => ['label' => 'Preparo', 'icon' => 'chef-hat'],
+        'preparo' => ['label' => 'Pronto', 'icon' => 'package-check'],
+        'rota' => ['label' => 'Retirado', 'icon' => 'check-circle'],
+    ];
+} else {
+    // Delivery
+    $nextActions = [
+        'novo' => ['label' => 'Preparo', 'icon' => 'chef-hat'],
+        'preparo' => ['label' => 'Saiu', 'icon' => 'bike'],
+        'rota' => ['label' => 'Entregue', 'icon' => 'check-circle'],
+    ];
+}
 
 $action = $nextActions[$status] ?? null;
 
@@ -48,8 +64,21 @@ $orderJson = htmlspecialchars(json_encode([
     </div>
 
     <div class="delivery-card-compact-info">
-        <span class="delivery-card-compact-customer">
-            #<?= $order['id'] ?>
+        <?php
+            // Define cor e label baseado no tipo
+            if ($orderType === 'local') {
+                $badgeColor = '#7c3aed'; // Roxo
+                $badgeLabel = '🍽️ Local';
+            } elseif ($orderType === 'pickup') {
+                $badgeColor = '#ea580c'; // Laranja
+                $badgeLabel = '🏪 Retirada';
+            } else {
+                $badgeColor = '#3b82f6'; // Azul
+                $badgeLabel = '🚚 Delivery';
+            }
+        ?>
+        <span class="delivery-card-compact-customer" style="color: <?= $badgeColor ?>; font-weight: 700;">
+            <?= $badgeLabel ?>
         </span>
         <span class="delivery-card-compact-total">
             R$ <?= number_format($order['total'] ?? 0, 2, ',', '.') ?>
@@ -59,7 +88,7 @@ $orderJson = htmlspecialchars(json_encode([
     <div class="delivery-card-compact-actions" onclick="event.stopPropagation()">
         <?php if ($action): ?>
             <button class="delivery-card-compact-btn delivery-card-compact-btn--primary"
-                    onclick="DeliveryActions.advance(<?= $order['id'] ?>, '<?= $status ?>')">
+                    onclick="DeliveryActions.advance(<?= $order['id'] ?>, '<?= $status ?>', '<?= $orderType ?>')">
                 <i data-lucide="<?= $action['icon'] ?>" style="width: 14px; height: 14px;"></i>
                 <?= $action['label'] ?>
             </button>

@@ -24,13 +24,20 @@ foreach ($orders as $order) {
 $columns = [
     'novo' => ['label' => 'Novo Pedido', 'icon' => 'inbox'],
     'preparo' => ['label' => 'Em Preparo', 'icon' => 'chef-hat'],
-    'rota' => ['label' => 'Em Rota', 'icon' => 'bike'],
+    'rota' => ['label' => 'Em Rota / Retirada', 'icon' => 'bike'],
     'entregue' => ['label' => 'Entregue', 'icon' => 'check-circle'],
-    'cancelado' => ['label' => 'Cancelado', 'icon' => 'x-circle'],
+    // 'cancelado' removido do Kanban padrão - aparece apenas via filtro
 ];
 
-// Sempre mostra todas as colunas (filtro é via JavaScript)
-$showColumns = $columns;
+// Coluna cancelado só aparece se filtrado diretamente
+$statusFilter = $statusFilter ?? null;
+if ($statusFilter === 'cancelado') {
+    $showColumns = [
+        'cancelado' => ['label' => 'Cancelado', 'icon' => 'x-circle'],
+    ];
+} else {
+    $showColumns = $columns;
+}
 ?>
 
 <div class="delivery-kanban">

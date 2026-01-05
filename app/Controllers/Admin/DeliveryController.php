@@ -57,9 +57,9 @@ class DeliveryController {
         try {
             $conn = Database::connect();
             
-            // Query base - busca TODOS os status
+            // Query base - busca delivery, retirada e local (regras específicas)
             $sql = "
-                SELECT o.id, o.total, o.status, o.created_at, o.payment_method,
+                SELECT o.id, o.total, o.status, o.created_at, o.payment_method, o.order_type,
                        c.name as client_name, 
                        c.phone as client_phone,
                        c.address as client_address,
@@ -67,10 +67,19 @@ class DeliveryController {
                 FROM orders o
                 LEFT JOIN clients c ON o.client_id = c.id
                 WHERE o.restaurant_id = :rid 
-                  AND o.order_type = 'delivery'
+                  AND (
+                      o.order_type IN ('delivery', 'pickup')
+                      OR (o.order_type = 'local' AND (o.status = 'novo' OR o.status = :status_filter_check))
+                  )
             ";
             
-            $params = ['rid' => $restaurant_id];
+            // Hack para usar o filtro na sub-condição do OR
+            $statusFilterCheck = $statusFilter ?? 'novo';
+            
+            $params = [
+                'rid' => $restaurant_id,
+                'status_filter_check' => $statusFilterCheck
+            ];
             
             // Filtro por status (se fornecido)
             $validStatuses = ['novo', 'preparo', 'rota', 'entregue', 'cancelado'];
@@ -342,15 +351,25 @@ class DeliveryController {
                 exit;
             }
 
-            if ($order['order_type'] !== 'delivery') {
-                echo json_encode(['success' => false, 'message' => 'Este pedido não é delivery']);
+            if (!in_array($order['order_type'], ['delivery', 'pickup'])) {
+                echo json_encode(['success' => false, 'message' => 'Este pedido não é delivery/retirada']);
                 exit;
             }
 
             $current_status = $order['status'];
+            $order_type = $order['order_type'];
+
+            // Transições - mesmas para delivery e pickup
+            // Ambos passam por: novo → preparo → rota → entregue
+            // A diferença é apenas visual (rota = "Em Rota" para delivery, "Pronto" para pickup)
+            $transitions = [
+                'novo'    => ['preparo', 'cancelado'],
+                'preparo' => ['rota', 'cancelado'],
+                'rota'    => ['entregue', 'cancelado'],
+            ];
 
             // Valida transição permitida
-            $allowed = self::ALLOWED_TRANSITIONS[$current_status] ?? [];
+            $allowed = $transitions[$current_status] ?? [];
             if (!in_array($new_status, $allowed)) {
                 echo json_encode([
                     'success' => false, 
@@ -367,6 +386,72 @@ class DeliveryController {
                 'success' => true, 
                 'message' => 'Status atualizado',
                 'new_status' => $new_status
+            ]);
+
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Envia pedido "Local" para a aba Mesas (Clientes/Comanda)
+     * Muda status de 'novo' para 'aberto'
+     * POST /admin/loja/delivery/send-to-table
+     */
+    public function sendToTable() {
+        header('Content-Type: application/json');
+        
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        
+        if (!isset($_SESSION['loja_ativa_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Sessão expirada']);
+            exit;
+        }
+
+        $restaurant_id = $_SESSION['loja_ativa_id'];
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        $order_id = $input['order_id'] ?? null;
+
+        if (!$order_id) {
+            echo json_encode(['success' => false, 'message' => 'ID do pedido não informado']);
+            exit;
+        }
+
+        try {
+            $conn = Database::connect();
+            
+            // Verifica se o pedido existe e é do tipo 'local'
+            $stmt = $conn->prepare("
+                SELECT id, status, order_type 
+                FROM orders 
+                WHERE id = :oid AND restaurant_id = :rid
+            ");
+            $stmt->execute(['oid' => $order_id, 'rid' => $restaurant_id]);
+            $order = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$order) {
+                echo json_encode(['success' => false, 'message' => 'Pedido não encontrado']);
+                exit;
+            }
+
+            if ($order['order_type'] !== 'local') {
+                echo json_encode(['success' => false, 'message' => 'Este pedido não é do tipo Local']);
+                exit;
+            }
+
+            if ($order['status'] !== 'novo') {
+                echo json_encode(['success' => false, 'message' => 'Pedido já foi enviado para mesa']);
+                exit;
+            }
+
+            // Muda status para 'aberto' - isso faz aparecer na aba Mesas > Clientes/Comanda
+            $stmt = $conn->prepare("UPDATE orders SET status = 'aberto' WHERE id = :oid");
+            $stmt->execute(['oid' => $order_id]);
+
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Pedido enviado para Mesas'
             ]);
 
         } catch (\Exception $e) {

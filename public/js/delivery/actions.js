@@ -17,23 +17,76 @@ const DeliveryActions = {
         'cancelado': 'Cancelado'
     },
 
-    // Próximo status na cadeia (sem aceito)
-    nextStatus: {
+    // Próximo status na cadeia (sem aceito) - para delivery
+    nextStatusDelivery: {
         'novo': 'preparo',
         'preparo': 'rota',
         'rota': 'entregue'
     },
 
+    // Próximo status para pickup (passa por rota como "Pronto")
+    nextStatusPickup: {
+        'novo': 'preparo',
+        'preparo': 'rota', // Pickup vai para "Pronto" (mesma coluna de rota)
+        'rota': 'entregue'
+    },
+
     /**
      * Avança para o próximo status
+     * @param orderType - 'delivery', 'pickup' ou 'local'
      */
-    advance: async function (orderId, currentStatus) {
-        const next = this.nextStatus[currentStatus];
+    advance: async function (orderId, currentStatus, orderType = 'delivery') {
+        // Pedidos "local" vão para a aba Mesas em vez de avançar normalmente
+        if (orderType === 'local') {
+            await this.sendToTable(orderId);
+            return;
+        }
+
+        const transitions = (orderType === 'pickup') ? this.nextStatusPickup : this.nextStatusDelivery;
+        const next = transitions[currentStatus];
         if (!next) {
             alert('Este pedido já está no status final.');
             return;
         }
         await this.updateStatus(orderId, next);
+    },
+
+    /**
+     * Envia pedido Local para a aba Mesas (Clientes/Comanda)
+     */
+    sendToTable: async function (orderId) {
+        const btn = event?.target?.closest('button');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin" style="width:16px;height:16px;"></i>';
+        }
+
+        try {
+            const response = await fetch(BASE_URL + '/admin/loja/delivery/send-to-table', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ order_id: orderId })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Recarrega a página para mostrar que o pedido foi removido
+                location.reload();
+            } else {
+                alert('Erro: ' + (data.message || 'Falha ao enviar para mesa'));
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Tentar novamente';
+                }
+            }
+        } catch (err) {
+            alert('Erro de conexão: ' + err.message);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = 'Tentar novamente';
+            }
+        }
     },
 
     /**

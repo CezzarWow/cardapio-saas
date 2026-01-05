@@ -32,20 +32,29 @@ class OrderApiController {
         $restaurantId = $input['restaurant_id'] ?? null;
         $customerName = trim($input['customer_name'] ?? '');
         $customerPhone = trim($input['customer_phone'] ?? '');
-        $orderTypeRaw = $input['order_type'] ?? 'delivery';
+        $orderTypeRaw = trim($input['order_type'] ?? 'delivery');
+        
+        // Se vier vazio, assume delivery
+        if (empty($orderTypeRaw)) {
+            $orderTypeRaw = 'delivery';
+        }
+        
         $paymentMethod = $input['payment_method'] ?? 'dinheiro';
         $items = $input['items'] ?? [];
         
         // Mapeia tipo de pedido do frontend (português) para banco (inglês)
         $orderTypeMap = [
             'entrega' => 'delivery',
-            'retirada' => 'delivery', // Retirada também entra no delivery
+            'retirada' => 'pickup', // Retirada = pickup (balcão)
             'local' => 'local',
             'delivery' => 'delivery',
-            'pickup' => 'delivery'
+            'pickup' => 'pickup'
         ];
         
         $orderType = $orderTypeMap[$orderTypeRaw] ?? 'delivery';
+        
+        // DEBUG: Log para ver o que está chegando (remover depois)
+        error_log("OrderAPI: orderTypeRaw = '$orderTypeRaw' | orderType final = '$orderType'");
         
         if (!$restaurantId || !$customerName || empty($items)) {
             echo json_encode(['success' => false, 'message' => 'Dados obrigatórios faltando']);
@@ -110,6 +119,9 @@ class OrderApiController {
                 )
             ");
             
+            // DEBUG: Log dos dados que serão salvos
+            error_log("OrderAPI INSERT: otype = '$orderType'");
+            
             $stmt->execute([
                 'rid' => $restaurantId,
                 'cid' => $clientId,
@@ -120,7 +132,10 @@ class OrderApiController {
                 'change' => $changeAmount
             ]);
             
+            // Força update do order_type caso tenha falhado
             $orderId = $conn->lastInsertId();
+            $conn->prepare("UPDATE orders SET order_type = :ot WHERE id = :oid AND (order_type IS NULL OR order_type = '')")
+                 ->execute(['ot' => $orderType, 'oid' => $orderId]);
             
             // 4. Inserir itens do pedido
             $stmtItem = $conn->prepare("

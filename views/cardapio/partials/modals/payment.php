@@ -44,13 +44,16 @@
                     <!-- Endereço (só para entrega) -->
                     <input type="text" id="customerAddress" class="payment-input delivery-only" placeholder="Endereço (rua) *" maxlength="80" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
                     
-                    <div class="payment-number-row delivery-only">
+                    <!-- Número (para entrega e local) -->
+                    <div id="numberFieldRow" class="payment-number-row">
                         <input type="tel" id="customerNumber" class="payment-input payment-number-input" placeholder="Nº *" maxlength="8" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
                         <button type="button" class="no-number-btn" onclick="toggleNoNumber()">
                             <span>Sem nº</span>
                         </button>
-                        <input type="text" id="customerNeighborhood" class="payment-input payment-neighborhood-input" placeholder="Bairro" maxlength="30" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">
                     </div>
+                    
+                    <!-- Bairro (só para entrega) -->
+                    <input type="text" id="customerNeighborhood" class="payment-input delivery-only" placeholder="Bairro" maxlength="30" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"">
                     
                     <textarea id="customerObs" class="payment-input payment-textarea" placeholder="Observações (opcional)" rows="2" maxlength="140" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"></textarea>
                 </div>

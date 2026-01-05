@@ -116,12 +116,24 @@ const CardapioCheckout = {
         if (msgLocal) msgLocal.style.display = (type === 'local') ? 'block' : 'none';
         if (msgRetirada) msgRetirada.style.display = (type === 'retirada') ? 'block' : 'none';
 
-        // Campos de entrega (Endereço, Bairro, Número)
+        // Campos de entrega (Endereço, Bairro)
         document.querySelectorAll('.delivery-only').forEach(el => {
             el.style.display = (type === 'entrega') ? '' : 'none';
         });
 
-        // Label do Número muda
+        // Campo de Número: visível apenas para Entrega (Local e Retirada não precisam)
+        const numberField = document.getElementById('numberFieldRow');
+        if (numberField) {
+            numberField.style.display = (type === 'entrega') ? '' : 'none';
+        }
+
+        // Placeholder do campo Número muda conforme o tipo
+        const numInput = document.getElementById('customerNumber');
+        if (numInput) {
+            numInput.placeholder = (type === 'local') ? 'Mesa *' : 'Nº *';
+        }
+
+        // Label do Número muda (se existir)
         const numLabel = document.querySelector('label[for="customerNumber"]');
         if (numLabel) {
             if (type === 'local') numLabel.textContent = 'Mesa / Comanda';
@@ -367,9 +379,10 @@ const CardapioCheckout = {
             if (!address) return alert('Por favor, preencha o endereço.');
         }
 
-        // Número é obrigatório para todos
-        if (!number && !this.hasNoNumber) {
-            return alert('Por favor, preencha o número (ou Mesa/Comanda) ou selecione "Sem nº".');
+        // Número obrigatório apenas para Entrega
+        // Local e Retirada não precisam de número (identificados pelo nome)
+        if (this.selectedOrderType === 'entrega' && !number && !this.hasNoNumber) {
+            return alert('Por favor, preencha o número ou selecione "Sem nº".');
         }
 
         if (!this.selectedPaymentMethod) {
