@@ -531,6 +531,51 @@ class AdditionalController {
     }
 
     // ==========================================
+    // API: OBTER ADICIONAIS DO PRODUTO (PDV)
+    // ==========================================
+    public function getProductExtras() {
+        header('Content-Type: application/json');
+        
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $productId = intval($_GET['product_id'] ?? 0);
+        $restaurantId = $_SESSION['loja_ativa_id'] ?? 0;
+
+        if ($productId <= 0 || $restaurantId <= 0) {
+            echo json_encode([]);
+            exit;
+        }
+
+        $conn = Database::connect();
+
+        // 1. Busca Grupos vinculados ao produto
+        $sqlGroups = "SELECT DISTINCT ag.id, ag.name, ag.required 
+                      FROM additional_groups ag
+                      JOIN product_additional_relations par ON par.group_id = ag.id
+                      WHERE par.product_id = :pid AND ag.restaurant_id = :rid
+                      ORDER BY ag.id ASC";
+        
+        $stmtGroups = $conn->prepare($sqlGroups);
+        $stmtGroups->execute(['pid' => $productId, 'rid' => $restaurantId]);
+        $groups = $stmtGroups->fetchAll(PDO::FETCH_ASSOC);
+
+        // 2. Para cada grupo, busca os itens
+        foreach ($groups as &$group) {
+            $sqlItems = "SELECT DISTINCT ai.id, ai.name, ai.price 
+                         FROM additional_items ai
+                         JOIN additional_group_items agi ON agi.item_id = ai.id
+                         WHERE agi.group_id = :gid AND ai.restaurant_id = :rid
+                         ORDER BY ai.price ASC, ai.name ASC";
+            
+            $stmtItems = $conn->prepare($sqlItems);
+            $stmtItems->execute(['gid' => $group['id'], 'rid' => $restaurantId]);
+            $group['items'] = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        echo json_encode($groups);
+        exit;
+    }
+
+    // ==========================================
     // SESSÃO
     // ==========================================
     private function checkSession() {

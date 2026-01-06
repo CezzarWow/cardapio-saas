@@ -15,6 +15,14 @@ const PDVTables = {
         const input = document.getElementById('client-search');
         if (!input) return;
 
+        // 0. Click Outside: Fecha dropdown ao clicar fora
+        document.addEventListener('click', (e) => {
+            const results = document.getElementById('client-results');
+            if (input && results && !input.contains(e.target) && !results.contains(e.target)) {
+                results.style.display = 'none';
+            }
+        });
+
         // 1. Focus: Mostra mesas (sem digitar)
         input.addEventListener('focus', () => {
             if (input.value.trim() === '') {
@@ -61,14 +69,20 @@ const PDVTables = {
 
         results.style.display = 'block';
 
-        // Header
+        // Header com botão fechar
         const header = document.createElement('div');
-        header.innerHTML = '<small style="color:#64748b; font-weight:700; padding:10px 15px 5px; display:block; font-size:0.75rem;">MESAS DISPONÍVEIS</small>';
+        header.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 10px 15px 5px;";
+        header.innerHTML = `
+            <small style="color:#64748b; font-weight:700; font-size:0.75rem;">MESAS DISPONÍVEIS</small>
+            <button onclick="document.getElementById('client-results').style.display='none'" 
+                    style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2rem; font-weight: bold; padding: 0; line-height: 1;"
+                    title="Fechar">&times;</button>
+        `;
         results.appendChild(header);
 
-        // Grid
+        // Grid (5 por linha, alinhado)
         const grid = document.createElement('div');
-        grid.style.cssText = "display: flex; flex-wrap: wrap; gap: 8px; padding: 10px;";
+        grid.style.cssText = "display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 10px;";
 
         tables.forEach(table => {
             const isOccupied = table.status === 'ocupada';
@@ -79,10 +93,10 @@ const PDVTables = {
             const card = document.createElement('div');
             card.className = 'table-card-item';
             card.style.cssText = `
-                width: 60px; height: 60px; 
+                width: 50px; height: 50px; 
                 background: ${bg}; 
                 border: 2px solid ${border}; 
-                border-radius: 12px; 
+                border-radius: 10px; 
                 display: flex; flex-direction: column; 
                 align-items: center; justify-content: center; 
                 cursor: pointer; transition: transform 0.1s;
@@ -259,8 +273,81 @@ const PDVTables = {
     },
 
     // ==========================================
-    // NOVO CLIENTE
+    // NOVO CLIENTE (MODAL)
     // ==========================================
+    modalSearchTimeout: null,
+
+    searchClientInModal: function (term) {
+        clearTimeout(this.modalSearchTimeout);
+        const results = document.getElementById('modal-client-results');
+        const btnSave = document.getElementById('btn-save-new-client'); // Precisa adicionar ID no HTML
+
+        if (term.length < 2) {
+            results.style.display = 'none';
+            if (btnSave) btnSave.disabled = false;
+            if (btnSave) btnSave.style.opacity = '1';
+            return;
+        }
+
+        this.modalSearchTimeout = setTimeout(() => {
+            fetch('clientes/buscar?q=' + term)
+                .then(r => r.json())
+                .then(data => {
+                    results.innerHTML = '';
+                    let exactMatch = false;
+
+                    if (data.length > 0) {
+                        results.style.display = 'block';
+
+                        data.forEach(client => {
+                            // Verifica duplicidade exata (case insensitive)
+                            if (client.name.toLowerCase() === term.toLowerCase()) {
+                                exactMatch = true;
+                            }
+
+                            const div = document.createElement('div');
+                            div.style.cssText = "padding: 8px 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; justify-content: space-between; align-items: center;";
+                            div.innerHTML = `
+                                <div>
+                                    <div style="font-weight:600; font-size:0.85rem;">${client.name}</div>
+                                    ${client.phone ? `<div style="font-size:0.75rem; color:#64748b;">${client.phone}</div>` : ''}
+                                </div>
+                                <span style="font-size: 0.75rem; color: #2563eb; background: #eff6ff; padding: 2px 6px; border-radius: 4px;">Selecionar</span>
+                            `;
+
+                            div.onclick = () => {
+                                this.selectClient(client.id, client.name);
+                                document.getElementById('clientModal').style.display = 'none';
+                                document.body.removeChild(document.getElementById('clientModal')); // Move de volta ou destroi? Melhor esconder e resetar.
+                                // Na verdade o modal foi movido pro body, entao ok.
+                                document.getElementById('new_client_name').value = '';
+                                results.style.display = 'none';
+                            };
+
+                            results.appendChild(div);
+                        });
+                    } else {
+                        results.style.display = 'none';
+                    }
+
+                    // Bloqueia salvar se tiver nome igual
+                    if (exactMatch) {
+                        if (btnSave) {
+                            btnSave.disabled = true;
+                            btnSave.style.opacity = '0.5';
+                            btnSave.innerText = "Já Existe";
+                        }
+                    } else {
+                        if (btnSave) {
+                            btnSave.disabled = false;
+                            btnSave.style.opacity = '1';
+                            btnSave.innerText = "Salvar";
+                        }
+                    }
+                });
+        }, 300);
+    },
+
     saveClient: function () {
         const name = document.getElementById('new_client_name').value;
         const phone = document.getElementById('new_client_phone').value;

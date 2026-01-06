@@ -3,6 +3,8 @@
  * Dependências: PDVState, Utils (se houver, senão nativo)
  */
 
+let pendingProduct = null;
+
 const PDVCart = {
     items: [],
     backupItems: [],
@@ -12,35 +14,56 @@ const PDVCart = {
     },
 
     setItems: function (newItems) {
-        this.items = newItems;
+        if (!newItems) newItems = [];
+        // Migração simples para garantir cartItemId se vier do PHP
+        this.items = newItems.map(item => ({
+            ...item,
+            cartItemId: item.cartItemId || ('legacy_' + item.id + '_' + Math.random()),
+            extras: item.extras || [],
+            price: parseFloat(item.price) // Garante float
+        }));
         this.updateUI();
     },
 
-    add: function (id, name, price, quantity = 1) {
-        // Limpa backup ao modificar o carrinho manualmente
+    /**
+     * Adiciona item ao carrinho
+     * @param {number} id - Product ID
+     * @param {string} name - Product Name
+     * @param {number} price - Unit Price (Base + Extras)
+     * @param {number} quantity - Qty
+     * @param {Array} extras - Array of extra objects {id, name, price}
+     */
+    add: function (id, name, price, quantity = 1, extras = []) {
         this.backupItems = [];
-
-        // Converte tipos para garantir segurança (mesma lógica do legacy)
         const numId = parseInt(id);
         const floatPrice = parseFloat(price);
 
-        const existing = this.items.find(item => item.id === numId);
+        // Gera chave única baseada nos extras para agrupar iguais
+        const extrasKey = JSON.stringify(extras.sort((a, b) => a.id - b.id));
+
+        const existing = this.items.find(item =>
+            item.id === numId &&
+            JSON.stringify(item.extras.sort((a, b) => a.id - b.id)) === extrasKey
+        );
 
         if (existing) {
-            existing.quantity++;
+            existing.quantity += quantity;
         } else {
             this.items.push({
+                cartItemId: 'item_' + Date.now() + '_' + Math.random(),
                 id: numId,
                 name: name,
                 price: floatPrice,
-                quantity: quantity
+                quantity: quantity,
+                extras: extras
             });
         }
         this.updateUI();
     },
 
-    remove: function (id) {
-        const index = this.items.findIndex(item => item.id === id);
+    // Remove por cartItemId (único)
+    remove: function (cartItemId) {
+        const index = this.items.findIndex(item => item.cartItemId === cartItemId);
 
         if (index > -1) {
             const item = this.items[index];
@@ -102,7 +125,6 @@ const PDVCart = {
             cartContainer.style.display = 'none';
             if (emptyState) {
                 emptyState.style.display = 'flex';
-                // Reseta HTML do empty state para o padrão (remove botão antigo se houver)
                 emptyState.innerHTML = `
                     <i data-lucide="shopping-cart" size="48" color="#e5e7eb" style="margin-bottom: 1rem;"></i>
                     <p>Carrinho Vazio</p>
@@ -118,17 +140,28 @@ const PDVCart = {
             // Renderiza Itens
             let html = '';
             this.items.forEach(item => {
+                // Renderiza extras
+                let extrasHtml = '';
+                if (item.extras && item.extras.length > 0) {
+                    extrasHtml = '<div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">';
+                    item.extras.forEach(ex => {
+                        extrasHtml += `+ ${ex.name}<br>`;
+                    });
+                    extrasHtml += '</div>';
+                }
+
                 html += `
-                <div style="padding: 10px 0; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center;">
+                <div style="padding: 10px 0; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: flex-start;">
                     <div style="flex: 1;">
                         <div style="font-weight: 600; font-size: 0.9rem; color: #1f2937;">${item.name}</div>
-                        <div style="font-size: 0.8rem; color: #6b7280;">
+                        ${extrasHtml}
+                        <div style="font-size: 0.8rem; color: #6b7280; margin-top: 2px;">
                             ${item.quantity}x R$ ${PDVCart.formatMoney(item.price)}
                         </div>
                     </div>
-                    <div style="display: flex; gap: 5px; align-items: center;">
-                         <button onclick="PDVCart.remove(${item.id})" style="background: #fee2e2; color: #991b1b; border: none; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-weight:bold;">-</button>
-                         <button onclick="PDVCart.add(${item.id}, '${item.name.replace(/'/g, "\\'")}', ${item.price})" style="background: #dcfce7; color: #166534; border: none; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-weight:bold;">+</button>
+                    <div style="display: flex; gap: 5px; align-items: center; margin-top: 5px;">
+                         <button onclick="PDVCart.remove('${item.cartItemId}')" style="background: #fee2e2; color: #991b1b; border: none; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-weight:bold;">-</button>
+                         <button onclick='PDVCart.add(${item.id}, "${item.name.replace(/"/g, '&quot;').replace(/'/g, "\\'")}", ${item.price}, 1, ${JSON.stringify(item.extras || []).replace(/'/g, "&#39;")})' style="background: #dcfce7; color: #166534; border: none; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-weight:bold;">+</button>
                     </div>
                 </div>
                 `;
@@ -168,24 +201,207 @@ const PDVCart = {
     }
 };
 
-// Expor Globalmente
 window.PDVCart = PDVCart;
 
+
 // ==========================================
-// COMPATIBILIDADE LEGADA (MANTÉM FUNCIONANDO)
+// EXPOSIÇÃO GLOBAL E EVENTOS
+// ==========================================
+
+// Namespace Global PDV (se não existir)
+window.PDV = window.PDV || {};
+
+/**
+ * Função Global para clique no produto (chamada pelo HTML onclick)
+ * Mais robusto que event listeners em estruturas dinâmicas/PHP misto.
+ */
+window.PDV.clickProduct = function (id, name, price, hasExtras, encodedExtras = '[]') {
+    // Normaliza booleanos que podem vir como string ou int do PHP
+    const hasExtrasBool = (hasExtras === true || hasExtras === 'true' || hasExtras === 1 || hasExtras === '1');
+
+    console.log('[PDV] Click:', { id, name, price, hasExtrasBool });
+
+    if (hasExtrasBool) {
+        pendingProduct = { id, name, price: parseFloat(price) };
+        openExtrasModal(id);
+    } else {
+        PDVCart.add(id, name, parseFloat(price));
+    }
+};
+
+// Mantém compatibilidade com chamadas antigas se existirem
+window.addToCart = function (id, name, price, hasExtras) {
+    window.PDV.clickProduct(id, name, price, hasExtras);
+};
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[PDV Cart] DOM Ready. Handlers initialized.');
+});
+
+// ==========================================
+// COMPATIBILIDADE LEGADA E MODAL
 // ==========================================
 
 // Mapeia array global 'cart' para PDVCart.items
-// Isso é perigoso se reatribuírem 'cart = []'. No main.js, vamos mudar isso.
 window.cart = PDVCart.items;
 Object.defineProperty(window, 'cart', {
     get: () => PDVCart.items,
     set: (val) => PDVCart.setItems(val)
 });
 
-// Funções Globais chamadas pelo HTML (onclick)
-window.addToCart = (id, name, price) => PDVCart.add(id, name, price);
-window.removeFromCart = (id) => PDVCart.remove(id);
+// Funções Globais (se algo externo chamar ainda)
+window.addToCart = function (id, name, price, hasExtras = false) {
+    console.log('[Deprecation] addToCart called via inline JS. Prefer event listener.');
+    if (hasExtras) {
+        pendingProduct = { id, name, price };
+        openExtrasModal(id);
+    } else {
+        PDVCart.add(id, name, price);
+    }
+};
+
+window.openExtrasModal = async function (productId) {
+    const modal = document.getElementById('extrasModal');
+    const content = document.getElementById('extras-modal-content');
+
+    if (!modal) {
+        console.error('Modal #extrasModal não encontrado no DOM!');
+        alert('Erro interno: Modal de adicionais não encontrado.');
+        return;
+    }
+
+    modal.style.display = 'flex';
+    content.innerHTML = '<div style="text-align: center; margin-top: 20px; color: #64748b;">Carregando opções... <span class="loader"></span></div>';
+
+    // Garante que BASE_URL não tenha barras duplas ou falte
+    const baseUrl = (typeof BASE_URL !== 'undefined') ? BASE_URL : '';
+    const url = `${baseUrl}/admin/loja/adicionais/get-product-extras?product_id=${productId}`;
+
+    console.log(`[PDV] Buscando adicionais: ${url}`);
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+
+        const groups = await response.json();
+        renderExtras(groups);
+    } catch (e) {
+        console.error(e);
+        content.innerHTML = `
+            <div style="color:#ef4444; text-align: center; padding: 20px;">
+                <p><strong>Erro ao carregar opções.</strong></p>
+                <p style="font-size: 0.8rem; color: #7f1d1d;">${e.message}</p>
+                <button onclick="closeExtrasModal()" style="margin-top:10px; padding:5px 10px;">Fechar</button>
+            </div>
+        `;
+    }
+};
+
+window.closeExtrasModal = function () {
+    const modal = document.getElementById('extrasModal');
+    if (modal) modal.style.display = 'none';
+    pendingProduct = null;
+    // Limpa checkboxes
+    const content = document.getElementById('extras-modal-content');
+    if (content) content.innerHTML = '';
+};
+
+window.renderExtras = function (groups) {
+    const container = document.getElementById('extras-modal-content');
+    container.innerHTML = '';
+
+    if (!groups || groups.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <p style="color:#64748b;">Nenhuma opção extra disponível para este produto.</p>
+                <button onclick="confirmExtras()" style="background: #2563eb; color: white; padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;"> Adicionar sem extras</button>
+            </div>
+        `;
+        return;
+    }
+
+    // ... (rest of render logic is fine, keeping simple)
+    groups.forEach(group => {
+        const groupDiv = document.createElement('div');
+        groupDiv.style.marginBottom = '20px';
+
+        const title = document.createElement('h4');
+        title.innerHTML = `${group.name}`;
+        if (group.required == 1) {
+            title.innerHTML += ' <span style="color:#ef4444; font-size:0.8em;">(Obrigatório)</span>';
+        }
+        title.style.margin = '0 0 10px 0';
+        title.style.color = '#334155';
+        groupDiv.appendChild(title);
+
+        group.items.forEach(item => {
+            const label = document.createElement('label');
+            label.style.display = 'flex';
+            label.style.justifyContent = 'space-between';
+            label.style.padding = '10px';
+            label.style.border = '1px solid #e2e8f0';
+            label.style.marginBottom = '8px';
+            label.style.borderRadius = '8px';
+            label.style.cursor = 'pointer';
+            label.style.transition = 'all 0.2s';
+
+            const formattedPrice = parseFloat(item.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            label.innerHTML = `
+                <div style="display:flex; align-items:center; gap: 10px;">
+                    <input type="checkbox" name="extra_group_${group.id}" value="${item.id}" 
+                           data-name="${item.name}" data-price="${item.price}" 
+                           class="extra-input" style="width: 18px; height: 18px; cursor: pointer;">
+                    <span style="font-size: 0.95rem; color: #1e293b;">${item.name}</span>
+                </div>
+                <span style="font-weight:600; color:#059669; font-size: 0.9rem;">+ ${formattedPrice}</span>
+            `;
+
+            const checkbox = label.querySelector('input');
+            checkbox.addEventListener('change', function () {
+                if (this.checked) {
+                    label.style.borderColor = '#16a34a';
+                    label.style.background = '#f0fdf4';
+                } else {
+                    label.style.borderColor = '#e2e8f0';
+                    label.style.background = 'white';
+                }
+            });
+
+            groupDiv.appendChild(label);
+        });
+
+        container.appendChild(groupDiv);
+    });
+};
+
+window.confirmExtras = function () {
+    if (!pendingProduct) return;
+
+    const selectedExtras = [];
+    let totalPrice = parseFloat(pendingProduct.price);
+
+    const inputs = document.querySelectorAll('.extra-input:checked');
+    inputs.forEach(input => {
+        const price = parseFloat(input.dataset.price);
+        selectedExtras.push({
+            id: parseInt(input.value),
+            name: input.dataset.name,
+            price: price
+        });
+        totalPrice += price;
+    });
+
+    PDVCart.add(pendingProduct.id, pendingProduct.name, totalPrice, 1, selectedExtras);
+    closeExtrasModal();
+};
+
+window.removeFromCart = (id) => {
+    const item = PDVCart.items.find(i => i.id === id);
+    if (item) PDVCart.remove(item.cartItemId);
+};
 window.updateCartUI = () => PDVCart.updateUI();
-window.calculateTotal = () => PDVCart.calculateTotal(); // Usado no checkout
+window.calculateTotal = () => PDVCart.calculateTotal();
 window.clearCart = () => PDVCart.clear();
+

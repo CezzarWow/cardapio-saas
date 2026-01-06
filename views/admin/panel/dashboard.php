@@ -96,14 +96,13 @@ if ($isEditingPaid && $editingOrderId) {
                 </div>
 
                 <!-- Grid Unificado de Produtos -->
-                <div class="products-grid">
+                <div class="products-grid" id="products-grid">
                     <?php foreach ($categories as $category): ?>
                         <?php if (!empty($category['products'])): ?>
                             <?php foreach ($category['products'] as $product): ?>
                                 
                                 <div class="product-card" 
-                                     data-category="<?= htmlspecialchars($category['name']) ?>"
-                                     onclick="addToCart(<?= $product['id'] ?>, '<?= addslashes($product['name']) ?>', <?= $product['price'] ?>)">
+                                     onclick='PDV.clickProduct(<?= $product['id'] ?>, <?= json_encode($product['name']) ?>, <?= $product['price'] ?>, <?= $product['has_extras'] ? "true" : "false" ?>)'>
                                     
                                     <!-- Caixa padrão -->
                                     <div class="pdv-product-icon">
@@ -130,7 +129,7 @@ if ($isEditingPaid && $editingOrderId) {
     <input type="hidden" id="current_table_id" value="<?= $mesa_id ?? '' ?>">
     <input type="hidden" id="current_table_number" value="<?= $mesa_numero ?? '' ?>">
 
-    <aside class="cart-sidebar">
+    <aside class="cart-sidebar" style="padding-bottom: 85px;">
         <div class="cart-header">
             <h2 class="cart-title">
                 <i data-lucide="shopping-cart" color="#2563eb"></i> Carrinho
@@ -143,13 +142,13 @@ if ($isEditingPaid && $editingOrderId) {
             </div>
         </div>
         
-        <div id="cart-empty-state" class="cart-empty">
+        <div id="cart-empty-state" class="cart-empty" style="flex: 1;">
             <i data-lucide="shopping-cart" size="48" color="#e5e7eb" style="margin-bottom: 1rem;"></i>
             <p>Carrinho Vazio</p>
         </div>
 
-        <div id="cart-items-area" style="flex: 1; overflow-y: auto; padding: 1rem; display: none;">
-        </div>
+        <!-- Items Area com Flex 1 para empurrar rodapé (mas scrolar) -->
+        <div id="cart-items-area" style="flex: 1; overflow-y: auto; padding: 0 1.5rem; display: none;"></div>
 
         <?php if (!empty($itensJaPedidos)): ?>
             <div style="padding: 1rem; background: #fff7ed; border-bottom: 1px solid #fed7aa;">
@@ -180,24 +179,24 @@ if ($isEditingPaid && $editingOrderId) {
             </div>
         <?php endif; ?>
 
-        <div class="cart-footer" style="box-shadow: 0 -4px 12px rgba(0,0,0,0.05); padding-top: 20px; padding-bottom: 30px;">
+        <div class="cart-footer" style="box-shadow: 0 -4px 12px rgba(0,0,0,0.05); padding-top: 10px; padding-bottom: 15px;">
             
         <?php if (!$mesa_id && empty($contaAberta)): ?>
-            <div style="margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px dashed #e5e7eb;">
+            <div style="margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px dashed #e5e7eb;">
                 <label style="font-size: 1.1rem; font-weight: 800; color: #1f2937; margin-bottom: 10px; display: block;">Identificar Mesa / Cliente</label>
                 
                     <div id="client-search-area" style="display: flex; gap: 12px; align-items: flex-start;">
                     <!-- Wrapper relativo apenas para o Input e Resultados -->
                     <div style="position: relative; flex: 1;">
                         <input type="text" id="client-search" placeholder="Clique para ver mesas ou digite..." autocomplete="off"
-                               style="width: 100%; padding: 15px 12px; border: 1px solid #94a3b8; border-radius: 10px; font-size: 1.1rem; outline: none; transition: all 0.2s; background: #f8fafc;">
+                               style="width: 100%; padding: 10px 12px; border: 1px solid #94a3b8; border-radius: 10px; font-size: 1.1rem; outline: none; transition: all 0.2s; background: #f8fafc;">
                         
                         <!-- Dropdown Redesenhado -->
                         <div id="client-results" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); max-height: 200px; overflow-y: auto; z-index: 9999; margin-top: 6px;">
                         </div>
                     </div>
                     
-                    <button type="button" onclick="const m=document.getElementById('clientModal'); if(m) { m.style.display='flex'; document.getElementById('new_client_name').focus(); }" title="Novo Cliente"
+                    <button type="button" onclick="const m=document.getElementById('clientModal'); if(m) { document.body.appendChild(m); m.style.display='flex'; m.style.zIndex='9999'; document.getElementById('new_client_name').focus(); }" title="Novo Cliente"
                             style="flex-shrink: 0; background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; height: 38px; width: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
                         <i data-lucide="user-plus" style="width: 20px;"></i>
                     </button>
@@ -227,11 +226,16 @@ if ($isEditingPaid && $editingOrderId) {
                 <span id="grand-total" style="font-size: 1.8rem; font-weight: 900; color: #2563eb;">R$ 0,00</span>
             </div>
 
-            <!-- Adicionar (Carrinho) -->
+            <!-- Adicionar (Carrinho) - Só mostra se estiver em Mesa ou Comanda Aberta -->
+            <?php if ($mesa_id || !empty($contaAberta)): ?>
             <div class="total-row" style="margin-bottom: 1.5rem;">
                 <span class="total-label" style="font-size: 1rem; color: #111827; font-weight: 700;">Adicionar</span>
                 <span id="cart-total" class="total-value" style="font-size: 1.1rem; color: #16a34a;">R$ 0,00</span>
             </div>
+            <?php else: ?>
+                <!-- Escondido no Balcão, mas mantendo ID pro JS funcionar -->
+                 <span id="cart-total" style="display: none;">R$ 0,00</span>
+            <?php endif; ?>
 
             <!-- Botões de Ação -->
             <div style="display: flex; gap: 10px;">
@@ -449,17 +453,21 @@ if ($isEditingPaid && $editingOrderId) {
                 </button>
             </div>
         </div>
+        </div>
     </div>
 </div>
 
 <!-- MODAL NOVO CLIENTE -->
-<div id="clientModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 200;">
+<div id="clientModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 9999;">
     <div style="background: white; padding: 25px; border-radius: 12px; width: 350px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
         <h3 style="margin-top: 0; color: #1e293b;">Novo Cliente</h3>
         
-        <div style="margin-bottom: 15px;">
+        <div style="margin-bottom: 15px; position: relative;">
             <label style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 5px;">Nome</label>
-            <input type="text" id="new_client_name" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+            <input type="text" id="new_client_name" autocomplete="off"
+                   oninput="PDVTables.searchClientInModal(this.value)"
+                   style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+            <div id="modal-client-results" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 6px; max-height: 150px; overflow-y: auto; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
         </div>
         
         <div style="margin-bottom: 20px;">
@@ -468,21 +476,13 @@ if ($isEditingPaid && $editingOrderId) {
         </div>
 
         <div style="display: flex; gap: 10px;">
-            <button onclick="document.getElementById('clientModal').style.display='none'" style="flex: 1; padding: 10px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer; color: #475569; font-weight: 600;">Cancelar</button>
-            <button onclick="saveClient()" style="flex: 1; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Salvar</button>
+            <button onclick="document.body.removeChild(document.getElementById('clientModal'));" style="flex: 1; padding: 10px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer; color: #475569; font-weight: 600;">Cancelar</button>
+            <button id="btn-save-new-client" onclick="saveClient()" style="flex: 1; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Salvar</button>
         </div>
     </div>
 </div>
 
-<!-- MODAL SUCESSO -->
-<div id="successModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); justify-content: center; align-items: center; z-index: 300;">
-    <div style="background: white; padding: 30px; border-radius: 16px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transform: scale(1.1);">
-        <div style="width: 60px; height: 60px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
-            <i data-lucide="check-circle-2" style="width: 32px; color: #16a34a;"></i>
-        </div>
-        <h2 style="margin: 0; color: #166534; font-size: 1.5rem;">Sucesso!</h2>
-    </div>
-</div>
+
     <script>
         const BASE_URL = '<?= BASE_URL ?>';
         // Injeta o carrinho recuperado do PHP para o JS
@@ -493,6 +493,28 @@ if ($isEditingPaid && $editingOrderId) {
         const originalPaidTotal = <?= $originalPaidTotalFromDB ?? 0 ?>;
         const editingPaidOrderId = <?= $editingOrderId ?? 'null' ?>;
     </script>
+
+    <!-- MODAL DE ADICIONAIS -->
+    <div id="extrasModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: white; width: 500px; max-width: 95%; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+            <div style="padding: 15px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                <h3 id="extras-modal-title" style="margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 700;">Opções</h3>
+                <button onclick="closeExtrasModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <div id="extras-modal-content" style="padding: 20px; overflow-y: auto; flex: 1;">
+                <!-- Groups will be injected here -->
+                <div style="text-align: center; color: #64748b;">Carregando opções...</div>
+            </div>
+            <div style="padding: 15px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; text-align: right; display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="closeExtrasModal()" style="padding: 10px 16px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; cursor: pointer; color: #475569;">Cancelar</button>
+                <button id="btn-add-extras" onclick="confirmExtras()" style="padding: 10px 20px; background: #16a34a; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
+                    Adicionar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts do PDV -->
     <script src="<?= BASE_URL ?>/js/pdv/state.js?v=<?= time() ?>"></script>
     <script src="<?= BASE_URL ?>/js/pdv/cart.js?v=<?= time() ?>"></script>
     <script src="<?= BASE_URL ?>/js/pdv/tables.js?v=<?= time() ?>"></script>

@@ -35,13 +35,16 @@
 
 /* ========== CARRINHO VAZIO ========== */
 .cart-empty {
-    flex: 1;
+    /* flex: 1; removido para não empurrar o rodapé lá pra baixo */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     color: var(--text-light, #6b7280);
     gap: 1rem;
+    padding: 2rem 0;
+    /* Espaço interno */
+    min-height: 200px;
 }
 
 /* ========== FOOTER ========== */

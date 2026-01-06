@@ -266,6 +266,11 @@ switch ($path) {
         (new \App\Controllers\Admin\AdditionalController())->getItemData();
         break;
 
+    case '/admin/loja/adicionais/get-product-extras':
+        require_once __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
+        (new \App\Controllers\Admin\AdditionalController())->getProductExtras();
+        break;
+
 
 
 

@@ -86,7 +86,16 @@ class ProductController {
         foreach ($categories as &$cat) {
             $stmtProd = $conn->prepare("SELECT * FROM products WHERE category_id = :cid AND is_active = 1");
             $stmtProd->execute(['cid' => $cat['id']]);
-            $cat['products'] = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
+            $products = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
+
+            // [NOVO] Verifica se tem adicionais
+            foreach ($products as &$prod) {
+                // Query leve para saber se tem adicionais vinculados
+                $stmtHas = $conn->prepare("SELECT 1 FROM product_additional_relations WHERE product_id = :pid LIMIT 1");
+                $stmtHas->execute(['pid' => $prod['id']]);
+                $prod['has_extras'] = (bool) $stmtHas->fetchColumn();
+            }
+            $cat['products'] = $products;
         }
 
         // --- VERIFICA SE TEM CARRINHO RECUPERADO (EDIÇÃO) ---
