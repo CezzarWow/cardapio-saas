@@ -6,6 +6,8 @@
 const PDVCheckout = {
     currentPayments: [],
     totalPaid: 0,
+    discountValue: 0, // [NOVO]
+    cachedTotal: 0, // [FIX] Total armazenado quando o modal abre
     selectedMethod: 'dinheiro',
     closingOrderId: null, // Para fechar comanda específica
 
@@ -15,6 +17,9 @@ const PDVCheckout = {
     },
 
     bindEvents: function () {
+        // [FIX] Removido bind manual para evitar conflitos com onclick inline
+        // O onclick="finalizeSale()" do HTML chamará window.finalizeSale() -> PDVCheckout.finalizeSale()
+
         // Input de pagamento
         const payInput = document.getElementById('pay-amount');
         if (payInput) {
@@ -26,6 +31,15 @@ const PDVCheckout = {
                 }
             });
         }
+
+        // Input Desconto [FIX]
+        const discInput = document.getElementById('discount-amount');
+        if (discInput) {
+            discInput.addEventListener('input', function () {
+                PDVCheckout.formatMoneyInput(this);
+                PDVCheckout.applyDiscount(this.value);
+            });
+        }
     },
 
     formatMoneyInput: function (input) {
@@ -34,6 +48,26 @@ const PDVCheckout = {
         value = (parseInt(value) / 100).toFixed(2).replace('.', ',');
         value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
         input.value = value;
+    },
+
+    // [NOVO] Aplica desconto
+    applyDiscount: function (valStr) {
+        if (!valStr) {
+            this.discountValue = 0;
+        } else {
+            let val = valStr.replace(/\./g, '').replace(',', '.');
+            this.discountValue = parseFloat(val) || 0;
+        }
+        this.updateCheckoutUI();
+
+        // Se mudou o desconto, reseta o valor sugerido no input de pagamento
+        const finalTotal = this.getFinalTotal();
+        const remaining = Math.max(0, finalTotal - this.totalPaid);
+        const input = document.getElementById('pay-amount');
+        if (input) {
+            input.value = remaining.toFixed(2).replace('.', ',');
+            this.formatMoneyInput(input);
+        }
     },
 
     // ==========================================
@@ -53,7 +87,8 @@ const PDVCheckout = {
 
         if (tableId) {
             if (PDVCart.items.length === 0) { alert('Carrinho vazio!'); return; }
-            this.submitSale(); // Salva direto (sem checkout modal)
+            // Abre modal de pagamento (não salva direto)
+            this.openCheckoutModal();
             return;
         }
 
@@ -147,10 +182,44 @@ const PDVCheckout = {
     openCheckoutModal: function () {
         this.currentPayments = [];
         this.totalPaid = 0;
-        document.getElementById('checkout-total-display').innerText = this.formatCurrency(PDVCart.calculateTotal());
+        this.discountValue = 0; // Reset
+
+        // Calcula o total usando a função global (pdv-core.js) ou PDVCart
+        let cartTotal = 0;
+        if (typeof calculateTotal === 'function') {
+            // Usa a função global de pdv-core.js (variável global 'cart')
+            cartTotal = calculateTotal();
+        } else if (typeof PDVCart !== 'undefined') {
+            // Fallback para PDVCart
+            cartTotal = PDVCart.calculateTotal();
+        }
+        let tableInitialTotal = parseFloat(document.getElementById('table-initial-total')?.value || 0);
+        this.cachedTotal = cartTotal + tableInitialTotal;
+
+        // Reset Inputs
+        const discInput = document.getElementById('discount-amount');
+        if (discInput) discInput.value = '';
+
+        // Reset payment list
+        this.updatePaymentList();
+
+        document.getElementById('checkout-total-display').innerText = this.formatCurrency(this.cachedTotal);
         document.getElementById('checkoutModal').style.display = 'flex';
         this.setMethod('dinheiro');
+
+        // SEMPRE abre com "Local" selecionado
+        const localCard = document.querySelector('.order-type-card:first-child');
+        if (localCard) {
+            this.selectOrderType('local', localCard);
+        } else {
+            // Fallback: reseta manualmente
+            document.getElementById('keep_open_value').value = 'false';
+            const alertBox = document.getElementById('retirada-client-alert');
+            if (alertBox) alertBox.style.display = 'none';
+        }
+
         this.updateCheckoutUI();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     },
 
     closeCheckout: function () {
@@ -236,6 +305,10 @@ const PDVCheckout = {
             label: this.formatMethodLabel(this.selectedMethod)
         });
         this.totalPaid += amount;
+
+        // DEBUG
+        console.log('[addPayment] amount:', amount, 'totalPaid:', this.totalPaid, 'finalTotal:', this.getFinalTotal());
+
         amountInput.value = '';
 
         this.updatePaymentList();
@@ -264,7 +337,9 @@ const PDVCheckout = {
         const listEl = document.getElementById('payment-list');
         listEl.innerHTML = '';
         if (this.currentPayments.length === 0) {
-            listEl.style.display = 'none';
+            // Mantém o espaço mas mostra placeholder
+            listEl.style.display = 'block';
+            listEl.innerHTML = '<div style="text-align: center; color: #94a3b8; font-size: 0.9rem; padding: 20px 0;">Nenhum pagamento lançado</div>';
             return;
         }
         listEl.style.display = 'block';
@@ -280,34 +355,58 @@ const PDVCheckout = {
             `;
             listEl.appendChild(row);
         });
+
+        // Auto-scroll para o final
+        setTimeout(() => {
+            listEl.scrollTop = listEl.scrollHeight;
+        }, 50);
+
         if (typeof lucide !== 'undefined') lucide.createIcons();
     },
 
     updateCheckoutUI: function () {
         const finalTotal = this.getFinalTotal();
+        const discount = this.discountValue || 0;
+        // Subtotal é o total FINAL + Desconto (ou seja, o valor original antes do desconto)
+        // Se a gente quiser mostrar o total bruto do carrinho:
+        const subtotal = finalTotal + discount;
+
+        // document.getElementById('display-subtotal').innerText = this.formatCurrency(subtotal);
+        document.getElementById('display-discount').innerText = '- ' + this.formatCurrency(discount);
+        document.getElementById('display-paid').innerText = this.formatCurrency(this.totalPaid);
+        document.getElementById('checkout-total-display').innerText = this.formatCurrency(finalTotal);
+
         const remaining = finalTotal - this.totalPaid;
         const btnFinish = document.getElementById('btn-finish-sale');
 
-        document.getElementById('checkout-remaining').innerText = this.formatCurrency(Math.max(0, remaining));
+        // Debug
+        console.log('[Checkout] remaining:', remaining, 'btnFinish:', btnFinish);
+
+        document.getElementById('display-remaining').innerText = this.formatCurrency(Math.max(0, remaining));
 
         const changeBox = document.getElementById('change-box');
-        const epsilon = 0.009;
 
-        if (remaining < -epsilon) {
-            // Troco
-            changeBox.style.display = 'block';
-            document.getElementById('checkout-change').innerText = this.formatCurrency(Math.abs(remaining));
-            btnFinish.disabled = false;
-            btnFinish.style.background = '#22c55e';
-            btnFinish.style.cursor = 'pointer';
-        } else if (Math.abs(remaining) <= epsilon) {
-            // Exato
-            changeBox.style.display = 'none';
+        // Verifica se elemento existe
+        if (!btnFinish) {
+            console.error('[Checkout] btn-finish-sale não encontrado!');
+            return;
+        }
+
+        // Lógica Simplificada: Se falta <= 1 centavo, libera
+        if (remaining <= 0.01) {
+            // Pode ter troco ou ser exato
+            if (remaining < -0.01) {
+                // Tem troco
+                changeBox.style.display = 'block';
+                document.getElementById('checkout-change').innerText = this.formatCurrency(Math.abs(remaining));
+            } else {
+                changeBox.style.display = 'none';
+            }
             btnFinish.disabled = false;
             btnFinish.style.background = '#22c55e';
             btnFinish.style.cursor = 'pointer';
         } else {
-            // Falta
+            // Falta pagar
             changeBox.style.display = 'none';
             btnFinish.disabled = true;
             btnFinish.style.background = '#cbd5e1';
@@ -315,34 +414,31 @@ const PDVCheckout = {
         }
 
         // Validação Extra: Retirada sem Cliente
-        const keepOpenValue = document.getElementById('keep_open_value')?.value;
+        // Só bloqueia se input existir, for 'true' E não tiver cliente selecionado
+        const keepOpenInput = document.getElementById('keep_open_value');
         const clientId = document.getElementById('current_client_id')?.value;
         const tableId = document.getElementById('current_table_id')?.value;
 
-        if (keepOpenValue === 'true' && !clientId && !tableId) {
+        if (keepOpenInput && keepOpenInput.value === 'true' && !clientId && !tableId) {
             btnFinish.disabled = true;
-            btnFinish.style.background = '#fbbf24';
+            btnFinish.style.background = '#fbbf24'; // Amarelo alerta
             btnFinish.style.cursor = 'not-allowed';
         }
     },
 
     getFinalTotal: function () {
-        const { modo } = PDVState.getState();
-        let total = 0;
-
-        if (modo === 'mesa' || modo === 'comanda') {
-            const val = document.getElementById('table-initial-total')?.value;
-            total = parseFloat(val) || 0;
-        } else {
-            total = PDVCart.calculateTotal(); // Carrinho normal
-        }
+        // [FIX] Sempre usa cachedTotal que já inclui table-initial-total + cart
+        let total = this.cachedTotal || 0;
 
         // Se editando pago, desconta o original
         if (typeof isEditingPaidOrder !== 'undefined' && isEditingPaidOrder && typeof originalPaidTotal !== 'undefined') {
             const diff = total - originalPaidTotal;
-            return diff > 0 ? diff : 0;
+            total = diff > 0 ? diff : 0;
         }
-        return total;
+
+        // [NOVO] Aplica desconto
+        total = total - this.discountValue;
+        return total > 0 ? total : 0;
     },
 
     // ==========================================
@@ -356,12 +452,22 @@ const PDVCheckout = {
         const keepOpenStr = document.getElementById('keep_open_value') ? document.getElementById('keep_open_value').value : 'false';
         const keepOpen = keepOpenStr === 'true';
 
+        // Usa o carrinho global (pdv-core.js) ou PDVCart
+        let cartItems = [];
+        if (typeof cart !== 'undefined' && Array.isArray(cart)) {
+            cartItems = cart;
+        } else if (typeof PDVCart !== 'undefined') {
+            cartItems = PDVCart.items;
+        }
+
         const payload = {
-            cart: PDVCart.items,
+            cart: cartItems,
             table_id: tableId ? parseInt(tableId) : null,
             client_id: clientId ? parseInt(clientId) : null,
             payments: this.currentPayments,
-            keep_open: keepOpen
+            discount: this.discountValue,
+            keep_open: keepOpen,
+            finalize_now: true  // [NOVO] Indica que veio do modal de pagamento - finalizar venda
         };
 
         // Lógica de Estado (Mesa/Comanda/Inclusão)
@@ -391,9 +497,13 @@ const PDVCheckout = {
                 if (data.success) {
                     this.showSuccessModal();
                     PDVCart.clear();
+                    // Limpa o carrinho global também
+                    if (typeof cart !== 'undefined') cart.length = 0;
+
                     setTimeout(() => {
-                        if (isPaidLoop || modo === 'mesa' || modo === 'comanda') {
-                            // Se fechou mesa/comanda, vai pro mapa. Se editou, reload?
+                        // Se veio do modal de pagamento (finalize_now), sempre reload
+                        // Só redireciona para mesas se fechou conta de mesa existente
+                        if (isPaidLoop) {
                             window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
                         } else {
                             window.location.reload();
@@ -463,22 +573,59 @@ const PDVCheckout = {
     },
 
     selectOrderType: function (type, element) {
-        // Lógica visual do card Local/Retirada
-        document.querySelectorAll('.order-type-card').forEach(el => el.classList.remove('active'));
-        if (element) element.classList.add('active');
-        // Logica de keep open
-        // Chama updateCheckoutUI para validar se Retirada precisa de cliente
+        // Reset todos os cards
+        document.querySelectorAll('.order-type-card').forEach(el => {
+            if (!el.classList.contains('disabled')) {
+                el.classList.remove('active');
+                el.style.border = '1px solid #cbd5e1';
+                el.style.background = 'white';
+            }
+        });
+
+        // Ativa o selecionado
+        if (element && !element.classList.contains('disabled')) {
+            element.classList.add('active');
+            element.style.border = '2px solid #2563eb';
+            element.style.background = '#eff6ff';
+        }
+
+        // Logica de keep open / Retirada
         const keepOpenInput = document.getElementById('keep_open_value');
         const alertBox = document.getElementById('retirada-client-alert');
+        const clientSelectedBox = document.getElementById('retirada-client-selected');
+        const noClientBox = document.getElementById('retirada-no-client');
 
         if (type === 'retirada') {
             if (keepOpenInput) keepOpenInput.value = 'true';
+
             const clientId = document.getElementById('current_client_id')?.value;
-            if (!clientId && alertBox) alertBox.style.display = 'block';
+            // Tenta pegar o nome de várias fontes
+            let clientName = document.getElementById('current_client_name')?.value;
+            if (!clientName) {
+                // Tenta pegar do display lateral
+                clientName = document.getElementById('selected-client-name')?.innerText;
+            }
+
+            if (alertBox) alertBox.style.display = 'block';
+
+            if (clientId && clientName) {
+                // Tem cliente - mostra verde
+                if (clientSelectedBox) {
+                    clientSelectedBox.style.display = 'block';
+                    document.getElementById('retirada-client-name').innerText = clientName;
+                }
+                if (noClientBox) noClientBox.style.display = 'none';
+            } else {
+                // Não tem cliente - mostra aviso
+                if (clientSelectedBox) clientSelectedBox.style.display = 'none';
+                if (noClientBox) noClientBox.style.display = 'block';
+            }
         } else {
             if (keepOpenInput) keepOpenInput.value = 'false';
             if (alertBox) alertBox.style.display = 'none';
         }
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
         this.updateCheckoutUI();
     },
 
@@ -506,3 +653,59 @@ window.addPayment = () => PDVCheckout.addPayment();
 window.removePayment = (i) => PDVCheckout.removePayment(i);
 window.closeCheckout = () => PDVCheckout.closeCheckout();
 window.selectOrderType = (t, e) => PDVCheckout.selectOrderType(t, e);
+
+// Funções auxiliares para Retirada
+window.openClientSelector = function () {
+    // Foca na busca de cliente na barra lateral
+    const selectedArea = document.getElementById('selected-client-area');
+    const searchArea = document.getElementById('client-search-area');
+    const searchInput = document.getElementById('client-search');
+
+    // Limpa cliente atual se houver
+    document.getElementById('current_client_id').value = '';
+    if (document.getElementById('current_client_name')) {
+        document.getElementById('current_client_name').value = '';
+    }
+
+    // Mostra a área de busca
+    if (selectedArea) selectedArea.style.display = 'none';
+    if (searchArea) searchArea.style.display = 'flex';
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+        // Dispara o evento para mostrar as mesas/opções
+        searchInput.dispatchEvent(new Event('focus'));
+    }
+
+    // Alerta visual
+    alert('Selecione um cliente na barra lateral à direita');
+};
+
+window.clearRetiradaClient = function () {
+    // Limpa o cliente selecionado
+    document.getElementById('current_client_id').value = '';
+    if (document.getElementById('current_client_name')) {
+        document.getElementById('current_client_name').value = '';
+    }
+
+    // Limpa a barra lateral também
+    const selectedArea = document.getElementById('selected-client-area');
+    const searchArea = document.getElementById('client-search-area');
+    const searchInput = document.getElementById('client-search');
+
+    if (selectedArea) selectedArea.style.display = 'none';
+    if (searchArea) searchArea.style.display = 'flex';
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+
+    // Mostra o aviso de "Vincule um cliente"
+    const clientSelectedBox = document.getElementById('retirada-client-selected');
+    const noClientBox = document.getElementById('retirada-no-client');
+
+    if (clientSelectedBox) clientSelectedBox.style.display = 'none';
+    if (noClientBox) noClientBox.style.display = 'block';
+
+    PDVCheckout.updateCheckoutUI();
+};

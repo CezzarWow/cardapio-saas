@@ -167,6 +167,17 @@ function selectClient(id, name) {
     document.getElementById('current_client_id').value = id;
     document.getElementById('current_table_id').value = '';
 
+    // Armazena o nome do cliente também
+    let clientNameInput = document.getElementById('current_client_name');
+    if (!clientNameInput) {
+        // Cria o input hidden se não existir
+        clientNameInput = document.createElement('input');
+        clientNameInput.type = 'hidden';
+        clientNameInput.id = 'current_client_name';
+        document.body.appendChild(clientNameInput);
+    }
+    clientNameInput.value = name;
+
     const displayEl = document.getElementById('selected-client-display');
     const nameEl = document.getElementById('selected-client-name');
     const searchBox = document.getElementById('client-search-box');
@@ -175,6 +186,23 @@ function selectClient(id, name) {
     if (nameEl) nameEl.innerText = name;
     if (searchBox) searchBox.style.display = 'none';
     if (clientResults) clientResults.style.display = 'none';
+
+    // Atualiza a view de Retirada se estiver visível
+    const retiradaAlert = document.getElementById('retirada-client-alert');
+    if (retiradaAlert && retiradaAlert.style.display !== 'none') {
+        const clientSelectedBox = document.getElementById('retirada-client-selected');
+        const noClientBox = document.getElementById('retirada-no-client');
+        const clientNameDisplay = document.getElementById('retirada-client-name');
+
+        if (clientSelectedBox) {
+            clientSelectedBox.style.display = 'block';
+            if (clientNameDisplay) clientNameDisplay.innerText = name;
+        }
+        if (noClientBox) noClientBox.style.display = 'none';
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        if (typeof PDVCheckout !== 'undefined') PDVCheckout.updateCheckoutUI();
+    }
 }
 
 function clearClient() {

@@ -60,7 +60,11 @@ class OrderController {
             }
 
             // --- LÓGICA DE MESA ---
-            if ($table_id) {
+            // Se finalize_now = true, ignora a lógica de mesa e finaliza direto
+            $finalizeNow = isset($input['finalize_now']) && $input['finalize_now'] === true;
+            
+            if ($table_id && !$finalizeNow) {
+                // APENAS SALVAR NA MESA (botão "Salvar")
                 $stmtTable = $conn->prepare("SELECT current_order_id FROM tables WHERE id = :tid");
                 $stmtTable->execute(['tid' => $table_id]);
                 $mesa = $stmtTable->fetch(PDO::FETCH_ASSOC);
@@ -108,10 +112,11 @@ class OrderController {
                 
                 // 2. Cria o Pedido
                 $payments = $input['payments'] ?? [];
+                $discount = floatval($input['discount'] ?? 0); // [NOVO] Desconto
                 
                 // Se não vier pagamentos (ex: versão antiga do front), assume dinheiro
                 if (empty($payments)) {
-                    $payments = [['method' => 'dinheiro', 'amount' => $totalVenda]];
+                    $payments = [['method' => 'dinheiro', 'amount' => $totalVenda - $discount]];
                 }
 
                 $mainMethod = $payments[0]['method'] ?? 'dinheiro';
@@ -122,10 +127,11 @@ class OrderController {
                 $orderStatus = $keepOpen ? 'aberto' : 'concluido';
                 $isPaid = $keepOpen ? 1 : 0; // Retirada = Pago antecipado
 
-                $stmtOrder = $conn->prepare("INSERT INTO orders (restaurant_id, client_id, total, status, payment_method, is_paid) VALUES (:rid, :cid, 0, :status, :method, :paid)");
+                $stmtOrder = $conn->prepare("INSERT INTO orders (restaurant_id, client_id, total, discount, status, payment_method, is_paid) VALUES (:rid, :cid, 0, :discount, :status, :method, :paid)");
                 $stmtOrder->execute([
                     'rid' => $restaurant_id, 
                     'cid' => $input['client_id'] ?? null, 
+                    'discount' => $discount,
                     'status' => $orderStatus,
                     'method' => $paymentMethodDesc,
                     'paid' => $isPaid
@@ -140,12 +146,14 @@ class OrderController {
                     $stmtPay->execute(['oid' => $orderId, 'method' => $pay['method'], 'amount' => $pay['amount']]);
                 }
 
-                // 3. Lança UMA entrada no Caixa com o TOTAL da venda
+                // 3. Lança UMA entrada no Caixa com o TOTAL da venda (Subtotal - Desconto)
                 $desc = "Venda Balcão #" . $orderId;
+                $finalAmount = max(0, $totalVenda - $discount); // Garante que não negativo
+
                 $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
                 $stmtMov->execute([
                     'cid' => $caixa['id'],
-                    'val' => $totalVenda, // TOTAL da venda, não apenas dinheiro
+                    'val' => $finalAmount,
                     'desc' => $desc,
                     'oid' => $orderId
                 ]);
@@ -167,9 +175,16 @@ class OrderController {
                 $stmtStock->execute(['qtd' => $item['quantity'], 'pid' => $item['id']]);
             }
 
-            // Atualiza o total do pedido
-            $conn->prepare("UPDATE orders SET total = total + :val WHERE id = :oid")
-                 ->execute(['val' => $totalVenda, 'oid' => $orderId]);
+            // Atualiza o total do pedido (Total final = Soma itens - Desconto)
+            // Lógica: total = $totalVenda - $discount
+            // Mas o INSERT lá me cima setou total = 0.
+            // Aqui fazemos UPDATE. 
+            // CUIDADO: O código original fazia `SET total = total + :val`.
+            // Se eu mudar para `SET total = :val - :discount` fica mais seguro.
+            
+            $finalTotalOrder = max(0, $totalVenda - ($discount ?? 0));
+            $conn->prepare("UPDATE orders SET total = :val WHERE id = :oid")
+                 ->execute(['val' => $finalTotalOrder, 'oid' => $orderId]);
 
             $conn->commit();
             echo json_encode(['success' => true]);

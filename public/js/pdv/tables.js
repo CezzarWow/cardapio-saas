@@ -137,14 +137,15 @@ const PDVTables = {
         document.getElementById('client-search-area').style.display = 'none';
         document.getElementById('client-results').style.display = 'none';
 
-        // Botão Salvar
-        const btn = document.getElementById('btn-finalizar');
-        btn.innerText = "Salvar";
-        btn.style.backgroundColor = "#d97706";
-        btn.disabled = false;
+        // Mostra botão Salvar (laranja) e mantém Finalizar (azul)
+        const btnFinalizar = document.getElementById('btn-finalizar');
+        if (btnFinalizar) {
+            btnFinalizar.innerText = "Finalizar";
+            btnFinalizar.style.backgroundColor = "";
+        }
 
-        // Se tinha alerta de retirada, limpar?
-        // ... (lógica específica de retirada pode ser tratada via PDVState listeners futuros)
+        const btnSave = document.getElementById('btn-save-command');
+        if (btnSave) btnSave.style.display = 'flex';
     },
 
     // ==========================================
@@ -196,6 +197,16 @@ const PDVTables = {
         document.getElementById('current_client_id').value = id;
         document.getElementById('current_table_id').value = '';
 
+        // Armazena o nome do cliente também
+        let clientNameInput = document.getElementById('current_client_name');
+        if (!clientNameInput) {
+            clientNameInput = document.createElement('input');
+            clientNameInput.type = 'hidden';
+            clientNameInput.id = 'current_client_name';
+            document.body.appendChild(clientNameInput);
+        }
+        clientNameInput.value = name;
+
         document.getElementById('selected-client-name').innerText = name;
 
         // Visual
@@ -203,11 +214,31 @@ const PDVTables = {
         document.getElementById('client-search-area').style.display = 'none';
         document.getElementById('client-results').style.display = 'none';
 
+        // Atualiza a view de Retirada se estiver visível
+        const retiradaAlert = document.getElementById('retirada-client-alert');
+        if (retiradaAlert && retiradaAlert.style.display !== 'none') {
+            const clientSelectedBox = document.getElementById('retirada-client-selected');
+            const noClientBox = document.getElementById('retirada-no-client');
+            const clientNameDisplay = document.getElementById('retirada-client-name');
+
+            if (clientSelectedBox) {
+                clientSelectedBox.style.display = 'block';
+                if (clientNameDisplay) clientNameDisplay.innerText = name;
+            }
+            if (noClientBox) noClientBox.style.display = 'none';
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            if (typeof PDVCheckout !== 'undefined') PDVCheckout.updateCheckoutUI();
+        }
+
         // Botões
         const btn = document.getElementById('btn-finalizar');
-        btn.innerText = "Finalizar";
-        btn.style.backgroundColor = "";
+        if (btn) {
+            btn.innerText = "Finalizar";
+            btn.style.backgroundColor = "";
+        }
 
+        // NÃO mostrar botão Salvar Comanda em modo balcão (só em comanda)
         const btnSave = document.getElementById('btn-save-command');
         if (btnSave) btnSave.style.display = 'flex';
     },

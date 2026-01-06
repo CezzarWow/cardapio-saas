@@ -238,7 +238,7 @@ if ($isEditingPaid && $editingOrderId) {
             <?php endif; ?>
 
             <!-- Botões de Ação -->
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <!-- Botão SALVAR COMANDA: Exibe se for Comanda NÃO paga -->
                 <?php $showSalvar = (!empty($contaAberta) && !$mesa_id && !$isEditingPaid); ?>
                 <button id="btn-save-command" onclick="saveClientOrder()" 
@@ -256,7 +256,7 @@ if ($isEditingPaid && $editingOrderId) {
 
                 <!-- Botão FINALIZAR (Venda Rápida): Só exibe se NÃO for Comanda aberta -->
                 <button id="btn-finalizar" class="btn-primary" disabled onclick="finalizeSale()" 
-                        style="flex: 1; display: <?= (!empty($contaAberta) && !$mesa_id) ? 'none' : 'block' ?>; padding: 16px; font-size: 1.1rem;">
+                        style="flex: 1; display: <?= (!empty($contaAberta) && !$mesa_id) ? 'none' : 'flex' ?>; padding: 16px; font-size: 1.1rem; align-items: center; justify-content: center;">
                     Finalizar
                 </button>
 
@@ -307,11 +307,10 @@ if ($isEditingPaid && $editingOrderId) {
     </style>
 
     <div id="checkoutModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center;">
-    <!-- ... (Rest of Checkout Modal) ... -->
     
-    <div style="background: white; width: 620px; max-width: 95%; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 90vh;">
+    <div style="background: white; width: 1000px; max-width: 95%; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 90vh;">
         
-        <!-- Header minimalista / Apenas título ou nada? O usuário pediu pra tirar tudo -->
+        <!-- Header -->
         <div style="padding: 20px 25px 0 25px;">
             <h2 style="margin: 0; color: #1e293b; font-size: 1.4rem; font-weight: 800;">Pagamento</h2>
         </div>
@@ -330,50 +329,108 @@ if ($isEditingPaid && $editingOrderId) {
         </div>
         <?php endif; ?>
 
-        <div style="padding: 25px;">
+        <!-- GRID LAYOUT (NEW) -->
+        <div style="padding: 25px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: stretch; overflow-y: auto; flex: 1;">
             
-            <!-- NOVO LAYOUT DO BODY DO MODAL -->
-            <div style="flex: 1; min-height: 0; padding: 0 25px 20px; overflow-y: auto;">
+            <!-- COLUNA ESQUERDA: Métodos + Inputs + Ações -->
+            <div style="display: flex; flex-direction: column; gap: 25px; justify-content: flex-start;">
                 
-                <!-- 1. Lista de Pagamentos (Topo e maior) -->
-                <div id="payment-list" style="border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 20px; padding: 15px; overflow-y: auto; background: #f8fafc; min-height: 80px; display: none;"></div>
-
-                <!-- 2. Seleção de Método -->
-                <!-- REMOVIDO TEXTO "FORMA DE PAGAMENTO" -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                    <button onclick="setMethod('dinheiro')" id="btn-method-dinheiro" class="payment-method-btn active" style="padding: 12px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s;">
-                        <i data-lucide="banknote" size="24"></i>
-                        <span style="font-size: 0.85rem; font-weight: 700;">Dinheiro</span>
-                    </button>
-                    <button onclick="setMethod('pix')" id="btn-method-pix" class="payment-method-btn" style="padding: 12px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s;">
-                        <i data-lucide="qr-code" size="24"></i>
-                        <span style="font-size: 0.85rem; font-weight: 700;">Pix</span>
-                    </button>
-                    <button onclick="setMethod('credito')" id="btn-method-credito" class="payment-method-btn" style="padding: 12px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s;">
-                        <i data-lucide="credit-card" size="24"></i>
-                        <span style="font-size: 0.85rem; font-weight: 700;">Crédito</span>
-                    </button>
-                    <button onclick="setMethod('debito')" id="btn-method-debito" class="payment-method-btn" style="padding: 12px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s;">
-                        <i data-lucide="credit-card" size="24"></i>
-                        <span style="font-size: 0.85rem; font-weight: 700;">Débito</span>
-                    </button>
-                </div>
-
-                <!-- 3. Valor em Destaque -->
-                <!-- REMOVIDO TEXTO "VALOR RECEBIDO" -->
-                <div style="background: #f1f5f9; padding: 15px; border-radius: 12px; display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px;">
-                    <div style="flex: 1; position: relative;">
-                        <span style="position: absolute; left: 12px; top: 16px; color: #64748b; font-weight: bold; font-size: 1.1rem;">R$</span>
-                        <input type="text" id="pay-amount" placeholder="0,00" 
-                               style="width: 100%; padding: 12px 12px 12px 40px; border: 2px solid #94a3b8; border-radius: 10px; font-weight: 800; font-size: 1.5rem; color: #1e293b; outline: none;">
+                <!-- 1. Métodos de Pagamento -->
+                <div>
+                    <label style="display: block; font-size: 0.8rem; color: #64748b; font-weight: 700; margin-bottom: 8px;">FORMA DE PAGAMENTO</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <button onclick="setMethod('dinheiro')" id="btn-method-dinheiro" class="payment-method-btn active" style="padding: 18px 12px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s;">
+                            <i data-lucide="banknote" size="22"></i>
+                            <span style="font-size: 0.95rem; font-weight: 700;">Dinheiro</span>
+                        </button>
+                        <button onclick="setMethod('pix')" id="btn-method-pix" class="payment-method-btn" style="padding: 18px 12px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s;">
+                            <i data-lucide="qr-code" size="22"></i>
+                            <span style="font-size: 0.95rem; font-weight: 700;">Pix</span>
+                        </button>
+                        <button onclick="setMethod('credito')" id="btn-method-credito" class="payment-method-btn" style="padding: 18px 12px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s;">
+                            <i data-lucide="credit-card" size="22"></i>
+                            <span style="font-size: 0.95rem; font-weight: 700;">Crédito</span>
+                        </button>
+                        <button onclick="setMethod('debito')" id="btn-method-debito" class="payment-method-btn" style="padding: 18px 12px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s;">
+                            <i data-lucide="credit-card" size="22"></i>
+                            <span style="font-size: 0.95rem; font-weight: 700;">Débito</span>
+                        </button>
                     </div>
-                    <button onclick="addPayment()" style="width: 60px; height: 55px; background: #0f172a; color: white; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
-                        <i data-lucide="arrow-down" size="28"></i>
-                    </button>
                 </div>
+
+                <!-- 2. Desconto and 3. Valor (Agora em linhas separadas) -->
+                
+                <!-- Input Desconto -->
+                <div style="background: #fff1f2; padding: 10px 15px; border-radius: 10px; border: 1px solid #fda4af;">
+                    <label style="display: block; font-size: 0.8rem; color: #be123c; font-weight: 700; margin-bottom: 5px;">DESCONTO (R$)</label>
+                    <input type="text" id="discount-amount" placeholder="0,00" 
+                           style="width: 100%; padding: 8px; border: 1px solid #f43f5e; border-radius: 6px; font-weight: 700; font-size: 1rem; color: #be123c; outline: none; background: white;">
+                </div>
+
+                <!-- Input Valor a Pagar -->
+                <div style="background: #f1f5f9; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <label style="display: block; font-size: 0.85rem; color: #64748b; font-weight: 700; margin-bottom: 8px;">VALOR A LANÇAR</label>
+                        <div style="position: relative;">
+                        <span style="position: absolute; left: 12px; top: 14px; color: #64748b; font-weight: bold; font-size: 1.1rem;">R$</span>
+                        <input type="text" id="pay-amount" placeholder="0,00" 
+                                onkeypress="handleEnter(event)"
+                                onkeyup="PDVCheckout.formatMoneyInput(this)"
+                                style="width: 100%; padding: 12px 12px 12px 40px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; font-size: 1.2rem; color: #1e293b; outline: none;">
+                        </div>
+                </div>
+
+                <!-- Botão Adicionar Pagamento -->
+                <button onclick="addPayment()" style="width: 100%; padding: 12px; background: #e2e8f0; color: #475569; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: auto; transition: all 0.2s;" onmouseover="this.style.background='#cbd5e1'" onmouseout="this.style.background='#e2e8f0'">
+                    <i data-lucide="plus" size="18"></i>
+                    ADICIONAR PAGAMENTO
+                </button>
+
+            </div>
+
+            <!-- COLUNA DIREITA: Lista de Pagamentos + Totais -->
+            <div style="background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; display: flex; flex-direction: column; overflow: hidden; height: 100%; min-height: 480px;">
+                
+                <h3 style="margin: 0 0 15px 0; font-size: 0.95rem; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="list" size="16"></i> Resumo
+                </h3>
+
+                <!-- Lista Rolável -->
+                <div id="payment-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; padding-right: 5px; max-height: 210px;">
+                    <!-- Items serão inseridos aqui via JS -->
+                    <div style="text-align: center; color: #94a3b8; font-size: 0.9rem; margin-top: 20px;">
+                        Nenhum pagamento lançado
+                    </div>
+                </div>
+
+                <!-- Resumo Final -->
+                <div style="border-top: 1px solid #cbd5e1; padding-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; color: #be123c;">
+                        <span>Desconto:</span>
+                        <strong id="display-discount">- R$ 0,00</strong>
+                    </div>
+                    
+                    <div style="background: #d1fae5; color: #065f46; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 8px;">
+                        <span>PAGO:</span>
+                        <span id="display-paid">R$ 0,00</span>
+                    </div>
+                    <div style="background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 12px;">
+                        <span>RESTANTE:</span>
+                        <span id="display-remaining">R$ 0,00</span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 2px dashed #cbd5e1; font-size: 1.3rem; color: #1e293b; font-weight: 900;">
+                        <span>TOTAL:</span>
+                        <strong id="checkout-total-display">R$ 0,00</strong>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
 
                 <!-- 4. Tipo de Pedido (Cards) -->
-                <div style="background: white; margin-bottom: 5px;">
+                <div style="background: white; margin-bottom: 5px; padding: 0 25px;">
                     <label style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 10px; font-weight: 700;">TIPO DE PEDIDO</label>
                     <input type="hidden" id="keep_open_value" value="false">
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
@@ -396,52 +453,42 @@ if ($isEditingPaid && $editingOrderId) {
                         </div>
                     </div>
                     
-                    <!-- AVISO: Cliente obrigatório para Retirada -->
-                    <div id="retirada-client-alert" style="display: none; margin-top: 12px; padding: 12px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                            <i data-lucide="alert-triangle" size="18" style="color: #d97706;"></i>
-                            <span style="font-weight: 700; color: #92400e; font-size: 0.9rem;">Cliente obrigatório para Retirada</span>
+                    <!-- AVISO: Retirada - Mostra cliente ou aviso -->
+                    <div id="retirada-client-alert" style="display: none; margin-top: 12px;">
+                        <!-- Se TEM cliente selecionado -->
+                        <div id="retirada-client-selected" style="display: none; padding: 10px 12px; background: #d1fae5; border: 1px solid #10b981; border-radius: 8px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i data-lucide="user-check" size="18" style="color: #059669;"></i>
+                                    <span style="font-weight: 700; color: #065f46; font-size: 0.9rem;" id="retirada-client-name">Cliente Selecionado</span>
+                                </div>
+                                <button type="button" onclick="clearRetiradaClient()" style="background: none; border: none; color: #059669; cursor: pointer; font-size: 0.8rem; text-decoration: underline;">Alterar</button>
+                            </div>
                         </div>
                         
-                        <!-- Campo de busca de cliente -->
-                        <div style="position: relative; margin-bottom: 10px;">
-                            <input type="text" id="retirada-client-search" placeholder="Buscar cliente por nome ou telefone..."
-                                   style="width: 100%; padding: 10px 12px; border: 1px solid #d97706; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box;"
-                                   oninput="searchClientForRetirada(this.value)">
-                            <div id="retirada-client-results" style="display: none; position: absolute; left: 0; right: 0; top: 100%; background: white; border: 1px solid #e5e7eb; border-radius: 6px; max-height: 150px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
-                        </div>
-                        
-                        <!-- Botões -->
-                        <div style="display: flex; gap: 8px;">
-                            <button type="button" onclick="document.getElementById('clientModal').style.display='flex'" 
-                                    style="flex: 1; padding: 10px; background: white; color: #d97706; border: 1px solid #d97706; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                                <i data-lucide="user-plus" size="16"></i> Cadastrar Novo
-                            </button>
+                        <!-- Se NÃO tem cliente -->
+                        <div id="retirada-no-client" style="display: none; padding: 10px 12px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="alert-triangle" size="18" style="color: #d97706;"></i>
+                                <span style="font-weight: 600; color: #92400e; font-size: 0.85rem;">Vincule um cliente na barra lateral</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-            </div>
 
         <!-- FOOTER: TOTAL, RESTANTE E BOTÕES -->
         <div style="padding: 20px; border-top: 1px solid #e2e8f0; background: #f8fafc;">
             
             <!-- LINHA DE TOTAIS -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 5px;">
-                <div style="display: flex; flex-direction: column; gap: 5px;">
-                    <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">
-                        TOTAL A PAGAR: <span id="checkout-total-display" style="color: #2563eb;">R$ 0,00</span>
-                    </div>
-                    <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">
-                        FALTAM: <span id="checkout-remaining" style="color: #dc2626;">R$ 0,00</span>
-                    </div>
-                </div>
+            <!-- LINHA DE TOTAIS -->
+            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 15px; padding: 0 5px;">
                 
                 <div id="change-box" style="display: none; text-align: right; background: #dcfce7; padding: 10px 20px; border-radius: 8px; border: 1px solid #86efac; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                     <span style="font-size: 0.85rem; font-weight: 800; color: #166534; display: block; letter-spacing: 0.5px;">TROCO</span>
                     <span id="checkout-change" style="font-size: 1.6rem; font-weight: 900; color: #166534;">R$ 0,00</span>
                 </div>
             </div>
+
 
             <!-- BOTÕES -->
             <div style="display: flex; gap: 15px;">
@@ -453,7 +500,8 @@ if ($isEditingPaid && $editingOrderId) {
                 </button>
             </div>
         </div>
-        </div>
+        
+    </div>
     </div>
 </div>
 
