@@ -36,8 +36,9 @@
             <?php endif; ?>
                 
                 <!-- Nome (truncado) -->
-                <span style="font-size: 1.1rem; font-weight: 700; color: #1e293b; line-height: 1.2; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    <?= substr($order['client_name'], 0, 12) ?>
+                <!-- Nome (truncado com CSS) -->
+                <span style="font-size: 1.1rem; font-weight: 700; color: #1e293b; text-align: center; max-width: 100%; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                    <?= htmlspecialchars($order['client_name']) ?>
                 </span>
                 
                 <!-- Status -->

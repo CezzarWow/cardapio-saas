@@ -79,26 +79,36 @@ if ($isEditingPaid && $editingOrderId) {
                 </div>
             <?php else: ?>
             
-                <?php foreach ($categories as $category): ?>
-                    <?php if (!empty($category['products'])): ?>
-                        
-                        <h3 style="font-weight: 800; color: #111827; font-size: 1.25rem; margin: 2rem 0 1rem 0; padding-left: 5px; border-left: 4px solid #f59e0b;">
-                            <?= htmlspecialchars($category['name']) ?>
-                        </h3>
+                <!-- Chips de Categoria (Filtro Rápido) -->
+                <div class="pdv-category-chips-container">
+                    <div class="pdv-category-chips">
+                        <button class="pdv-category-chip active" data-category="">
+                            📂 Todos
+                        </button>
+                        <?php foreach ($categories as $cat): ?>
+                            <?php if (!empty($cat['products'])): ?>
+                                <button class="pdv-category-chip" data-category="<?= htmlspecialchars($cat['name']) ?>">
+                                    <?= htmlspecialchars($cat['name']) ?>
+                                </button>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
 
-                        <div class="products-grid">
+                <!-- Grid Unificado de Produtos -->
+                <div class="products-grid">
+                    <?php foreach ($categories as $category): ?>
+                        <?php if (!empty($category['products'])): ?>
                             <?php foreach ($category['products'] as $product): ?>
                                 
                                 <div class="product-card" 
+                                     data-category="<?= htmlspecialchars($category['name']) ?>"
                                      onclick="addToCart(<?= $product['id'] ?>, '<?= addslashes($product['name']) ?>', <?= $product['price'] ?>)">
                                     
-                                    <?php if (!empty($product['image'])): ?>
-                                        <img src="<?= BASE_URL ?>/uploads/<?= $product['image'] ?>" alt="<?= htmlspecialchars($product['name']) ?>" class="product-image" loading="lazy">
-                                    <?php else: ?>
-                                        <div class="product-icon icon-orange">
-                                            <?= strtoupper(substr($product['name'], 0, 1)) ?>
-                                        </div>
-                                    <?php endif; ?>
+                                    <!-- Caixa padrão -->
+                                    <div class="pdv-product-icon">
+                                        <i data-lucide="package" style="width: 32px; height: 32px;"></i>
+                                    </div>
 
                                     <div class="product-info">
                                         <h3><?= htmlspecialchars($product['name']) ?></h3>
@@ -109,10 +119,9 @@ if ($isEditingPaid && $editingOrderId) {
                                 </div>
 
                             <?php endforeach; ?>
-                        </div>
-
-                    <?php endif; ?>
-                <?php endforeach; ?>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
 
             <?php endif; ?>
         </div>
@@ -126,7 +135,12 @@ if ($isEditingPaid && $editingOrderId) {
             <h2 class="cart-title">
                 <i data-lucide="shopping-cart" color="#2563eb"></i> Carrinho
             </h2>
-            <button class="btn-icon" onclick="clearCart()" title="Limpar Carrinho"><i data-lucide="trash-2"></i></button>
+            <div style="display: flex; gap: 5px;">
+                <button id="btn-undo-clear" class="btn-icon" onclick="PDVCart.undoClear()" title="Desfazer Limpeza" style="display: none; color: #2563eb; background: #eff6ff; border-color: #bfdbfe;">
+                    <i data-lucide="rotate-ccw"></i>
+                </button>
+                <button class="btn-icon" onclick="clearCart()" title="Limpar Carrinho"><i data-lucide="trash-2"></i></button>
+            </div>
         </div>
         
         <div id="cart-empty-state" class="cart-empty">

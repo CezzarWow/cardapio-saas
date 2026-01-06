@@ -4,7 +4,7 @@
  * Variáveis esperadas: $tables (array de mesas)
  */
 ?>
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1.2rem; margin-bottom: 3rem;">
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); gap: 1rem; margin-bottom: 3rem;">
     <?php foreach ($tables as $mesa): ?>
         <?php 
             $isOccupied = ($mesa['status'] == 'ocupada');

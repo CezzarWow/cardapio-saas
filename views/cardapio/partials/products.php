@@ -84,6 +84,10 @@
                         <div class="cardapio-product-image-wrapper">
                             <?php if (!empty($product['image'])): ?>
                                 <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($product['image']) ?>" class="cardapio-product-image" loading="lazy">
+                            <?php elseif (!empty($product['icon_as_photo']) && !empty($product['icon'])): ?>
+                                <div class="cardapio-product-icon-placeholder" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 8px;">
+                                    <span style="font-size: 3rem;"><?= $product['icon'] ?></span>
+                                </div>
                             <?php else: ?>
                                 <div class="cardapio-product-image-placeholder"><i data-lucide="image" size="24"></i></div>
                             <?php endif; ?>
@@ -122,6 +126,11 @@
                         <div class="cardapio-product-image-wrapper">
                             <?php if (!empty($product['image'])): ?>
                                 <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($product['image']) ?>" class="cardapio-product-image" loading="lazy">
+                            <?php elseif (!empty($product['icon_as_photo']) && !empty($product['icon'])): ?>
+                                <!-- Emoji colorido como fallback -->
+                                <div class="cardapio-product-icon-placeholder" style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 8px;">
+                                    <span style="font-size: 3rem;"><?= $product['icon'] ?></span>
+                                </div>
                             <?php else: ?>
                                 <div class="cardapio-product-image-placeholder"><i data-lucide="image" size="24"></i></div>
                             <?php endif; ?>

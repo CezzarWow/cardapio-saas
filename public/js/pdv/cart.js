@@ -5,6 +5,7 @@
 
 const PDVCart = {
     items: [],
+    backupItems: [],
 
     init: function () {
         console.log('[PDVCart] Inicializado');
@@ -16,6 +17,9 @@ const PDVCart = {
     },
 
     add: function (id, name, price, quantity = 1) {
+        // Limpa backup ao modificar o carrinho manualmente
+        this.backupItems = [];
+
         // Converte tipos para garantir segurança (mesma lógica do legacy)
         const numId = parseInt(id);
         const floatPrice = parseFloat(price);
@@ -50,8 +54,20 @@ const PDVCart = {
     },
 
     clear: function () {
+        if (this.items.length > 0) {
+            // Salva backup antes de limpar
+            this.backupItems = JSON.parse(JSON.stringify(this.items));
+        }
         this.items = [];
         this.updateUI();
+    },
+
+    undoClear: function () {
+        if (this.backupItems.length > 0) {
+            this.items = JSON.parse(JSON.stringify(this.backupItems));
+            this.backupItems = []; // Consome o backup
+            this.updateUI();
+        }
     },
 
     calculateTotal: function () {
@@ -60,10 +76,12 @@ const PDVCart = {
 
     // A Mágica: Desenha o carrinho na tela (Refatorado de updateCartUI)
     updateUI: function () {
+        // Referências
         const cartContainer = document.getElementById('cart-items-area');
         const emptyState = document.getElementById('cart-empty-state');
         const totalElement = document.getElementById('cart-total');
         const btnFinalizar = document.getElementById('btn-finalizar');
+        const btnUndo = document.getElementById('btn-undo-clear');
 
         // Safety check
         if (!cartContainer) return;
@@ -71,9 +89,26 @@ const PDVCart = {
         cartContainer.innerHTML = '';
         const total = this.calculateTotal();
 
+        // Lógica do botão Desfazer (Header)
+        if (btnUndo) {
+            if (this.items.length === 0 && this.backupItems.length > 0) {
+                btnUndo.style.display = 'flex';
+            } else {
+                btnUndo.style.display = 'none';
+            }
+        }
+
         if (this.items.length === 0) {
             cartContainer.style.display = 'none';
-            if (emptyState) emptyState.style.display = 'flex';
+            if (emptyState) {
+                emptyState.style.display = 'flex';
+                // Reseta HTML do empty state para o padrão (remove botão antigo se houver)
+                emptyState.innerHTML = `
+                    <i data-lucide="shopping-cart" size="48" color="#e5e7eb" style="margin-bottom: 1rem;"></i>
+                    <p>Carrinho Vazio</p>
+                `;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
             if (btnFinalizar) btnFinalizar.disabled = true;
         } else {
             cartContainer.style.display = 'block';
@@ -153,3 +188,4 @@ window.addToCart = (id, name, price) => PDVCart.add(id, name, price);
 window.removeFromCart = (id) => PDVCart.remove(id);
 window.updateCartUI = () => PDVCart.updateUI();
 window.calculateTotal = () => PDVCart.calculateTotal(); // Usado no checkout
+window.clearCart = () => PDVCart.clear();

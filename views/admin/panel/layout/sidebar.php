@@ -24,14 +24,14 @@
             <span class="nav-label">Mesas</span>
         </a>
 
-        <a href="<?= BASE_URL ?>/admin/loja/cardapio" class="nav-item <?= ViewHelper::isRouteActive('cardapio') ? 'active' : '' ?>">
-            <i data-lucide="book-open" size="36"></i>
-            <span class="nav-label">Cardápio</span>
-        </a>
-
         <a href="<?= BASE_URL ?>/admin/loja/delivery" class="nav-item <?= ViewHelper::isRouteActive('delivery') ? 'active' : '' ?>">
             <i data-lucide="bike" size="36"></i>
             <span class="nav-label">Delivery</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/admin/loja/cardapio" class="nav-item <?= ViewHelper::isRouteActive('cardapio') ? 'active' : '' ?>">
+            <i data-lucide="book-open" size="36"></i>
+            <span class="nav-label">Cardápio</span>
         </a>
 
         <a href="<?= BASE_URL ?>/admin/loja/produtos" class="nav-item <?= ViewHelper::isRouteActive('produtos') ? 'active' : '' ?>">

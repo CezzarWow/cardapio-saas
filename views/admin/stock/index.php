@@ -114,10 +114,23 @@ foreach ($products as $p) {
                      data-category="<?= htmlspecialchars($prod['category_name']) ?>">
                     
                     <!-- Imagem (altura reduzida) -->
+                    <!-- Imagem (altura reduzida) -->
                     <?php if($prod['image']): ?>
                         <img src="<?= BASE_URL ?>/uploads/<?= $prod['image'] ?>" loading="lazy" 
                              style="width: 100%; height: 140px; object-fit: cover; border-radius: 12px 12px 0 0;"
                              alt="<?= htmlspecialchars($prod['name']) ?>">
+                    <?php elseif(($prod['icon_as_photo'] ?? 0) == 1): ?>
+                        <div style="width: 100%; height: 140px; background: #eff6ff; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            <?php 
+                                $icon = $prod['icon'] ?? '📦';
+                                // Se for ícone antigo (texto), usa lucide, senão é emoji
+                                if (preg_match('/^[a-z-]+$/', $icon) && strlen($icon) > 4): 
+                            ?>
+                                <i data-lucide="<?= $icon ?>" style="width: 64px; height: 64px; color: #3b82f6;"></i>
+                            <?php else: ?>
+                                <span style="font-size: 4rem; line-height: 1;"><?= $icon ?></span>
+                            <?php endif; ?>
+                        </div>
                     <?php else: ?>
                         <div style="width: 100%; height: 140px; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
                             <i data-lucide="image" style="width: 40px; height: 40px;"></i>

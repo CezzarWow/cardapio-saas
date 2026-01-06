@@ -17,8 +17,8 @@ class Database {
 
         if (self::$instance === null) {
             try {
-                // Tenta conectar
-                self::$instance = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $pass);
+                // Tenta conectar (utf8mb4 para suporte a emoji)
+                self::$instance = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);
                 
                 // Configura para o PHP avisar se der erro no SQL
                 self::$instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

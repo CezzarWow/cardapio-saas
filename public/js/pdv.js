@@ -69,7 +69,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Atualiza a UI do carrinho inicialmente
     PDVCart.updateUI();
 
-    // 5. ÍCONES (Lucide)
+    // 5. FILTRO DE CATEGORIAS (Chips)
+    let selectedCategory = '';
+
+    function filterPdvProducts() {
+        const cards = document.querySelectorAll('.product-card');
+        cards.forEach(card => {
+            const cat = card.dataset.category;
+            card.style.display = (!selectedCategory || cat === selectedCategory) ? '' : 'none';
+        });
+    }
+
+    document.querySelectorAll('.pdv-category-chip').forEach(chip => {
+        chip.addEventListener('click', function () {
+            document.querySelectorAll('.pdv-category-chip').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            selectedCategory = this.dataset.category;
+            filterPdvProducts();
+        });
+    });
+
+    // 6. ÍCONES (Lucide)
     if (typeof lucide !== 'undefined') lucide.createIcons();
 });
 

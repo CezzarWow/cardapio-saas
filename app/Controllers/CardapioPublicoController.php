@@ -49,6 +49,8 @@ class CardapioPublicoController {
                 p.image,
                 p.stock,
                 p.is_featured,
+                p.icon,
+                p.icon_as_photo,
                 c.id as category_id,
                 c.name as category_name,
                 c.category_type,

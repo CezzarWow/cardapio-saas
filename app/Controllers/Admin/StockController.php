@@ -65,6 +65,10 @@ class StockController {
         // [FASE 1] Estoque vem do formulário (padrão 0 se vazio)
         $stock = isset($_POST['stock']) && $_POST['stock'] !== '' ? intval($_POST['stock']) : 0;
         
+        // [NOVO] Ícone do produto
+        $icon = $_POST['icon'] ?? 'package';
+        $icon_as_photo = isset($_POST['icon_as_photo']) ? 1 : 0;
+        
         // Arrays de grupos selecionados
         $selectedGroups = $_POST['additional_groups'] ?? [];
 
@@ -76,8 +80,14 @@ class StockController {
         }
 
         $conn = Database::connect();
-        $sql = "INSERT INTO products (restaurant_id, category_id, name, description, price, image, stock) 
-                VALUES (:rid, :cid, :name, :desc, :price, :img, :stock)";
+        
+        // [NOVO] Calcula próximo item_number para este restaurante
+        $stmtMax = $conn->prepare("SELECT COALESCE(MAX(item_number), 0) + 1 AS next_num FROM products WHERE restaurant_id = :rid");
+        $stmtMax->execute(['rid' => $restaurant_id]);
+        $nextNumber = $stmtMax->fetch(PDO::FETCH_ASSOC)['next_num'];
+        
+        $sql = "INSERT INTO products (restaurant_id, category_id, name, description, price, image, icon, icon_as_photo, item_number, stock) 
+                VALUES (:rid, :cid, :name, :desc, :price, :img, :icon, :iap, :inum, :stock)";
         
         $stmt = $conn->prepare($sql);
         $stmt->execute([
@@ -87,6 +97,9 @@ class StockController {
             'desc' => $description,
             'price' => $price,
             'img' => $imageName,
+            'icon' => $icon,
+            'iap' => $icon_as_photo,
+            'inum' => $nextNumber,
             'stock' => $stock
         ]);
         
@@ -161,6 +174,10 @@ class StockController {
         $stock = isset($_POST['stock']) && $_POST['stock'] !== '' ? intval($_POST['stock']) : 0;
         $restaurant_id = $_SESSION['loja_ativa_id'];
         
+        // [NOVO] Ícone do produto
+        $icon = $_POST['icon'] ?? 'package';
+        $icon_as_photo = isset($_POST['icon_as_photo']) ? 1 : 0;
+        
         // Arrays de grupos selecionados
         $selectedGroups = $_POST['additional_groups'] ?? [];
 
@@ -193,7 +210,9 @@ class StockController {
                     category_id = :cid, 
                     description = :desc, 
                     stock = :stock, 
-                    image = :img 
+                    image = :img,
+                    icon = :icon,
+                    icon_as_photo = :iap
                 WHERE id = :id AND restaurant_id = :rid";
         
         $stmt = $conn->prepare($sql);
@@ -204,6 +223,8 @@ class StockController {
             'desc' => $description,
             'stock' => $stock,
             'img' => $imageName,
+            'icon' => $icon,
+            'iap' => $icon_as_photo,
             'id' => $id,
             'rid' => $restaurant_id
         ]);
