@@ -115,16 +115,26 @@ $totalItems = count($allItems);
                             <span style="color: #6b7280; font-size: 0.85rem;">(<?= count($group['items']) ?> itens)</span>
                         </div>
                         <div style="display: flex; gap: 10px;">
-                            <button onclick="openLinkCategoryModal(<?= $group['id'] ?>, '<?= htmlspecialchars($group['name']) ?>')" 
-                               class="btn-stock-action" style="background: #8b5cf6; color: white;" title="Vincular Categoria inteira">
+                            <button type="button" 
+                               class="btn-stock-action btn-action-category" 
+                               style="background: #8b5cf6; color: white;" 
+                               title="Vincular Categoria inteira"
+                               data-group-id="<?= $group['id'] ?>"
+                               data-group-name="<?= htmlspecialchars($group['name'], ENT_QUOTES) ?>">
                                 <i data-lucide="layers" size="14"></i> Categoria
                             </button>
-                            <button onclick="openLinkModal(<?= $group['id'] ?>, '<?= htmlspecialchars($group['name']) ?>')" 
-                               class="btn-stock-action" style="background: #10b981; color: white;">
+                            <button type="button" 
+                               class="btn-stock-action btn-action-link" 
+                               style="background: #10b981; color: white;"
+                               data-group-id="<?= $group['id'] ?>"
+                               data-group-name="<?= htmlspecialchars($group['name'], ENT_QUOTES) ?>">
                                 <i data-lucide="link" size="14"></i> Vincular Item
                             </button>
-                            <button onclick="openDeleteModal('<?= BASE_URL ?>/admin/loja/adicionais/grupo/deletar?id=<?= $group['id'] ?>', '<?= addslashes(htmlspecialchars($group['name'])) ?>')" 
-                               class="btn-stock-action btn-stock-delete" style="border: none; cursor: pointer;">
+                            <button type="button" 
+                               class="btn-stock-action btn-stock-delete btn-action-delete-group" 
+                               style="border: none; cursor: pointer;"
+                               data-url="<?= BASE_URL ?>/admin/loja/adicionais/grupo/deletar?id=<?= $group['id'] ?>"
+                               data-name="<?= htmlspecialchars($group['name'], ENT_QUOTES) ?>">
                                 <i data-lucide="trash-2" size="14"></i> Excluir
                             </button>
                         </div>
@@ -135,7 +145,11 @@ $totalItems = count($allItems);
                         <?php if (empty($group['items'])): ?>
                             <div class="group-card-empty">
                                 Nenhum item vinculado. 
-                                <a href="javascript:void(0)" onclick="openLinkModal(<?= $group['id'] ?>, '<?= htmlspecialchars($group['name']) ?>')" style="color: #2563eb; text-decoration: none; font-weight: 600;">+ Vincular item</a>
+                                <a href="javascript:void(0)" 
+                                   class="btn-action-link"
+                                   data-group-id="<?= $group['id'] ?>"
+                                   data-group-name="<?= htmlspecialchars($group['name'], ENT_QUOTES) ?>"
+                                   style="color: #2563eb; text-decoration: none; font-weight: 600;">+ Vincular item</a>
                             </div>
                         <?php else: ?>
                             <div class="item-chips-container">
@@ -146,7 +160,7 @@ $totalItems = count($allItems);
                                         <?= $item['price'] > 0 ? '+R$ ' . number_format($item['price'], 2, ',', '.') : 'Grátis' ?>
                                     </span>
                                     <a href="<?= BASE_URL ?>/admin/loja/adicionais/desvincular?grupo=<?= $group['id'] ?>&item=<?= $item['id'] ?>" 
-                                       onclick="return confirm('Desvincular &quot;<?= htmlspecialchars($item['name']) ?>&quot; deste grupo?')"
+                                       onclick="return confirm('Desvincular &quot;<?= htmlspecialchars($item['name'], ENT_QUOTES) ?>&quot; deste grupo?')"
                                        title="Desvincular"
                                        class="item-chip-unlink">
                                         <i data-lucide="x" size="12"></i>
@@ -189,8 +203,11 @@ $totalItems = count($allItems);
                                     <button onclick="openEditItemModal(<?= $item['id'] ?>)" class="btn-stock-action" style="background: #f1f5f9; color: #475569; padding: 8px; border: none; cursor: pointer;">
                                         <i data-lucide="pencil" style="width: 16px; height: 16px;"></i>
                                     </button>
-                                    <button onclick="openDeleteModal('<?= BASE_URL ?>/admin/loja/adicionais/item/deletar?id=<?= $item['id'] ?>', '<?= addslashes(htmlspecialchars($item['name'])) ?>')" 
-                                       class="btn-stock-action btn-stock-delete" style="padding: 8px; border: none; cursor: pointer;">
+                                    <button type="button" 
+                                       class="btn-stock-action btn-stock-delete btn-action-delete-item" 
+                                       style="padding: 8px; border: none; cursor: pointer;"
+                                       data-url="<?= BASE_URL ?>/admin/loja/adicionais/item/deletar?id=<?= $item['id'] ?>"
+                                       data-name="<?= htmlspecialchars($item['name'], ENT_QUOTES) ?>">
                                         <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
                                     </button>
                                 </div>
@@ -203,250 +220,15 @@ $totalItems = count($allItems);
     </div>
 </main>
 
-<!-- Modal de Novo Grupo -->
-<div id="groupModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 400px; margin: 20px;">
-        <h3 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 1.5rem;">Novo Grupo</h3>
-        
-        <form action="<?= BASE_URL ?>/admin/loja/adicionais/grupo/salvar" method="POST">
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Nome do Grupo</label>
-                <input type="text" name="name" placeholder="Ex: Molhos, Extras, Bordas..." required 
-                       style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem;">
-            </div>
-
-            <!-- Vincular Itens ao Grupo (Opcional) -->
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Vincular Itens (Opcional)</label>
-                <?php if (empty($allItems)): ?>
-                    <p style="color: #9ca3af; padding: 12px; background: #f9fafb; border-radius: 8px;">
-                        Nenhum item cadastrado. <a href="javascript:void(0)" onclick="closeGroupModal(); openItemModal();" style="color: #2563eb;">Criar item primeiro</a>
-                    </p>
-                <?php else: ?>
-                    <div class="custom-select-container-group-items" style="position: relative;">
-                        
-                        <div class="select-trigger-group-items" onclick="toggleGroupItemsSelect(this)" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; background: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-                            <span class="trigger-text-group-items" style="color: #6b7280;">Selecione os itens...</span>
-                            <i data-lucide="chevron-down" size="16" style="color: #9ca3af;"></i>
-                        </div>
-                        
-                        <div class="options-list-group-items" style="display: none; position: absolute; top: 105%; left: 0; right: 0; background: white; border: 1px solid #d1d5db; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 10; padding: 5px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                            <?php foreach ($allItems as $itm): ?>
-                                <label style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-radius: 6px; transition: background 0.1s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-                                    <input type="checkbox" name="item_ids[]" value="<?= $itm['id'] ?>" onchange="updateGroupItemsTriggerText()" style="width: 18px; height: 18px; accent-color: #2563eb;">
-                                    <span style="flex: 1; font-size: 0.95rem; color: #374151;"><?= htmlspecialchars($itm['name']) ?></span>
-                                    <span style="font-size: 0.8rem; color: #6b7280;">
-                                        <?= $itm['price'] > 0 ? 'R$ ' . number_format($itm['price'], 2, ',', '.') : 'Grátis' ?>
-                                    </span>
-                                </label>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <button type="button" onclick="closeGroupModal()" style="flex: 1; padding: 12px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                    Cancelar
-                </button>
-                <button type="submit" style="flex: 1; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                    Criar Grupo
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal de Novo Item (Completo) -->
-<div id="itemModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 500px; margin: 20px;">
-        <h3 id="itemModalTitle" style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 1.5rem;">Novo Item</h3>
-        
-        <form id="itemForm" action="<?= BASE_URL ?>/admin/loja/adicionais/item/salvar-modal" method="POST">
-            <input type="hidden" name="id" id="itemIdInputHidden">
-            <!-- Nome -->
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Nome do Item</label>
-                <input type="text" name="name" placeholder="Ex: Bacon, Cheddar..." required 
-                       style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem;">
-            </div>
-
-            <!-- Preço -->
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Preço (R$)</label>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                     <input type="text" name="price" id="itemPriceInput" placeholder="0,00" oninput="formatCurrency(this)"
-                       style="flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem;">
-                     
-                     <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;">
-                         <input type="checkbox" onchange="toggleItemFree(this)" style="width: 18px; height: 18px; accent-color: #10b981;">
-                         <span style="font-weight: 500; color: #374151;">Grátis</span>
-                     </label>
-                </div>
-            </div>
-
-            <!-- Seleção de Grupos -->
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Vincular a Grupos (Opcional)</label>
-                <?php if (empty($groups)): ?>
-                    <p style="color: #9ca3af; padding: 12px; background: #f9fafb; border-radius: 8px;">
-                        Nenhum grupo cadastrado.
-                    </p>
-                <?php else: ?>
-                    <div class="custom-select-container-groups" style="position: relative;">
-                        
-                        <div class="select-trigger-groups" onclick="toggleGroupsSelect(this)" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; background: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-                            <span class="trigger-text-groups" style="color: #6b7280;">Selecione os grupos...</span>
-                            <i data-lucide="chevron-down" size="16" style="color: #9ca3af;"></i>
-                        </div>
-                        
-                        <div class="options-list-groups" style="display: none; position: absolute; top: 105%; left: 0; right: 0; background: white; border: 1px solid #d1d5db; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 10; padding: 5px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                            <?php foreach ($groups as $grp): ?>
-                                <label style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-radius: 6px; transition: background 0.1s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-                                    <input type="checkbox" name="group_ids[]" value="<?= $grp['id'] ?>" onchange="updateGroupsTriggerText()" style="width: 18px; height: 18px; accent-color: #2563eb;">
-                                    <span style="flex: 1; font-size: 0.95rem; color: #374151;"><?= htmlspecialchars($grp['name']) ?></span>
-                                </label>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <button type="button" onclick="closeItemModal()" style="flex: 1; padding: 12px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                    Cancelar
-                </button>
-                <button type="submit" style="flex: 1; padding: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                    Salvar Item
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
+<!-- Modais (Partials) -->
+<?php require __DIR__ . '/partials/group-modal.php'; ?>
+<?php require __DIR__ . '/partials/item-modal.php'; ?>
+<?php require __DIR__ . '/partials/link-modal.php'; ?>
+<?php require __DIR__ . '/partials/category-modal.php'; ?>
 <?php require __DIR__ . '/../partials/delete-modal.php'; ?>
 
-<!-- Modal de Vincular Itens (Multi-select) -->
-<div id="linkModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 500px; margin: 20px;">
-        <h3 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Vincular Itens ao Grupo</h3>
-        <p style="color: #6b7280; margin-bottom: 1.5rem;" id="linkGroupName">Grupo: </p>
-        
-        <form action="<?= BASE_URL ?>/admin/loja/adicionais/vincular-multiplos" method="POST">
-            <input type="hidden" name="group_id" id="linkGroupId">
-            
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Selecione os Itens</label>
-                <?php if (empty($allItems)): ?>
-                    <p style="color: #9ca3af; padding: 12px; background: #f9fafb; border-radius: 8px;">
-                        Nenhum item cadastrado. <a href="<?= BASE_URL ?>/admin/loja/adicionais/itens" style="color: #2563eb;">Criar itens primeiro</a>
-                    </p>
-                <?php else: ?>
-                    
-                    <!-- CUSTOM MULTI-SELECT -->
-                    <div class="custom-select-container-items" style="position: relative;">
-                        <input type="hidden" name="dummy" value="1">
-                        
-                        <div class="select-trigger-items" onclick="toggleItemsSelect(this)" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; background: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-                            <span class="trigger-text-items" style="color: #6b7280;">Selecione os itens...</span>
-                            <i data-lucide="chevron-down" size="16" style="color: #9ca3af;"></i>
-                        </div>
-                        
-                        <div class="options-list-items" style="display: none; position: absolute; top: 105%; left: 0; right: 0; background: white; border: 1px solid #d1d5db; border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 10; padding: 5px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                            <?php foreach ($allItems as $item): ?>
-                                <label style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-radius: 6px; transition: background 0.1s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-                                    <input type="checkbox" name="item_ids[]" value="<?= $item['id'] ?>" onchange="updateItemsTriggerText()" style="width: 18px; height: 18px; accent-color: #10b981;">
-                                    <span style="flex: 1; font-size: 0.95rem; color: #374151;"><?= htmlspecialchars($item['name']) ?></span>
-                                    <span style="padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: <?= $item['price'] > 0 ? '#dbeafe' : '#d1fae5' ?>; color: <?= $item['price'] > 0 ? '#1d4ed8' : '#059669' ?>;">
-                                        <?= $item['price'] > 0 ? '+R$ ' . number_format($item['price'], 2, ',', '.') : 'Grátis' ?>
-                                    </span>
-                                </label>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-
-                    <p style="margin-top: 8px; font-size: 0.85rem; color: #6b7280;">
-                        <i data-lucide="info" size="14" style="vertical-align: middle;"></i>
-                        Selecione um ou mais itens para vincular ao grupo.
-                    </p>
-                <?php endif; ?>
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <button type="button" onclick="closeLinkModal()" style="flex: 1; padding: 12px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                    Cancelar
-                </button>
-                <?php if (!empty($allItems)): ?>
-                <button type="submit" style="flex: 1; padding: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                    Vincular Selecionados
-                </button>
-                <?php endif; ?>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal de Vincular Categoria (Bulk) -->
-<div id="linkCategoryModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 450px; margin: 20px;">
-        <h3 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Vincular Categoria Inteira</h3>
-        <p style="color: #6b7280; margin-bottom: 1.5rem;" id="linkCategoryGroupName">Grupo: </p>
-        
-        <form action="<?= BASE_URL ?>/admin/loja/adicionais/vincular-categoria" method="POST">
-            <input type="hidden" name="group_id" id="linkCategoryGroupId">
-            
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Selecione as Categorias</label>
-                <?php if (empty($categories)): ?>
-                    <p style="color: #9ca3af; padding: 12px; background: #f9fafb; border-radius: 8px;">
-                        Nenhuma categoria cadastrada.
-                    </p>
-                <?php else: ?>
-                    
-                    <!-- CUSTOM MULTI-SELECT -->
-                    <div class="custom-select-container-cat" style="position: relative;">
-                        <input type="hidden" name="dummy" value="1"> <!-- Evita envio vazio se nada selecionado -->
-                        
-                        <div class="select-trigger-cat" onclick="toggleCategorySelect(this)" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; background: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-                            <span class="trigger-text-cat" style="color: #6b7280;">Selecione...</span>
-                            <i data-lucide="chevron-down" size="16" style="color: #9ca3af;"></i>
-                        </div>
-                        
-                        <div class="options-list-cat" style="display: none; position: absolute; top: 105%; left: 0; right: 0; background: white; border: 1px solid #d1d5db; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 10; padding: 5px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                            <?php foreach ($categories as $cat): ?>
-                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 4px; transition: background 0.1s;">
-                                    <input type="checkbox" name="category_ids[]" value="<?= $cat['id'] ?>" onchange="updateCategoryTriggerText(this)" style="width: 16px; height: 16px;">
-                                    <span style="font-size: 0.95rem; color: #374151;"><?= htmlspecialchars($cat['name']) ?></span>
-                                </label>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-
-                    <p style="margin-top: 8px; font-size: 0.85rem; color: #6b7280;">
-                        <i data-lucide="info" size="14" style="vertical-align: middle;"></i>
-                        Os produtos das categorias selecionadas receberão vínculo com este grupo.
-                    </p>
-                <?php endif; ?>
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <button type="button" onclick="closeLinkCategoryModal()" style="flex: 1; padding: 12px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                    Cancelar
-                </button>
-                <?php if (!empty($categories)): ?>
-                <button type="submit" style="flex: 1; padding: 12px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                    Vincular Tudo
-                </button>
-                <?php endif; ?>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-    // Expor BASE_URL para o JS externo
-    window.BASE_URL = '<?= BASE_URL ?>';
-</script>
+<!-- Scripts -->
+<script>window.BASE_URL = '<?= BASE_URL ?>';</script>
 <script src="<?= BASE_URL ?>/js/components/multi-select.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/admin/additionals.js?v=<?= time() ?>"></script>
 

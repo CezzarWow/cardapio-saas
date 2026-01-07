@@ -173,51 +173,36 @@ class AdditionalController {
         $this->checkSession();
         
         $name = trim($_POST['name'] ?? '');
-        $itemIds = $_POST['item_ids'] ?? []; // Array de IDs de itens para vincular
+        $itemIds = $_POST['item_ids'] ?? []; 
         $restaurantId = $_SESSION['loja_ativa_id'];
 
-        if (!empty($name)) {
-            $conn = Database::connect();
-            
-            try {
-                $conn->beginTransaction();
-
-                // 1. Criar Grupo
-                $stmt = $conn->prepare("INSERT INTO additional_groups (restaurant_id, name, required) VALUES (:rid, :name, 0)");
-                $stmt->execute([
-                    'rid' => $restaurantId,
-                    'name' => $name
-                ]);
-                $groupId = $conn->lastInsertId();
-
-                // 2. Vincular Itens Selecionados
-                if (!empty($itemIds) && is_array($itemIds)) {
-                    $sqlLink = "INSERT INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)";
-                    $stmtLink = $conn->prepare($sqlLink);
-
-                    foreach ($itemIds as $iid) {
-                        // Verifica se o item pertence à loja
-                        $checkItem = $conn->prepare("SELECT id FROM additional_items WHERE id = :iid AND restaurant_id = :rid");
-                        $checkItem->execute(['iid' => $iid, 'rid' => $restaurantId]);
-                        
-                        if ($checkItem->fetch()) {
-                            $stmtLink->execute(['gid' => $groupId, 'iid' => $iid]);
-                        }
-                    }
-                }
-
-                $conn->commit();
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=grupo_criado');
-                exit;
-
-            } catch (Exception $e) {
-                $conn->rollBack();
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=erro_criar_grupo');
-                exit;
-            }
-        } else {
+        // Passo 1: Validação HTTP Básica
+        if (empty($name)) {
              header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=nome_obrigatorio');
              exit;
+        }
+
+        try {
+            // Passo 2: Execução do Caso de Uso (DDD Lite)
+            $service = new \App\Services\Additional\CreateAdditionalGroupService();
+            $service->execute($restaurantId, [
+                'name' => $name,
+                'item_ids' => $itemIds,
+                // Futuro: 'required' => $_POST['required'] ?? 0
+            ]);
+
+            header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=grupo_criado');
+            exit;
+
+        } catch (\Exception $e) {
+            // Log do erro real para debug (opcional)
+            // error_log($e->getMessage());
+            
+            // Retorno amigável ao usuário
+            // Ideal: Identificar se é erro de regra (ex: duplicated) ou sistema
+            $errorMsg = urlencode($e->getMessage()); // Para simplificar o piloto
+            header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=' . $errorMsg);
+            exit;
         }
     }
 

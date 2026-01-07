@@ -1,3 +1,5 @@
+console.log('Additionals JS Loaded');
+// alert('JS Carregado!'); // Descomente se console não for visível
 /**
  * ADDITIONALS - JavaScript
  * Gerencia modais, multi-selects e busca da página de Adicionais
@@ -47,6 +49,52 @@ function updateGroupsTriggerText() {
 
 // Inicializa click-outside para todos os multi-selects
 MultiSelect.initClickOutside(['group-items', 'cat', 'items', 'groups']);
+
+// ==========================================
+// EVENT DELEGATION (Padrão Robusto)
+// ==========================================
+// Centraliza handlers de clique para evitar onclick inline com parâmetros PHP
+document.addEventListener('click', function (e) {
+    // 1. Vincular Categoria ao Grupo
+    const btnCat = e.target.closest('.btn-action-category');
+    if (btnCat) {
+        e.preventDefault();
+        const groupId = btnCat.dataset.groupId;
+        const groupName = btnCat.dataset.groupName;
+        openLinkCategoryModal(groupId, groupName);
+        return;
+    }
+
+    // 2. Vincular Item ao Grupo
+    const btnLink = e.target.closest('.btn-action-link');
+    if (btnLink) {
+        e.preventDefault();
+        const groupId = btnLink.dataset.groupId;
+        const groupName = btnLink.dataset.groupName;
+        openLinkModal(groupId, groupName);
+        return;
+    }
+
+    // 3. Excluir Grupo
+    const btnDelGroup = e.target.closest('.btn-action-delete-group');
+    if (btnDelGroup) {
+        e.preventDefault();
+        const url = btnDelGroup.dataset.url;
+        const name = btnDelGroup.dataset.name;
+        openDeleteModal(url, name);
+        return;
+    }
+
+    // 4. Excluir Item
+    const btnDelItem = e.target.closest('.btn-action-delete-item');
+    if (btnDelItem) {
+        e.preventDefault();
+        const url = btnDelItem.dataset.url;
+        const name = btnDelItem.dataset.name;
+        openDeleteModal(url, name);
+        return;
+    }
+});
 
 // ==========================================
 // MODAIS DE GRUPO

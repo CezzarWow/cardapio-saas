@@ -1,6 +1,6 @@
 <!-- Modal de Exclusão Genérico -->
-<!-- 
-    USO: <?php require __DIR__ . '/partials/delete-modal.php'; ?>
+<!--
+    USO: require __DIR__ . '/../partials/delete-modal.php';
     
     FUNÇÕES JS NECESSÁRIAS (em additionals.js ou global):
     - openDeleteModal(actionUrl, itemName)
