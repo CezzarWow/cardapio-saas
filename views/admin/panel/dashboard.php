@@ -703,7 +703,20 @@ if ($restaurantId) {
     <script src="<?= BASE_URL ?>/js/pdv/state.js?v=<?= time() ?>"></script>
     <script src="<?= BASE_URL ?>/js/pdv/cart.js?v=<?= time() ?>"></script>
     <script src="<?= BASE_URL ?>/js/pdv/tables.js?v=<?= time() ?>"></script>
-    <script src="<?= BASE_URL ?>/js/pdv/checkout.js?v=<?= time() ?>"></script>
+    
+    <!-- Módulos de Checkout (ordem de dependência obrigatória) -->
+    <script src="<?= BASE_URL ?>/js/pdv/checkout/helpers.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/checkout/state.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/checkout/totals.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/checkout/ui.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/checkout/payments.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/checkout/submit.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/checkout/orderType.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/checkout/retirada.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/checkout/entrega.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/checkout/pickup.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/checkout/index.js?v=<?= time() ?>"></script>
+    
     <script src="<?= BASE_URL ?>/js/pdv.js?v=<?= time() ?>"></script>
 
 <?php require __DIR__ . '/layout/footer.php'; ?>

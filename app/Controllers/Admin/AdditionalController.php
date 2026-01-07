@@ -197,7 +197,7 @@ class AdditionalController {
 
                     foreach ($itemIds as $iid) {
                         // Verifica se o item pertence à loja
-                        $checkItem = $conn->prepare("SELECT id FROM additionals WHERE id = :iid AND restaurant_id = :rid");
+                        $checkItem = $conn->prepare("SELECT id FROM additional_items WHERE id = :iid AND restaurant_id = :rid");
                         $checkItem->execute(['iid' => $iid, 'rid' => $restaurantId]);
                         
                         if ($checkItem->fetch()) {
