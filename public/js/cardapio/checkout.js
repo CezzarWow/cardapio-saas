@@ -1,16 +1,24 @@
 /**
- * CHECKOUT.JS - Fluxo de Finalização e Pagamento
- * Dependências: Cart.js, Utils.js
+ * CHECKOUT.JS - Orquestrador do Fluxo de Checkout
+ * 
+ * Módulos externos:
+ * - checkout-order.js  → CheckoutOrder (envio de pedidos)
+ * - checkout-fields.js → CheckoutFields (toggles e campos)
+ * - checkout-modals.js → CheckoutModals (modais UI)
  */
 
 const CardapioCheckout = {
-    selectedOrderType: 'entrega', // Default
+    // Estado
+    selectedOrderType: 'entrega',
     selectedPaymentMethod: null,
     hasNoNumber: false,
     hasNoChange: false,
 
+    // ==========================================
+    // INICIALIZAÇÃO
+    // ==========================================
     init: function () {
-// Inicializa Máscara de Telefone
+        // Máscara de telefone
         const phoneInput = document.getElementById('customerPhone');
         if (phoneInput) {
             phoneInput.oninput = function () {
@@ -22,27 +30,24 @@ const CardapioCheckout = {
         const modal = document.getElementById('paymentModal');
         if (modal) {
             modal.addEventListener('click', (e) => {
-                if (e.target === modal) CardapioCheckout.closePayment();
+                if (e.target === modal) this.closePayment();
             });
         }
 
-        // Valida Tipo de Pedido Inicial (caso Entrega esteja desabilitado)
+        // Valida tipo de pedido inicial
         setTimeout(() => {
-            const currentRadio = document.querySelector(`input[name="orderType"][value="${CardapioCheckout.selectedOrderType}"]`);
+            const currentRadio = document.querySelector(`input[name="orderType"][value="${this.selectedOrderType}"]`);
             if (!currentRadio || currentRadio.disabled) {
                 const enabledRadio = document.querySelector('input[name="orderType"]:not([disabled])');
                 if (enabledRadio) {
-                    CardapioCheckout.setOrderType(enabledRadio.value);
+                    this.setOrderType(enabledRadio.value);
                 }
             }
         }, 100);
     },
 
     // ==========================================
-    // SELECIONAR TIPO DE PEDIDO
-    // ==========================================
-    // ==========================================
-    // LÓGICA DE TAXAS E TOTAIS
+    // TAXAS E TOTAIS
     // ==========================================
     getDeliveryFee: function () {
         if (this.selectedOrderType !== 'entrega') return 0;
@@ -52,8 +57,7 @@ const CardapioCheckout = {
 
     getFinalTotal: function () {
         const cartTotal = CardapioCart.getTotals().value;
-        const fee = this.getDeliveryFee();
-        return cartTotal + fee;
+        return cartTotal + this.getDeliveryFee();
     },
 
     updateTotals: function () {
@@ -61,12 +65,7 @@ const CardapioCheckout = {
         const total = this.getFinalTotal();
         const feeRow = document.getElementById('deliveryFeeRow');
 
-        // Atualiza Linha da Taxa (Review Modal)
         if (feeRow) {
-            // Mostra apenas se tem taxa E é entrega
-            // Se taxa for 0, mas for entrega, opcionalmente mostra "Grátis" ou esconde.
-            // O usuário pediu pra mostrar o valor. Se for 0, mostra R$ 0,00 ou Grátis?
-            // Vou mostrar valor normal.
             if (this.selectedOrderType === 'entrega' && fee > 0) {
                 feeRow.style.display = 'flex';
                 const elDiv = document.getElementById('deliveryFeeValue');
@@ -76,443 +75,84 @@ const CardapioCheckout = {
             }
         }
 
-        // Atualiza Total Visual em todos os lugares
         const totalFormatted = Utils.formatCurrency(total);
-
         const reviewTotal = document.getElementById('orderReviewTotal');
         if (reviewTotal) reviewTotal.innerText = totalFormatted;
 
         const paymentTotal = document.getElementById('paymentTotalValue');
         if (paymentTotal) paymentTotal.innerText = totalFormatted;
-
-        // Atualiza também o botão flutuante principal se estiver visível (opcional, mas bom pra consistência)
     },
 
     // ==========================================
-    // SELECIONAR TIPO DE PEDIDO
+    // TIPO DE PEDIDO
     // ==========================================
     setOrderType: function (type) {
         this.selectedOrderType = type;
 
-        // Atualiza UI
         document.querySelectorAll('input[name="orderType"]').forEach(radio => {
             radio.checked = (radio.value === type);
         });
 
-        // Atualiza campos visíveis
         this.updateFieldsVisibility();
-
-        // Atualiza Totais (Taxas mudam)
         this.updateTotals();
     },
 
+    // ==========================================
+    // DELEGAÇÕES PARA MÓDULOS EXTERNOS
+    // ==========================================
+
+    // Fields (checkout-fields.js)
     updateFieldsVisibility: function () {
-        const type = this.selectedOrderType;
-        const msgLocal = document.getElementById('msgLocal');
-        const msgRetirada = document.getElementById('msgRetirada');
-
-        if (msgLocal) msgLocal.style.display = (type === 'local') ? 'block' : 'none';
-        if (msgRetirada) msgRetirada.style.display = (type === 'retirada') ? 'block' : 'none';
-
-        // Campos de entrega (Endereço, Bairro)
-        document.querySelectorAll('.delivery-only').forEach(el => {
-            el.style.display = (type === 'entrega') ? '' : 'none';
-        });
-
-        // Campo de Número: visível apenas para Entrega (Local e Retirada não precisam)
-        const numberField = document.getElementById('numberFieldRow');
-        if (numberField) {
-            numberField.style.display = (type === 'entrega') ? '' : 'none';
-        }
-
-        // Placeholder do campo Número muda conforme o tipo
-        const numInput = document.getElementById('customerNumber');
-        if (numInput) {
-            numInput.placeholder = (type === 'local') ? 'Mesa *' : 'Nº *';
-        }
-
-        // Label do Número muda (se existir)
-        const numLabel = document.querySelector('label[for="customerNumber"]');
-        if (numLabel) {
-            if (type === 'local') numLabel.textContent = 'Mesa / Comanda';
-            else if (type === 'retirada') numLabel.textContent = 'Identificação (Nome/ID)';
-            else numLabel.textContent = 'Número';
-        }
+        CheckoutFields.updateFieldsVisibility(this.selectedOrderType);
     },
-
-    // ==========================================
-    // RESUMO DO PEDIDO
-    // ==========================================
-    openOrderReview: function () {
-        if (CardapioCart.items.length === 0) {
-            alert('Seu carrinho está vazio!');
-            return;
-        }
-
-        this.renderReviewItems();
-        this.updateTotals(); // Garante cálculo correto ao abrir
-
-        document.getElementById('orderReviewModal').classList.add('show');
-    },
-
-    closeOrderReview: function () {
-        document.getElementById('orderReviewModal').classList.remove('show');
-    },
-
-    renderReviewItems: function () {
-        const container = document.getElementById('orderReviewItems');
-        if (!container) return;
-
-        container.innerHTML = '';
-        const items = CardapioCart.items;
-
-        items.forEach(item => {
-            container.innerHTML += `
-                <div class="order-review-item">
-                    <div class="order-review-item-qty">${item.quantity}x</div>
-                    <div class="order-review-item-info">
-                        <div class="order-review-item-name">${item.name}</div>
-                        
-                        ${item.isCombo && item.products ? `
-                            <div class="order-review-combo-details" style="font-size: 0.85rem; color: #666; margin-top: 2px;">
-                                ${item.products.map(p => `
-                                    <div>
-                                        <span>• ${p.name}</span>
-                                        ${p.additionals && p.additionals.length > 0 ? `
-                                            <span style="font-size: 0.8rem; color: #888;">(+ ${p.additionals.map(a => a.name).join(', ')})</span>
-                                        ` : ''}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        ` : ''}
-
-                        ${!item.isCombo && item.additionals && item.additionals.length > 0 ? `<div class="order-review-item-extras">+ ${item.additionals.map(a => a.name).join(', ')}</div>` : ''}
-                        ${item.observation ? `<div class="order-review-item-obs">Obs: ${item.observation}</div>` : ''}
-                    </div>
-                    <div class="order-review-item-actions">
-                        <span class="order-review-item-price">${Utils.formatCurrency(item.unitPrice * item.quantity)}</span>
-                        <button class="order-review-remove-btn" onclick="CardapioCart.remove(${item.id}); CardapioCheckout.renderReviewItems();">
-                            <i data-lucide="trash-2" size="16"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-        Utils.initIcons();
-
-        // Atualiza total se remover e re-renderizar
-        this.updateTotals();
-
-        if (items.length === 0) this.closeOrderReview();
-    },
-
-    // ==========================================
-    // PAGAMENTO
-    // ==========================================
-    goToPayment: function () {
-        this.closeOrderReview();
-        this.updateTotals(); // Garante total atualizado no modal pagamento
-
-        // RESET: Esconde o card de troco (só aparece ao selecionar Dinheiro)
-        const changeContainer = document.getElementById('changeContainer');
-        if (changeContainer) {
-            changeContainer.style.display = 'none';
-        }
-
-        // RESET: Limpa seleção de método de pagamento
-        this.selectedPaymentMethod = null;
-        document.querySelectorAll('input[name="paymentMethod"]').forEach(r => r.checked = false);
-        document.getElementById('paymentModal').classList.remove('has-change');
-
-        // Aplica máscara de dinheiro ao campo de troco
-        const changeInput = document.getElementById('changeAmount');
-        if (changeInput) {
-            changeInput.value = '';
-            // Remove listener antigo se existir e adiciona novo
-            changeInput.oninput = function () {
-                Utils.formatMoneyInput(this);
-            };
-        }
-
-        document.getElementById('paymentModal').classList.add('show');
-        this.updateFieldsVisibility(); // Garante estado correto
-    },
-
-    closePayment: function () {
-        document.getElementById('paymentModal').classList.remove('show');
-    },
-
-    backToReview: function () {
-        this.closePayment();
-        // Garante que o modal de revisão abra imediatamente
-        this.openOrderReview();
-    },
-
-    selectPaymentMethod: function (method) {
-        this.selectedPaymentMethod = method;
-
-        // Visual
-        // O código original usa radio buttons, então o browser cuida do visual 'checked'.
-        // Se precisarmos de logica extra (ex: mostrar campo troco):
-        const changeContainer = document.getElementById('changeContainer');
-        if (method === 'dinheiro') {
-            changeContainer.style.display = 'block';
-            document.getElementById('paymentModal').classList.add('has-change');
-            setTimeout(() => this.scrollToChange(), 250);
-        } else {
-            changeContainer.style.display = 'none';
-            document.getElementById('paymentModal').classList.remove('has-change');
-            this.hasNoChange = false; // Reset
-        }
-    },
-
     toggleNoNumber: function () {
-        const input = document.getElementById('customerNumber');
-        const btn = document.querySelector('.no-number-btn');
-
-        this.hasNoNumber = !this.hasNoNumber;
-
-        if (this.hasNoNumber) {
-            input.value = 'S/N';
-            input.disabled = true;
-            btn.classList.add('active');
-        } else {
-            input.value = '';
-            input.disabled = false;
-            btn.classList.remove('active');
-            input.focus();
-        }
+        CheckoutFields.toggleNoNumber(this);
     },
-
     toggleNoChange: function () {
-        const input = document.getElementById('changeAmount');
-        const btn = document.querySelector('.no-change-btn');
-
-        this.hasNoChange = !this.hasNoChange;
-
-        if (this.hasNoChange) {
-            input.value = 'Sem troco';
-            input.disabled = true;
-            btn.classList.add('active');
-            this.confirmChange();
-        } else {
-            input.value = 'R$ 0,00';
-            input.disabled = false;
-            btn.classList.remove('active');
-        }
+        CheckoutFields.toggleNoChange(this);
     },
-
     confirmChange: function () {
-        // Lógica de "OK" no troco (compactar)
-        const input = document.getElementById('changeAmount');
-        const inputGroup = document.getElementById('changeInputGroup');
-        const summary = document.getElementById('changeSummary');
-        const summaryText = document.getElementById('changeSummaryText');
-
-        let val = input.value;
-        if (!val || val === 'R$ 0,00') val = 'Sem troco';
-
-        summaryText.textContent = (val === 'Sem troco') ? 'Sem troco' : 'Troco: ' + val;
-
-        if (inputGroup) inputGroup.style.display = 'none';
-        if (summary) summary.style.display = 'flex';
-
-        document.getElementById('changeContainer').classList.add('summary-mode');
+        CheckoutFields.confirmChange();
     },
-
     editChange: function () {
-        const inputGroup = document.getElementById('changeInputGroup');
-        const summary = document.getElementById('changeSummary');
-        const input = document.getElementById('changeAmount');
-
-        if (inputGroup) inputGroup.style.display = 'block';
-        if (summary) summary.style.display = 'none';
-
-        document.getElementById('changeContainer').classList.remove('summary-mode');
-
-        // Reset robusto do input
-        if (input) {
-            input.disabled = false;
-            // Limpa se tiver qualquer texto relacionado a sem troco
-            if (input.value && (input.value.includes('Sem') || input.value.includes('troco'))) {
-                input.value = '';
-            }
-        }
-
-        // Remove active de TODOS os botões de sem troco (prevenção)
-        document.querySelectorAll('.no-change-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-
-        this.hasNoChange = false;
-
-        // Força foco com pequeno delay para garantir renderização
-        if (input) {
-            setTimeout(() => input.focus(), 50);
-        }
+        CheckoutFields.editChange(this);
     },
-
     scrollToChange: function () {
-        const el = document.getElementById('changeContainer');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        CheckoutFields.scrollToChange();
     },
 
-    // ==========================================
-    // ENVIAR PEDIDO
-    // ==========================================
+    // Modals (checkout-modals.js)
+    openOrderReview: function () {
+        CheckoutModals.openOrderReview(this);
+    },
+    closeOrderReview: function () {
+        CheckoutModals.closeOrderReview();
+    },
+    renderReviewItems: function () {
+        CheckoutModals.renderReviewItems();
+        this.updateTotals();
+    },
+    goToPayment: function () {
+        CheckoutModals.goToPayment(this);
+    },
+    closePayment: function () {
+        CheckoutModals.closePayment();
+    },
+    backToReview: function () {
+        CheckoutModals.backToReview(this);
+    },
+    selectPaymentMethod: function (method) {
+        CheckoutModals.selectPaymentMethod(this, method);
+    },
+
+    // Order (checkout-order.js)
     sendOrder: async function () {
-        const name = document.getElementById('customerName').value.trim();
-        const phone = document.getElementById('customerPhone')?.value.trim() || '';
-        const address = document.getElementById('customerAddress').value.trim();
-        const number = document.getElementById('customerNumber').value.trim();
-        const neighborhood = document.getElementById('customerNeighborhood').value.trim();
-        const obs = document.getElementById('customerObs').value.trim();
-        const changeAmount = document.getElementById('changeAmount').value.trim();
-
-        // Validações
-        if (!name) return alert('Por favor, preencha seu nome.');
-
-        // Validação de Endereço (só para Entrega)
-        if (this.selectedOrderType === 'entrega') {
-            if (!address) return alert('Por favor, preencha o endereço.');
-        }
-
-        // Número obrigatório apenas para Entrega
-        // Local e Retirada não precisam de número (identificados pelo nome)
-        if (this.selectedOrderType === 'entrega' && !number && !this.hasNoNumber) {
-            return alert('Por favor, preencha o número ou selecione "Sem nº".');
-        }
-
-        if (!this.selectedPaymentMethod) {
-            return alert('Por favor, selecione a forma de pagamento.');
-        }
-
-        const totals = CardapioCart.getTotals();
-        const config = window.cardapioConfig || {};
-        const whatsappNumber = (config.whatsapp_number || '').replace(/\D/g, '');
-        const restaurantId = window.restaurantId || config.restaurant_id;
-
-        // Preparar dados para API
-        const deliveryFee = this.getDeliveryFee();
-        const orderData = {
-            restaurant_id: restaurantId,
-            customer_name: name,
-            customer_phone: phone,
-            customer_address: address,
-            customer_number: number,
-            customer_neighborhood: neighborhood,
-            order_type: this.selectedOrderType, // delivery, pickup, local
-            payment_method: this.selectedPaymentMethod,
-            change_amount: changeAmount,
-            observation: obs,
-            delivery_fee: deliveryFee,
-            items: CardapioCart.items.map(item => ({
-                product_id: item.productId || null,
-                name: item.name,
-                quantity: item.quantity,
-                unit_price: item.unitPrice,
-                observation: item.observation || '',
-                additionals: (item.additionals || []).map(add => ({
-                    id: add.id,
-                    name: add.name,
-                    price: add.price || 0
-                }))
-            }))
-        };
-
-        try {
-            // 1. Salvar no banco de dados primeiro
-            const response = await fetch(window.BASE_URL + '/api/order/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(orderData)
-            });
-
-            const result = await response.json();
-
-            if (!result.success) {
-                alert('Erro ao enviar pedido: ' + (result.message || 'Erro desconhecido'));
-                return;
-            }
-
-            // 2. Montar mensagem para WhatsApp
-            let msgBefore = 'Olá! Gostaria de fazer um pedido:';
-            let msgAfter = 'Aguardo a confirmação.';
-
-            try {
-                if (config.whatsapp_message) {
-                    const parsed = JSON.parse(config.whatsapp_message);
-                    if (parsed && (typeof parsed === 'object') && (parsed.before || parsed.after)) {
-                        if (Array.isArray(parsed.before) && parsed.before.length > 0) {
-                            msgBefore = parsed.before.join('\n');
-                        }
-                        if (Array.isArray(parsed.after) && parsed.after.length > 0) {
-                            msgAfter = parsed.after.join('\n');
-                        }
-                    } else if (Array.isArray(parsed)) {
-                        if (parsed.length > 0 && parsed[0]) msgBefore = parsed[0];
-                        if (parsed.length > 1 && parsed[1]) msgAfter = parsed[1];
-                    }
-                }
-            } catch (e) {
-                console.warn('Erro ao decodificar mensagens do WhatsApp', e);
-            }
-
-            // Monta o Corpo do Pedido
-            let orderSummary = '*NOVO PEDIDO*\n\n' +
-                '👤 *Nome:* ' + name + '\n';
-
-            if (this.selectedOrderType === 'entrega') {
-                orderSummary += '📍 *Entrega:* ' + address + ', ' + number + '\n' +
-                    '🏘️ *Bairro:* ' + neighborhood + '\n';
-            } else {
-                const label = (this.selectedOrderType === 'local') ? 'Mesa/Comanda' : 'Retirada';
-                orderSummary += '🏪 *' + label + ':* ' + number + '\n';
-            }
-
-            orderSummary += '\n🛒 *ITENS:*\n';
-            CardapioCart.items.forEach(item => {
-                orderSummary += `• ${item.quantity}x ${item.name} ` +
-                    (item.additionals.length ? `(${item.additionals.map(a => a.name).join(', ')})` : '') + '\n';
-                if (item.observation) orderSummary += `  _Obs: ${item.observation}_\n`;
-            });
-
-            // Adiciona Taxa de Entrega se houver
-            if (this.selectedOrderType === 'entrega' && deliveryFee > 0) {
-                orderSummary += '🛵 *Taxa de Entrega:* ' + Utils.formatCurrency(deliveryFee) + '\n';
-            }
-
-            orderSummary += '\n💰 *Total Final:* ' + Utils.formatCurrency(this.getFinalTotal()) + '\n';
-            orderSummary += '💳 *Pagamento:* ' + this.selectedPaymentMethod.toUpperCase();
-
-            if (this.selectedPaymentMethod === 'dinheiro' && changeAmount) {
-                orderSummary += ' (Troco para: ' + changeAmount + ')';
-            }
-
-            if (obs) orderSummary += '\n📝 *Obs Geral:* ' + obs;
-
-            // Monta Mensagem Final Completa
-            const finalMessage = `${msgBefore}\n\n${orderSummary}\n\n${msgAfter}`;
-
-            // 3. Envia para o WhatsApp
-            if (whatsappNumber) {
-                const url = `https://wa.me/55${whatsappNumber}?text=${encodeURIComponent(finalMessage)}`;
-                window.open(url, '_blank');
-                alert('Pedido enviado com sucesso! ✅\n\nSeu pedido foi registrado e aparecerá para o restaurante.');
-            } else {
-                // Se não tiver WhatsApp configurado, ainda mostra sucesso do salvamento
-                alert('Pedido registrado com sucesso! ✅\n\nO restaurante foi notificado.\n\n' +
-                    '(WhatsApp não configurado para este restaurante)');
-            }
-
-            this.reset();
-
-        } catch (error) {
-            console.error('Erro ao enviar pedido:', error);
-            alert('Erro de conexão ao enviar pedido. Por favor, tente novamente.');
-        }
+        await CheckoutOrder.send(this);
     },
 
+    // ==========================================
+    // RESET
+    // ==========================================
     reset: function () {
         CardapioCart.clear();
         this.selectedPaymentMethod = null;
@@ -520,25 +160,20 @@ const CardapioCheckout = {
         this.hasNoNumber = false;
 
         document.getElementById('paymentModal').classList.remove('show');
-
-        // Reset Inputs
         document.querySelectorAll('input').forEach(i => i.value = '');
         document.getElementById('changeContainer').style.display = 'none';
-
-        // Reset Radios
         document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
-        // Reseta tipo de pedido default
+
         this.setOrderType('entrega');
     }
 };
 
 // ==========================================
-// EXPOR VARIÁVEIS PARA COMPATIBILIDADE
+// EXPOR PARA COMPATIBILIDADE
 // ==========================================
 window.CardapioCheckout = CardapioCheckout;
 
-// Variáveis Globais (Mapping)
-// Variáveis Globais (Mapping)
+// Getters globais
 try {
     Object.defineProperty(window, 'selectedOrderType', {
         get: () => CardapioCheckout.selectedOrderType,
@@ -559,14 +194,14 @@ try {
     console.warn('[CardapioCheckout] Falha ao definir getters globais:', e);
 }
 
-// Funções Legado
+// Funções legado
 window.selectOrderType = (t) => CardapioCheckout.setOrderType(t);
 window.openOrderReviewModal = () => CardapioCheckout.openOrderReview();
 window.closeOrderReviewModal = () => CardapioCheckout.closeOrderReview();
 window.finalizarPedido = () => {
     CardapioCheckout.openOrderReview();
     if (typeof closeSuggestionsModal === 'function') {
-        setTimeout(() => closeSuggestionsModal(), 100); // Small delay for smooth transition
+        setTimeout(() => closeSuggestionsModal(), 100);
     }
 };
 window.goToPayment = () => CardapioCheckout.goToPayment();
@@ -577,7 +212,7 @@ window.toggleNoChange = () => CardapioCheckout.toggleNoChange();
 window.confirmChange = () => CardapioCheckout.confirmChange();
 window.editChange = () => CardapioCheckout.editChange();
 
-// Evento Global de Pagamento (Delegado)
+// Evento Global de Pagamento
 document.addEventListener('change', function (e) {
     if (e.target.name === 'paymentMethod') {
         CardapioCheckout.selectPaymentMethod(e.target.value);

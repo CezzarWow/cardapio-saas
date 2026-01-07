@@ -183,6 +183,9 @@
 <script src="<?= BASE_URL ?>/js/cardapio/utils.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/cart.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/modals.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio/checkout-order.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio/checkout-fields.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio/checkout-modals.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/checkout.js?v=<?= time() ?>"></script>
 
 <!-- Main Script (Listeners) -->
