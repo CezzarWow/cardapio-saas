@@ -59,4 +59,50 @@ class AdditionalGroupRepository
         
         return (bool) $stmt->fetch();
     }
+
+    /**
+     * Busca todos os grupos com seus itens vinculados
+     * (Extraído de AdditionalController::getGroupsWithItems)
+     */
+    public function findAllWithItems(int $restaurantId): array
+    {
+        $conn = Database::connect();
+        
+        // Busca grupos
+        $stmt = $conn->prepare("SELECT * FROM additional_groups WHERE restaurant_id = :rid ORDER BY name ASC");
+        $stmt->execute(['rid' => $restaurantId]);
+        $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Para cada grupo, busca itens via pivot
+        foreach ($groups as &$group) {
+            $stmtItems = $conn->prepare("
+                SELECT ai.* FROM additional_items ai
+                INNER JOIN additional_group_items agi ON ai.id = agi.item_id
+                WHERE agi.group_id = :gid
+                ORDER BY ai.name ASC
+            ");
+            $stmtItems->execute(['gid' => $group['id']]);
+            $group['items'] = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+        }
+        unset($group); // Quebra referência
+        
+        return $groups;
+    }
+
+    /**
+     * Deleta um grupo por ID
+     * Nota: Os vínculos em additional_group_items devem ser deletados primeiro (FK)
+     */
+    public function delete(int $id): void
+    {
+        $conn = Database::connect();
+        
+        // Primeiro remove vínculos da tabela pivot
+        $stmt = $conn->prepare("DELETE FROM additional_group_items WHERE group_id = :gid");
+        $stmt->execute(['gid' => $id]);
+        
+        // Depois remove o grupo
+        $stmt = $conn->prepare("DELETE FROM additional_groups WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+    }
 }

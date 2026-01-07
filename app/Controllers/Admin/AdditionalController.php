@@ -1,471 +1,220 @@
 <?php
 namespace App\Controllers\Admin;
 
-use App\Core\Database;
-use PDO;
+use App\Services\Additional\AdditionalQueryService;
+use App\Services\Additional\CreateAdditionalGroupService;
+use App\Services\Additional\CreateItemService;
+use App\Services\Additional\UpdateItemService;
+use App\Services\Additional\DeleteItemService;
+use App\Services\Additional\DeleteGroupService;
+use App\Services\Additional\LinkItemService;
+use App\Services\Additional\UnlinkItemService;
+use App\Services\Additional\LinkCategoryService;
+use App\Repositories\AdditionalCategoryRepository;
+use Exception;
 
 /**
- * [FASE 5.1] Controller de Adicionais - Arquitetura Global
- * - Itens são globais por loja (restaurant_id)
- * - Grupos vinculam itens via tabela pivot
- * - Padrão clássico: POST → Redirect → Reload
+ * Controller de Adicionais - DDD Lite
+ * Apenas HTTP handling: parse request → call service → redirect/json
  */
 class AdditionalController {
 
     // ==========================================
-    // MÉTODOS AUXILIARES PRIVADOS
-    // ==========================================
-    
-    private function getGroupsWithItems($conn, $restaurantId) {
-        // Busca grupos
-        $stmt = $conn->prepare("SELECT * FROM additional_groups WHERE restaurant_id = :rid ORDER BY name ASC");
-        $stmt->execute(['rid' => $restaurantId]);
-        $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Para cada grupo, busca itens via pivot
-        foreach ($groups as &$group) {
-            $stmtItems = $conn->prepare("
-                SELECT ai.* FROM additional_items ai
-                INNER JOIN additional_group_items agi ON ai.id = agi.item_id
-                WHERE agi.group_id = :gid
-                ORDER BY ai.name ASC
-            ");
-            $stmtItems->execute(['gid' => $group['id']]);
-            $group['items'] = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
-        }
-        unset($group); // Quebra referência
-        
-        return $groups;
-    }
-    
-    private function getGlobalItems($conn, $restaurantId) {
-        $stmt = $conn->prepare("SELECT * FROM additional_items WHERE restaurant_id = :rid ORDER BY name ASC");
-        $stmt->execute(['rid' => $restaurantId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    // ==========================================
-    // LISTAGEM PRINCIPAL (GRUPOS + ITENS)
+    // LISTAGEM PRINCIPAL (VIEW)
     // ==========================================
     public function index() {
         $this->checkSession();
-        $conn = Database::connect();
         $restaurantId = $_SESSION['loja_ativa_id'];
         
-        $groups = $this->getGroupsWithItems($conn, $restaurantId);
-        $allItems = $this->getGlobalItems($conn, $restaurantId);
-
-        // [NOVO] Busca categorias para o modal de vínculo em massa
-        $stmtCat = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :rid ORDER BY name ASC");
-        $stmtCat->execute(['rid' => $restaurantId]);
-        $categories = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
+        $queryService = new AdditionalQueryService();
+        $categoryRepository = new AdditionalCategoryRepository();
+        
+        $groups = $queryService->getAllGroupsWithItems($restaurantId);
+        $allItems = $queryService->getAllItems($restaurantId);
+        $categories = $categoryRepository->findAllCategories($restaurantId);
 
         require __DIR__ . '/../../../views/admin/additionals/index.php';
     }
 
-    // ... (Métodos listItems, storeGroup, deleteGroup, createItem, storeItem, editItem, updateItem, deleteItem, linkItem, unlinkItem mantidos) ...
-
     // ==========================================
-    // VÍNCULO EM MASSA (POR CATEGORIAS)
+    // GRUPO: CRIAR
     // ==========================================
-    
-    // AJAX: Retorna categorias que possuem VÍNCULO com o grupo
-    public function getLinkedCategories() {
-        $this->checkSession();
-        header('Content-Type: application/json');
-
-        $groupId = intval($_GET['group_id'] ?? 0);
-        $restaurantId = $_SESSION['loja_ativa_id'];
-
-        if ($groupId <= 0) {
-            echo json_encode([]);
-            exit;
-        }
-
-        $conn = Database::connect();
-        
-        // Estratégia: Se uma categoria tem produtos vinculados a este grupo, retorna o ID dela.
-        // (Pode ajustar para "Se > metada dos produtos", mas "pelo menos 1" é mais rápido e seguro pra UI)
-        $sql = "SELECT DISTINCT p.category_id 
-                FROM product_additional_relations par
-                JOIN products p ON par.product_id = p.id
-                WHERE par.group_id = :gid AND p.restaurant_id = :rid";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->execute(['gid' => $groupId, 'rid' => $restaurantId]);
-        
-        $linkedCategories = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
-        echo json_encode($linkedCategories);
-        exit;
-    }
-
-    // POST: Salva (Sincroniza) vínculos
-    public function linkCategory() {
-        $this->checkSession();
-        
-        $groupId = intval($_POST['group_id'] ?? 0);
-        $categoryIds = $_POST['category_ids'] ?? []; // Array de IDs MARCADOS
-        $restaurantId = $_SESSION['loja_ativa_id'];
-
-        if ($groupId > 0) {
-            $conn = Database::connect();
-
-            // 1. Verifica segurança
-            $stmtCheck = $conn->prepare("SELECT id FROM additional_groups WHERE id = :gid AND restaurant_id = :rid");
-            $stmtCheck->execute(['gid' => $groupId, 'rid' => $restaurantId]);
-            if (!$stmtCheck->fetch()) {
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=grupo_invalido');
-                exit;
-            }
-
-            // 2. Busca TODAS as categorias da loja para saber quais foram DESMARCADAS
-            $stmtAllCats = $conn->prepare("SELECT id FROM categories WHERE restaurant_id = :rid");
-            $stmtAllCats->execute(['rid' => $restaurantId]);
-            $allCategoryIds = $stmtAllCats->fetchAll(PDO::FETCH_COLUMN);
-
-            // Prepara Statements
-            $stmtGetProds = $conn->prepare("SELECT id FROM products WHERE category_id = :cid AND restaurant_id = :rid");
-            $stmtIns = $conn->prepare("INSERT IGNORE INTO product_additional_relations (product_id, group_id) VALUES (:pid, :gid)");
-            $stmtDel = $conn->prepare("DELETE FROM product_additional_relations WHERE product_id = :pid AND group_id = :gid");
-
-            // 3. Itera sobre TODAS as categorias
-            foreach ($allCategoryIds as $cid) {
-                // A categoria está na lista de Marcados?
-                if (in_array($cid, $categoryIds)) {
-                    // SIM: Vincular todos os produtos
-                    $stmtGetProds->execute(['cid' => $cid, 'rid' => $restaurantId]);
-                    $products = $stmtGetProds->fetchAll(PDO::FETCH_COLUMN);
-                    foreach ($products as $pid) {
-                        $stmtIns->execute(['pid' => $pid, 'gid' => $groupId]);
-                    }
-                } else {
-                    // NÃO: Desvincular todos os produtos (pois foi desmarcada ou nunca marcada)
-                    // AÇÃO DESTRUTIVA: Remove vínculo deste grupo para produtos desta categoria
-                    $stmtGetProds->execute(['cid' => $cid, 'rid' => $restaurantId]);
-                    $products = $stmtGetProds->fetchAll(PDO::FETCH_COLUMN);
-                    foreach ($products as $pid) {
-                        $stmtDel->execute(['pid' => $pid, 'gid' => $groupId]);
-                    }
-                }
-            }
-        }
-
-        header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=vinculo_sincronizado');
-        exit;
-    }
-
-    // ==========================================
-    // CATÁLOGO GLOBAL DE ITENS
-    // ==========================================
-    // ==========================================
-    // CATÁLOGO GLOBAL DE ITENS (Descontinuado - Redirecionado para index)
-    // ==========================================
-    // public function listItems() { ... } Removido em favor da view unificada
-        
-
-
-    // ==========================================
-    // GRUPOS - CRUD
-    // ==========================================
-    
     public function storeGroup() {
         $this->checkSession();
         
-        $name = trim($_POST['name'] ?? '');
-        $itemIds = $_POST['item_ids'] ?? []; 
-        $restaurantId = $_SESSION['loja_ativa_id'];
-
-        // Passo 1: Validação HTTP Básica
-        if (empty($name)) {
-             header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=nome_obrigatorio');
-             exit;
-        }
-
-        try {
-            // Passo 2: Execução do Caso de Uso (DDD Lite)
-            $service = new \App\Services\Additional\CreateAdditionalGroupService();
-            $service->execute($restaurantId, [
-                'name' => $name,
-                'item_ids' => $itemIds,
-                // Futuro: 'required' => $_POST['required'] ?? 0
-            ]);
-
-            header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=grupo_criado');
-            exit;
-
-        } catch (\Exception $e) {
-            // Log do erro real para debug (opcional)
-            // error_log($e->getMessage());
-            
-            // Retorno amigável ao usuário
-            // Ideal: Identificar se é erro de regra (ex: duplicated) ou sistema
-            $errorMsg = urlencode($e->getMessage()); // Para simplificar o piloto
-            header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=' . $errorMsg);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $service = new CreateAdditionalGroupService();
+                $service->execute($_SESSION['loja_ativa_id'], [
+                    'name' => $_POST['name'] ?? '',
+                    'item_ids' => $_POST['item_ids'] ?? []
+                ]);
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=grupo_criado');
+            } catch (Exception $e) {
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=' . urlencode($e->getMessage()));
+            }
             exit;
         }
     }
 
+    // ==========================================
+    // GRUPO: DELETAR
+    // ==========================================
     public function deleteGroup() {
         $this->checkSession();
         
         $id = intval($_GET['id'] ?? 0);
-        $restaurantId = $_SESSION['loja_ativa_id'];
-
-        if ($id > 0) {
-            $conn = Database::connect();
-            $stmt = $conn->prepare("DELETE FROM additional_groups WHERE id = :id AND restaurant_id = :rid");
-            $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
-        }
+        $service = new DeleteGroupService();
+        $service->execute($id, $_SESSION['loja_ativa_id']);
 
         header('Location: ' . BASE_URL . '/admin/loja/adicionais');
         exit;
     }
 
     // ==========================================
-    // ITENS GLOBAIS - CRUD
+    // ITEM: CRIAR
     // ==========================================
+    public function storeItemWithGroups() {
+        $this->checkSession();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $service = new CreateItemService();
+                $service->execute($_SESSION['loja_ativa_id'], [
+                    'name' => $_POST['name'] ?? '',
+                    'price' => $_POST['price'] ?? '0',
+                    'group_ids' => $_POST['group_ids'] ?? []
+                ]);
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=item_criado');
+            } catch (Exception $e) {
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=' . urlencode($e->getMessage()));
+            }
+            exit;
+        }
+    }
 
+    // ==========================================
+    // ITEM: ATUALIZAR
+    // ==========================================
+    public function updateItemWithGroups() {
+        $this->checkSession();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $service = new UpdateItemService();
+                $service->execute($_SESSION['loja_ativa_id'], [
+                    'id' => $_POST['id'] ?? 0,
+                    'name' => $_POST['name'] ?? '',
+                    'price' => $_POST['price'] ?? '0',
+                    'group_ids' => $_POST['group_ids'] ?? []
+                ]);
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=item_atualizado');
+            } catch (Exception $e) {
+                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=' . urlencode($e->getMessage()));
+            }
+            exit;
+        }
+    }
 
-
-
-
+    // ==========================================
+    // ITEM: DELETAR
+    // ==========================================
     public function deleteItem() {
         $this->checkSession();
         
         $id = intval($_GET['id'] ?? 0);
-        $restaurantId = $_SESSION['loja_ativa_id'];
-
-        if ($id > 0) {
-            $conn = Database::connect();
-            $stmt = $conn->prepare("DELETE FROM additional_items WHERE id = :id AND restaurant_id = :rid");
-            $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
-        }
+        $service = new DeleteItemService();
+        $service->execute($id, $_SESSION['loja_ativa_id']);
 
         header('Location: ' . BASE_URL . '/admin/loja/adicionais/itens');
         exit;
     }
 
     // ==========================================
-    // VÍNCULO GRUPO ↔ ITEM (PIVOT)
+    // VÍNCULO: ITEM → GRUPO (SIMPLES)
     // ==========================================
-
     public function linkItem() {
         $this->checkSession();
         
         $groupId = intval($_POST['group_id'] ?? 0);
         $itemId = intval($_POST['item_id'] ?? 0);
-        $restaurantId = $_SESSION['loja_ativa_id'];
-
-        if ($groupId > 0 && $itemId > 0) {
-            $conn = Database::connect();
-            
-            // Verifica se grupo pertence à loja
-            $stmt = $conn->prepare("SELECT id FROM additional_groups WHERE id = :gid AND restaurant_id = :rid");
-            $stmt->execute(['gid' => $groupId, 'rid' => $restaurantId]);
-            
-            if ($stmt->fetch()) {
-                // Insere vínculo (IGNORE para não duplicar)
-                $stmt = $conn->prepare("INSERT IGNORE INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)");
-                $stmt->execute(['gid' => $groupId, 'iid' => $itemId]);
-            }
-        }
+        
+        $service = new LinkItemService();
+        $service->linkSingle($groupId, $itemId, $_SESSION['loja_ativa_id']);
 
         header('Location: ' . BASE_URL . '/admin/loja/adicionais');
         exit;
     }
 
-    // [NOVO] Vincular múltiplos itens de uma vez
+    // ==========================================
+    // VÍNCULO: MÚLTIPLOS ITENS → GRUPO
+    // ==========================================
     public function linkMultipleItems() {
         $this->checkSession();
         
         $groupId = intval($_POST['group_id'] ?? 0);
-        $itemIds = $_POST['item_ids'] ?? []; // Array de IDs selecionados
-        $restaurantId = $_SESSION['loja_ativa_id'];
-
-        if ($groupId > 0 && !empty($itemIds)) {
-            $conn = Database::connect();
-            
-            // Verifica se grupo pertence à loja
-            $stmt = $conn->prepare("SELECT id FROM additional_groups WHERE id = :gid AND restaurant_id = :rid");
-            $stmt->execute(['gid' => $groupId, 'rid' => $restaurantId]);
-            
-            if ($stmt->fetch()) {
-                $stmtIns = $conn->prepare("INSERT IGNORE INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)");
-                
-                foreach ($itemIds as $itemId) {
-                    $itemId = intval($itemId);
-                    if ($itemId > 0) {
-                        $stmtIns->execute(['gid' => $groupId, 'iid' => $itemId]);
-                    }
-                }
-            }
-        }
+        $itemIds = $_POST['item_ids'] ?? [];
+        
+        $service = new LinkItemService();
+        $service->linkMultiple($groupId, $itemIds, $_SESSION['loja_ativa_id']);
 
         header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=itens_vinculados');
         exit;
     }
 
-
+    // ==========================================
+    // DESVÍNCULO: ITEM ← GRUPO
+    // ==========================================
     public function unlinkItem() {
         $this->checkSession();
         
         $groupId = intval($_GET['grupo'] ?? 0);
         $itemId = intval($_GET['item'] ?? 0);
-        $restaurantId = $_SESSION['loja_ativa_id'];
-
-        if ($groupId > 0 && $itemId > 0) {
-            $conn = Database::connect();
-            
-            // Verifica se grupo pertence à loja
-            $stmt = $conn->prepare("SELECT id FROM additional_groups WHERE id = :gid AND restaurant_id = :rid");
-            $stmt->execute(['gid' => $groupId, 'rid' => $restaurantId]);
-            
-            if ($stmt->fetch()) {
-                $stmt = $conn->prepare("DELETE FROM additional_group_items WHERE group_id = :gid AND item_id = :iid");
-                $stmt->execute(['gid' => $groupId, 'iid' => $itemId]);
-            }
-        }
+        
+        $service = new UnlinkItemService();
+        $service->execute($groupId, $itemId, $_SESSION['loja_ativa_id']);
 
         header('Location: ' . BASE_URL . '/admin/loja/adicionais');
         exit;
     }
 
     // ==========================================
-    // MÉTODO PARA SALVAR ITEM + VÍNCULOS (MODAL)
+    // VÍNCULO: CATEGORIA → GRUPO (BULK)
     // ==========================================
-    public function storeItemWithGroups() {
+    public function linkCategory() {
         $this->checkSession();
         
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $name = trim($_POST['name'] ?? '');
-            
-            // Tratamento de Moeda BR (1.200,50 -> 1200.50)
-            $priceRaw = $_POST['price'] ?? '0';
-            $priceRaw = str_replace('.', '', $priceRaw); // Remove ponto de milhar
-            $priceRaw = str_replace(',', '.', $priceRaw); // Troca vírgula por ponto
-            $price = floatval($priceRaw);
+        $groupId = intval($_POST['group_id'] ?? 0);
+        $categoryIds = $_POST['category_ids'] ?? [];
+        
+        $service = new LinkCategoryService();
+        $result = $service->execute($groupId, $categoryIds, $_SESSION['loja_ativa_id']);
 
-            $groupIds = $_POST['group_ids'] ?? []; // Array de IDs de grupos
-            $restaurantId = $_SESSION['loja_ativa_id'];
-            
-            if (empty($name)) {
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=nome_obrigatorio');
-                exit;
-            }
-
-            $conn = Database::connect();
-            
-            try {
-                // Iniciar transação para garantir integridade
-                $conn->beginTransaction();
-
-                // 1. Inserir Item
-                $stmt = $conn->prepare("INSERT INTO additional_items (restaurant_id, name, price) VALUES (:rid, :name, :price)");
-                $stmt->execute([
-                    'rid' => $restaurantId,
-                    'name' => $name,
-                    'price' => $price
-                ]);
-                $itemId = $conn->lastInsertId();
-
-                // 2. Vincular aos Grupos Selecionados
-                if (!empty($groupIds) && is_array($groupIds)) {
-                    $sqlLink = "INSERT INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)";
-                    $stmtLink = $conn->prepare($sqlLink);
-
-                    foreach ($groupIds as $gid) {
-                        // Verificar se grupo pertence à loja (segurança)
-                        $checkGroup = $conn->prepare("SELECT id FROM additional_groups WHERE id = :gid AND restaurant_id = :rid");
-                        $checkGroup->execute(['gid' => $gid, 'rid' => $restaurantId]);
-                        
-                        if ($checkGroup->fetch()) {
-                            $stmtLink->execute(['gid' => $gid, 'iid' => $itemId]);
-                        }
-                    }
-                }
-
-                $conn->commit();
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=item_criado');
-                exit;
-
-            } catch (Exception $e) {
-                $conn->rollBack();
-                // Logar erro se necessário
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=erro_banco');
-                exit;
-            }
+        if ($result) {
+            header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=vinculo_sincronizado');
+        } else {
+            header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=grupo_invalido');
         }
+        exit;
     }
 
     // ==========================================
-    // MÉTODO PARA ATUALIZAR ITEM + VÍNCULOS (MODAL)
+    // API: CATEGORIAS VINCULADAS (AJAX)
     // ==========================================
-    public function updateItemWithGroups() {
+    public function getLinkedCategories() {
         $this->checkSession();
+        header('Content-Type: application/json');
+
+        $groupId = intval($_GET['group_id'] ?? 0);
         
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id = intval($_POST['id'] ?? 0);
-            $name = trim($_POST['name'] ?? '');
-            
-            // Tratamento de Moeda BR
-            $priceRaw = $_POST['price'] ?? '0';
-            $priceRaw = str_replace('.', '', $priceRaw);
-            $priceRaw = str_replace(',', '.', $priceRaw);
-            $price = floatval($priceRaw);
-
-            $groupIds = $_POST['group_ids'] ?? [];
-            $restaurantId = $_SESSION['loja_ativa_id'];
-            
-            if ($id <= 0 || empty($name)) {
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=dados_invalidos');
-                exit;
-            }
-
-            $conn = Database::connect();
-            
-            try {
-                $conn->beginTransaction();
-
-                // 1. Atualizar Item
-                $stmt = $conn->prepare("UPDATE additional_items SET name = :name, price = :price WHERE id = :id AND restaurant_id = :rid");
-                $stmt->execute([
-                    'name' => $name,
-                    'price' => $price,
-                    'id' => $id,
-                    'rid' => $restaurantId
-                ]);
-
-                // 2. Sincronizar Grupos (Remove todos e reinsere os selecionados)
-                // Remove atuais
-                $stmtDel = $conn->prepare("DELETE FROM additional_group_items WHERE item_id = :iid");
-                $stmtDel->execute(['iid' => $id]);
-
-                // Insere novos
-                if (!empty($groupIds) && is_array($groupIds)) {
-                    $sqlLink = "INSERT INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)";
-                    $stmtLink = $conn->prepare($sqlLink);
-
-                    foreach ($groupIds as $gid) {
-                        $checkGroup = $conn->prepare("SELECT id FROM additional_groups WHERE id = :gid AND restaurant_id = :rid");
-                        $checkGroup->execute(['gid' => $gid, 'rid' => $restaurantId]);
-                        
-                        if ($checkGroup->fetch()) {
-                            $stmtLink->execute(['gid' => $gid, 'iid' => $id]);
-                        }
-                    }
-                }
-
-                $conn->commit();
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=item_atualizado');
-                exit;
-
-            } catch (Exception $e) {
-                $conn->rollBack();
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=erro_atualizar_item');
-                exit;
-            }
+        if ($groupId <= 0) {
+            echo json_encode([]);
+            exit;
         }
+
+        $service = new LinkCategoryService();
+        echo json_encode($service->getLinkedCategories($groupId, $_SESSION['loja_ativa_id']));
+        exit;
     }
 
     // ==========================================
@@ -477,38 +226,24 @@ class AdditionalController {
         try {
             $this->checkSession();
             $id = intval($_GET['id'] ?? 0);
-            $restaurantId = $_SESSION['loja_ativa_id'];
 
             if ($id <= 0) {
                 echo json_encode(['error' => 'ID inválido']);
                 exit;
             }
 
-            $conn = Database::connect();
-            
-            // Dados do Item
-            $stmt = $conn->prepare("SELECT * FROM additional_items WHERE id = :id AND restaurant_id = :rid");
-            $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
-            $item = $stmt->fetch(PDO::FETCH_ASSOC);
+            $queryService = new AdditionalQueryService();
+            $data = $queryService->getItemData($id, $_SESSION['loja_ativa_id']);
 
-            if (!$item) {
+            if (!$data) {
                 echo json_encode(['error' => 'Item não encontrado']);
                 exit;
             }
 
-            // Grupos Vinculados
-            $stmtGroups = $conn->prepare("SELECT group_id FROM additional_group_items WHERE item_id = :id");
-            $stmtGroups->execute(['id' => $id]);
-            $groupIds = $stmtGroups->fetchAll(PDO::FETCH_COLUMN);
-
-            echo json_encode([
-                'item' => $item,
-                'groups' => $groupIds
-            ]);
+            echo json_encode($data);
             exit;
 
         } catch (\Throwable $e) {
-            // Captura Erros Fatais e Exceptions
             http_response_code(500);
             echo json_encode(['error' => 'Erro no Servidor: ' . $e->getMessage()]);
             exit;
@@ -516,7 +251,7 @@ class AdditionalController {
     }
 
     // ==========================================
-    // API: OBTER ADICIONAIS DO PRODUTO (PDV)
+    // API: ADICIONAIS DO PRODUTO (PDV)
     // ==========================================
     public function getProductExtras() {
         header('Content-Type: application/json');
@@ -530,33 +265,8 @@ class AdditionalController {
             exit;
         }
 
-        $conn = Database::connect();
-
-        // 1. Busca Grupos vinculados ao produto
-        $sqlGroups = "SELECT DISTINCT ag.id, ag.name, ag.required 
-                      FROM additional_groups ag
-                      JOIN product_additional_relations par ON par.group_id = ag.id
-                      WHERE par.product_id = :pid AND ag.restaurant_id = :rid
-                      ORDER BY ag.id ASC";
-        
-        $stmtGroups = $conn->prepare($sqlGroups);
-        $stmtGroups->execute(['pid' => $productId, 'rid' => $restaurantId]);
-        $groups = $stmtGroups->fetchAll(PDO::FETCH_ASSOC);
-
-        // 2. Para cada grupo, busca os itens
-        foreach ($groups as &$group) {
-            $sqlItems = "SELECT DISTINCT ai.id, ai.name, ai.price 
-                         FROM additional_items ai
-                         JOIN additional_group_items agi ON agi.item_id = ai.id
-                         WHERE agi.group_id = :gid AND ai.restaurant_id = :rid
-                         ORDER BY ai.price ASC, ai.name ASC";
-            
-            $stmtItems = $conn->prepare($sqlItems);
-            $stmtItems->execute(['gid' => $group['id'], 'rid' => $restaurantId]);
-            $group['items'] = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
-        }
-
-        echo json_encode($groups);
+        $queryService = new AdditionalQueryService();
+        echo json_encode($queryService->getProductExtras($productId, $restaurantId));
         exit;
     }
 
@@ -565,8 +275,8 @@ class AdditionalController {
     // ==========================================
     private function checkSession() {
         if (session_status() === PHP_SESSION_NONE) session_start();
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            header('Location: ' . BASE_URL . '/admin');
+        if (empty($_SESSION['loja_ativa_id'])) {
+            header('Location: ' . BASE_URL . '/admin/escolher-loja');
             exit;
         }
     }

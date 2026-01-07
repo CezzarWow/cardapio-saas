@@ -1,365 +1,44 @@
 <?php
 /**
  * ============================================
- * CARDÁPIO CONTROLLER
+ * CARDÁPIO CONTROLLER - DDD Lite
  * Gerencia configurações do cardápio web
  * ============================================
  */
 
 namespace App\Controllers\Admin;
 
-use App\Core\Database;
+use App\Services\Cardapio\CardapioQueryService;
+use App\Services\Cardapio\UpdateCardapioConfigService;
 use App\Services\Admin\ComboService;
-use PDO;
 
 class CardapioController {
 
-    /**
-     * Exibe a página de configurações
-     */
+    // ==========================================
+    // LISTAGEM PRINCIPAL (VIEW)
+    // ==========================================
     public function index() {
         $this->checkSession();
-        $conn = Database::connect();
         $restaurantId = $_SESSION['loja_ativa_id'];
+        
+        $queryService = new CardapioQueryService();
+        $data = $queryService->getIndexData($restaurantId);
+        
+        // Extrai variáveis para a view
+        extract($data);
 
-        // Busca configuração atual (ou cria padrão)
-        $stmt = $conn->prepare("SELECT * FROM cardapio_config WHERE restaurant_id = :rid");
-        $stmt->execute(['rid' => $restaurantId]);
-        $config = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // Se não existe, cria registro padrão
-        if (!$config) {
-            $conn->prepare("INSERT INTO cardapio_config (restaurant_id) VALUES (:rid)")
-                 ->execute(['rid' => $restaurantId]);
-            
-            $stmt->execute(['rid' => $restaurantId]);
-            $config = $stmt->fetch(PDO::FETCH_ASSOC);
-        }
-
-        // [ETAPA 2] Buscar horários de funcionamento
-        $stmtHours = $conn->prepare("SELECT * FROM business_hours WHERE restaurant_id = :rid");
-        $stmtHours->execute(['rid' => $restaurantId]);
-        $hoursRaw = $stmtHours->fetchAll(PDO::FETCH_ASSOC);
-
-        // Organizar por dia da semana
-        $businessHours = [];
-        foreach ($hoursRaw as $h) {
-            $businessHours[$h['day_of_week']] = $h;
-        }
-
-        // Se não existem horários, criar os 7 dias padrão
-        if (empty($businessHours)) {
-            $this->createDefaultHours($conn, $restaurantId);
-            $stmtHours->execute(['rid' => $restaurantId]);
-            $hoursRaw = $stmtHours->fetchAll(PDO::FETCH_ASSOC);
-            foreach ($hoursRaw as $h) {
-                $businessHours[$h['day_of_week']] = $h;
-            }
-        }
-
-        // [ETAPA 3] Buscar combos
-        $stmtCombos = $conn->prepare("SELECT * FROM combos WHERE restaurant_id = :rid ORDER BY display_order, name");
-        $stmtCombos->execute(['rid' => $restaurantId]);
-        $combos = $stmtCombos->fetchAll(PDO::FETCH_ASSOC);
-
-        // [NOVO] Buscar itens dos combos para exibir na lista
-        if (!empty($combos)) {
-            $comboIds = array_column($combos, 'id');
-            $inQuery = implode(',', array_fill(0, count($comboIds), '?'));
-            
-            $stmtItems = $conn->prepare("
-                SELECT ci.combo_id, p.name, p.price 
-                FROM combo_items ci
-                JOIN products p ON ci.product_id = p.id
-                WHERE ci.combo_id IN ($inQuery)
-            ");
-            $stmtItems->execute($comboIds);
-            $allItems = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
-
-            // Agrupar itens por combo
-            $itemsByCombo = [];
-            foreach ($allItems as $item) {
-                $itemsByCombo[$item['combo_id']][] = $item;
-            }
-
-            // Processar dados para a view
-            foreach ($combos as &$combo) {
-                $items = $itemsByCombo[$combo['id']] ?? [];
-                $counts = [];
-                $originalPrice = 0;
-
-                foreach ($items as $it) {
-                    $name = $it['name'];
-                    $counts[$name] = ($counts[$name] ?? 0) + 1;
-                    $originalPrice += floatval($it['price']);
-                }
-
-                // Formatar lista: "2 X-Burger + 1 Coca"
-                $descParts = [];
-                foreach ($counts as $name => $qty) {
-                    $descParts[] = ($qty > 1 ? "{$qty} " : "") . $name;
-                }
-                
-                $combo['items_description'] = implode(" + ", $descParts);
-                $combo['original_price'] = $originalPrice;
-                
-                // Calcular desconto
-                if ($originalPrice > 0) {
-                    $discount = (($originalPrice - $combo['price']) / $originalPrice) * 100;
-                    $combo['discount_percent'] = round($discount);
-                } else {
-                    $combo['discount_percent'] = 0;
-                }
-            }
-            unset($combo); // Quebra referência
-        }
-
-        // [ETAPA 3] Buscar todos os produtos para destaques
-        $stmtProducts = $conn->prepare("
-            SELECT p.*, c.name as category_name 
-            FROM products p 
-            LEFT JOIN categories c ON p.category_id = c.id 
-            WHERE p.restaurant_id = :rid 
-            ORDER BY c.sort_order ASC, c.name ASC, p.display_order ASC, p.name ASC
-        ");
-        $stmtProducts->execute(['rid' => $restaurantId]);
-        $allProducts = $stmtProducts->fetchAll(PDO::FETCH_ASSOC);
-
-        // [ETAPA 5] Buscar slug do restaurante para o link "Ver Cardápio"
-        $stmtRestaurant = $conn->prepare("SELECT slug FROM restaurants WHERE id = :rid");
-        $stmtRestaurant->execute(['rid' => $restaurantId]);
-        $restaurantSlug = $stmtRestaurant->fetchColumn() ?: $restaurantId;
-
-        // [SYSTEM CATEGORIES] Verificar e criar categorias de sistema (Combos e Destaques)
-        $this->ensureSystemCategories($conn, $restaurantId);
-
-        // [DESTAQUES] Buscar categorias ordenadas por sort_order
-        // Agora inclui 'category_type' para identificar Destaques e Combos
-        $stmtCategories = $conn->prepare("
-            SELECT * FROM categories 
-            WHERE restaurant_id = :rid 
-            ORDER BY COALESCE(sort_order, 999) ASC, name ASC
-        ");
-        $stmtCategories->execute(['rid' => $restaurantId]);
-        $categories = $stmtCategories->fetchAll(PDO::FETCH_ASSOC);
-
-        // [DESTAQUES] Agrupar produtos por categoria
-        $productsByCategory = [];
-        foreach ($allProducts as $product) {
-            $catName = $product['category_name'] ?? 'Sem categoria';
-            if (!isset($productsByCategory[$catName])) {
-                $productsByCategory[$catName] = [];
-            }
-            $productsByCategory[$catName][] = $product;
-        }
-
-        // Renderiza a view
         require __DIR__ . '/../../../views/admin/cardapio/index.php';
     }
 
-    /**
-     * Cria horários padrão para os 7 dias da semana
-     */
-    private function createDefaultHours($conn, $restaurantId) {
-        $defaults = [
-            0 => ['is_open' => 0, 'open' => '09:00', 'close' => '22:00'], // Domingo
-            1 => ['is_open' => 1, 'open' => '09:00', 'close' => '22:00'],
-            2 => ['is_open' => 1, 'open' => '09:00', 'close' => '22:00'],
-            3 => ['is_open' => 1, 'open' => '09:00', 'close' => '22:00'],
-            4 => ['is_open' => 1, 'open' => '09:00', 'close' => '22:00'],
-            5 => ['is_open' => 1, 'open' => '09:00', 'close' => '23:00'], // Sexta
-            6 => ['is_open' => 1, 'open' => '09:00', 'close' => '23:00'], // Sábado
-        ];
-
-        $stmt = $conn->prepare("INSERT INTO business_hours (restaurant_id, day_of_week, is_open, open_time, close_time) VALUES (:rid, :day, :is_open, :open, :close)");
-        
-        foreach ($defaults as $day => $h) {
-            $stmt->execute([
-                'rid' => $restaurantId,
-                'day' => $day,
-                'is_open' => $h['is_open'],
-                'open' => $h['open'],
-                'close' => $h['close']
-            ]);
-        }
-    }
-
-    /**
-     * Salva as configurações
-     */
+    // ==========================================
+    // ATUALIZAR CONFIGURAÇÕES
+    // ==========================================
     public function update() {
         $this->checkSession();
-        $conn = Database::connect();
         $restaurantId = $_SESSION['loja_ativa_id'];
-
-        // Processa valores monetários (troca vírgula por ponto)
-        $deliveryFee = str_replace(',', '.', $_POST['delivery_fee'] ?? '5');
-        $deliveryFee = preg_replace('/[^\d.]/', '', $deliveryFee);
         
-        $minOrderValue = str_replace(',', '.', $_POST['min_order_value'] ?? '20');
-        $minOrderValue = preg_replace('/[^\d.]/', '', $minOrderValue);
-
-        // WhatsApp (Ajuste [ETAPA 6]: Listas Dinâmicas Antes/Depois)
-        $whatsappData = $_POST['whatsapp_data'] ?? null;
-        
-        if ($whatsappData && is_array($whatsappData)) {
-            // Estrutura Nova: {before: [], after: []}
-            $finalMessages = [
-                'before' => array_values(array_filter($whatsappData['before'] ?? [], fn($m) => !empty(trim($m)))),
-                'after' => array_values(array_filter($whatsappData['after'] ?? [], fn($m) => !empty(trim($m))))
-            ];
-            $jsonMessages = json_encode($finalMessages, JSON_UNESCAPED_UNICODE);
-        } else {
-            // Legado (Array Simples ou String)
-            $whatsappMessages = $_POST['whatsapp_messages'] ?? [];
-            if (!is_array($whatsappMessages)) {
-                $whatsappMessages = [$whatsappMessages];
-            }
-            $whatsappMessages = array_values(array_filter($whatsappMessages, fn($m) => !empty(trim($m))));
-            $jsonMessages = json_encode($whatsappMessages, JSON_UNESCAPED_UNICODE);
-        }
-
-        // Coleta dados do formulário
-        $data = [
-            // WhatsApp
-            'whatsapp_enabled' => isset($_POST['whatsapp_enabled']) ? 1 : 0,
-            'whatsapp_number' => preg_replace('/\D/', '', $_POST['whatsapp_number'] ?? ''),
-            'whatsapp_message' => $jsonMessages,
-            
-            // Operação
-            'is_open' => isset($_POST['is_open']) ? 1 : 0,
-            'opening_time' => $_POST['opening_time'] ?? '08:00',
-            'closing_time' => $_POST['closing_time'] ?? '22:00',
-            'closed_message' => trim($_POST['closed_message'] ?? 'Estamos fechados no momento'),
-            
-            // Delivery
-            'delivery_enabled' => isset($_POST['delivery_enabled']) ? 1 : 0,
-            'delivery_fee' => floatval($deliveryFee),
-            'min_order_value' => floatval($minOrderValue),
-            'delivery_time_min' => intval($_POST['delivery_time_min'] ?? 30),
-            'delivery_time_max' => intval($_POST['delivery_time_max'] ?? 45),
-            
-            // Retirada e Local
-            'pickup_enabled' => isset($_POST['pickup_enabled']) ? 1 : 0,
-            'dine_in_enabled' => isset($_POST['dine_in_enabled']) ? 1 : 0,
-            
-            // Pagamentos (accept_card grava em credit e debit para compatibilidade)
-            'accept_cash' => isset($_POST['accept_cash']) ? 1 : 0,
-            'accept_credit' => isset($_POST['accept_card']) ? 1 : 0,
-            'accept_debit' => isset($_POST['accept_card']) ? 1 : 0,
-            'accept_pix' => isset($_POST['accept_pix']) ? 1 : 0,
-            'pix_key' => trim($_POST['pix_key'] ?? ''),
-            'pix_key_type' => $_POST['pix_key_type'] ?? 'telefone',
-        ];
-
-        // Atualiza no banco
-        $sql = "UPDATE cardapio_config SET 
-                    whatsapp_enabled = :whatsapp_enabled,
-                    whatsapp_number = :whatsapp_number,
-                    whatsapp_message = :whatsapp_message,
-                    is_open = :is_open,
-                    opening_time = :opening_time,
-                    closing_time = :closing_time,
-                    closed_message = :closed_message,
-                    delivery_enabled = :delivery_enabled,
-                    delivery_fee = :delivery_fee,
-                    min_order_value = :min_order_value,
-                    delivery_time_min = :delivery_time_min,
-                    delivery_time_max = :delivery_time_max,
-                    pickup_enabled = :pickup_enabled,
-                    dine_in_enabled = :dine_in_enabled,
-                    accept_cash = :accept_cash,
-                    accept_credit = :accept_credit,
-                    accept_debit = :accept_debit,
-                    accept_pix = :accept_pix,
-                    pix_key = :pix_key,
-                    pix_key_type = :pix_key_type
-                WHERE restaurant_id = :rid";
-
-        $data['rid'] = $restaurantId;
-        $conn->prepare($sql)->execute($data);
-
-        // [ETAPA 2] Salvar horários de funcionamento
-        $hours = $_POST['hours'] ?? [];
-        $stmtHour = $conn->prepare("
-            INSERT INTO business_hours (restaurant_id, day_of_week, is_open, open_time, close_time)
-            VALUES (:rid, :day, :is_open, :open, :close)
-            ON DUPLICATE KEY UPDATE 
-                is_open = VALUES(is_open),
-                open_time = VALUES(open_time),
-                close_time = VALUES(close_time)
-        ");
-
-        for ($day = 0; $day <= 6; $day++) {
-            $stmtHour->execute([
-                'rid' => $restaurantId,
-                'day' => $day,
-                'is_open' => isset($hours[$day]['is_open']) ? 1 : 0,
-                'open' => $hours[$day]['open_time'] ?? '09:00',
-                'close' => $hours[$day]['close_time'] ?? '22:00'
-            ]);
-        }
-
-        // [ETAPA 3] Salvar destaques de produtos
-        $featured = $_POST['featured'] ?? [];
-        
-        // Primeiro, remove todos os destaques do restaurante
-        $conn->prepare("UPDATE products SET is_featured = 0 WHERE restaurant_id = :rid")
-             ->execute(['rid' => $restaurantId]);
-        
-        // Depois, marca os selecionados
-        if (!empty($featured)) {
-            $stmtFeat = $conn->prepare("UPDATE products SET is_featured = 1 WHERE id = :pid AND restaurant_id = :rid");
-            foreach (array_keys($featured) as $productId) {
-                $stmtFeat->execute(['pid' => $productId, 'rid' => $restaurantId]);
-            }
-        }
-
-        // [DESTAQUES] Salvar prioridade/ordem das categorias
-        $categoryOrder = $_POST['category_order'] ?? [];
-        if (!empty($categoryOrder)) {
-            $stmtCatOrder = $conn->prepare("UPDATE categories SET sort_order = :order WHERE id = :cid AND restaurant_id = :rid");
-            foreach ($categoryOrder as $catId => $order) {
-                $stmtCatOrder->execute([
-                    'order' => intval($order),
-                    'cid' => intval($catId),
-                    'rid' => $restaurantId
-                ]);
-            }
-        }
-
-        // [DESTAQUES] Salvar estado de habilitação das categorias
-        // Primeiro, desabilita todas as categorias do restaurante
-        $conn->prepare("UPDATE categories SET is_active = 0 WHERE restaurant_id = :rid")
-             ->execute(['rid' => $restaurantId]);
-        
-        // Depois, habilita as selecionadas
-        $categoryEnabled = $_POST['category_enabled'] ?? [];
-        if (!empty($categoryEnabled)) {
-            $stmtCatEnabled = $conn->prepare("UPDATE categories SET is_active = 1 WHERE id = :cid AND restaurant_id = :rid");
-            foreach (array_keys($categoryEnabled) as $catId) {
-                $stmtCatEnabled->execute(['cid' => intval($catId), 'rid' => $restaurantId]);
-            }
-        }
-
-        // [DESTAQUES] Salvar ordem dos produtos
-        $productOrder = $_POST['product_order'] ?? [];
-        
-        // DEBUG: SEMPRE salva o que está sendo recebido
-        $debugContent = "product_order recebido:\n";
-        $debugContent .= empty($productOrder) ? "VAZIO!" : print_r($productOrder, true);
-        file_put_contents($_SERVER['DOCUMENT_ROOT'] . '/cardapio-saas/debug_order.txt', $debugContent);
-        
-        if (!empty($productOrder)) {
-            $stmtProdOrder = $conn->prepare("UPDATE products SET display_order = :order WHERE id = :pid AND restaurant_id = :rid");
-            foreach ($productOrder as $prodId => $order) {
-                $stmtProdOrder->execute([
-                    'order' => intval($order),
-                    'pid' => intval($prodId),
-                    'rid' => $restaurantId
-                ]);
-            }
-        }
+        $service = new UpdateCardapioConfigService();
+        $service->execute($restaurantId, $_POST);
 
         // Log da ação
         if (class_exists('\App\Core\Logger')) {
@@ -372,40 +51,38 @@ class CardapioController {
         exit;
     }
 
-    /**
-     * [ETAPA 3] Exibe formulário de novo combo
-     */
+    // ==========================================
+    // COMBO: FORMULÁRIO
+    // ==========================================
     public function comboForm() {
         $this->checkSession();
-        $conn = Database::connect();
         $restaurantId = $_SESSION['loja_ativa_id'];
 
         $combo = null;
         $comboProducts = [];
 
-        // Buscar produtos
-        $stmt = $conn->prepare("SELECT * FROM products WHERE restaurant_id = :rid ORDER BY name");
-        $stmt->execute(['rid' => $restaurantId]);
-        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $queryService = new CardapioQueryService();
+        $data = $queryService->getComboFormData($restaurantId);
+        $products = $data['products'];
 
         require __DIR__ . '/../../../views/admin/cardapio/combo_form.php';
     }
 
-    /**
-     * [ETAPA 3] Salva novo combo
-     */
+    // ==========================================
+    // COMBO: CRIAR (delega para ComboService)
+    // ==========================================
     public function storeCombo() {
         $this->checkSession();
         $service = new ComboService();
         $service->store();
     }
 
-    /**
-     * [ETAPA 3] Exibe formulário de edição
-     * Suporta resposta JSON para edição in-place via AJAX
-     */
+    // ==========================================
+    // COMBO: EDITAR
+    // ==========================================
     public function editCombo() {
         $this->checkSession();
+        $restaurantId = $_SESSION['loja_ativa_id'];
         
         // Se for AJAX, o Service faz o exit internamente
         $service = new ComboService();
@@ -416,86 +93,49 @@ class CardapioController {
         $comboProducts = $result['comboProducts'];
         $comboItemsSettings = $result['comboItemsSettings'];
         
-        // Buscar produtos para a view de formulário tradicional
-        $conn = Database::connect();
-        $restaurantId = $_SESSION['loja_ativa_id'];
-        $stmt = $conn->prepare("SELECT * FROM products WHERE restaurant_id = :rid ORDER BY name");
-        $stmt->execute(['rid' => $restaurantId]);
-        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Buscar produtos para a view
+        $queryService = new CardapioQueryService();
+        $data = $queryService->getComboFormData($restaurantId);
+        $products = $data['products'];
 
         require __DIR__ . '/../../../views/admin/cardapio/combo_form.php';
     }
 
-
-    /**
-     * [ETAPA 3] Atualiza combo
-     */
+    // ==========================================
+    // COMBO: ATUALIZAR (delega para ComboService)
+    // ==========================================
     public function updateCombo() {
         $this->checkSession();
         $service = new ComboService();
         $service->update();
     }
 
-    /**
-     * [ETAPA 3] Deleta combo
-     */
+    // ==========================================
+    // COMBO: DELETAR (delega para ComboService)
+    // ==========================================
     public function deleteCombo() {
         $this->checkSession();
         $service = new ComboService();
         $service->delete();
     }
 
-    /**
-     * [AJAX] Alterna status do combo
-     */
+    // ==========================================
+    // COMBO: TOGGLE STATUS (delega para ComboService)
+    // ==========================================
     public function toggleComboStatus() {
         $this->checkSession();
         $service = new ComboService();
         $service->toggleStatus();
     }
 
-    /**
-     * Verifica sessão ativa
-     */
+    // ==========================================
+    // SESSÃO
+    // ==========================================
     private function checkSession() {
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (!isset($_SESSION['loja_ativa_id'])) {
             header('Location: ' . BASE_URL . '/admin');
             exit;
-        }
-    }
-
-    /**
-     * Garante que as categorias de sistema existam
-     */
-    private function ensureSystemCategories($conn, $restaurantId) {
-        $systemTypes = [
-            'combos' => [
-                'name' => '🔥 Combos', 
-                'default_order' => -10
-            ],
-            'featured' => [
-                'name' => '⭐ Destaques', 
-                'default_order' => -5
-            ]
-        ];
-
-        $stmtCheck = $conn->prepare("SELECT id FROM categories WHERE restaurant_id = :rid AND category_type = :type");
-        $stmtInsert = $conn->prepare("
-            INSERT INTO categories (restaurant_id, name, category_type, sort_order, is_active) 
-            VALUES (:rid, :name, :type, :order, 1)
-        ");
-
-        foreach ($systemTypes as $type => $info) {
-            $stmtCheck->execute(['rid' => $restaurantId, 'type' => $type]);
-            if (!$stmtCheck->fetch()) {
-                $stmtInsert->execute([
-                    'rid' => $restaurantId,
-                    'name' => $info['name'],
-                    'type' => $type,
-                    'order' => $info['default_order']
-                ]);
-            }
         }
     }
 }
