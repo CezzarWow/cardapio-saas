@@ -511,11 +511,11 @@ switch ($path) {
             exit;
         }
         
-        // Se não, tenta carregar o cardápio
-        require __DIR__ . '/../app/Controllers/MenuController.php';
-        $menu = new \App\Controllers\MenuController();
-        // Remove a barra inicial do slug (ex: "/pizzaria" vira "pizzaria")
+        // Tenta carregar o cardápio pelo slug
+        require __DIR__ . '/../app/Controllers/CardapioPublicoController.php';
         $slug = ltrim($path, '/');
-        if($slug) $menu->index($slug);
+        if ($slug) {
+            (new \App\Controllers\CardapioPublicoController())->showBySlug($slug);
+        }
         break;
 }
