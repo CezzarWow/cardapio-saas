@@ -11,8 +11,7 @@ const PDVCart = {
     backupItems: [],
 
     init: function () {
-        console.log('[PDVCart] Inicializado');
-    },
+},
 
     setItems: function (newItems) {
         if (!newItems) newItems = [];
@@ -255,10 +254,7 @@ window.PDV = window.PDV || {};
 window.PDV.clickProduct = function (id, name, price, hasExtras, encodedExtras = '[]') {
     // Normaliza booleanos que podem vir como string ou int do PHP
     const hasExtrasBool = (hasExtras === true || hasExtras === 'true' || hasExtras === 1 || hasExtras === '1');
-
-    console.log('[PDV] Click:', { id, name, price, hasExtrasBool });
-
-    if (hasExtrasBool) {
+if (hasExtrasBool) {
         pendingProduct = { id, name, price: parseFloat(price) };
         openExtrasModal(id);
     } else {
@@ -273,7 +269,6 @@ window.addToCart = function (id, name, price, hasExtras) {
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[PDV Cart] DOM Ready. Handlers initialized.');
 });
 
 // ==========================================
@@ -289,8 +284,7 @@ Object.defineProperty(window, 'cart', {
 
 // Funções Globais (se algo externo chamar ainda)
 window.addToCart = function (id, name, price, hasExtras = false) {
-    console.log('[Deprecation] addToCart called via inline JS. Prefer event listener.');
-    if (hasExtras) {
+if (hasExtras) {
         pendingProduct = { id, name, price };
         openExtrasModal(id);
     } else {
@@ -319,10 +313,7 @@ window.openExtrasModal = async function (productId) {
     // Garante que BASE_URL não tenha barras duplas ou falte
     const baseUrl = (typeof BASE_URL !== 'undefined') ? BASE_URL : '';
     const url = `${baseUrl}/admin/loja/adicionais/get-product-extras?product_id=${productId}`;
-
-    console.log(`[PDV] Buscando adicionais: ${url}`);
-
-    try {
+try {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
 

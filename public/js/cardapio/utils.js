@@ -84,9 +84,7 @@ window.formatCurrency = Utils.formatCurrency;
 
     if (isSamsung) {
         document.body.classList.add('samsung-browser');
-        console.log('[Utils] Samsung Internet detectado - aplicando ajustes de compatibilidade');
-
-        // Aguarda DOM carregar para dimensionar spacers
+// Aguarda DOM carregar para dimensionar spacers
         document.addEventListener('DOMContentLoaded', function () {
             const spacers = document.querySelectorAll('.modal-scroll-spacer');
 
@@ -101,8 +99,7 @@ window.formatCurrency = Utils.formatCurrency;
 
                 // Define altura do spacer (altura do botão + 60px de folga)
                 spacer.style.height = (btnHeight + 60) + 'px';
-                console.log('[Utils] Spacer dimensionado para Samsung:', btnHeight + 60, 'px');
-            });
+});
         });
     }
 })();

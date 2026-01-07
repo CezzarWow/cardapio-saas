@@ -41,9 +41,7 @@ const DeliveryTabs = {
 
         // Atualiza contador
         this.updateCounter();
-
-        console.log('[Delivery] Filtro:', status);
-    },
+},
 
     /**
      * Atualiza contador de pedidos visíveis
@@ -57,5 +55,3 @@ const DeliveryTabs = {
 
 // Expõe globalmente
 window.DeliveryTabs = DeliveryTabs;
-
-console.log('[Delivery] Tabs carregado ✓');

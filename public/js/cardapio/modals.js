@@ -12,8 +12,7 @@ const CardapioModals = {
 
     init: function () {
         // Listeners globais de modal seriam configurados aqui ou no main.js
-        console.log('[Modals] Inicializado');
-    },
+},
 
     // ==========================================
     // MODAL DE PRODUTO

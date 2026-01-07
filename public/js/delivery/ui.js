@@ -95,9 +95,7 @@ const DeliveryUI = {
 
         // [DEBUG] Forçar conversão para número
         const isPaidValue = parseInt(orderData.is_paid) || 0;
-        console.log('[Delivery] is_paid original:', orderData.is_paid, 'convertido:', isPaidValue);
-
-        if (isPaidValue === 1) {
+if (isPaidValue === 1) {
             paymentEl.textContent = '✅ PAGO';
             paymentContainer.style.background = '#dcfce7';
             paymentEl.style.color = '#166534';
@@ -197,5 +195,3 @@ const DeliveryUI = {
 
 // Expõe globalmente
 window.DeliveryUI = DeliveryUI;
-
-console.log('[Delivery] UI carregado ✓');

@@ -4,9 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[PDV Main] Inicializando...');
-
-    // 1. INICIALIZA ESTADO (PDVState)
+// 1. INICIALIZA ESTADO (PDVState)
     const tableIdInput = document.getElementById('current_table_id');
     const clientIdInput = document.getElementById('current_client_id');
     const orderIdInput = document.getElementById('current_order_id');
@@ -37,9 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     PDVState.initStatus(status);
-    console.log('[PDV Main] Estado Inicial:', PDVState.getState());
-
-    // 2. INICIALIZA CARRINHO (PDVCart)
+// 2. INICIALIZA CARRINHO (PDVCart)
     // Recupera carrinho do PHP (Recovered Cart)
     if (typeof recoveredCart !== 'undefined' && recoveredCart.length > 0) {
         // Mapeia formato do PHP para formato do JS (se necessário)
@@ -50,8 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
             quantity: parseInt(item.quantity)
         }));
         PDVCart.setItems(items);
-        console.log('[PDV Main] Carrinho recuperado:', items.length, 'itens');
-        // alert('Pedido carregado para edição! ✏️'); // Opcional
+// alert('Pedido carregado para edição! ✏️'); // Opcional
     }
 
     // 3. INICIALIZA MÓDULOS DE UI

@@ -145,5 +145,3 @@ const DeliveryActions = {
 
 // Expõe globalmente
 window.DeliveryActions = DeliveryActions;
-
-console.log('[Delivery] Actions carregado ✓');

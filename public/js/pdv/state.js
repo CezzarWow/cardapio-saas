@@ -37,8 +37,7 @@ const PDVState = (() => {
                 status: 'aberto',
                 fechandoConta: false
             };
-            console.log('[PDVState] Resetado para Balcão');
-        },
+},
 
         // Atualizador Genérico (exceto status)
         set(patch) {
@@ -67,8 +66,7 @@ const PDVState = (() => {
                 return false;
             }
             state.status = novoStatus;
-            console.log(`[PDVState] Status alterado: ${novoStatus}`);
-            return true;
+return true;
         }
     };
 })();

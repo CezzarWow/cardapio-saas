@@ -26,8 +26,6 @@ window.CardapioAdmin.init = function () {
     if (waInput && waInput.value) {
         this.maskPhone(waInput);
     }
-
-    console.log('✅ CardapioAdmin v2.0 (Modular) inicializado');
 };
 
 // Auto-inicializa quando DOM estiver pronto

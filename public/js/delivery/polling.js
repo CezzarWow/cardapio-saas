@@ -31,8 +31,7 @@ const DeliveryPolling = {
             this.audio = new Audio(BASE_URL + '/sounds/new-order.mp3');
             this.audio.volume = 1.0; // Volume máximo
             // this.audio.playbackRate = 1.5; // Desativado - velocidade normal
-            console.log('[Delivery] Som carregado');
-        } catch (e) {
+} catch (e) {
             console.warn('[Delivery] Audio não suportado');
         }
     },
@@ -46,8 +45,7 @@ const DeliveryPolling = {
         try {
             this.audio.currentTime = 0;
             this.audio.play();
-            console.log('[Delivery] 🔔 Som de novo pedido!');
-        } catch (e) {
+} catch (e) {
             console.warn('[Delivery] Erro ao tocar som:', e);
         }
     },
@@ -75,9 +73,7 @@ const DeliveryPolling = {
         //         this.resume();
         //     }
         // });
-
-        console.log('[Delivery] Polling iniciado (intervalo: ' + (this.interval / 1000) + 's)');
-    },
+},
 
     /**
      * Para polling
@@ -88,16 +84,14 @@ const DeliveryPolling = {
             this.timerId = null;
         }
         this.isActive = false;
-        console.log('[Delivery] Polling parado');
-    },
+},
 
     /**
      * Pausa temporariamente
      */
     pause: function () {
         this.isPaused = true;
-        console.log('[Delivery] Polling pausado (aba inativa)');
-    },
+},
 
     /**
      * Retoma polling
@@ -106,8 +100,7 @@ const DeliveryPolling = {
         if (this.isPaused) {
             this.isPaused = false;
             this.poll(); // Atualiza imediatamente
-            console.log('[Delivery] Polling retomado');
-        }
+}
     },
 
     /**
@@ -140,13 +133,9 @@ const DeliveryPolling = {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
             const newCount = tempDiv.querySelectorAll('.delivery-column--novo .delivery-card-compact').length;
-
-            console.log('[Delivery] Pedidos novos:', newCount, '| Anterior:', this.lastNewCount);
-
-            // Se tem mais pedidos novos, toca som!
+// Se tem mais pedidos novos, toca som!
             if (newCount > this.lastNewCount) {
-                console.log('[Delivery] 🔔 Novo pedido detectado! Tocando som...');
-                this.playSound();
+this.playSound();
             }
             this.lastNewCount = newCount;
 
@@ -183,5 +172,3 @@ window.DeliveryPolling = DeliveryPolling;
 document.addEventListener('DOMContentLoaded', () => {
     DeliveryPolling.start();
 });
-
-console.log('[Delivery] Polling carregado ✓');

@@ -10,9 +10,7 @@ const CardapioCheckout = {
     hasNoChange: false,
 
     init: function () {
-        console.log('[Checkout] Inicializado');
-
-        // Inicializa Máscara de Telefone
+// Inicializa Máscara de Telefone
         const phoneInput = document.getElementById('customerPhone');
         if (phoneInput) {
             phoneInput.oninput = function () {

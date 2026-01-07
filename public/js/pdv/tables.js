@@ -7,8 +7,7 @@ const PDVTables = {
     searchTimeout: null,
 
     init: function () {
-        console.log('[PDVTables] Inicializado');
-        this.bindEvents();
+this.bindEvents();
     },
 
     bindEvents: function () {

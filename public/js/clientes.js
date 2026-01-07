@@ -114,9 +114,7 @@ function setTypeVisual(type) {
 // 3. Salvar
 // 3. Salvar
 function saveSuperClient() {
-    console.log('Iniciando salvamento...');
-
-    // Remove formatação de moeda para salvar
+// Remove formatação de moeda para salvar
     let limitVal = document.getElementById('cli_limit').value;
     limitVal = limitVal.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
 

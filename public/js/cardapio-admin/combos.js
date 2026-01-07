@@ -388,8 +388,7 @@ window.toggleComboActive = function (id, isActive) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log('Status atualizado');
-            } else {
+} else {
                 alert('Erro ao atualizar status: ' + (data.error || 'Desconhecido'));
                 const checkbox = document.querySelector(`input[onchange*="${id}"]`);
                 if (checkbox) checkbox.checked = !isActive;

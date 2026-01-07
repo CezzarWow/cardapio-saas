@@ -7,9 +7,7 @@
 // window.CardapioCart, window.CardapioModals, etc já estão definidos nos módulos.
 
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('[MAIN] Inicializando Cardápio...');
-
-    // Inicialização dos Módulos (se tiverem init)
+// Inicialização dos Módulos (se tiverem init)
     if (window.CardapioModals && CardapioModals.init) CardapioModals.init();
     if (window.CardapioCheckout && CardapioCheckout.init) CardapioCheckout.init();
 
@@ -55,15 +53,12 @@ function initializeEventListeners() {
 
     // 3. Listeners de Categoria
     const categoryButtons = document.querySelectorAll('.cardapio-category-btn');
-    console.log('[MAIN] Botões de categoria encontrados:', categoryButtons.length);
-
-    categoryButtons.forEach(btn => {
+categoryButtons.forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
             const category = this.getAttribute('data-category');
-            console.log('[MAIN] Clique na categoria:', category);
-            filterByCategory(category);
+filterByCategory(category);
         });
     });
 
@@ -75,8 +70,7 @@ function initializeEventListeners() {
             if (btn) {
                 e.preventDefault();
                 const category = btn.getAttribute('data-category');
-                console.log('[DELEGATION] Clique na categoria:', category);
-                filterByCategory(category);
+filterByCategory(category);
             }
         });
     }
@@ -114,9 +108,7 @@ function handleSearch(e) {
 }
 
 function filterByCategory(categoryName) {
-    console.log('[FILTER] Filtrando por categoria:', categoryName);
-
-    const sections = document.querySelectorAll('.cardapio-category-section');
+const sections = document.querySelectorAll('.cardapio-category-section');
     const buttons = document.querySelectorAll('.cardapio-category-btn');
 
     // Visual botões - Simplificado
@@ -132,9 +124,7 @@ function filterByCategory(categoryName) {
     // Filtra seções
     sections.forEach(sec => {
         const secId = sec.getAttribute('data-category-id');
-        console.log('[FILTER] Seção:', secId, '| Categoria clicada:', categoryName);
-
-        // Se for 'todos', mostra tudo. Se não, mostra só se o ID bater.
+// Se for 'todos', mostra tudo. Se não, mostra só se o ID bater.
         if (categoryName === 'todos' || secId === categoryName) {
             sec.style.display = 'block';
         } else {
@@ -181,5 +171,3 @@ document.addEventListener('DOMContentLoaded', initAddButtons); // Adiciona ao ci
 
 // Expor filtro globalmente
 window.filterByCategory = filterByCategory;
-
-console.log('[MAIN] Cardápio carregado e módulos integrados.');

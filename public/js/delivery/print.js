@@ -338,5 +338,3 @@ const DeliveryPrint = {
 
 // Expõe globalmente
 window.DeliveryPrint = DeliveryPrint;
-
-console.log('[Delivery] Print carregado ✓');

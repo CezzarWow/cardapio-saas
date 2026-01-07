@@ -13,9 +13,24 @@
 namespace App\Controllers\Admin;
 
 use App\Core\Database;
+use App\Services\PaymentService;
+use App\Services\CashRegisterService;
+use App\Services\StockService;
 use PDO;
 
 class OrderController {
+    
+    private $paymentService;
+    private $cashRegisterService;
+    private $stockService;
+
+    public function __construct() {
+        $this->paymentService = new PaymentService();
+        $this->cashRegisterService = new CashRegisterService();
+        $this->stockService = new StockService();
+    }
+
+
 
     public function store() {
         header('Content-Type: application/json');
@@ -30,11 +45,11 @@ class OrderController {
         $restaurant_id = $_SESSION['loja_ativa_id'];
         $conn = Database::connect();
 
-        // 🛑 1. SEGURANÇA: Verifica se o CAIXA está ABERTO antes de qualquer coisa
-        $caixa = $this->getCaixaAberto($conn, $restaurant_id);
-
-        if (!$caixa) {
-            echo json_encode(['success' => false, 'message' => 'O Caixa está FECHADO! Abra o caixa para vender. 🔒']);
+        // 🛑 1. SEGURANÇA: Verifica se o CAIXA está ABERTO via Service
+        try {
+            $caixa = $this->cashRegisterService->assertOpen($conn, $restaurant_id);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             exit;
         }
         // -------------------------------------------------------------------
@@ -209,33 +224,27 @@ class OrderController {
                     }
                 }
 
-                // 2. Salva os Pagamentos na tabela nova (order_payments)
-                $stmtPay = $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)");
-                
-                // Salva pagamentos (só se houver)
-                foreach ($payments as $pay) {
-                    $stmtPay->execute(['oid' => $orderId, 'method' => $pay['method'], 'amount' => $pay['amount']]);
-                }
+                // 2. Salva os Pagamentos via Service
+                $this->paymentService->registerPayments($conn, $orderId, $payments);
 
                 // 3. Lança UMA entrada no Caixa APENAS SE PAGO
                 if ($isPaid == 1 && !empty($payments)) {
                     $desc = "Venda Balcão #" . $orderId;
                     $finalAmount = max(0, $totalVenda - $discount);
 
-                    $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
-                    $stmtMov->execute([
-                        'cid' => $caixa['id'],
-                        'val' => $finalAmount,
-                        'desc' => $desc,
-                        'oid' => $orderId
-                    ]);
+                    $this->cashRegisterService->registerMovement(
+                        $conn,
+                        $caixa['id'],
+                        $finalAmount,
+                        $desc,
+                        $orderId
+                    );
                 }
             }
 
             // --- SALVA OS ITENS ---
             $stmtItem = $conn->prepare("INSERT INTO order_items (order_id, product_id, name, quantity, price) VALUES (:oid, :pid, :name, :qtd, :price)");
-            $stmtStock = $conn->prepare("UPDATE products SET stock = stock - :qtd WHERE id = :pid");
-
+            
             foreach ($cart as $item) {
                 $stmtItem->execute([
                     'oid' => $orderId,
@@ -244,8 +253,9 @@ class OrderController {
                     'qtd' => $item['quantity'],
                     'price' => $item['price']
                 ]);
-                
-                $stmtStock->execute(['qtd' => $item['quantity'], 'pid' => $item['id']]);
+
+                // Baixa Estoque via Service
+                $this->stockService->decrement($conn, $item['id'], $item['quantity']);
             }
 
             // Atualiza o total do pedido (Total final = Soma itens - Desconto + Taxa entrega)
@@ -287,11 +297,11 @@ class OrderController {
 
         $conn = Database::connect();
         
-        // 🛑 VERIFICA CAIXA (Segurança também no fechamento de mesa)
-        $caixa = $this->getCaixaAberto($conn, $restaurant_id);
-
-        if (!$caixa) {
-            echo json_encode(['success' => false, 'message' => 'Caixa FECHADO! Não é possível receber o pagamento.']);
+        // 🛑 VERIFICA CAIXA (Service)
+        try {
+            $caixa = $this->cashRegisterService->assertOpen($conn, $restaurant_id);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             exit;
         }
 
@@ -323,23 +333,18 @@ class OrderController {
                 $conn->prepare("UPDATE orders SET status = 'concluido', payment_method = :method WHERE id = :oid")
                      ->execute(['oid' => $orderId, 'method' => $paymentMethodDesc]);
 
-                // 3. Salva os Pagamentos na tabela order_payments
-                $stmtPay = $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)");
-
-                // Salva pagamentos
-                foreach ($payments as $pay) {
-                    $stmtPay->execute(['oid' => $orderId, 'method' => $pay['method'], 'amount' => $pay['amount']]);
-                }
+                // 3. Salva os Pagamentos via Service
+                $this->paymentService->registerPayments($conn, $orderId, $payments);
 
                 // Lança UMA entrada no Caixa com o TOTAL da venda
                 $desc = "Mesa #" . $mesa['number'];
-                $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
-                $stmtMov->execute([
-                    'cid' => $caixa['id'],
-                    'val' => $mesa['total'], // TOTAL da mesa
-                    'desc' => $desc,
-                    'oid' => $orderId
-                ]);
+                $this->cashRegisterService->registerMovement(
+                    $conn,
+                    $caixa['id'],
+                    $mesa['total'],
+                    $desc,
+                    $orderId
+                );
 
                 // 4. Libera a mesa
                 $conn->prepare("UPDATE tables SET status = 'livre', current_order_id = NULL WHERE id = :tid")
@@ -374,11 +379,11 @@ class OrderController {
 
         $conn = Database::connect();
         
-        // 🛑 VERIFICA CAIXA
-        $caixa = $this->getCaixaAberto($conn, $restaurant_id);
-
-        if (!$caixa) {
-            echo json_encode(['success' => false, 'message' => 'Caixa FECHADO! Abra o caixa para receber.']);
+        // 🛑 VERIFICA CAIXA (Service)
+        try {
+            $caixa = $this->cashRegisterService->assertOpen($conn, $restaurant_id);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             exit;
         }
 
@@ -414,25 +419,18 @@ class OrderController {
                 $mainMethod = $payments[0]['method'] ?? 'dinheiro';
                 $paymentMethodDesc = (count($payments) > 1) ? 'multiplo' : $mainMethod;
 
-                // Registra Pagamentos
-                $stmtPay = $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)");
-
-                // Salva pagamentos e calcula total
-                $totalPago = 0;
-                foreach ($payments as $pay) {
-                    $stmtPay->execute(['oid' => $order_id, 'method' => $pay['method'], 'amount' => $pay['amount']]);
-                    $totalPago += $pay['amount'];
-                }
+                // Registra Pagamentos via Service
+                $totalPago = $this->paymentService->registerPayments($conn, $order_id, $payments);
 
                 // Lança UMA entrada no Caixa com o TOTAL
                 $desc = "Comanda #" . $order_id;
-                $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
-                $stmtMov->execute([
-                    'cid' => $caixa['id'],
-                    'val' => $totalPago, // TOTAL pago
-                    'desc' => $desc,
-                    'oid' => $order_id
-                ]);
+                $this->cashRegisterService->registerMovement(
+                    $conn,
+                    $caixa['id'],
+                    $totalPago,
+                    $desc,
+                    $order_id
+                );
                 
                 // Define como PAGO
                 $conn->prepare("UPDATE orders SET is_paid = 1, payment_method = :method WHERE id = :oid")
@@ -497,9 +495,8 @@ class OrderController {
                 $valueToDeduct = $item['price'];
             }
 
-            // 3. Devolve 1 unidade ao Estoque
-            $conn->prepare("UPDATE products SET stock = stock + 1 WHERE id = :pid")
-                 ->execute(['pid' => $item['product_id']]);
+            // 3. Devolve 1 unidade ao Estoque via Service
+            $this->stockService->increment($conn, $item['product_id'], 1);
 
             // 4. Atualiza o Total do Pedido
             // Garante que não fique negativo (sanity check)
@@ -540,8 +537,8 @@ class OrderController {
             $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
 
             foreach ($items as $item) {
-                $conn->prepare("UPDATE products SET stock = stock + :qtd WHERE id = :pid")
-                     ->execute(['qtd' => $item['quantity'], 'pid' => $item['product_id']]);
+                // Devolve Estoque via Service
+                $this->stockService->increment($conn, $item['product_id'], $item['quantity']);
             }
 
             // 2. Remove Itens e Pedido
@@ -716,15 +713,8 @@ class OrderController {
                      ]);
             }
 
-            // Registra os pagamentos dos novos itens
-            foreach ($payments as $p) {
-                $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)")
-                     ->execute([
-                         'oid' => $orderId,
-                         'method' => $p['method'],
-                         'amount' => floatval($p['amount'])
-                     ]);
-            }
+            // Registra Pagamentos via Service
+            $this->paymentService->registerPayments($conn, $orderId, $payments);
 
             // Atualiza o total do pedido
             $updatedTotal = floatval($order['total']) + $newTotal;
@@ -752,13 +742,5 @@ class OrderController {
         }
     }
 
-    /**
-     * Helper: Retorna o caixa aberto ou null se não existir
-     * Centraliza verificação que se repete em vários métodos
-     */
-    private function getCaixaAberto($conn, $restaurantId) {
-        $stmt = $conn->prepare("SELECT id FROM cash_registers WHERE restaurant_id = :rid AND status = 'aberto'");
-        $stmt->execute(['rid' => $restaurantId]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
-    }
+
 }
