@@ -19,503 +19,159 @@ use App\Controllers\Admin\DashboardController;
 use App\Controllers\Admin\RestaurantController;
 use App\Controllers\Admin\AutologinController;
 use App\Controllers\Admin\PanelController; // <--- Vamos criar esse cara já já
+use App\Core\Router;
 
 $url = $_SERVER['REQUEST_URI'];
 $url_clean = parse_url($url, PHP_URL_PATH);
 $path = str_replace('/cardapio-saas/public', '', $url_clean);
 
-switch ($path) {
-    // --- ROTAS DE API (Cardápio Público) ---
-    case '/api/order/create':
-        require __DIR__ . '/../app/Controllers/Api/OrderApiController.php';
-        (new \App\Controllers\Api\OrderApiController())->create();
-        break;
+// ============================================================
+// GRUPO 1: Rotas de API (migradas para Router)
+// ============================================================
+Router::add('/api/order/create', \App\Controllers\Api\OrderApiController::class, 'create');
 
-    // --- ROTAS DO ADMIN GERAL (Dono do SaaS) ---
-    case '/admin':
-        (new DashboardController())->index();
-        break;
+// ============================================================
+// GRUPO 2: Rotas Admin Geral (migradas para Router)
+// ============================================================
+Router::add('/admin', DashboardController::class, 'index');
+Router::add('/admin/restaurantes/novo', RestaurantController::class, 'create');
+Router::add('/admin/restaurantes/salvar', RestaurantController::class, 'store');
+Router::add('/admin/restaurantes/editar', RestaurantController::class, 'edit');
+Router::add('/admin/restaurantes/atualizar', RestaurantController::class, 'update');
+Router::add('/admin/restaurantes/deletar', RestaurantController::class, 'delete');
+Router::add('/admin/restaurantes/status', RestaurantController::class, 'toggleStatus');
+Router::add('/admin/autologin', AutologinController::class, 'login');
 
-    case '/admin/restaurantes/novo':
-        (new RestaurantController())->create();
-        break;
+// ============================================================
+// GRUPO 3: Painel/PDV (migradas para Router)
+// ============================================================
+Router::add('/admin/loja/painel', \App\Controllers\Admin\ProductController::class, 'index');
+Router::add('/admin/loja/pdv', \App\Controllers\Admin\ProductController::class, 'index');
+Router::add('/admin/loja/mesas', \App\Controllers\Admin\TableController::class, 'index');
+Router::add('/admin/loja/pdv/cancelar-edicao', \App\Controllers\Admin\ProductController::class, 'cancelEdit');
 
-    case '/admin/restaurantes/salvar':
-        (new RestaurantController())->store();
-        break;
+// ============================================================
+// GRUPO 4: Delivery (migradas para Router)
+// ============================================================
+Router::add('/admin/loja/delivery', \App\Controllers\Admin\DeliveryController::class, 'index');
+Router::add('/admin/loja/delivery/status', \App\Controllers\Admin\DeliveryController::class, 'updateStatus');
+Router::add('/admin/loja/delivery/list', \App\Controllers\Admin\DeliveryController::class, 'list');
+Router::add('/admin/loja/delivery/details', \App\Controllers\Admin\DeliveryController::class, 'getOrderDetails');
+Router::add('/admin/loja/delivery/history', \App\Controllers\Admin\DeliveryController::class, 'history');
+Router::add('/admin/loja/delivery/send-to-table', \App\Controllers\Admin\DeliveryController::class, 'sendToTable');
 
-    case '/admin/restaurantes/editar':
-        (new RestaurantController())->edit();
-        break;
+// ============================================================
+// GRUPO 5: Cardápio Admin (migradas para Router)
+// ============================================================
+Router::add('/admin/loja/cardapio', \App\Controllers\Admin\CardapioController::class, 'index');
+Router::add('/admin/loja/cardapio/salvar', \App\Controllers\Admin\CardapioController::class, 'update');
+Router::add('/admin/loja/cardapio/combo/novo', \App\Controllers\Admin\CardapioController::class, 'comboForm');
+Router::add('/admin/loja/cardapio/combo/salvar', \App\Controllers\Admin\CardapioController::class, 'storeCombo');
+Router::add('/admin/loja/cardapio/combo/editar', \App\Controllers\Admin\CardapioController::class, 'editCombo');
+Router::add('/admin/loja/cardapio/combo/atualizar', \App\Controllers\Admin\CardapioController::class, 'updateCombo');
+Router::add('/admin/loja/cardapio/combo/deletar', \App\Controllers\Admin\CardapioController::class, 'deleteCombo');
+Router::add('/admin/loja/cardapio/combo/status', \App\Controllers\Admin\CardapioController::class, 'toggleComboStatus');
 
-    case '/admin/restaurantes/atualizar':
-        (new RestaurantController())->update();
-        break;
+// ============================================================
+// GRUPO 6: Estoque/Produtos (migradas para Router)
+// ============================================================
+Router::add('/admin/loja/produtos', \App\Controllers\Admin\StockController::class, 'index');
+Router::add('/admin/loja/produtos/novo', \App\Controllers\Admin\StockController::class, 'create');
+Router::add('/admin/loja/produtos/salvar', \App\Controllers\Admin\StockController::class, 'store');
+Router::add('/admin/loja/produtos/deletar', \App\Controllers\Admin\StockController::class, 'delete');
+Router::add('/admin/loja/produtos/editar', \App\Controllers\Admin\StockController::class, 'edit');
+Router::add('/admin/loja/produtos/atualizar', \App\Controllers\Admin\StockController::class, 'update');
+Router::add('/admin/loja/reposicao', \App\Controllers\Admin\StockRepositionController::class, 'index');
+Router::add('/admin/loja/reposicao/ajustar', \App\Controllers\Admin\StockRepositionController::class, 'adjust');
+Router::add('/admin/loja/movimentacoes', \App\Controllers\Admin\StockMovementController::class, 'index');
 
-    case '/admin/restaurantes/deletar': // <--- CORREÇÃO APLICADA AQUI
-        (new RestaurantController())->delete();
-        break;
+// ============================================================
+// GRUPO 7: Categorias (migradas para Router)
+// ============================================================
+Router::add('/admin/loja/categorias', \App\Controllers\Admin\CategoryController::class, 'index');
+Router::add('/admin/loja/categorias/salvar', \App\Controllers\Admin\CategoryController::class, 'store');
+Router::add('/admin/loja/categorias/editar', \App\Controllers\Admin\CategoryController::class, 'edit');
+Router::add('/admin/loja/categorias/atualizar', \App\Controllers\Admin\CategoryController::class, 'update');
+Router::add('/admin/loja/categorias/deletar', \App\Controllers\Admin\CategoryController::class, 'delete');
+Router::add('/admin/categories', \App\Controllers\Admin\CategoryController::class, 'index');
+Router::add('/admin/categories/salvar', \App\Controllers\Admin\CategoryController::class, 'store');
+Router::add('/admin/categories/deletar', \App\Controllers\Admin\CategoryController::class, 'delete');
 
-    case '/admin/restaurantes/status':
-        (new RestaurantController())->toggleStatus();
-        break;
-    
-    case '/admin/autologin':
-        (new AutologinController())->login();
-        break;
+// ============================================================
+// GRUPO 8: Adicionais (migradas para Router)
+// ============================================================
+Router::add('/admin/loja/adicionais', \App\Controllers\Admin\AdditionalController::class, 'index');
+Router::add('/admin/loja/adicionais/grupo/salvar', \App\Controllers\Admin\AdditionalController::class, 'storeGroup');
+Router::add('/admin/loja/adicionais/grupo/deletar', \App\Controllers\Admin\AdditionalController::class, 'deleteGroup');
+Router::add('/admin/loja/adicionais/item/salvar-modal', \App\Controllers\Admin\AdditionalController::class, 'storeItemWithGroups');
+Router::add('/admin/loja/adicionais/item/atualizar-modal', \App\Controllers\Admin\AdditionalController::class, 'updateItemWithGroups');
+Router::add('/admin/loja/adicionais/get-item-data', \App\Controllers\Admin\AdditionalController::class, 'getItemData');
+Router::add('/admin/loja/adicionais/get-product-extras', \App\Controllers\Admin\AdditionalController::class, 'getProductExtras');
+Router::add('/admin/loja/adicionais/item/deletar', \App\Controllers\Admin\AdditionalController::class, 'deleteItem');
+Router::add('/admin/loja/adicionais/vincular', \App\Controllers\Admin\AdditionalController::class, 'linkItem');
+Router::add('/admin/loja/adicionais/desvincular', \App\Controllers\Admin\AdditionalController::class, 'unlinkItem');
+Router::add('/admin/loja/adicionais/vincular-multiplos', \App\Controllers\Admin\AdditionalController::class, 'linkMultipleItems');
+Router::add('/admin/loja/adicionais/vincular-categoria', \App\Controllers\Admin\AdditionalController::class, 'linkCategory');
+Router::add('/admin/loja/adicionais/get-linked-categories', \App\Controllers\Admin\AdditionalController::class, 'getLinkedCategories');
 
-    // --- ROTAS DO PAINEL DO RESTAURANTE (Onde o cliente mexe) ---
-    // --- ROTAS DO PAINEL DO RESTAURANTE ---
-    case '/admin/loja/painel': 
-    case '/admin/loja/pdv': // Adicionei essa rota pois seu botão na sidebar aponta para 'pdv'
-        require __DIR__ . '/../app/Controllers/Admin/ProductController.php';
-        (new \App\Controllers\Admin\ProductController())->index();
-        break;
+// ============================================================
+// GRUPO 9: Caixa/Financeiro (migradas para Router)
+// ============================================================
+Router::add('/admin/loja/caixa', \App\Controllers\Admin\CashierController::class, 'index');
+Router::add('/admin/loja/caixa/abrir', \App\Controllers\Admin\CashierController::class, 'open');
+Router::add('/admin/loja/caixa/fechar', \App\Controllers\Admin\CashierController::class, 'close');
+Router::add('/admin/loja/caixa/movimentar', \App\Controllers\Admin\CashierController::class, 'addMovement');
+Router::add('/admin/loja/caixa/estornar-pdv', \App\Controllers\Admin\CashierController::class, 'reverseToPdv');
+Router::add('/admin/loja/caixa/remover', \App\Controllers\Admin\CashierController::class, 'removeMovement');
+Router::add('/admin/loja/caixa/estornar-mesa', \App\Controllers\Admin\CashierController::class, 'reverseToTable');
+Router::add('/admin/loja/config', \App\Controllers\Admin\ConfigController::class, 'index');
+Router::add('/admin/loja/config/salvar', \App\Controllers\Admin\ConfigController::class, 'update');
+Router::add('/admin/loja/configuracoes-gerais', \App\Controllers\Admin\ConfigGeraisController::class, 'index');
 
-    // --- ROTA DE MESAS ---
-    case '/admin/loja/mesas':
-        require __DIR__ . '/../app/Controllers/Admin/TableController.php';
-        (new \App\Controllers\Admin\TableController())->index();
-        break;
+// ============================================================
+// GRUPO 10: Pedidos/Vendas (migradas para Router)
+// ============================================================
+Router::add('/admin/loja/venda/finalizar', \App\Controllers\Admin\OrderController::class, 'store');
+Router::add('/admin/loja/mesa/fechar', \App\Controllers\Admin\OrderController::class, 'closeTable');
+Router::add('/admin/loja/venda/fechar-comanda', \App\Controllers\Admin\OrderController::class, 'closeCommand');
+Router::add('/admin/loja/venda/remover-item', \App\Controllers\Admin\OrderController::class, 'removeItem');
+Router::add('/admin/loja/mesa/cancelar', \App\Controllers\Admin\OrderController::class, 'cancelTableOrder');
+Router::add('/admin/loja/pedidos/entregar', \App\Controllers\Admin\OrderController::class, 'deliverOrder');
+Router::add('/admin/loja/pedidos/cancelar', \App\Controllers\Admin\OrderController::class, 'cancelOrder');
+Router::add('/admin/loja/pedido-pago/incluir', \App\Controllers\Admin\OrderController::class, 'includePaidOrderItems');
+Router::add('/admin/loja/mesas/deletar', \App\Controllers\Admin\TableController::class, 'deleteByNumber');
+Router::add('/admin/loja/mesas/buscar', \App\Controllers\Admin\TableController::class, 'search');
+Router::add('/admin/loja/mesas/salvar', \App\Controllers\Admin\TableController::class, 'store');
+Router::add('/admin/loja/vendas/itens', \App\Controllers\Admin\SalesController::class, 'getItems');
+Router::add('/admin/loja/clientes/buscar', \App\Controllers\Admin\ClientController::class, 'search');
+Router::add('/admin/loja/clientes/salvar', \App\Controllers\Admin\ClientController::class, 'store');
+Router::add('/admin/loja/clientes/detalhes', \App\Controllers\Admin\ClientController::class, 'details');
+Router::add('/admin/loja/vendas', \App\Controllers\Admin\SalesController::class, 'index');
+Router::add('/admin/loja/vendas/cancelar', \App\Controllers\Admin\SalesController::class, 'cancel');
+Router::add('/admin/loja/vendas/reabrir', \App\Controllers\Admin\SalesController::class, 'reactivateTable');
 
-    case '/admin/loja/delivery':
-        require __DIR__ . '/../app/Controllers/Admin/DeliveryController.php';
-        (new \App\Controllers\Admin\DeliveryController())->index();
-        break;
+// ============================================================
+// GRUPO 11: Rotas Dinâmicas (Regex) - Cardápio Público
+// ============================================================
+Router::pattern('/^\\/cardapio\\/([a-zA-Z0-9_-]+)$/', \App\Controllers\CardapioPublicoController::class, 'showBySlug');
+Router::pattern('/^\\/c\\/(\\d+)$/', \App\Controllers\CardapioPublicoController::class, 'show');
 
-    case '/admin/loja/delivery/status':
-        require __DIR__ . '/../app/Controllers/Admin/DeliveryController.php';
-        (new \App\Controllers\Admin\DeliveryController())->updateStatus();
-        break;
-
-    case '/admin/loja/delivery/list':
-        require __DIR__ . '/../app/Controllers/Admin/DeliveryController.php';
-        (new \App\Controllers\Admin\DeliveryController())->list();
-        break;
-
-    case '/admin/loja/delivery/details':
-        require __DIR__ . '/../app/Controllers/Admin/DeliveryController.php';
-        (new \App\Controllers\Admin\DeliveryController())->getOrderDetails();
-        break;
-
-    case '/admin/loja/delivery/history':
-        require __DIR__ . '/../app/Controllers/Admin/DeliveryController.php';
-        (new \App\Controllers\Admin\DeliveryController())->history();
-        break;
-
-    case '/admin/loja/delivery/send-to-table':
-        require __DIR__ . '/../app/Controllers/Admin/DeliveryController.php';
-        (new \App\Controllers\Admin\DeliveryController())->sendToTable();
-        break;
-
-    // --- CARDÁPIO WEB ---
-    case '/admin/loja/cardapio':
-        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
-        (new \App\Controllers\Admin\CardapioController())->index();
-        break;
-
-    case '/admin/loja/cardapio/salvar':
-        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
-        (new \App\Controllers\Admin\CardapioController())->update();
-        break;
-
-    // --- COMBOS (ETAPA 3) ---
-    case '/admin/loja/cardapio/combo/novo':
-        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
-        (new \App\Controllers\Admin\CardapioController())->comboForm();
-        break;
-
-    case '/admin/loja/cardapio/combo/salvar':
-        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
-        (new \App\Controllers\Admin\CardapioController())->storeCombo();
-        break;
-
-    case '/admin/loja/cardapio/combo/editar':
-        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
-        (new \App\Controllers\Admin\CardapioController())->editCombo();
-        break;
-
-    case '/admin/loja/cardapio/combo/atualizar':
-        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
-        (new \App\Controllers\Admin\CardapioController())->updateCombo();
-        break;
-
-    case '/admin/loja/cardapio/combo/deletar':
-        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
-        (new \App\Controllers\Admin\CardapioController())->deleteCombo();
-        break;
-
-    case '/admin/loja/cardapio/combo/status':
-        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
-        (new \App\Controllers\Admin\CardapioController())->toggleComboStatus();
-        break;
-
-    // --- GESTÃO DE ESTOQUE (PRODUTOS) ---
-    case '/admin/loja/produtos':
-        require __DIR__ . '/../app/Controllers/Admin/StockController.php';
-        (new \App\Controllers\Admin\StockController())->index();
-        break;
-    
-    // [CATEGORIAS] - Layout Moderno
-    case '/admin/loja/categorias':
-        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
-        (new \App\Controllers\Admin\CategoryController())->index();
-        break;
-
-    case '/admin/loja/categorias/salvar':
-        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
-        (new \App\Controllers\Admin\CategoryController())->store();
-        break;
-
-    case '/admin/loja/categorias/editar':
-        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
-        (new \App\Controllers\Admin\CategoryController())->edit();
-        break;
-
-    case '/admin/loja/categorias/atualizar':
-        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
-        (new \App\Controllers\Admin\CategoryController())->update();
-        break;
-
-    case '/admin/loja/categorias/deletar':
-        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
-        (new \App\Controllers\Admin\CategoryController())->delete();
-        break;
-
-    case '/admin/loja/produtos/novo':
-        require __DIR__ . '/../app/Controllers/Admin/StockController.php';
-        (new \App\Controllers\Admin\StockController())->create();
-        break;
-
-    case '/admin/loja/produtos/salvar':
-        require __DIR__ . '/../app/Controllers/Admin/StockController.php';
-        (new \App\Controllers\Admin\StockController())->store();
-        break;
-
-    case '/admin/loja/produtos/deletar':
-        require __DIR__ . '/../app/Controllers/Admin/StockController.php';
-        (new \App\Controllers\Admin\StockController())->delete();
-        break;
-
-    // [FASE 1] Editar e Atualizar Produto
-    case '/admin/loja/produtos/editar':
-        require __DIR__ . '/../app/Controllers/Admin/StockController.php';
-        (new \App\Controllers\Admin\StockController())->edit();
-        break;
-
-    case '/admin/loja/produtos/atualizar':
-        require __DIR__ . '/../app/Controllers/Admin/StockController.php';
-        (new \App\Controllers\Admin\StockController())->update();
-        break;
-
-    // [FASE 3] Reposição de Estoque
-    case '/admin/loja/reposicao':
-        require __DIR__ . '/../app/Controllers/Admin/StockRepositionController.php';
-        (new \App\Controllers\Admin\StockRepositionController())->index();
-        break;
-
-    case '/admin/loja/reposicao/ajustar':
-        require __DIR__ . '/../app/Controllers/Admin/StockRepositionController.php';
-        (new \App\Controllers\Admin\StockRepositionController())->adjust();
-        break;
-
-    // [FASE 4] Movimentações de Estoque (Histórico)
-    case '/admin/loja/movimentacoes':
-        require __DIR__ . '/../app/Controllers/Admin/StockMovementController.php';
-        (new \App\Controllers\Admin\StockMovementController())->index();
-        break;
-
-    // [FASE 5.1] Adicionais - Arquitetura Global
-    case '/admin/loja/adicionais':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->index();
-        break;
-
-    case '/admin/loja/adicionais/itens':
-        // Redireciona para a página principal que agora contém as abas
-        header('Location: ' . BASE_URL . '/admin/loja/adicionais');
+// ============================================================
+// DEFAULT: Handler para rotas não encontradas
+// ============================================================
+Router::setDefault(function($path) {
+    // Se for a raiz ou vazio, vai pro admin
+    if ($path == '/' || $path == '') {
+        header('Location: admin');
         exit;
-        break;
-
-    case '/admin/loja/adicionais/grupo/salvar':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->storeGroup();
-        break;
-
-    case '/admin/loja/adicionais/grupo/deletar':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->deleteGroup();
-        break;
-
-
-
-
-
-    case '/admin/loja/adicionais/item/salvar-modal':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->storeItemWithGroups();
-        break;
-
-    case '/admin/loja/adicionais/item/atualizar-modal':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->updateItemWithGroups();
-        break;
-
-    case '/admin/loja/adicionais/get-item-data':
-        require_once __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->getItemData();
-        break;
-
-    case '/admin/loja/adicionais/get-product-extras':
-        require_once __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->getProductExtras();
-        break;
-
-
-
-
-
-    case '/admin/loja/adicionais/item/deletar':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->deleteItem();
-        break;
-
-    case '/admin/loja/adicionais/vincular':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->linkItem();
-        break;
-
-    case '/admin/loja/adicionais/desvincular':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->unlinkItem();
-        break;
-
-    case '/admin/loja/adicionais/vincular-multiplos':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->linkMultipleItems();
-        break;
-
-    case '/admin/loja/adicionais/vincular-categoria':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->linkCategory();
-        break;
-
-    // AJAX: Recuperar categorias vinculadas (para o modal)
-    case '/admin/loja/adicionais/get-linked-categories':
-        require __DIR__ . '/../app/Controllers/Admin/AdditionalController.php';
-        (new \App\Controllers\Admin\AdditionalController())->getLinkedCategories();
-        break;
-
-    // --- FINANCEIRO E CAIXA ---
-    case '/admin/loja/caixa':
-        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
-        (new \App\Controllers\Admin\CashierController())->index();
-        break;
-
-    // --- CARDÁPIO (Em construção) ---
-    case '/admin/loja/cardapio':
-        require __DIR__ . '/../app/Controllers/Admin/CardapioController.php';
-        (new \App\Controllers\Admin\CardapioController())->index();
-        break;
-
-    case '/admin/loja/caixa/abrir':
-        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
-        (new \App\Controllers\Admin\CashierController())->open();
-        break;
-
-    case '/admin/loja/caixa/fechar':
-        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
-        (new \App\Controllers\Admin\CashierController())->close();
-        break;
-
-    case '/admin/loja/caixa/movimentar':
-        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
-        (new \App\Controllers\Admin\CashierController())->addMovement();
-        break;
-
-    case '/admin/loja/pdv/cancelar-edicao':
-        require __DIR__ . '/../app/Controllers/Admin/ProductController.php';
-        (new \App\Controllers\Admin\ProductController())->cancelEdit();
-        break;
-
-    case '/admin/loja/caixa/estornar-pdv':
-        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
-        (new \App\Controllers\Admin\CashierController())->reverseToPdv();
-        break;
-
-    case '/admin/loja/caixa/remover':
-        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
-        (new \App\Controllers\Admin\CashierController())->removeMovement();
-        break;
-
-    case '/admin/loja/caixa/estornar-mesa':
-        require __DIR__ . '/../app/Controllers/Admin/CashierController.php';
-        (new \App\Controllers\Admin\CashierController())->reverseToTable();
-        break;
-
-    // --- CONFIGURAÇÕES DA LOJA ---
-    case '/admin/loja/config':
-        require __DIR__ . '/../app/Controllers/Admin/ConfigController.php';
-        (new \App\Controllers\Admin\ConfigController())->index();
-        break;
-
-    case '/admin/loja/config/salvar':
-        require __DIR__ . '/../app/Controllers/Admin/ConfigController.php';
-        (new \App\Controllers\Admin\ConfigController())->update();
-        break;
-
-    case '/admin/loja/configuracoes-gerais':
-        require __DIR__ . '/../app/Controllers/Admin/ConfigGeraisController.php';
-        (new \App\Controllers\Admin\ConfigGeraisController())->index();
-        break;
-
-    // --- ROTAS DE AÇÃO (AJAX) ---
-    case '/admin/loja/venda/finalizar':
-        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
-        (new \App\Controllers\Admin\OrderController())->store();
-        break;
-
-    case '/admin/loja/mesa/fechar':
-        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
-        (new \App\Controllers\Admin\OrderController())->closeTable();
-        break;
-
-    case '/admin/loja/venda/fechar-comanda':
-        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
-        (new \App\Controllers\Admin\OrderController())->closeCommand();
-        break;
-
-    case '/admin/loja/venda/remover-item':
-        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
-        (new \App\Controllers\Admin\OrderController())->removeItem();
-        break;
-
-    case '/admin/loja/mesa/cancelar':
-        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
-        (new \App\Controllers\Admin\OrderController())->cancelTableOrder();
-        break;
-
-    case '/admin/loja/pedidos/entregar':
-        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
-        (new \App\Controllers\Admin\OrderController())->deliverOrder();
-        break;
-
-    case '/admin/loja/pedidos/cancelar':
-        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
-        (new \App\Controllers\Admin\OrderController())->cancelOrder();
-        break;
-
-    case '/admin/loja/pedido-pago/incluir':
-        require __DIR__ . '/../app/Controllers/Admin/OrderController.php';
-        (new \App\Controllers\Admin\OrderController())->includePaidOrderItems();
-        break;
-
-    case '/admin/loja/mesas/deletar':
-        require __DIR__ . '/../app/Controllers/Admin/TableController.php';
-        (new \App\Controllers\Admin\TableController())->deleteByNumber();
-        break;
-
-    case '/admin/loja/mesas/buscar':
-        require __DIR__ . '/../app/Controllers/Admin/TableController.php';
-        (new \App\Controllers\Admin\TableController())->search();
-        break;
-
-    case '/admin/loja/mesas/salvar':
-        require __DIR__ . '/../app/Controllers/Admin/TableController.php';
-        (new \App\Controllers\Admin\TableController())->store();
-        break;
-
-    // 3. Obter Itens (AJAX)
-    case '/admin/loja/vendas/itens':
-        require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
-        (new \App\Controllers\Admin\SalesController())->getItems();
-        break;
-
-    // --- GESTÃO DE CLIENTES (AJAX) ---
-    case '/admin/loja/clientes/buscar':
-        require __DIR__ . '/../app/Controllers/Admin/ClientController.php';
-        (new \App\Controllers\Admin\ClientController())->search();
-        break;
-
-    case '/admin/loja/clientes/salvar':
-        require __DIR__ . '/../app/Controllers/Admin/ClientController.php';
-        (new \App\Controllers\Admin\ClientController())->store();
-        break;
-
-    case '/admin/loja/clientes/detalhes':
-        require __DIR__ . '/../app/Controllers/Admin/ClientController.php';
-        (new \App\Controllers\Admin\ClientController())->details();
-        break;
-
-    // --- GESTÃO DE CATEGORIAS ---
+    }
     
-    // 1. Listar
-    case '/admin/categories':
-        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
-        (new \App\Controllers\Admin\CategoryController())->index();
-        break;
+    // Tenta carregar o cardápio pelo slug
+    $slug = ltrim($path, '/');
+    if ($slug) {
+        (new \App\Controllers\CardapioPublicoController())->showBySlug($slug);
+    }
+});
 
-    // 2. Salvar (POST do formulário)
-    case '/admin/categories/salvar':
-        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
-        (new \App\Controllers\Admin\CategoryController())->store();
-        break;
-
-    // 3. Deletar
-    case '/admin/categories/deletar':
-        require __DIR__ . '/../app/Controllers/Admin/CategoryController.php';
-        (new \App\Controllers\Admin\CategoryController())->delete();
-        break;
-
-    // --- ROTA DE RELATÓRIO DE VENDAS ---
-    case '/admin/loja/vendas':
-        require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
-        (new \App\Controllers\Admin\SalesController())->index();
-        break;
-
-    // --- ROTA PARA PEGAR ITENS DA VENDA (AJAX) ---
-    case '/admin/loja/vendas/itens':
-        require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
-        (new \App\Controllers\Admin\SalesController())->getItems();
-        break;
-
-    // --- AÇÕES DE VENDAS ---
-    case '/admin/loja/vendas/cancelar':
-        require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
-        (new \App\Controllers\Admin\SalesController())->cancel();
-        break;
-
-    case '/admin/loja/vendas/reabrir':
-        require __DIR__ . '/../app/Controllers/Admin/SalesController.php';
-        (new \App\Controllers\Admin\SalesController())->reactivateTable();
-        break;
-
-    // --- ROTA PÚBLICA: CARDÁPIO POR SLUG (/cardapio/{slug}) ---
-    case (preg_match('/^\\/cardapio\\/([a-zA-Z0-9_-]+)$/', $path, $mSlug) ? true : false):
-        require __DIR__ . '/../app/Controllers/CardapioPublicoController.php';
-        (new \App\Controllers\CardapioPublicoController())->showBySlug($mSlug[1]);
-        break;
-
-    // --- ROTA PÚBLICA: CARDÁPIO POR ID (para acesso pelo celular) ---
-    // Acesse: /c/1 para ver cardápio do restaurante ID 1
-    case (preg_match('/^\/c\/(\d+)$/', $path, $m) ? true : false):
-        require __DIR__ . '/../app/Controllers/CardapioPublicoController.php';
-        (new \App\Controllers\CardapioPublicoController())->show(intval($m[1]));
-        break;
-
-    // --- ROTA PÚBLICA (Cardápio) ---
-    default:
-        // Se for a raiz ou vazio, vai pro admin
-        if ($path == '/' || $path == '') {
-            header('Location: admin');
-            exit;
-        }
-        
-        // Tenta carregar o cardápio pelo slug
-        require __DIR__ . '/../app/Controllers/CardapioPublicoController.php';
-        $slug = ltrim($path, '/');
-        if ($slug) {
-            (new \App\Controllers\CardapioPublicoController())->showBySlug($slug);
-        }
-        break;
-}
+// Tenta despachar pelo Router
+Router::dispatch($path);
