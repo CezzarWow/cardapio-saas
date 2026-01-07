@@ -331,6 +331,16 @@ const PDVCheckout = {
         this.totalPaid -= removed.amount;
         this.updatePaymentList();
         this.updateCheckoutUI();
+
+        // [FIX] Restaura o valor restante no campo "Valor a Lançar"
+        const finalTotal = this.getFinalTotal();
+        const remaining = Math.max(0, finalTotal - this.totalPaid);
+        const input = document.getElementById('pay-amount');
+        if (input && remaining > 0) {
+            input.value = remaining.toFixed(2).replace('.', ',');
+            this.formatMoneyInput(input);
+            input.focus();
+        }
     },
 
     updatePaymentList: function () {
@@ -421,7 +431,7 @@ const PDVCheckout = {
 
         if (keepOpenInput && keepOpenInput.value === 'true' && !clientId && !tableId) {
             btnFinish.disabled = true;
-            btnFinish.style.background = '#fbbf24'; // Amarelo alerta
+            btnFinish.style.background = '#cbd5e1'; // Cinza padrão disabled
             btnFinish.style.cursor = 'not-allowed';
         }
     },
@@ -438,6 +448,21 @@ const PDVCheckout = {
 
         // [NOVO] Aplica desconto
         total = total - this.discountValue;
+
+        // [NOVO] Adiciona taxa de entrega se for Entrega com dados preenchidos
+        const orderTypeCards = document.querySelectorAll('.order-type-card.active');
+        let isDelivery = false;
+        orderTypeCards.forEach(card => {
+            const label = card.innerText.toLowerCase().trim();
+            if (label.includes('entrega')) isDelivery = true;
+        });
+
+        if (isDelivery && typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled) {
+            if (typeof PDV_DELIVERY_FEE !== 'undefined') {
+                total += PDV_DELIVERY_FEE;
+            }
+        }
+
         return total > 0 ? total : 0;
     },
 
@@ -460,6 +485,21 @@ const PDVCheckout = {
             cartItems = PDVCart.items;
         }
 
+        // [FIX] Detecta qual tipo de pedido está selecionado
+        const orderTypeCards = document.querySelectorAll('.order-type-card.active');
+        let selectedOrderType = 'local'; // default
+
+        orderTypeCards.forEach(card => {
+            const label = card.innerText.toLowerCase().trim();
+            if (label.includes('retirada')) selectedOrderType = 'pickup';
+            else if (label.includes('entrega')) selectedOrderType = 'delivery';
+            else if (label.includes('local')) selectedOrderType = 'local';
+        });
+
+        // Para Retirada/Entrega, verificar se já pagou ou não
+        // [FIX] Se tem pagamentos registrados, significa que pagou (botão só habilita com pagamento completo)
+        let isPaid = (this.currentPayments && this.currentPayments.length > 0) ? 1 : 0;
+
         const payload = {
             cart: cartItems,
             table_id: tableId ? parseInt(tableId) : null,
@@ -467,8 +507,19 @@ const PDVCheckout = {
             payments: this.currentPayments,
             discount: this.discountValue,
             keep_open: keepOpen,
-            finalize_now: true  // [NOVO] Indica que veio do modal de pagamento - finalizar venda
+            finalize_now: true,
+            order_type: selectedOrderType,
+            is_paid: isPaid,
+            delivery_fee: (selectedOrderType === 'delivery' && typeof PDV_DELIVERY_FEE !== 'undefined') ? PDV_DELIVERY_FEE : 0
         };
+
+        // Se for Entrega, adiciona dados de entrega
+        if (selectedOrderType === 'delivery' && typeof getDeliveryData === 'function') {
+            const deliveryData = getDeliveryData();
+            if (deliveryData) {
+                payload.delivery_data = deliveryData;
+            }
+        }
 
         // Lógica de Estado (Mesa/Comanda/Inclusão)
         const { modo, fechandoConta } = PDVState.getState();
@@ -537,19 +588,23 @@ const PDVCheckout = {
     saveClientOrder: function () {
         // Salva Comanda Aberta (Botão Laranja)
         const clientId = document.getElementById('current_client_id').value;
+        const tableId = document.getElementById('current_table_id').value;
         const orderId = document.getElementById('current_order_id') ? document.getElementById('current_order_id').value : null;
 
         if (PDVCart.items.length === 0) return alert('Carrinho vazio!');
-        if (!clientId) return alert('Selecione um cliente!');
 
-        PDVState.set({ modo: 'comanda', clienteId: parseInt(clientId) });
+        // [FIX] Aceita cliente OU mesa
+        if (!clientId && !tableId) return alert('Selecione um cliente ou mesa!');
+
+        PDVState.set({ modo: tableId ? 'mesa' : 'comanda', clienteId: clientId ? parseInt(clientId) : null, mesaId: tableId ? parseInt(tableId) : null });
 
         fetch('venda/finalizar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 cart: PDVCart.items,
-                client_id: clientId,
+                client_id: clientId || null,
+                table_id: tableId || null,
                 order_id: orderId,
                 save_account: true
             })
@@ -582,6 +637,16 @@ const PDVCheckout = {
             }
         });
 
+        // [FIX] Se element não foi passado, busca pelo tipo
+        if (!element) {
+            document.querySelectorAll('.order-type-card').forEach(card => {
+                const label = card.innerText.toLowerCase().trim();
+                if (type === 'local' && label.includes('local')) element = card;
+                else if (type === 'retirada' && label.includes('retirada')) element = card;
+                else if (type === 'entrega' && label.includes('entrega')) element = card;
+            });
+        }
+
         // Ativa o selecionado
         if (element && !element.classList.contains('disabled')) {
             element.classList.add('active');
@@ -591,38 +656,102 @@ const PDVCheckout = {
 
         // Logica de keep open / Retirada
         const keepOpenInput = document.getElementById('keep_open_value');
-        const alertBox = document.getElementById('retirada-client-alert');
+        const alertBoxRetirada = document.getElementById('retirada-client-alert');
         const clientSelectedBox = document.getElementById('retirada-client-selected');
         const noClientBox = document.getElementById('retirada-no-client');
+
+        // Elementos de Entrega
+        const alertBoxEntrega = document.getElementById('entrega-alert');
+        const entregaDadosOk = document.getElementById('entrega-dados-ok');
+        const entregaDadosPendente = document.getElementById('entrega-dados-pendente');
+
+        // Esconde todos os alertas primeiro
+        if (alertBoxRetirada) alertBoxRetirada.style.display = 'none';
+        if (alertBoxEntrega) alertBoxEntrega.style.display = 'none';
 
         if (type === 'retirada') {
             if (keepOpenInput) keepOpenInput.value = 'true';
 
             const clientId = document.getElementById('current_client_id')?.value;
-            // Tenta pegar o nome de várias fontes
-            let clientName = document.getElementById('current_client_name')?.value;
-            if (!clientName) {
+            const tableId = document.getElementById('current_table_id')?.value;
+
+            // [FIX] Tenta pegar o nome de várias fontes (cliente OU mesa)
+            let displayName = document.getElementById('current_client_name')?.value;
+            if (!displayName) {
+                displayName = document.getElementById('current_table_name')?.value;
+            }
+            if (!displayName) {
                 // Tenta pegar do display lateral
-                clientName = document.getElementById('selected-client-name')?.innerText;
+                displayName = document.getElementById('selected-client-name')?.innerText;
             }
 
-            if (alertBox) alertBox.style.display = 'block';
+            if (alertBoxRetirada) alertBoxRetirada.style.display = 'block';
 
-            if (clientId && clientName) {
-                // Tem cliente - mostra verde
+            // [FIX] Aceita cliente OU mesa para liberar Retirada
+            if ((clientId || tableId) && displayName) {
+                // Tem cliente ou mesa - mostra verde
                 if (clientSelectedBox) {
                     clientSelectedBox.style.display = 'block';
-                    document.getElementById('retirada-client-name').innerText = clientName;
+                    document.getElementById('retirada-client-name').innerText = displayName;
                 }
                 if (noClientBox) noClientBox.style.display = 'none';
             } else {
-                // Não tem cliente - mostra aviso
+                // Não tem cliente nem mesa - mostra aviso
                 if (clientSelectedBox) clientSelectedBox.style.display = 'none';
                 if (noClientBox) noClientBox.style.display = 'block';
             }
-        } else {
+        } else if (type === 'entrega') {
             if (keepOpenInput) keepOpenInput.value = 'false';
-            if (alertBox) alertBox.style.display = 'none';
+
+            // Mostra alerta de entrega
+            if (alertBoxEntrega) alertBoxEntrega.style.display = 'block';
+
+            // Verifica se dados já foram preenchidos
+            if (typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled) {
+                if (entregaDadosOk) entregaDadosOk.style.display = 'block';
+                if (entregaDadosPendente) entregaDadosPendente.style.display = 'none';
+            } else {
+                if (entregaDadosOk) entregaDadosOk.style.display = 'none';
+                if (entregaDadosPendente) entregaDadosPendente.style.display = 'block';
+            }
+        } else {
+            // Local
+            if (keepOpenInput) keepOpenInput.value = 'false';
+        }
+
+        // [NOVO] Mostra/esconde botão "Pagar Depois" para Retirada/Entrega
+        const btnSavePickup = document.getElementById('btn-save-pickup');
+        if (btnSavePickup) {
+            if (type === 'retirada' || type === 'entrega') {
+                btnSavePickup.style.display = 'flex';
+
+                // Verifica se pode habilitar
+                const clientId = document.getElementById('current_client_id')?.value;
+                const tableId = document.getElementById('current_table_id')?.value;
+
+                // Para Retirada: precisa de cliente ou mesa
+                // Para Entrega: precisa de cliente OU dados de entrega preenchidos
+                let canEnable = false;
+
+                if (type === 'retirada') {
+                    canEnable = !!(clientId || tableId);
+                } else if (type === 'entrega') {
+                    // Para Entrega, habilita se tiver dados de entrega preenchidos
+                    canEnable = !!(clientId || tableId || (typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled));
+                }
+
+                if (canEnable) {
+                    btnSavePickup.disabled = false;
+                    btnSavePickup.style.opacity = '1';
+                    btnSavePickup.style.cursor = 'pointer';
+                } else {
+                    btnSavePickup.disabled = true;
+                    btnSavePickup.style.opacity = '0.5';
+                    btnSavePickup.style.cursor = 'not-allowed';
+                }
+            } else {
+                btnSavePickup.style.display = 'none';
+            }
         }
 
         if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -708,4 +837,253 @@ window.clearRetiradaClient = function () {
     if (noClientBox) noClientBox.style.display = 'block';
 
     PDVCheckout.updateCheckoutUI();
+};
+
+// ==========================================
+// FUNÇÕES PARA PAINEL DE ENTREGA
+// ==========================================
+
+let deliveryDataFilled = false; // Flag para saber se dados foram preenchidos
+
+window.openDeliveryPanel = function () {
+    const panel = document.getElementById('delivery-panel');
+    if (!panel) return;
+
+    // Só auto-preenche nome se realmente tiver cliente/mesa selecionado
+    const clientId = document.getElementById('current_client_id')?.value;
+    const tableId = document.getElementById('current_table_id')?.value;
+
+    if (clientId || tableId) {
+        // Tem cliente ou mesa - tenta pegar o nome
+        const clientName = document.getElementById('current_client_name')?.value ||
+            document.getElementById('current_table_name')?.value || '';
+
+        if (clientName && clientName.trim()) {
+            document.getElementById('delivery_name').value = clientName.replace('🔹 ', '').split(' (')[0].trim();
+        }
+    }
+
+    // Mostra o painel
+    panel.style.display = 'flex';
+
+    // Foca no primeiro campo vazio
+    const nameInput = document.getElementById('delivery_name');
+    const addressInput = document.getElementById('delivery_address');
+    if (nameInput && !nameInput.value) {
+        nameInput.focus();
+    } else if (addressInput) {
+        addressInput.focus();
+    }
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+};
+
+window.closeDeliveryPanel = function () {
+    const panel = document.getElementById('delivery-panel');
+    if (panel) panel.style.display = 'none';
+};
+
+window.confirmDeliveryData = function () {
+    // Valida campos obrigatórios
+    const name = document.getElementById('delivery_name').value.trim();
+    const address = document.getElementById('delivery_address').value.trim();
+    const neighborhood = document.getElementById('delivery_neighborhood').value.trim();
+
+    if (!name) {
+        alert('Digite o nome do cliente!');
+        document.getElementById('delivery_name').focus();
+        return;
+    }
+    if (!address) {
+        alert('Digite o endereço!');
+        document.getElementById('delivery_address').focus();
+        return;
+    }
+    if (!neighborhood) {
+        alert('Digite o bairro!');
+        document.getElementById('delivery_neighborhood').focus();
+        return;
+    }
+
+    // Marca como preenchido
+    deliveryDataFilled = true;
+
+    // Fecha o painel
+    closeDeliveryPanel();
+
+    // Atualiza o alerta para mostrar que dados estão OK
+    const alertEntrega = document.getElementById('entrega-alert');
+    const dadosOk = document.getElementById('entrega-dados-ok');
+    const dadosPendente = document.getElementById('entrega-dados-pendente');
+
+    if (alertEntrega) alertEntrega.style.display = 'block';
+    if (dadosOk) dadosOk.style.display = 'block';
+    if (dadosPendente) dadosPendente.style.display = 'none';
+
+    // Atualiza ícones
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    // [NOVO] Re-executa selectOrderType para atualizar botões
+    PDVCheckout.selectOrderType('entrega');
+
+    // [NOVO] Atualiza o TOTAL exibido com a taxa de entrega
+    // Calcula total do carrinho + taxa de entrega
+    let cartTotal = 0;
+    if (typeof cart !== 'undefined' && Array.isArray(cart)) {
+        cart.forEach(item => {
+            cartTotal += item.price * item.quantity;
+        });
+    }
+    const deliveryFee = (typeof PDV_DELIVERY_FEE !== 'undefined') ? PDV_DELIVERY_FEE : 0;
+    const newTotal = cartTotal + deliveryFee;
+
+    const totalDisplay = document.getElementById('checkout-total-display');
+    if (totalDisplay) {
+        totalDisplay.innerText = 'R$ ' + newTotal.toFixed(2).replace('.', ',');
+    }
+
+    // Atualiza UI do checkout (restante, troco, botão)
+    if (typeof updateCheckoutUI === 'function') {
+        updateCheckoutUI();
+    }
+};
+
+// Função para obter dados de entrega preenchidos
+window.getDeliveryData = function () {
+    if (!deliveryDataFilled) return null;
+
+    return {
+        name: document.getElementById('delivery_name')?.value || '',
+        address: document.getElementById('delivery_address')?.value || '',
+        number: document.getElementById('delivery_number')?.value || '',
+        neighborhood: document.getElementById('delivery_neighborhood')?.value || '',
+        phone: document.getElementById('delivery_phone')?.value || '',
+        complement: document.getElementById('delivery_complement')?.value || ''
+    };
+};
+
+// Reseta dados de entrega quando o checkout fecha
+const originalCloseCheckout = PDVCheckout.closeCheckout;
+PDVCheckout.closeCheckout = function () {
+    deliveryDataFilled = false;
+    closeDeliveryPanel();
+
+    // Limpa campos
+    ['delivery_name', 'delivery_address', 'delivery_number', 'delivery_neighborhood', 'delivery_phone', 'delivery_complement'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    // Chama original
+    originalCloseCheckout.call(PDVCheckout);
+};
+
+// Função para excluir dados de entrega
+window.clearDeliveryData = function () {
+    deliveryDataFilled = false;
+
+    // Limpa campos
+    ['delivery_name', 'delivery_address', 'delivery_number', 'delivery_neighborhood', 'delivery_phone', 'delivery_complement'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    // Atualiza alertas
+    const dadosOk = document.getElementById('entrega-dados-ok');
+    const dadosPendente = document.getElementById('entrega-dados-pendente');
+
+    if (dadosOk) dadosOk.style.display = 'none';
+    if (dadosPendente) dadosPendente.style.display = 'block';
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    PDVCheckout.updateCheckoutUI();
+};
+
+// ==========================================
+// SALVAR PEDIDO DE RETIRADA/ENTREGA (PAGAR DEPOIS)
+// ==========================================
+
+window.savePickupOrder = function () {
+    // Detecta qual tipo de pedido está selecionado
+    const orderTypeCards = document.querySelectorAll('.order-type-card.active');
+    let selectedOrderType = 'pickup'; // default para Retirada
+
+    orderTypeCards.forEach(card => {
+        const label = card.innerText.toLowerCase().trim();
+        if (label.includes('retirada')) selectedOrderType = 'pickup';
+        else if (label.includes('entrega')) selectedOrderType = 'delivery';
+    });
+
+    // Para Entrega, verifica se dados foram preenchidos
+    if (selectedOrderType === 'delivery') {
+        if (typeof deliveryDataFilled === 'undefined' || !deliveryDataFilled) {
+            alert('Preencha os dados de entrega primeiro!');
+            openDeliveryPanel();
+            return;
+        }
+    }
+
+    // Pega o carrinho
+    let cartItems = [];
+    if (typeof cart !== 'undefined' && Array.isArray(cart)) {
+        cartItems = cart;
+    } else if (typeof PDVCart !== 'undefined') {
+        cartItems = PDVCart.items;
+    }
+
+    if (cartItems.length === 0) {
+        alert('Carrinho vazio!');
+        return;
+    }
+
+    // Pega a forma de pagamento selecionada (para mostrar no Kanban como "vai pagar com...")
+    const selectedPaymentMethod = PDVCheckout.selectedMethod || 'dinheiro';
+
+    // [NOVO] Taxa de entrega (apenas para delivery)
+    const deliveryFee = (selectedOrderType === 'delivery' && typeof PDV_DELIVERY_FEE !== 'undefined') ? PDV_DELIVERY_FEE : 0;
+
+    const payload = {
+        cart: cartItems,
+        table_id: null,
+        client_id: document.getElementById('current_client_id')?.value || null,
+        payments: [], // Sem pagamentos - vai pagar depois
+        discount: PDVCheckout.discountValue || 0,
+        delivery_fee: deliveryFee, // [NOVO]
+        keep_open: false,
+        finalize_now: true,
+        order_type: selectedOrderType,
+        is_paid: 0, // NÃO PAGO - vai pagar na retirada
+        payment_method_expected: selectedPaymentMethod // Forma que vai pagar
+    };
+
+    // Se for Entrega, adiciona dados de entrega
+    if (selectedOrderType === 'delivery' && typeof getDeliveryData === 'function') {
+        const deliveryData = getDeliveryData();
+        if (deliveryData) {
+            payload.delivery_data = deliveryData;
+        }
+    }
+
+    const url = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/venda/finalizar';
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                PDVCheckout.showSuccessModal();
+                PDVCart.clear();
+                if (typeof cart !== 'undefined') cart.length = 0;
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                alert('Erro: ' + data.message);
+            }
+        })
+        .catch(err => alert('Erro de conexão: ' + err.message));
 };

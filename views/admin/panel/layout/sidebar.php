@@ -44,10 +44,7 @@
             <span class="nav-label">Caixa</span>
         </a>
 
-        <a href="<?= BASE_URL ?>/admin/loja/configuracoes-gerais" class="nav-item <?= ViewHelper::isRouteActive('configuracoes-gerais') ? 'active' : '' ?>">
-            <i data-lucide="settings" size="36"></i>
-            <span class="nav-label">Config</span>
-        </a>
+
 
 
 

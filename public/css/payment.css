@@ -449,3 +449,66 @@
    
    Breakpoints específicos e ajustes de tela estão em compatibility.css
 */
+
+/* ========== TRANSIÇÕES SUAVES PARA CHECKOUT ========== */
+/* Evita "jagualada" ao trocar entre Local/Retirada/Entrega */
+
+/* Cards de tipo de pedido */
+.order-type-card {
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Alertas que aparecem/somem */
+#entrega-alert,
+#retirada-alert,
+#entrega-dados-ok,
+#entrega-dados-pendente,
+#retirada-client-selected,
+#retirada-no-client {
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+/* Botão Pagar Depois */
+#btn-save-pickup {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Total e valores */
+#checkout-total-display,
+#checkout-remaining {
+    transition: color 0.2s ease-in-out;
+}
+
+/* Container dos alertas - altura fixa para evitar "pulo" ao trocar tipo */
+#retirada-client-alert,
+#entrega-alert {
+    height: 55px;
+    overflow: hidden;
+}
+
+/* Esconde scroll no container do checkout quando muda tipo */
+#checkout-main {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
+}
+
+#checkout-main::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    /* Chrome/Safari/Opera */
+}
+
+/* Esconde scroll em todos elementos filhos do checkout */
+#checkoutModal * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+#checkoutModal *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+}

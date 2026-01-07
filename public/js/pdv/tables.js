@@ -131,6 +131,16 @@ const PDVTables = {
         document.getElementById('current_table_id').value = table.id;
         document.getElementById('current_client_id').value = '';
 
+        // [FIX] Armazena o nome/número da mesa para funcionar com Retirada
+        let tableNameInput = document.getElementById('current_table_name');
+        if (!tableNameInput) {
+            tableNameInput = document.createElement('input');
+            tableNameInput.type = 'hidden';
+            tableNameInput.id = 'current_table_name';
+            document.body.appendChild(tableNameInput);
+        }
+        tableNameInput.value = `Mesa ${table.number}`;
+
         // Visual
         document.getElementById('selected-client-name').innerHTML = `🔹 Mesa ${table.number} <small>(${table.status})</small>`;
         document.getElementById('selected-client-area').style.display = 'flex';
@@ -146,6 +156,23 @@ const PDVTables = {
 
         const btnSave = document.getElementById('btn-save-command');
         if (btnSave) btnSave.style.display = 'flex';
+
+        // Atualiza a view de Retirada se estiver visível (igual cliente)
+        const retiradaAlert = document.getElementById('retirada-client-alert');
+        if (retiradaAlert && retiradaAlert.style.display !== 'none') {
+            const clientSelectedBox = document.getElementById('retirada-client-selected');
+            const noClientBox = document.getElementById('retirada-no-client');
+            const clientNameDisplay = document.getElementById('retirada-client-name');
+
+            if (clientSelectedBox) {
+                clientSelectedBox.style.display = 'block';
+                if (clientNameDisplay) clientNameDisplay.innerText = `Mesa ${table.number}`;
+            }
+            if (noClientBox) noClientBox.style.display = 'none';
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            if (typeof PDVCheckout !== 'undefined') PDVCheckout.updateCheckoutUI();
+        }
     },
 
     // ==========================================

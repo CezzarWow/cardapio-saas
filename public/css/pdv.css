@@ -190,6 +190,43 @@ body {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
+/* ========== CARD COMPACTO (SEM ÍCONE) ========== */
+.product-card-compact {
+    height: 105px;
+    /* Altura FIXA - cabe 3 linhas */
+    padding: 0.75rem;
+    justify-content: space-between;
+    gap: 0.25rem;
+}
+
+.product-card-compact .product-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.product-card-compact .product-info h3 {
+    /* Fonte que varia: mínimo 0.7rem, ideal 2.5vw, máximo 0.95rem */
+    font-size: clamp(0.7rem, 2.5vw, 0.95rem);
+    font-weight: 700;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    line-height: 1.2;
+    max-height: 3.6em;
+}
+
+.product-card-compact .product-price {
+    margin-top: 0;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
 .product-icon {
     width: 48px;
     height: 48px;
@@ -255,16 +292,17 @@ body {
     font-weight: 600;
     color: var(--text-dark, #1f2937);
     margin-bottom: 0.25rem;
-    font-size: 0.85rem;
-    /* Limita a 2 linhas com reticências */
+    font-size: 0.75rem;
+    /* Limita a 1 linha com reticências */
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
     line-height: 1.3;
-    max-height: 2.2em;
+    max-height: 1.3em;
 }
 
 .product-info span {

@@ -125,38 +125,111 @@ class OrderController {
                 // Se for RETIRADA: status = aberto, is_paid = 1 (Pago mas aguardando retirada)
                 // Se for LOCAL: status = concluido (Venda finalizada)
                 $orderStatus = $keepOpen ? 'aberto' : 'concluido';
-                $isPaid = $keepOpen ? 1 : 0; // Retirada = Pago antecipado
+                
+                // [NOVO] Usa is_paid do frontend se disponível, senão usa lógica legada
+                $isPaid = isset($input['is_paid']) ? intval($input['is_paid']) : ($keepOpen ? 1 : 0);
+                
+                // [NOVO] Tipo de pedido: local, pickup (retirada), delivery (entrega)
+                $orderType = $input['order_type'] ?? 'local';
+                if (!in_array($orderType, ['local', 'pickup', 'delivery'])) {
+                    $orderType = 'local';
+                }
+                
+                // Para Retirada/Entrega, muda status para 'novo' para aparecer no Kanban
+                if (in_array($orderType, ['pickup', 'delivery'])) {
+                    $orderStatus = 'novo';
+                }
 
-                $stmtOrder = $conn->prepare("INSERT INTO orders (restaurant_id, client_id, total, discount, status, payment_method, is_paid) VALUES (:rid, :cid, 0, :discount, :status, :method, :paid)");
+                // [NOVO] Se não pagou (is_paid=0), usa payment_method_expected como forma esperada
+                if ($isPaid == 0 && isset($input['payment_method_expected'])) {
+                    $paymentMethodDesc = $input['payment_method_expected'];
+                }
+
+                $stmtOrder = $conn->prepare("INSERT INTO orders (restaurant_id, client_id, total, discount, status, payment_method, is_paid, order_type) VALUES (:rid, :cid, 0, :discount, :status, :method, :paid, :otype)");
                 $stmtOrder->execute([
                     'rid' => $restaurant_id, 
                     'cid' => $input['client_id'] ?? null, 
                     'discount' => $discount,
                     'status' => $orderStatus,
                     'method' => $paymentMethodDesc,
-                    'paid' => $isPaid
+                    'paid' => $isPaid,
+                    'otype' => $orderType
                 ]);
                 $orderId = $conn->lastInsertId();
+
+                // [NOVO] Se for Entrega com dados de delivery_data, cria/atualiza cliente
+                if ($orderType === 'delivery' && isset($input['delivery_data'])) {
+                    $deliveryData = $input['delivery_data'];
+                    $deliveryName = trim($deliveryData['name'] ?? '');
+                    $deliveryAddress = trim($deliveryData['address'] ?? '');
+                    $deliveryNumber = trim($deliveryData['number'] ?? '');
+                    $deliveryNeighborhood = trim($deliveryData['neighborhood'] ?? '');
+                    $deliveryPhone = trim($deliveryData['phone'] ?? '');
+                    $deliveryComplement = trim($deliveryData['complement'] ?? '');
+
+                    $clientIdForOrder = $input['client_id'] ?? null;
+
+                    // Se já tem cliente vinculado, atualiza os dados de entrega
+                    if ($clientIdForOrder) {
+                        $stmtUpdateClient = $conn->prepare("
+                            UPDATE clients SET 
+                                address = :addr,
+                                address_number = :num,
+                                neighborhood = :neigh,
+                                phone = COALESCE(:phone, phone)
+                            WHERE id = :cid
+                        ");
+                        $stmtUpdateClient->execute([
+                            'addr' => $deliveryAddress,
+                            'num' => $deliveryNumber,
+                            'neigh' => $deliveryNeighborhood,
+                            'phone' => $deliveryPhone ?: null,
+                            'cid' => $clientIdForOrder
+                        ]);
+                    } 
+                    // Se não tem cliente e tem nome, cria um novo
+                    elseif ($deliveryName) {
+                        $stmtNewClient = $conn->prepare("
+                            INSERT INTO clients (restaurant_id, name, phone, address, address_number, neighborhood)
+                            VALUES (:rid, :name, :phone, :addr, :num, :neigh)
+                        ");
+                        $stmtNewClient->execute([
+                            'rid' => $restaurant_id,
+                            'name' => $deliveryName,
+                            'phone' => $deliveryPhone,
+                            'addr' => $deliveryAddress,
+                            'num' => $deliveryNumber,
+                            'neigh' => $deliveryNeighborhood
+                        ]);
+                        $clientIdForOrder = $conn->lastInsertId();
+                        
+                        // Vincula o novo cliente ao pedido
+                        $conn->prepare("UPDATE orders SET client_id = :cid WHERE id = :oid")
+                             ->execute(['cid' => $clientIdForOrder, 'oid' => $orderId]);
+                    }
+                }
 
                 // 2. Salva os Pagamentos na tabela nova (order_payments)
                 $stmtPay = $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)");
                 
-                // Salva pagamentos
+                // Salva pagamentos (só se houver)
                 foreach ($payments as $pay) {
                     $stmtPay->execute(['oid' => $orderId, 'method' => $pay['method'], 'amount' => $pay['amount']]);
                 }
 
-                // 3. Lança UMA entrada no Caixa com o TOTAL da venda (Subtotal - Desconto)
-                $desc = "Venda Balcão #" . $orderId;
-                $finalAmount = max(0, $totalVenda - $discount); // Garante que não negativo
+                // 3. Lança UMA entrada no Caixa APENAS SE PAGO
+                if ($isPaid == 1 && !empty($payments)) {
+                    $desc = "Venda Balcão #" . $orderId;
+                    $finalAmount = max(0, $totalVenda - $discount);
 
-                $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
-                $stmtMov->execute([
-                    'cid' => $caixa['id'],
-                    'val' => $finalAmount,
-                    'desc' => $desc,
-                    'oid' => $orderId
-                ]);
+                    $stmtMov = $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, 'venda', :val, :desc, :oid, NOW())");
+                    $stmtMov->execute([
+                        'cid' => $caixa['id'],
+                        'val' => $finalAmount,
+                        'desc' => $desc,
+                        'oid' => $orderId
+                    ]);
+                }
             }
 
             // --- SALVA OS ITENS ---
@@ -175,14 +248,17 @@ class OrderController {
                 $stmtStock->execute(['qtd' => $item['quantity'], 'pid' => $item['id']]);
             }
 
-            // Atualiza o total do pedido (Total final = Soma itens - Desconto)
-            // Lógica: total = $totalVenda - $discount
+            // Atualiza o total do pedido (Total final = Soma itens - Desconto + Taxa entrega)
+            // Lógica: total = $totalVenda - $discount + $deliveryFee
             // Mas o INSERT lá me cima setou total = 0.
             // Aqui fazemos UPDATE. 
             // CUIDADO: O código original fazia `SET total = total + :val`.
             // Se eu mudar para `SET total = :val - :discount` fica mais seguro.
             
-            $finalTotalOrder = max(0, $totalVenda - ($discount ?? 0));
+            // [NOVO] Taxa de entrega (apenas para delivery)
+            $deliveryFee = floatval($input['delivery_fee'] ?? 0);
+            
+            $finalTotalOrder = max(0, $totalVenda - ($discount ?? 0) + $deliveryFee);
             $conn->prepare("UPDATE orders SET total = :val WHERE id = :oid")
                  ->execute(['val' => $finalTotalOrder, 'oid' => $orderId]);
 

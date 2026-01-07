@@ -67,6 +67,7 @@ const clientSearchInput = document.getElementById('client-search');
 const clientResults = document.getElementById('client-results');
 let searchTimeout = null;
 
+/* LOGICA MOVIDA PARA tables.js (EVITAR DUPLICIDADE)
 if (clientSearchInput && clientResults) {
     clientSearchInput.addEventListener('input', function () {
         const term = this.value.trim();
@@ -92,6 +93,7 @@ if (clientSearchInput && clientResults) {
         }
     });
 }
+*/
 
 function fetchTables() {
     fetch('mesas/buscar')

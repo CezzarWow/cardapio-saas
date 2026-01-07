@@ -4,6 +4,7 @@
  */
 
 let pendingProduct = null;
+let extrasQty = 1; // Quantidade selecionada no modal
 
 const PDVCart = {
     items: [],
@@ -307,6 +308,11 @@ window.openExtrasModal = async function (productId) {
         return;
     }
 
+    // Reseta quantidade para 1
+    extrasQty = 1;
+    const qtyDisplay = document.getElementById('extras-qty-display');
+    if (qtyDisplay) qtyDisplay.innerText = '1';
+
     modal.style.display = 'flex';
     content.innerHTML = '<div style="text-align: center; margin-top: 20px; color: #64748b;">Carregando opções... <span class="loader"></span></div>';
 
@@ -429,8 +435,24 @@ window.confirmExtras = function () {
         totalPrice += price;
     });
 
-    PDVCart.add(pendingProduct.id, pendingProduct.name, totalPrice, 1, selectedExtras);
+    // [FIX] Usa a quantidade selecionada no modal
+    PDVCart.add(pendingProduct.id, pendingProduct.name, totalPrice, extrasQty, selectedExtras);
     closeExtrasModal();
+};
+
+// Funções de controle de quantidade no modal de adicionais
+window.increaseExtrasQty = function () {
+    extrasQty++;
+    const display = document.getElementById('extras-qty-display');
+    if (display) display.innerText = extrasQty;
+};
+
+window.decreaseExtrasQty = function () {
+    if (extrasQty > 1) {
+        extrasQty--;
+        const display = document.getElementById('extras-qty-display');
+        if (display) display.innerText = extrasQty;
+    }
 };
 
 window.removeFromCart = (id) => {

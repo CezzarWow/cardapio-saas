@@ -20,6 +20,17 @@ if ($isEditingPaid && $editingOrderId) {
     $orderData = $stmt->fetch(PDO::FETCH_ASSOC);
     $originalPaidTotalFromDB = floatval($orderData['total'] ?? 0);
 }
+
+// [NOVO] Carrega taxa de entrega do cardápio
+$deliveryFee = 5.0; // default
+$restaurantId = $_SESSION['loja_ativa_id'] ?? null;
+if ($restaurantId) {
+    $settingsPath = __DIR__ . '/../../../data/restaurants/' . $restaurantId . '/cardapio_settings.json';
+    if (file_exists($settingsPath)) {
+        $settings = json_decode(file_get_contents($settingsPath), true);
+        $deliveryFee = floatval($settings['delivery_fee'] ?? 5.0);
+    }
+}
 ?>
 
         <?php if ($isEditingPaid && $editingOrderId): ?>
@@ -101,14 +112,10 @@ if ($isEditingPaid && $editingOrderId) {
                         <?php if (!empty($category['products'])): ?>
                             <?php foreach ($category['products'] as $product): ?>
                                 
-                                <div class="product-card" 
+                                <div class="product-card product-card-compact" 
+                                     data-category="<?= htmlspecialchars($category['name']) ?>"
                                      onclick='PDV.clickProduct(<?= $product['id'] ?>, <?= json_encode($product['name']) ?>, <?= $product['price'] ?>, <?= $product['has_extras'] ? "true" : "false" ?>)'>
                                     
-                                    <!-- Caixa padrão -->
-                                    <div class="pdv-product-icon">
-                                        <i data-lucide="package" style="width: 32px; height: 32px;"></i>
-                                    </div>
-
                                     <div class="product-info">
                                         <h3><?= htmlspecialchars($product['name']) ?></h3>
                                     </div>
@@ -187,14 +194,14 @@ if ($isEditingPaid && $editingOrderId) {
                 
                     <div id="client-search-area" style="display: flex; gap: 12px; align-items: flex-start;">
                     <!-- Wrapper relativo apenas para o Input e Resultados -->
-                    <div style="position: relative; flex: 1;">
-                        <input type="text" id="client-search" placeholder="Clique para ver mesas ou digite..." autocomplete="off"
+                    <form id="form-client-search" action="#" onsubmit="return false;" style="position: relative; flex: 1;">
+                        <input type="text" id="client-search" name="pdv_main_search_<?= time() ?>" autocomplete="off" data-lpignore="true" placeholder="Clique para ver mesas ou digite..."
                                style="width: 100%; padding: 10px 12px; border: 1px solid #94a3b8; border-radius: 10px; font-size: 1.1rem; outline: none; transition: all 0.2s; background: #f8fafc;">
                         
                         <!-- Dropdown Redesenhado -->
                         <div id="client-results" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); max-height: 200px; overflow-y: auto; z-index: 9999; margin-top: 6px;">
                         </div>
-                    </div>
+                    </form>
                     
                     <button type="button" onclick="const m=document.getElementById('clientModal'); if(m) { document.body.appendChild(m); m.style.display='flex'; m.style.zIndex='9999'; document.getElementById('new_client_name').focus(); }" title="Novo Cliente"
                             style="flex-shrink: 0; background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; height: 38px; width: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
@@ -308,11 +315,15 @@ if ($isEditingPaid && $editingOrderId) {
 
     <div id="checkoutModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center;">
     
-    <div style="background: white; width: 1000px; max-width: 95%; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 90vh;">
+    <!-- Container Flex: Checkout + Painel Entrega -->
+    <div style="display: flex; gap: 0; align-items: stretch;">
+    
+    <!-- CHECKOUT PRINCIPAL (inalterado) -->
+    <div id="checkout-main" style="background: white; width: 1000px; max-width: 95%; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 90vh;">
         
         <!-- Header -->
-        <div style="padding: 20px 25px 0 25px;">
-            <h2 style="margin: 0; color: #1e293b; font-size: 1.4rem; font-weight: 800;">Pagamento</h2>
+        <div style="padding: 15px 25px 0 25px;">
+            <h2 style="margin: 0; color: #1e293b; font-size: 1.25rem; font-weight: 800;">Pagamento</h2>
         </div>
         
         <?php if ($isEditingPaid ?? false): ?>
@@ -330,16 +341,16 @@ if ($isEditingPaid && $editingOrderId) {
         <?php endif; ?>
 
         <!-- GRID LAYOUT (NEW) -->
-        <div style="padding: 25px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: stretch; overflow-y: auto; flex: 1;">
+        <div style="padding: 15px 25px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 15px; align-items: stretch; overflow-y: auto; flex: 1;">
             
             <!-- COLUNA ESQUERDA: Métodos + Inputs + Ações -->
-            <div style="display: flex; flex-direction: column; gap: 25px; justify-content: flex-start;">
+            <div style="display: flex; flex-direction: column; gap: 15px; justify-content: flex-start;">
                 
                 <!-- 1. Métodos de Pagamento -->
                 <div>
                     <label style="display: block; font-size: 0.8rem; color: #64748b; font-weight: 700; margin-bottom: 8px;">FORMA DE PAGAMENTO</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <button onclick="setMethod('dinheiro')" id="btn-method-dinheiro" class="payment-method-btn active" style="padding: 18px 12px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s;">
+                        <button onclick="setMethod('dinheiro')" id="btn-method-dinheiro" class="payment-method-btn active" style="padding: 14px 10px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
                             <i data-lucide="banknote" size="22"></i>
                             <span style="font-size: 0.95rem; font-weight: 700;">Dinheiro</span>
                         </button>
@@ -388,7 +399,7 @@ if ($isEditingPaid && $editingOrderId) {
             </div>
 
             <!-- COLUNA DIREITA: Lista de Pagamentos + Totais -->
-            <div style="background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; display: flex; flex-direction: column; overflow: hidden; height: 100%; min-height: 480px;">
+            <div style="background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; padding: 12px; display: flex; flex-direction: column; overflow: hidden; height: 100%; min-height: 380px;">
                 
                 <h3 style="margin: 0 0 15px 0; font-size: 0.95rem; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 8px;">
                     <i data-lucide="list" size="16"></i> Resumo
@@ -447,9 +458,10 @@ if ($isEditingPaid && $editingOrderId) {
                             <div style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">Retirada</div>
                         </div>
                         <!-- OPÇÃO 3: ENTREGA -->
-                        <div class="order-type-card disabled" style="border: 1px solid #e2e8f0; background: #f1f5f9; border-radius: 8px; padding: 10px 5px; text-align: center; opacity: 0.5; cursor: not-allowed;">
-                            <i data-lucide="truck" size="18" style="color: #94a3b8; margin-bottom: 4px;"></i>
-                            <div style="font-weight: 700; font-size: 0.85rem; color: #94a3b8;">Entrega</div>
+                        <div onclick="selectOrderType('entrega', this)" class="order-type-card" title="Pedido para Entrega"
+                             style="border: 1px solid #cbd5e1; background: white; border-radius: 8px; padding: 10px 5px; cursor: pointer; text-align: center; transition: all 0.2s;">
+                            <i data-lucide="truck" size="18" style="color: #64748b; margin-bottom: 4px;"></i>
+                            <div style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">Entrega</div>
                         </div>
                     </div>
                     
@@ -468,9 +480,40 @@ if ($isEditingPaid && $editingOrderId) {
                         
                         <!-- Se NÃO tem cliente -->
                         <div id="retirada-no-client" style="display: none; padding: 10px 12px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <i data-lucide="alert-triangle" size="18" style="color: #d97706;"></i>
-                                <span style="font-weight: 600; color: #92400e; font-size: 0.85rem;">Vincule um cliente na barra lateral</span>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i data-lucide="alert-triangle" size="18" style="color: #d97706;"></i>
+                                    <span style="font-weight: 600; color: #92400e; font-size: 0.85rem;">Vincule um cliente na barra lateral</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AVISO: Entrega - Mostra status dos dados -->
+                    <div id="entrega-alert" style="display: none; margin-top: 12px;">
+                        <!-- Dados de entrega preenchidos -->
+                        <div id="entrega-dados-ok" style="display: none; padding: 10px 12px; background: #d1fae5; border: 1px solid #10b981; border-radius: 8px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i data-lucide="check-circle" size="18" style="color: #059669;"></i>
+                                    <span style="font-weight: 700; color: #065f46; font-size: 0.9rem;">Dados de entrega cadastrados</span>
+                                    <span style="background: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">+ R$ <?= number_format($deliveryFee, 2, ',', '.') ?></span>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <button type="button" onclick="clearDeliveryData()" style="background: none; border: none; color: #dc2626; cursor: pointer; font-size: 0.8rem; text-decoration: underline;">Excluir</button>
+                                    <button type="button" onclick="openDeliveryPanel()" style="background: none; border: none; color: #059669; cursor: pointer; font-size: 0.8rem; text-decoration: underline;">Editar</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Dados de entrega NÃO preenchidos -->
+                        <div id="entrega-dados-pendente" style="display: none; padding: 10px 12px; background: #dbeafe; border: 1px solid #3b82f6; border-radius: 8px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i data-lucide="map-pin" size="18" style="color: #2563eb;"></i>
+                                    <span style="font-weight: 600; color: #1e40af; font-size: 0.85rem;">Preencha os dados da entrega</span>
+                                </div>
+                                <button type="button" onclick="openDeliveryPanel()" style="background: #2563eb; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">Preencher</button>
                             </div>
                         </div>
                     </div>
@@ -494,6 +537,13 @@ if ($isEditingPaid && $editingOrderId) {
             <div style="display: flex; gap: 15px;">
                 <button onclick="closeCheckout()" style="flex: 1; padding: 15px; background: white; border: 1px solid #cbd5e1; color: #475569; border-radius: 10px; font-weight: 700; cursor: pointer;">Cancelar</button>
                 
+                <!-- Botão SALVAR (aparece só em Retirada/Entrega) -->
+                <button id="btn-save-pickup" onclick="savePickupOrder()" 
+                        style="display: none; flex: 1; padding: 15px; background: #f59e0b; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.95rem;">
+                    <i data-lucide="clock" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>
+                    Pagar Depois
+                </button>
+                
                 <button id="btn-finish-sale" onclick="submitSale()" disabled 
                         style="flex: 2; padding: 15px; background: #cbd5e1; color: white; border: none; border-radius: 10px; font-weight: 800; cursor: not-allowed; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; gap: 10px;">
                     CONCLUIR VENDA <i data-lucide="check-circle"></i>
@@ -502,7 +552,76 @@ if ($isEditingPaid && $editingOrderId) {
         </div>
         
     </div>
+    <!-- FIM CHECKOUT PRINCIPAL -->
+    
+    <!-- PAINEL LATERAL: INFORMAÇÕES DE ENTREGA -->
+    <div id="delivery-panel" style="display: none; background: white; width: 320px; border-radius: 0 16px 16px 0; margin-left: -16px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); display: none; flex-direction: column; max-height: 90vh; overflow: hidden;">
+        <!-- Header -->
+        <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 700;">
+                <i data-lucide="map-pin" size="18" style="display: inline-block; vertical-align: middle; margin-right: 6px; color: #2563eb;"></i>
+                Informações de Entrega
+            </h3>
+            <button type="button" onclick="closeDeliveryPanel()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #64748b;">&times;</button>
+        </div>
+        
+        <!-- Campos -->
+        <form id="form-delivery-panel" action="#" onsubmit="return false;" style="padding: 20px; flex: 1; overflow-y: auto;">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 5px; font-weight: 600;">Nome *</label>
+                <input type="text" id="delivery_name" name="pdv_delivery_name_<?= time() ?>" autocomplete="off" data-lpignore="true" placeholder="Nome do cliente" 
+                       style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 5px; font-weight: 600;">Endereço *</label>
+                <input type="text" id="delivery_address" name="pdv_delivery_address_<?= time() ?>" autocomplete="off" data-lpignore="true" placeholder="Rua, Av..." 
+                       style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 5px; font-weight: 600;">Número</label>
+                    <input type="text" id="delivery_number" name="pdv_delivery_number_<?= time() ?>" autocomplete="off" data-lpignore="true" placeholder="Nº" 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 5px; font-weight: 600;">Bairro *</label>
+                    <input type="text" id="delivery_neighborhood" name="pdv_delivery_neighborhood_<?= time() ?>" autocomplete="off" data-lpignore="true" placeholder="Bairro" 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 5px; font-weight: 600;">Telefone</label>
+                <input type="text" id="delivery_phone" name="pdv_delivery_phone_<?= time() ?>" autocomplete="off" data-lpignore="true" placeholder="(00) 00000-0000" 
+                       style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 5px; font-weight: 600;">Complemento</label>
+                <input type="text" id="delivery_complement" name="pdv_delivery_complement_<?= time() ?>" autocomplete="off" data-lpignore="true" placeholder="Apto, Bloco..." 
+                       style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+        </form>
+        
+        <!-- Footer com botões -->
+        <div style="padding: 15px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; gap: 10px;">
+            <button type="button" onclick="closeDeliveryPanel()" 
+                    style="flex: 1; padding: 12px; background: white; border: 1px solid #cbd5e1; color: #475569; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                Cancelar
+            </button>
+            <button type="button" onclick="confirmDeliveryData()" 
+                    style="flex: 1; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
+                Confirmar
+            </button>
+        </div>
     </div>
+    <!-- FIM PAINEL ENTREGA -->
+    
+    </div>
+    <!-- FIM Container Flex -->
+    
 </div>
 
 <!-- MODAL NOVO CLIENTE -->
@@ -540,6 +659,9 @@ if ($isEditingPaid && $editingOrderId) {
         const isEditingPaidOrder = <?= ($isEditingPaid ?? false) ? 'true' : 'false' ?>;
         const originalPaidTotal = <?= $originalPaidTotalFromDB ?? 0 ?>;
         const editingPaidOrderId = <?= $editingOrderId ?? 'null' ?>;
+        
+        // [NOVO] Taxa de entrega configurada
+        const PDV_DELIVERY_FEE = <?= $deliveryFee ?>;
     </script>
 
     <!-- MODAL DE ADICIONAIS -->
@@ -553,11 +675,26 @@ if ($isEditingPaid && $editingOrderId) {
                 <!-- Groups will be injected here -->
                 <div style="text-align: center; color: #64748b;">Carregando opções...</div>
             </div>
-            <div style="padding: 15px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; text-align: right; display: flex; justify-content: flex-end; gap: 10px;">
-                <button onclick="closeExtrasModal()" style="padding: 10px 16px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; cursor: pointer; color: #475569;">Cancelar</button>
-                <button id="btn-add-extras" onclick="confirmExtras()" style="padding: 10px 20px; background: #16a34a; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
-                    Adicionar
-                </button>
+            <div style="padding: 15px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+                <!-- Seletor de Quantidade -->
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-weight: 600; color: #475569; font-size: 0.9rem;">Qtd:</span>
+                    <div style="display: flex; align-items: center; gap: 5px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 4px;">
+                        <button type="button" onclick="decreaseExtrasQty()" 
+                                style="width: 32px; height: 32px; border: none; background: #fee2e2; color: #991b1b; border-radius: 6px; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">−</button>
+                        <span id="extras-qty-display" style="min-width: 35px; text-align: center; font-size: 1.1rem; font-weight: 700; color: #1e293b;">1</span>
+                        <button type="button" onclick="increaseExtrasQty()" 
+                                style="width: 32px; height: 32px; border: none; background: #dcfce7; color: #166534; border-radius: 6px; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+                    </div>
+                </div>
+                
+                <!-- Botões -->
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="closeExtrasModal()" style="padding: 10px 16px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; cursor: pointer; color: #475569;">Cancelar</button>
+                    <button id="btn-add-extras" onclick="confirmExtras()" style="padding: 10px 20px; background: #16a34a; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
+                        Adicionar
+                    </button>
+                </div>
             </div>
         </div>
     </div>

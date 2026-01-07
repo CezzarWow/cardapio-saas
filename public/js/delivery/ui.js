@@ -88,7 +88,31 @@ const DeliveryUI = {
 
         document.getElementById('modal-total').textContent = 'R$ ' + parseFloat(orderData.total || 0).toFixed(2).replace('.', ',');
         document.getElementById('modal-time').textContent = orderData.created_at || '--';
-        document.getElementById('modal-payment').textContent = orderData.payment_method || 'Não informado';
+
+        // [NOVO] Exibe status de pagamento
+        const paymentEl = document.getElementById('modal-payment');
+        const paymentContainer = paymentEl.parentElement;
+
+        // [DEBUG] Forçar conversão para número
+        const isPaidValue = parseInt(orderData.is_paid) || 0;
+        console.log('[Delivery] is_paid original:', orderData.is_paid, 'convertido:', isPaidValue);
+
+        if (isPaidValue === 1) {
+            paymentEl.textContent = '✅ PAGO';
+            paymentContainer.style.background = '#dcfce7';
+            paymentEl.style.color = '#166534';
+        } else {
+            const methodLabels = {
+                'dinheiro': '💵 Dinheiro',
+                'pix': '📱 Pix',
+                'credito': '💳 Crédito',
+                'debito': '💳 Débito',
+                'multiplo': '💰 Múltiplo'
+            };
+            paymentEl.textContent = methodLabels[orderData.payment_method] || orderData.payment_method || 'A pagar';
+            paymentContainer.style.background = '#fee2e2';
+            paymentEl.style.color = '#dc2626';
+        }
 
         // Badge de status
         const badge = document.getElementById('modal-order-badge');

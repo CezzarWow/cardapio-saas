@@ -47,6 +47,20 @@ function getFinalTotal() {
         return difference > 0 ? difference : 0;
     }
 
+    // [NOVO] Adiciona taxa de entrega se for Entrega e dados preenchidos
+    const orderTypeCards = document.querySelectorAll('.order-type-card.active');
+    let isDelivery = false;
+    orderTypeCards.forEach(card => {
+        const label = card.innerText.toLowerCase().trim();
+        if (label.includes('entrega')) isDelivery = true;
+    });
+
+    if (isDelivery && typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled) {
+        if (typeof PDV_DELIVERY_FEE !== 'undefined') {
+            total += PDV_DELIVERY_FEE;
+        }
+    }
+
     return total;
 }
 

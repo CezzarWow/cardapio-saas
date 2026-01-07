@@ -59,7 +59,7 @@ class DeliveryController {
             
             // Query base - busca delivery, retirada e local (regras específicas)
             $sql = "
-                SELECT o.id, o.total, o.status, o.created_at, o.payment_method, o.order_type,
+                SELECT o.id, o.total, o.status, o.created_at, o.payment_method, o.order_type, o.is_paid,
                        c.name as client_name, 
                        c.phone as client_phone,
                        c.address as client_address,

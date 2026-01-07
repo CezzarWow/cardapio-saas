@@ -45,6 +45,7 @@ $orderJson = htmlspecialchars(json_encode([
     'client_address' => $order['client_address'] ?? null,
     'total' => $order['total'] ?? 0,
     'payment_method' => $order['payment_method'] ?? null,
+    'is_paid' => $order['is_paid'] ?? 0,
     'created_at' => date('d/m/Y H:i', strtotime($order['created_at'])),
     'items' => []
 ]), ENT_QUOTES, 'UTF-8');
@@ -80,6 +81,32 @@ $orderJson = htmlspecialchars(json_encode([
         <span class="delivery-card-compact-customer" style="color: <?= $badgeColor ?>; font-weight: 700;">
             <?= $badgeLabel ?>
         </span>
+        
+        <?php
+            // Badge de Pagamento
+            $isPaid = $order['is_paid'] ?? 0;
+            $paymentMethod = $order['payment_method'] ?? '';
+            
+            if ($isPaid == 1) {
+                $paymentBadge = '✅ PAGO';
+                $paymentColor = '#16a34a'; // Verde
+            } else {
+                // Mostra forma de pagamento esperada
+                $methodLabels = [
+                    'dinheiro' => '💵 Dinheiro',
+                    'pix' => '📱 Pix',
+                    'credito' => '💳 Crédito',
+                    'debito' => '💳 Débito',
+                    'multiplo' => '💰 Múltiplo'
+                ];
+                $paymentBadge = $methodLabels[$paymentMethod] ?? '💰 ' . ucfirst($paymentMethod ?: 'A pagar');
+                $paymentColor = '#dc2626'; // Vermelho
+            }
+        ?>
+        <span style="font-size: 0.75rem; font-weight: 600; color: <?= $paymentColor ?>;">
+            <?= $paymentBadge ?>
+        </span>
+        
         <span class="delivery-card-compact-total">
             R$ <?= number_format($order['total'] ?? 0, 2, ',', '.') ?>
         </span>
