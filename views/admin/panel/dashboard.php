@@ -74,7 +74,7 @@ if ($restaurantId) {
             
             <div class="search-bar">
                 <i data-lucide="search" class="search-icon"></i>
-                <input type="text" placeholder="Buscar produtos (F2)..." class="search-input" />
+                <input type="text" id="product-search-input" placeholder="Buscar produtos (F2)..." class="search-input" />
             </div>
 
             <div class="status-badge">

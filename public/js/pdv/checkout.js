@@ -927,24 +927,48 @@ window.confirmDeliveryData = function () {
     PDVCheckout.selectOrderType('entrega');
 
     // [NOVO] Atualiza o TOTAL exibido com a taxa de entrega
-    // Calcula total do carrinho + taxa de entrega
-    let cartTotal = 0;
-    if (typeof cart !== 'undefined' && Array.isArray(cart)) {
-        cart.forEach(item => {
-            cartTotal += item.price * item.quantity;
-        });
+    // [CORRECÃO] Usa PDVCheckout.getFinalTotal() que já calcula corretamente (cache + taxa)
+    let newTotal = 0;
+    if (typeof PDVCheckout !== 'undefined') {
+        newTotal = PDVCheckout.getFinalTotal();
+    } else {
+        // Fallback apenas se PDVCheckout falhar
+        const deliveryFee = (typeof PDV_DELIVERY_FEE !== 'undefined') ? PDV_DELIVERY_FEE : 0;
+        newTotal = deliveryFee;
     }
-    const deliveryFee = (typeof PDV_DELIVERY_FEE !== 'undefined') ? PDV_DELIVERY_FEE : 0;
-    const newTotal = cartTotal + deliveryFee;
 
     const totalDisplay = document.getElementById('checkout-total-display');
     if (totalDisplay) {
         totalDisplay.innerText = 'R$ ' + newTotal.toFixed(2).replace('.', ',');
     }
 
+    // [NOVO - MOVIDO PRA CIMA] Atualiza o Input "Valor a Lançar"
+    // Verifica visualmente se o valor PAGO é R$ 0,00 para garantir atualização
+    const payInput = document.getElementById('pay-amount'); // [CORRIGIDO ID]
+    const paidDisplay = document.getElementById('display-paid');
+
+    if (payInput) {
+        let paidValue = 0;
+        if (paidDisplay) {
+            // Limpa tudo que não é digito ou virgula
+            const raw = paidDisplay.innerText.replace(/[^\d,]/g, '').replace(',', '.');
+            paidValue = parseFloat(raw) || 0;
+        }
+
+        console.log('[ConfirmDelivery] NewTotal:', newTotal, 'Paid:', paidValue);
+
+        if (paidValue < 0.01) { // Considera zero se for menor que 1 centavo
+            payInput.value = newTotal.toFixed(2).replace('.', ',');
+            // Dispara evento para garantir formatação da máscara (R$)
+            payInput.dispatchEvent(new Event('input'));
+        }
+    }
+
     // Atualiza UI do checkout (restante, troco, botão)
     if (typeof updateCheckoutUI === 'function') {
         updateCheckoutUI();
+    } else if (typeof PDVCheckout !== 'undefined' && typeof PDVCheckout.updateCheckoutUI === 'function') {
+        PDVCheckout.updateCheckoutUI();
     }
 };
 
