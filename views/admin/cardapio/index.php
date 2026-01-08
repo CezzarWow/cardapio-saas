@@ -119,8 +119,22 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 <script src="<?= BASE_URL ?>/js/cardapio-admin/pix.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio-admin/whatsapp.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio-admin/forms.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-tabs.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-toggles.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-validation.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-hours.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-delivery.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-cards.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio-admin/combos.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/combos-save.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/combos-edit.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/combos-helpers.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/combos-ui.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio-admin/featured.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/featured-edit.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/featured-dragdrop.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/featured-tabs.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/featured-categories.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio-admin/index.js?v=<?= time() ?>"></script>
 
 <script>
