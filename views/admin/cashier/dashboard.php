@@ -1,6 +1,7 @@
 <?php 
 require __DIR__ . '/../panel/layout/header.php'; 
 require __DIR__ . '/../panel/layout/sidebar.php'; 
+require __DIR__ . '/partials/_summary_card.php';
 ?>
 
 <main class="main-content">
@@ -17,42 +18,13 @@ require __DIR__ . '/../panel/layout/sidebar.php';
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px;">
-            
-            <div style="background: white; padding: 20px; border-radius: 12px; border-left: 5px solid #2563eb; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                <span style="display: block; color: #6b7280; font-size: 0.85rem; font-weight: 600;">TOTAL BRUTO</span>
-                <span style="display: block; font-size: 1.5rem; font-weight: 800; color: #1f2937; margin-top: 5px;">
-                    R$ <?= number_format($resumo['total_bruto'], 2, ',', '.') ?>
-                </span>
-            </div>
-
-            <div style="background: white; padding: 20px; border-radius: 12px; border-left: 5px solid #16a34a; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                <span style="display: block; color: #6b7280; font-size: 0.85rem; font-weight: 600;">DINHEIRO (GAVETA)</span>
-                <span style="display: block; font-size: 1.5rem; font-weight: 800; color: #16a34a; margin-top: 5px;">
-                    R$ <?= number_format($dinheiroEmCaixa, 2, ',', '.') ?>
-                </span>
-                <small style="color: #9ca3af; font-size: 0.75rem;">Início: R$ <?= number_format($caixa['opening_balance'], 2, ',', '.') ?></small>
-            </div>
-
-            <div style="background: white; padding: 20px; border-radius: 12px; border-left: 5px solid #4f46e5; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                <span style="display: block; color: #6b7280; font-size: 0.85rem; font-weight: 600;">CRÉDITO</span>
-                <span style="display: block; font-size: 1.5rem; font-weight: 800; color: #4f46e5; margin-top: 5px;">
-                    R$ <?= number_format($resumo['credito'], 2, ',', '.') ?>
-                </span>
-            </div>
-
-            <div style="background: white; padding: 20px; border-radius: 12px; border-left: 5px solid #f97316; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                <span style="display: block; color: #6b7280; font-size: 0.85rem; font-weight: 600;">DÉBITO</span>
-                <span style="display: block; font-size: 1.5rem; font-weight: 800; color: #f97316; margin-top: 5px;">
-                    R$ <?= number_format($resumo['debito'], 2, ',', '.') ?>
-                </span>
-            </div>
-
-            <div style="background: white; padding: 20px; border-radius: 12px; border-left: 5px solid #9333ea; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                <span style="display: block; color: #6b7280; font-size: 0.85rem; font-weight: 600;">PIX</span>
-                <span style="display: block; font-size: 1.5rem; font-weight: 800; color: #9333ea; margin-top: 5px;">
-                    R$ <?= number_format($resumo['pix'], 2, ',', '.') ?>
-                </span>
-            </div>
+            <?php 
+            renderSummaryCard('TOTAL BRUTO', $resumo['total_bruto'], '#2563eb', '#1f2937');
+            renderSummaryCard('DINHEIRO (GAVETA)', $dinheiroEmCaixa, '#16a34a', null, 'Início: R$ ' . number_format($caixa['opening_balance'], 2, ',', '.'));
+            renderSummaryCard('CRÉDITO', $resumo['credito'], '#4f46e5');
+            renderSummaryCard('DÉBITO', $resumo['debito'], '#f97316');
+            renderSummaryCard('PIX', $resumo['pix'], '#9333ea');
+            ?>
         </div>
 
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
@@ -79,15 +51,14 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                                     <i data-lucide="<?= $icone ?>" size="18"></i>
                                 </div>
                                 <div>
-                                    <strong style="color: #374151; text-transform: capitalize;"><?= $mov['type'] ?></strong>
+                                    <strong style="color: #374151; text-transform: capitalize;"><?= htmlspecialchars($mov['type']) ?></strong>
                                     <div style="font-size: 0.8rem; color: #6b7280;">
-                                        <?= $mov['description'] ?? 'Sem descrição' ?>
+                                        <?= htmlspecialchars($mov['description'] ?? 'Sem descrição') ?>
                                     </div>
 
                                     <div style="margin-top: 5px; display: flex; gap: 10px;">
 
                                         <?php if ($mov['type'] == 'venda' && $mov['order_id']): ?>
-                                            <div style="margin-top: 5px; display: flex; gap: 10px;">
                                                 
                                                 <a href="caixa/estornar-pdv?id=<?= $mov['id'] ?>" 
                                                    onclick="return confirm('Editar venda? O valor sairá do caixa e os itens irão para o balcão.')"
@@ -108,7 +79,6 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                                                     <i data-lucide="scroll-text" size="12"></i> Ver Comanda
                                                 </a>
 
-                                            </div>
                                         <?php endif; ?>
 
                                         <a href="caixa/remover?id=<?= $mov['id'] ?>" 
@@ -166,138 +136,10 @@ require __DIR__ . '/../panel/layout/sidebar.php';
     </div>
 </main>
 
-<div id="modalMovimento" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 25px; border-radius: 12px; width: 400px; max-width: 90%;">
-        <h3 id="modalTitle" style="font-weight: 800; font-size: 1.2rem; margin-bottom: 15px;">Nova Movimentação</h3>
-        
-        <form action="caixa/movimentar" method="POST">
-            <input type="hidden" name="type" id="movType">
-            
-            <label style="display: block; font-weight: 600; margin-bottom: 5px;">Valor (R$)</label>
-            <input type="text" name="amount" required placeholder="0,00" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px;">
+<?php require __DIR__ . '/partials/_modal_movimento.php'; ?>
+<?php require __DIR__ . '/partials/_modal_comanda.php'; ?>
 
-            <label style="display: block; font-weight: 600; margin-bottom: 5px;">Motivo / Descrição</label>
-            <input type="text" name="description" required placeholder="Ex: Pagamento Fornecedor" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px;">
-
-            <div style="display: flex; gap: 10px;">
-                <button type="button" onclick="document.getElementById('modalMovimento').style.display='none'" style="flex: 1; padding: 10px; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer;">Cancelar</button>
-                <button type="submit" class="btn-primary" style="flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer;">Salvar</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-function openModal(type) {
-    const modal = document.getElementById('modalMovimento');
-    const title = document.getElementById('modalTitle');
-    const inputType = document.getElementById('movType');
-
-    inputType.value = type;
-    
-    if(type === 'sangria') {
-        title.innerText = "Retirar Valor (Saída)";
-        title.style.color = "#b91c1c";
-    } else {
-        title.innerText = "Adicionar Dinheiro (Entrada)";
-        title.style.color = "#1d4ed8";
-    }
-    
-    modal.style.display = 'flex';
-}
-</script>
-
-<!-- MODAL COMANDA (Estilo Cupom Fiscal) -->
-<div id="orderDetailsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center;">
-    <div style="background: #fff; padding: 0; border-radius: 5px; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-family: 'Courier New', Courier, monospace; border: 1px solid #e5e7eb;">
-        
-        <!-- Cabeçalho do Cupom -->
-        <div style="background: #fef3c7; padding: 15px; text-align: center; border-bottom: 2px dashed #d1d5db; border-radius: 5px 5px 0 0;">
-            <h3 style="font-weight: 800; font-size: 1.1rem; color: #000; margin: 0; text-transform: uppercase;">Comprovante</h3>
-            <div id="receiptDate" style="font-size: 0.75rem; color: #4b5563; margin-top: 5px;"></div>
-        </div>
-        
-        <!-- Lista de Itens -->
-        <div id="modalItemsList" style="padding: 15px; max-height: 400px; overflow-y: auto; background: #fffbeeb0;">
-            Carregando...
-        </div>
-
-        <!-- Total e Rodapé -->
-        <div style="padding: 15px; background: #fff; border-top: 2px dashed #d1d5db; border-radius: 0 0 5px 5px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 1.1rem;">
-                <span>TOTAL</span>
-                <span id="receiptTotal">R$ 0,00</span>
-            </div>
-            
-            <button onclick="document.getElementById('orderDetailsModal').style.display='none'" 
-                    style="width: 100%; margin-top: 15px; background: #000; color: #fff; border: none; padding: 10px; font-family: sans-serif; font-weight: bold; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-size: 0.8rem;">
-                Fechar
-            </button>
-        </div>
-    </div>
-</div>
-
-<script>
-function openOrderDetails(orderId, total, date) {
-    const modal = document.getElementById('orderDetailsModal');
-    const list = document.getElementById('modalItemsList');
-    const dateEl = document.getElementById('receiptDate');
-    const totalEl = document.getElementById('receiptTotal');
-    
-    // Configura infos básicas
-    dateEl.innerText = 'PEDIDO #' + orderId + ' • ' + date;
-    totalEl.innerText = 'R$ ' + total;
-    
-    // Mostra o modal
-    modal.style.display = 'flex';
-    list.innerHTML = '<p style="text-align:center; padding: 20px 0;">Impressora conectando...</p>';
-
-    // Chama a API
-    fetch('<?= BASE_URL ?>/admin/loja/vendas/itens?id=' + orderId)
-        .then(response => response.json())
-        .then(data => {
-            if(data.length === 0) {
-                list.innerHTML = '<p style="text-align:center;">Sem itens.</p>';
-                return;
-            }
-
-            let html = '<table style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">';
-            
-            data.forEach(item => {
-                let unitPrice = parseFloat(item.price);
-                let subTotal = unitPrice * item.quantity;
-                
-                html += `
-                    <tr>
-                        <td style="padding: 4px 0; vertical-align: top;">
-                            <div style="font-weight:bold;">${item.quantity}x ${item.name}</div>
-                            <div style="font-size:0.7rem; color:#666;">Unit: R$ ${unitPrice.toFixed(2).replace('.', ',')}</div>
-                        </td>
-                        <td style="padding: 4px 0; text-align: right; vertical-align: top; font-weight:bold;">
-                            R$ ${subTotal.toFixed(2).replace('.', ',')}
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            html += '</table>';
-            html += '<div style="margin-top:10px; border-top:1px solid #000; padding-top:5px; font-size:0.7rem; text-align:center;">*** FIM DO COMPROVANTE ***</div>';
-            
-            list.innerHTML = html;
-        })
-        .catch(err => {
-            console.error(err);
-            list.innerHTML = '<p style="color:red; text-align:center;">Erro de conexão.</p>';
-        });
-}
-</script>
-
-
-<script>
-    // Força a renderização dos ícones caso o footer demore
-    if(typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
-</script>
+<script>const BASE_URL = '<?= BASE_URL ?>';</script>
+<script src="<?= BASE_URL ?>/js/admin/cashier.js?v=<?= time() ?>"></script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>

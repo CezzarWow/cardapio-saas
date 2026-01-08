@@ -176,6 +176,12 @@ $statusLabels = [
     const BASE_URL = '<?= BASE_URL ?>';
     if (typeof lucide !== 'undefined') lucide.createIcons();
 </script>
+<!-- DeliveryPrint Modules (carregar SUB-MÓDULOS primeiro) -->
+<script src="<?= BASE_URL ?>/js/delivery/print-helpers.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/delivery/print-generators.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/delivery/print-modal.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/delivery/print-actions.js?v=<?= time() ?>"></script>
+<!-- Orquestrador (carregar POR ÚLTIMO) -->
 <script src="<?= BASE_URL ?>/js/delivery/print.js?v=<?= time() ?>"></script>
 
 <!-- Área de impressão (oculta) -->

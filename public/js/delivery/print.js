@@ -1,340 +1,44 @@
 /**
- * ============================================
- * DELIVERY JS — Print (Impressão de Ficha)
- * ============================================
+ * PRINT.JS - Orquestrador de Impressão Delivery
+ * Namespace: DeliveryPrint
+ * 
+ * Dependências (carregar ANTES deste arquivo):
+ * - print-helpers.js
+ * - print-generators.js
+ * - print-modal.js
+ * - print-actions.js
  */
 
-const DeliveryPrint = {
+const DeliveryPrint = window.DeliveryPrint || {};
 
-    currentOrderId: null,
-    currentOrderData: null,
-    currentItemsData: null,
-    slipType: 'delivery', // 'delivery' ou 'kitchen'
+// ==========================================
+// DELEGAÇÃO PARA MÓDULOS
+// ==========================================
 
-    /**
-     * Abre modal de impressão (ficha do motoboy)
-     */
-    openModal: async function (orderId, type = 'delivery') {
-        this.currentOrderId = orderId;
-        this.slipType = type;
+// Modal Control
+DeliveryPrint.openModal = (orderId, type) => DeliveryPrint.Modal.open(orderId, type);
+DeliveryPrint.closeModal = () => DeliveryPrint.Modal.close();
+DeliveryPrint.showDeliverySlip = () => DeliveryPrint.Modal.showDeliverySlip();
+DeliveryPrint.showKitchenSlip = () => DeliveryPrint.Modal.showKitchenSlip();
 
-        const modal = document.getElementById('deliveryPrintModal');
-        const content = document.getElementById('print-slip-content');
-        const tabsContainer = document.getElementById('print-tabs-container');
+// Actions
+DeliveryPrint.print = () => DeliveryPrint.Actions.print();
+DeliveryPrint.printComplete = (orderData) => DeliveryPrint.Actions.printComplete(orderData);
 
-        if (!modal || !content) return;
+// Generators (acesso direto para uso externo)
+DeliveryPrint.generateSlipHTML = (order, items, title) =>
+    DeliveryPrint.Generators.generateSlipHTML(order, items, title);
+DeliveryPrint.generateKitchenSlipHTML = (order, items) =>
+    DeliveryPrint.Generators.generateKitchenSlipHTML(order, items);
 
-        // Esconde as abas quando tipo já foi especificado (veio do modal de detalhes)
-        if (tabsContainer) {
-            tabsContainer.style.display = 'none';
-        }
+// Helpers (acesso direto para uso externo)
+DeliveryPrint.extractOrderData = (order) => DeliveryPrint.Helpers.extractOrderData(order);
+DeliveryPrint.generateItemsHTML = (items, showPrice) => DeliveryPrint.Helpers.generateItemsHTML(items, showPrice);
 
-        content.innerHTML = '<div style="padding: 40px; text-align: center; color: #64748b;">Carregando...</div>';
-        modal.style.display = 'flex';
+// ==========================================
+// EXPÕE GLOBALMENTE
+// ==========================================
 
-        try {
-            const response = await fetch(BASE_URL + '/admin/loja/delivery/details?id=' + orderId);
-            const data = await response.json();
-
-            if (!data.success) {
-                content.innerHTML = '<div style="padding: 40px; text-align: center; color: #dc2626;">Erro: ' + data.message + '</div>';
-                return;
-            }
-
-            this.currentOrderData = data.order;
-            this.currentItemsData = data.items;
-
-            let html;
-            if (type === 'kitchen') {
-                html = this.generateKitchenSlipHTML(data.order, data.items);
-            } else if (type === 'complete') {
-                html = this.generateCompleteSlipHTML({ ...data.order, items: data.items });
-            } else {
-                html = this.generateSlipHTML(data.order, data.items);
-            }
-            content.innerHTML = html;
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-
-        } catch (err) {
-            content.innerHTML = '<div style="padding: 40px; text-align: center; color: #dc2626;">Erro de conexão</div>';
-        }
-    },
-
-    /**
-     * Alterna para ficha do motoboy
-     */
-    showDeliverySlip: function () {
-        this.slipType = 'delivery';
-        const content = document.getElementById('print-slip-content');
-        if (content && this.currentOrderData) {
-            content.innerHTML = this.generateSlipHTML(this.currentOrderData, this.currentItemsData);
-        }
-    },
-
-    /**
-     * Alterna para ficha da cozinha
-     */
-    showKitchenSlip: function () {
-        this.slipType = 'kitchen';
-        const content = document.getElementById('print-slip-content');
-        if (content && this.currentOrderData) {
-            content.innerHTML = this.generateKitchenSlipHTML(this.currentOrderData, this.currentItemsData);
-        }
-    },
-
-    /**
-     * Fecha modal
-     */
-    closeModal: function () {
-        const modal = document.getElementById('deliveryPrintModal');
-        if (modal) modal.style.display = 'none';
-        this.currentOrderId = null;
-    },
-
-    /**
-     * Gera HTML da ficha do MOTOBOY (entrega)
-     */
-    generateSlipHTML: function (order, items) {
-        const clientName = order.client_name || 'Não identificado';
-        const clientPhone = order.client_phone || '--';
-
-        let clientAddress = order.client_address || 'Endereço não informado';
-        if (order.client_number) clientAddress += ', ' + order.client_number;
-
-        const neighborhood = order.client_neighborhood || order.neighborhood || ''; // Tenta os dois
-        const observations = order.observation || order.observations || ''; // Tenta os dois (banco usa observation)
-        const paymentMethod = order.payment_method || 'Não informado';
-        const changeFor = order.change_for || '';
-        const total = parseFloat(order.total || 0).toFixed(2).replace('.', ',');
-        const date = order.created_at ? new Date(order.created_at).toLocaleString('pt-BR') : '--';
-
-        let itemsHTML = '';
-        if (items && items.length > 0) {
-            items.forEach(item => {
-                const subtotal = (item.quantity * item.price).toFixed(2).replace('.', ',');
-                itemsHTML += `
-                    <div class="print-slip-item">
-                        <span>${item.quantity}x ${item.name}</span>
-                        <span>R$ ${subtotal}</span>
-                    </div>
-                `;
-            });
-        } else {
-            itemsHTML = '<div style="color: #999;">Sem itens</div>';
-        }
-
-        let changeHTML = '';
-        if (paymentMethod.toLowerCase() === 'dinheiro' && changeFor) {
-            changeHTML = `<div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-radius: 4px; font-weight: bold;">💵 TROCO PARA: R$ ${parseFloat(changeFor).toFixed(2).replace('.', ',')}</div>`;
-        }
-
-        return `
-            <div class="print-slip">
-                <div class="print-slip-header">
-                    <h2>🛵 FICHA DE ENTREGA</h2>
-                    <div>Pedido #${order.id}</div>
-                    <div style="font-size: 10px; color: #666;">${date}</div>
-                </div>
-
-                <div class="print-slip-section">
-                    <h4>👤 Dados do Cliente:</h4>
-                    <div><strong>Nome:</strong> ${clientName}</div>
-                    <div><strong>Telefone:</strong> ${clientPhone}</div>
-                </div>
-
-                <div class="print-slip-section">
-                    <h4>📍 Endereço de Entrega:</h4>
-                    <div style="padding: 8px; background: #f5f5f5; border-radius: 4px;">
-                        ${clientAddress}
-                        ${neighborhood ? '<br><strong>Bairro:</strong> ' + neighborhood : ''}
-                    </div>
-                    ${observations ? '<div style="margin-top: 8px; font-weight: bold; color: #000;">📝 ' + observations + '</div>' : ''}
-                </div>
-
-                <div class="print-slip-section">
-                    <h4>📦 Itens:</h4>
-                    ${itemsHTML}
-                </div>
-
-                <div class="print-slip-section">
-                    <h4>💳 Pagamento:</h4>
-                    <div style="font-weight: bold; font-size: 14px;">${paymentMethod.toUpperCase()}</div>
-                    ${changeHTML}
-                </div>
-
-                <div class="print-slip-total">
-                    TOTAL: R$ ${total}
-                </div>
-            </div>
-        `;
-    },
-
-    /**
-     * Gera HTML da ficha da COZINHA
-     */
-    generateKitchenSlipHTML: function (order, items) {
-        const date = order.created_at ? new Date(order.created_at).toLocaleString('pt-BR') : '--';
-
-        // Tipo do pedido
-        const orderType = order.order_type || 'local';
-        const typeLabels = {
-            'delivery': '🛵 ENTREGA',
-            'pickup': '🏃 RETIRADA',
-            'local': '🍽️ CONSUMO LOCAL'
-        };
-        const typeLabel = typeLabels[orderType] || '🍽️ CONSUMO LOCAL';
-
-        let itemsHTML = '';
-        if (items && items.length > 0) {
-            items.forEach(item => {
-                itemsHTML += `
-                    <div style="padding: 8px 0; border-bottom: 1px dashed #ccc; font-size: 14px;">
-                        <strong style="font-size: 18px;">${item.quantity}x</strong> ${item.name}
-                    </div>
-                `;
-            });
-        } else {
-            itemsHTML = '<div style="color: #999;">Sem itens</div>';
-        }
-
-        return `
-            <div class="print-slip" style="font-size: 14px;">
-                <div class="print-slip-header" style="text-align: center; padding: 15px 0; border-bottom: 3px solid #333;">
-                    <h2 style="margin: 0; font-size: 24px;">🍳 COZINHA</h2>
-                    <div style="font-size: 12px; margin-top: 5px;">${date}</div>
-                </div>
-
-                <div style="text-align: center; padding: 15px; background: #f0f0f0; margin: 10px 0; border-radius: 8px;">
-                    <div style="font-size: 22px; font-weight: bold;">${typeLabel}</div>
-                    <div style="margin-top: 5px;">Pedido #${order.id}</div>
-                </div>
-
-                <div style="padding: 10px 0;">
-                    <h4 style="margin: 0 0 10px 0; font-size: 16px; text-transform: uppercase; border-bottom: 2px solid #333; padding-bottom: 5px;">Itens do Pedido:</h4>
-                    ${itemsHTML}
-                </div>
-            </div>
-        `;
-    },
-
-    /**
-     * Imprime a ficha
-     */
-    print: function () {
-        const content = document.getElementById('print-slip-content');
-        const printArea = document.getElementById('print-area');
-
-        if (!content || !printArea) return;
-
-        printArea.innerHTML = content.innerHTML;
-        window.print();
-
-        this.closeModal();
-    },
-
-    /**
-     * Imprime ficha completa diretamente (sem modal)
-     */
-    printComplete: function (orderData) {
-        if (!orderData) {
-            alert('Dados do pedido não disponíveis');
-            return;
-        }
-
-        const printArea = document.getElementById('print-area');
-        if (!printArea) {
-            alert('Área de impressão não encontrada');
-            return;
-        }
-
-        // Gera HTML da ficha completa
-        const html = this.generateCompleteSlipHTML(orderData);
-        printArea.innerHTML = html;
-        window.print();
-    },
-
-    /**
-     * Gera HTML da ficha COMPLETA (todas as informações)
-     * Usa o mesmo visual da ficha do Motoboy
-     */
-    generateCompleteSlipHTML: function (order) {
-        const clientName = order.client_name || 'Não identificado';
-        const clientPhone = order.client_phone || '--';
-
-        let clientAddress = order.client_address || 'Endereço não informado';
-        if (order.client_number) clientAddress += ', ' + order.client_number;
-
-        const neighborhood = order.client_neighborhood || order.neighborhood || '';
-        const observations = order.observation || order.observations || '';
-
-        const paymentMethod = order.payment_method || 'Não informado';
-        const changeFor = order.change_for || '';
-        const total = parseFloat(order.total || 0).toFixed(2).replace('.', ',');
-        const date = order.created_at ? new Date(order.created_at).toLocaleString('pt-BR') : '--';
-        const items = order.items || [];
-
-        let itemsHTML = '';
-        if (items.length > 0) {
-            items.forEach(item => {
-                const subtotal = (item.quantity * item.price).toFixed(2).replace('.', ',');
-                itemsHTML += `
-                    <div class="print-slip-item">
-                        <span>${item.quantity}x ${item.name}</span>
-                        <span>R$ ${subtotal}</span>
-                    </div>
-                `;
-            });
-        } else {
-            itemsHTML = '<div style="color: #999;">Sem itens</div>';
-        }
-
-        let changeHTML = '';
-        if (paymentMethod.toLowerCase() === 'dinheiro' && changeFor) {
-            changeHTML = `<div style="margin-top: 8px; padding: 8px; background: #fff3cd; border-radius: 4px; font-weight: bold;">💵 TROCO PARA: R$ ${parseFloat(changeFor).toFixed(2).replace('.', ',')}</div>`;
-        }
-
-        return `
-            <div class="print-slip">
-                <div class="print-slip-header">
-                    <h2>📋 FICHA DO PEDIDO</h2>
-                    <div>Pedido #${order.id}</div>
-                    <div style="font-size: 10px; color: #666;">${date}</div>
-                </div>
-
-                <div class="print-slip-section">
-                    <h4>👤 Dados do Cliente:</h4>
-                    <div><strong>Nome:</strong> ${clientName}</div>
-                    <div><strong>Telefone:</strong> ${clientPhone}</div>
-                </div>
-
-                <div class="print-slip-section">
-                    <h4>📍 Endereço de Entrega:</h4>
-                    <div style="padding: 8px; background: #f5f5f5; border-radius: 4px;">
-                        ${clientAddress}
-                        ${neighborhood ? '<br><strong>Bairro:</strong> ' + neighborhood : ''}
-                    </div>
-                    ${observations ? '<div style="margin-top: 8px; font-weight: bold; color: #000;">📝 ' + observations + '</div>' : ''}
-                </div>
-
-                <div class="print-slip-section">
-                    <h4>📦 Itens:</h4>
-                    ${itemsHTML}
-                </div>
-
-                <div class="print-slip-section">
-                    <h4>💳 Pagamento:</h4>
-                    <div style="font-weight: bold; font-size: 14px;">${paymentMethod.toUpperCase()}</div>
-                    ${changeHTML}
-                </div>
-
-                <div class="print-slip-total">
-                    TOTAL: R$ ${total}
-                </div>
-            </div>
-        `;
-    }
-};
-
-// Expõe globalmente
 window.DeliveryPrint = DeliveryPrint;
+
+console.log('[DeliveryPrint] Orquestrador carregado');

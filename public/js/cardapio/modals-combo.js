@@ -16,6 +16,17 @@
     CardapioModals.comboSelections = {}; // { productId: [ {id, name, price} ] }
 
     // ==========================================
+    // HELPER: CALCULAR TOTAL DE EXTRAS
+    // ==========================================
+    CardapioModals.calculateExtrasTotal = function () {
+        let total = 0;
+        Object.values(this.comboSelections).forEach(list => {
+            list.forEach(item => total += item.price);
+        });
+        return total;
+    };
+
+    // ==========================================
     // ABRIR MODAL DE COMBO
     // ==========================================
     CardapioModals.openCombo = function (comboId) {
@@ -225,11 +236,7 @@
     };
 
     CardapioModals.updateComboPrice = function () {
-        let totalExtras = 0;
-        Object.values(this.comboSelections).forEach(list => {
-            list.forEach(item => totalExtras += item.price);
-        });
-
+        const totalExtras = this.calculateExtrasTotal();
         const total = (parseFloat(this.currentCombo.price) + totalExtras) * this.comboQuantity;
 
         document.getElementById('modalComboQuantity').textContent = this.comboQuantity;
@@ -243,11 +250,7 @@
         if (!this.currentCombo) return;
 
         const observation = document.getElementById('modalComboObservation').value.trim();
-
-        let totalExtras = 0;
-        Object.values(this.comboSelections).forEach(list => {
-            list.forEach(item => totalExtras += item.price);
-        });
+        const totalExtras = this.calculateExtrasTotal();
 
         const productsList = this.currentCombo.items.map(item => {
             const extras = this.comboSelections[item.product_id] || [];
