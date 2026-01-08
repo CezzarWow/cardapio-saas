@@ -194,4 +194,22 @@ abstract class BaseController {
     protected function postInt(string $key, int $default = 0): int {
         return intval($_POST[$key] ?? $default);
     }
+
+    /**
+     * Retorna o body da requisição como array (para APIs JSON)
+     */
+    protected function getJsonBody(): array {
+        $content = file_get_contents('php://input');
+        return json_decode($content, true) ?? [];
+    }
+
+    /**
+     * Retorna o ID do usuário logado (para auditoria)
+     */
+    protected function getUserId(): int {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        return (int) ($_SESSION['user_id'] ?? 1); // Default 1 para dev
+    }
 }

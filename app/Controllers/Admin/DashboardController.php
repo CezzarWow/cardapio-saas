@@ -1,20 +1,28 @@
 <?php
+
 namespace App\Controllers\Admin;
 
-use App\Core\Database;
-use PDO;
+use App\Services\RestaurantService;
 
-class DashboardController {
+/**
+ * DashboardController - Super Thin
+ * Tela inicial do Admin (Seleção de Loja / Visão Geral)
+ */
+class DashboardController extends BaseController
+{
+    private RestaurantService $restaurantService;
+
+    public function __construct() {
+        $this->restaurantService = new RestaurantService();
+    }
     
     public function index() {
-        // 1. Conecta no banco
-        $conn = Database::connect();
+        $userId = $this->getUserId(); // Método do BaseController (valida sessão)
 
-        // 2. Busca todos os restaurantes cadastrados
-        $stmt = $conn->query("SELECT * FROM restaurants ORDER BY id DESC");
-        $restaurants = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Busca apenas restaurantes do usuário logado
+        $restaurants = $this->restaurantService->getByUser($userId);
 
-        // 3. Carrega a tela (enviando a variável $restaurants junto)
+        // View espera $restaurants
         require __DIR__ . '/../../../views/admin/dashboard.php';
     }
 }

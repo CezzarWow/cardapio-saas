@@ -28,13 +28,17 @@ const CheckoutSubmit = {
 
         // Detecta qual tipo de pedido está selecionado
         const orderTypeCards = document.querySelectorAll('.order-type-card.active');
-        let selectedOrderType = 'local';
+        let selectedOrderType = 'balcao'; // Default para venda de balcão (não aparece em Delivery)
+
+        // Só muda o tipo se tiver um card ativo E cliente/mesa selecionado
+        const hasClientOrTable = !!(clientId || tableId);
 
         orderTypeCards.forEach(card => {
             const label = card.innerText.toLowerCase().trim();
             if (label.includes('retirada')) selectedOrderType = 'pickup';
             else if (label.includes('entrega')) selectedOrderType = 'delivery';
-            else if (label.includes('local')) selectedOrderType = 'local';
+            else if (label.includes('local') && hasClientOrTable) selectedOrderType = 'local';
+            // Se 'local' mas sem cliente/mesa, mantém 'balcao'
         });
 
         // Se tem pagamentos registrados, significa que pagou

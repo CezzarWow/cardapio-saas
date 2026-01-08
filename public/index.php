@@ -45,10 +45,10 @@ Router::add('/admin/autologin', AutologinController::class, 'login');
 // ============================================================
 // GRUPO 3: Painel/PDV (migradas para Router)
 // ============================================================
-Router::add('/admin/loja/painel', \App\Controllers\Admin\ProductController::class, 'index');
-Router::add('/admin/loja/pdv', \App\Controllers\Admin\ProductController::class, 'index');
+Router::add('/admin/loja/painel', \App\Controllers\Admin\PdvController::class, 'index');
+Router::add('/admin/loja/pdv', \App\Controllers\Admin\PdvController::class, 'index');
 Router::add('/admin/loja/mesas', \App\Controllers\Admin\TableController::class, 'index');
-Router::add('/admin/loja/pdv/cancelar-edicao', \App\Controllers\Admin\ProductController::class, 'cancelEdit');
+Router::add('/admin/loja/pdv/cancelar-edicao', \App\Controllers\Admin\PdvController::class, 'cancelEdit');
 
 // ============================================================
 // GRUPO 4: Delivery (migradas para Router)

@@ -1,122 +1,126 @@
 <?php
+
 namespace App\Controllers\Admin;
 
-use App\Core\Database;
-use PDO;
+use App\Services\CategoryService;
+use App\Validators\CategoryValidator;
+use Exception;
 
 /**
- * Controller de Categorias - Layout Moderno
- * CRUD completo com padrão de sub-abas do Estoque
+ * Controller de Categorias - Super Thin
+ * Layout Moderno - CRUD completo
  */
-class CategoryController {
+class CategoryController extends BaseController
+{
+    private CategoryService $service;
+    private CategoryValidator $validator;
 
-    public function index() {
-        $this->checkSession();
-        $conn = Database::connect();
-        $restaurantId = $_SESSION['loja_ativa_id'];
+    public function __construct()
+    {
+        $this->service = new CategoryService();
+        $this->validator = new CategoryValidator();
+    }
 
-        $stmt = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :id ORDER BY name ASC");
-        $stmt->execute(['id' => $restaurantId]);
-        $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    /**
+     * Listagem
+     */
+    public function index(): void
+    {
+        $restaurantId = $this->getRestaurantId();
+        $categories = $this->service->list($restaurantId);
 
         require __DIR__ . '/../../../views/admin/categories/index.php';
     }
 
-    public function store() {
-        $this->checkSession();
+    /**
+     * Salvar Categoria
+     */
+    public function store(): void
+    {
+        $restaurantId = $this->getRestaurantId();
         
-        $name = trim($_POST['name'] ?? '');
-        $restaurantId = $_SESSION['loja_ativa_id'];
-
-        if (!empty($name)) {
-            $conn = Database::connect();
-            $stmt = $conn->prepare("INSERT INTO categories (restaurant_id, name) VALUES (:rid, :name)");
-            $stmt->execute([
-                'rid' => $restaurantId,
-                'name' => $name
-            ]);
+        $errors = $this->validator->validateStore($_POST);
+        if ($this->validator->hasErrors($errors)) {
+            $this->redirect('/admin/loja/categorias?error=' . urlencode($this->validator->getFirstError($errors)));
         }
 
-        header('Location: ' . BASE_URL . '/admin/loja/categorias?success=criado');
-        exit;
+        try {
+            $this->service->create($_POST, $restaurantId);
+            $this->redirect('/admin/loja/categorias?success=criado');
+        } catch (Exception $e) {
+            error_log('CategoryController::store Error: ' . $e->getMessage());
+            $this->redirect('/admin/loja/categorias?error=falha_criar');
+        }
     }
 
-    public function edit() {
-        $this->checkSession();
-        $conn = Database::connect();
-        $restaurantId = $_SESSION['loja_ativa_id'];
+    /**
+     * Formulário de edição
+     */
+    public function edit(): void
+    {
+        $restaurantId = $this->getRestaurantId();
+        $id = $this->getInt('id');
 
-        $id = intval($_GET['id'] ?? 0);
-        
-        $stmt = $conn->prepare("SELECT * FROM categories WHERE id = :id AND restaurant_id = :rid");
-        $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
-        $category = $stmt->fetch(PDO::FETCH_ASSOC);
+        $errors = $this->validator->validateId($id);
+        if ($this->validator->hasErrors($errors)) {
+            $this->redirect('/admin/loja/categorias?error=id_invalido');
+        }
+
+        $category = $this->service->findById($id, $restaurantId);
 
         if (!$category) {
-            header('Location: ' . BASE_URL . '/admin/loja/categorias');
-            exit;
+            $this->redirect('/admin/loja/categorias?error=nao_encontrado');
         }
 
         require __DIR__ . '/../../../views/admin/categories/edit.php';
     }
 
-    public function update() {
-        $this->checkSession();
-        
-        $id = intval($_POST['id'] ?? 0);
-        $name = trim($_POST['name'] ?? '');
-        $restaurantId = $_SESSION['loja_ativa_id'];
+    /**
+     * Atualizar Categoria
+     */
+    public function update(): void
+    {
+        $restaurantId = $this->getRestaurantId();
+        $id = $this->postInt('id'); // Nota: postInt helper deve existir ou ser simulado com (int)$_POST
 
-        if ($id > 0 && !empty($name)) {
-            $conn = Database::connect();
-            $stmt = $conn->prepare("UPDATE categories SET name = :name WHERE id = :id AND restaurant_id = :rid");
-            $stmt->execute([
-                'name' => $name,
-                'id' => $id,
-                'rid' => $restaurantId
-            ]);
+        // Fallback se postInt não existir no BaseController (vou assumir que existe pelo padrão ou usar (int))
+        if (!method_exists($this, 'postInt')) {
+            $id = (int)($_POST['id'] ?? 0);
         }
 
-        header('Location: ' . BASE_URL . '/admin/loja/categorias?success=atualizado');
-        exit;
+        $errors = $this->validator->validateUpdate($_POST);
+        if ($this->validator->hasErrors($errors)) {
+            $this->redirect('/admin/loja/categorias?error=' . urlencode($this->validator->getFirstError($errors)));
+        }
+
+        try {
+            $this->service->update($id, $_POST, $restaurantId);
+            $this->redirect('/admin/loja/categorias?success=atualizado');
+        } catch (Exception $e) {
+            error_log('CategoryController::update Error: ' . $e->getMessage());
+            $this->redirect('/admin/loja/categorias?error=falha_atualizar');
+        }
     }
     
-    public function delete() {
-        $this->checkSession();
-        
-        $id = intval($_GET['id'] ?? 0);
-        $restaurantId = $_SESSION['loja_ativa_id'];
+    /**
+     * Deletar Categoria
+     */
+    public function delete(): void
+    {
+        $restaurantId = $this->getRestaurantId();
+        $id = $this->getInt('id');
 
-        if ($id > 0) {
-            $conn = Database::connect();
-            
-            // Verifica se é categoria de sistema (não pode ser deletada)
-            $checkStmt = $conn->prepare("SELECT category_type FROM categories WHERE id = :id AND restaurant_id = :rid");
-            $checkStmt->execute(['id' => $id, 'rid' => $restaurantId]);
-            $category = $checkStmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($category && in_array($category['category_type'], ['featured', 'combos'])) {
-                // Categoria de sistema - não pode excluir
-                header('Location: ' . BASE_URL . '/admin/loja/categorias?error=' . urlencode('Categorias de sistema não podem ser excluídas.'));
-                exit;
-            }
-            
-            $stmt = $conn->prepare("DELETE FROM categories WHERE id = :id AND restaurant_id = :rid");
-            $stmt->execute([
-                'id' => $id,
-                'rid' => $restaurantId
-            ]);
+        $errors = $this->validator->validateId($id);
+        if ($this->validator->hasErrors($errors)) {
+            $this->redirect('/admin/loja/categorias?error=id_invalido');
         }
-        
-        header('Location: ' . BASE_URL . '/admin/loja/categorias?success=deletado');
-        exit;
-    }
 
-    private function checkSession() {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            header('Location: ' . BASE_URL . '/admin');
-            exit;
+        try {
+            $this->service->delete($id, $restaurantId);
+            $this->redirect('/admin/loja/categorias?success=deletado');
+        } catch (Exception $e) {
+            // Se for exceção de negócio (sistema)
+            $this->redirect('/admin/loja/categorias?error=' . urlencode($e->getMessage()));
         }
     }
 }

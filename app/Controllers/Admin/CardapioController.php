@@ -1,141 +1,221 @@
 <?php
-/**
- * ============================================
- * CARDÁPIO CONTROLLER - DDD Lite
- * Gerencia configurações do cardápio web
- * ============================================
- */
 
 namespace App\Controllers\Admin;
 
 use App\Services\Cardapio\CardapioQueryService;
 use App\Services\Cardapio\UpdateCardapioConfigService;
 use App\Services\Admin\ComboService;
+use App\Validators\CardapioValidator;
+use App\Core\Logger;
+use Exception;
 
-class CardapioController {
+/**
+ * CardapioController - Super Thin
+ * Gerencia configurações e combos do cardápio web
+ */
+class CardapioController extends BaseController
+{
+    private CardapioQueryService $queryService;
+    private UpdateCardapioConfigService $configService;
+    private ComboService $comboService;
+    private CardapioValidator $validator;
 
-    // ==========================================
-    // LISTAGEM PRINCIPAL (VIEW)
-    // ==========================================
-    public function index() {
-        $this->checkSession();
-        $restaurantId = $_SESSION['loja_ativa_id'];
+    public function __construct()
+    {
+        $this->queryService = new CardapioQueryService();
+        $this->configService = new UpdateCardapioConfigService();
+        $this->comboService = new ComboService();
+        $this->validator = new CardapioValidator();
+    }
+
+    /**
+     * Listagem principal e Configurações
+     */
+    public function index(): void
+    {
+        $restaurantId = $this->getRestaurantId();
         
-        $queryService = new CardapioQueryService();
-        $data = $queryService->getIndexData($restaurantId);
-        
-        // Extrai variáveis para a view
+        $data = $this->queryService->getIndexData($restaurantId);
         extract($data);
 
         require __DIR__ . '/../../../views/admin/cardapio/index.php';
     }
 
-    // ==========================================
-    // ATUALIZAR CONFIGURAÇÕES
-    // ==========================================
-    public function update() {
-        $this->checkSession();
-        $restaurantId = $_SESSION['loja_ativa_id'];
+    /**
+     * Atualizar configurações
+     */
+    public function update(): void
+    {
+        $restaurantId = $this->getRestaurantId();
         
-        $service = new UpdateCardapioConfigService();
-        $service->execute($restaurantId, $_POST);
+        // Validação (opcional por enquanto, mas estrutura pronta)
+        // $errors = $this->validator->validateConfig($_POST);
+        
+        try {
+            $this->configService->execute($restaurantId, $_POST);
 
-        // Log da ação
-        if (class_exists('\App\Core\Logger')) {
-            \App\Core\Logger::info('Configurações do cardápio atualizadas', [
-                'restaurant_id' => $restaurantId
-            ]);
+            if (class_exists(Logger::class)) {
+                Logger::info('Configurações do cardápio atualizadas', ['restaurant_id' => $restaurantId]);
+            }
+
+            $this->redirect('/admin/loja/cardapio?success=salvo#destaques');
+        } catch (Exception $e) {
+            error_log('CardapioConfig::update Error: ' . $e->getMessage());
+            $this->redirect('/admin/loja/cardapio?error=falha_salvar');
         }
-
-        header('Location: ' . BASE_URL . '/admin/loja/cardapio?success=salvo#destaques');
-        exit;
     }
 
-    // ==========================================
-    // COMBO: FORMULÁRIO
-    // ==========================================
-    public function comboForm() {
-        $this->checkSession();
-        $restaurantId = $_SESSION['loja_ativa_id'];
+    /**
+     * Formulário de criação de Combo
+     */
+    public function comboForm(): void
+    {
+        $restaurantId = $this->getRestaurantId();
 
         $combo = null;
         $comboProducts = [];
+        $comboItemsSettings = []; // Configurações vazias padrão
 
-        $queryService = new CardapioQueryService();
-        $data = $queryService->getComboFormData($restaurantId);
+        $data = $this->queryService->getComboFormData($restaurantId);
         $products = $data['products'];
 
         require __DIR__ . '/../../../views/admin/cardapio/combo_form.php';
     }
 
-    // ==========================================
-    // COMBO: CRIAR (delega para ComboService)
-    // ==========================================
-    public function storeCombo() {
-        $this->checkSession();
-        $service = new ComboService();
-        $service->store();
+    /**
+     * Salvar Combo
+     */
+    public function storeCombo(): void
+    {
+        $restaurantId = $this->getRestaurantId();
+
+        $errors = $this->validator->validateCombo($_POST);
+        if ($this->validator->hasErrors($errors)) {
+            $this->redirect('/admin/loja/cardapio/combo/criar?error=' . urlencode($this->validator->getFirstError($errors)));
+        }
+
+        try {
+            $this->comboService->store($_POST, $restaurantId);
+            $this->redirect('/admin/loja/cardapio?success=combo_criado');
+        } catch (Exception $e) {
+            error_log('Combo::store Error: ' . $e->getMessage());
+            $this->redirect('/admin/loja/cardapio?error=falha_criar_combo');
+        }
     }
 
-    // ==========================================
-    // COMBO: EDITAR
-    // ==========================================
-    public function editCombo() {
-        $this->checkSession();
-        $restaurantId = $_SESSION['loja_ativa_id'];
-        
-        // Se for AJAX, o Service faz o exit internamente
-        $service = new ComboService();
-        $result = $service->getForEdit();
-        
-        // Se chegou aqui, é requisição tradicional (view)
+    /**
+     * Editar Combo (View e AJAX)
+     */
+    public function editCombo(): void
+    {
+        $restaurantId = $this->getRestaurantId();
+        $id = $this->getInt('id');
+        $isAjax = isset($_GET['json']) && $_GET['json'] == '1';
+
+        $errors = $this->validator->validateId($id);
+        if ($this->validator->hasErrors($errors)) {
+            if ($isAjax) {
+                $this->json(['success' => false, 'error' => $this->validator->getFirstError($errors)], 400);
+            }
+            $this->redirect('/admin/loja/cardapio?error=id_invalido');
+            return; // Garante retorno
+        }
+
+        $result = $this->comboService->getForEdit($id, $restaurantId);
+
+        if (!$result) {
+            if ($isAjax) {
+                $this->json(['success' => false, 'error' => 'Combo não encontrado'], 404);
+            }
+            $this->redirect('/admin/loja/cardapio?error=combo_nao_encontrado');
+            return; // Garante retorno
+        }
+
+        // Se for AJAX, retorna JSON
+        if ($isAjax) {
+            $this->json([
+                'success' => true,
+                'combo' => $result['combo'],
+                'items' => $result['items'],
+                'settings' => $result['comboItemsSettings']
+            ]);
+        }
+
+        // Se for View tradicional
         $combo = $result['combo'];
         $comboProducts = $result['comboProducts'];
         $comboItemsSettings = $result['comboItemsSettings'];
         
-        // Buscar produtos para a view
-        $queryService = new CardapioQueryService();
-        $data = $queryService->getComboFormData($restaurantId);
+        // Produtos para o select
+        $data = $this->queryService->getComboFormData($restaurantId);
         $products = $data['products'];
 
         require __DIR__ . '/../../../views/admin/cardapio/combo_form.php';
     }
 
-    // ==========================================
-    // COMBO: ATUALIZAR (delega para ComboService)
-    // ==========================================
-    public function updateCombo() {
-        $this->checkSession();
-        $service = new ComboService();
-        $service->update();
+    /**
+     * Atualizar Combo
+     */
+    public function updateCombo(): void
+    {
+        $restaurantId = $this->getRestaurantId();
+        $id = $this->postInt('id');
+
+        $errors = $this->validator->validateCombo($_POST);
+        if ($this->validator->hasErrors($errors)) {
+            $this->redirect('/admin/loja/cardapio/combo/editar?id=' . $id . '&error=' . urlencode($this->validator->getFirstError($errors)));
+        }
+
+        try {
+            $this->comboService->update($id, $_POST, $restaurantId);
+            $this->redirect('/admin/loja/cardapio?success=combo_atualizado');
+        } catch (Exception $e) {
+            error_log('Combo::update Error: ' . $e->getMessage());
+            $this->redirect('/admin/loja/cardapio/combo/editar?id=' . $id . '&error=falha_atualizar_combo');
+        }
     }
 
-    // ==========================================
-    // COMBO: DELETAR (delega para ComboService)
-    // ==========================================
-    public function deleteCombo() {
-        $this->checkSession();
-        $service = new ComboService();
-        $service->delete();
+    /**
+     * Deletar Combo
+     */
+    public function deleteCombo(): void
+    {
+        $restaurantId = $this->getRestaurantId();
+        $id = $this->getInt('id');
+
+        $errors = $this->validator->validateId($id);
+        if ($this->validator->hasErrors($errors)) {
+            $this->redirect('/admin/loja/cardapio?error=id_invalido');
+        }
+
+        try {
+            $this->comboService->delete($id, $restaurantId);
+            $this->redirect('/admin/loja/cardapio?success=combo_deletado');
+        } catch (Exception $e) {
+            error_log('Combo::delete Error: ' . $e->getMessage());
+            $this->redirect('/admin/loja/cardapio?error=falha_deletar_combo');
+        }
     }
 
-    // ==========================================
-    // COMBO: TOGGLE STATUS (delega para ComboService)
-    // ==========================================
-    public function toggleComboStatus() {
-        $this->checkSession();
-        $service = new ComboService();
-        $service->toggleStatus();
-    }
+    /**
+     * Alternar Status do Combo (AJAX)
+     */
+    public function toggleComboStatus(): void
+    {
+        $restaurantId = $this->getRestaurantId();
+        $data = $this->getJsonBody();
 
-    // ==========================================
-    // SESSÃO
-    // ==========================================
-    private function checkSession() {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            header('Location: ' . BASE_URL . '/admin');
-            exit;
+        $errors = $this->validator->validateToggleStatus($data);
+        if ($this->validator->hasErrors($errors)) {
+            $this->json(['success' => false, 'error' => $this->validator->getFirstError($errors)], 400);
+        }
+
+        try {
+            $active = !empty($data['active']);
+            $success = $this->comboService->toggleStatus((int)$data['id'], $active, $restaurantId);
+            $this->json(['success' => $success]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
 }

@@ -1,18 +1,11 @@
 <?php
+
 namespace App\Controllers\Admin;
 
-class ConfigGeraisController {
+class ConfigGeraisController extends BaseController {
 
     public function index() {
-        $this->checkSession();
+        $this->getRestaurantId(); // Checa sessão
         require __DIR__ . '/../../../views/admin/config-gerais/index.php';
-    }
-
-    private function checkSession() {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            header('Location: ' . BASE_URL . '/admin');
-            exit;
-        }
     }
 }

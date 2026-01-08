@@ -1,66 +1,54 @@
 <?php
-/**
- * ============================================
- * DELIVERY CONTROLLER - DDD Lite
- * Gerencia pedidos de delivery/pickup/local
- * ============================================
- */
 namespace App\Controllers\Admin;
 
-use App\Services\Delivery\DeliveryQueryService;
-use App\Services\Delivery\UpdateOrderStatusService;
-use App\Services\Delivery\SendToTableService;
+use App\Services\Delivery\DeliveryService;
+use App\Validators\DeliveryValidator;
 
-class DeliveryController {
+/**
+ * DeliveryController - Super Thin
+ * Gerencia kanban e histórico de delivery
+ */
+class DeliveryController extends BaseController {
 
-    // ==========================================
-    // LISTAGEM (VIEW)
-    // ==========================================
+    private DeliveryService $service;
+    private DeliveryValidator $v;
+
+    public function __construct() {
+        $this->service = new DeliveryService();
+        $this->v = new DeliveryValidator();
+    }
+
+    // === VIEWS ===
     public function index() {
-        $this->checkSession();
-        
-        $restaurant_id = $_SESSION['loja_ativa_id'];
+        $rid = $this->getRestaurantId();
+        // Filtro opcional na URL
         $statusFilter = $_GET['status'] ?? null;
         
-        $queryService = new DeliveryQueryService();
-        $orders = $queryService->getOrders($restaurant_id, $statusFilter);
+        $orders = $this->service->getOrders($rid, $statusFilter);
         
         require __DIR__ . '/../../../views/admin/delivery/index.php';
     }
 
-    // ==========================================
-    // LISTAGEM PARCIAL (POLLING AJAX)
-    // ==========================================
     public function list() {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            http_response_code(401);
-            echo 'Sessão expirada';
-            exit;
-        }
-
-        $restaurant_id = $_SESSION['loja_ativa_id'];
+        // Método AJAX para polling do Kanban
+        // Como é um partial view, precisamos garantir sessão mas talvez não redirect
+        // O BaseController->getRestaurantId() redireciona se falhar? Sim.
+        // Para AJAX puro talvez fosse melhor retornar 401, mas vamos manter simples por enquanto.
+        $rid = $this->getRestaurantId();
         $statusFilter = $_GET['status'] ?? null;
         
-        $queryService = new DeliveryQueryService();
-        $orders = $queryService->getOrders($restaurant_id, $statusFilter);
+        $orders = $this->service->getOrders($rid, $statusFilter);
         
         require __DIR__ . '/../../../views/admin/delivery/partials/order_list_kanban.php';
     }
 
-    // ==========================================
-    // HISTÓRICO POR DIA OPERACIONAL
-    // ==========================================
     public function history() {
-        $this->checkSession();
-        
-        $restaurant_id = $_SESSION['loja_ativa_id'];
+        $rid = $this->getRestaurantId();
         $selectedDate = $_GET['date'] ?? date('Y-m-d');
         
-        $queryService = new DeliveryQueryService();
-        $result = $queryService->getOrdersByOperationalDay($restaurant_id, $selectedDate);
+        $result = $this->service->getOrdersByOperationalDay($rid, $selectedDate);
         
+        // Extrai variáveis para a view
         $orders = $result['orders'];
         $businessHour = $result['business_hour'];
         $periodStart = $result['period_start'];
@@ -69,109 +57,54 @@ class DeliveryController {
         require __DIR__ . '/../../../views/admin/delivery/history.php';
     }
 
-    // ==========================================
-    // DETALHES DO PEDIDO (API)
-    // ==========================================
+    // === APIs JSON ===
+
     public function getOrderDetails() {
-        header('Content-Type: application/json');
+        $rid = $this->getRestaurantId();
+        $orderId = $this->getInt('id');
         
-        if (session_status() === PHP_SESSION_NONE) session_start();
+        if ($orderId <= 0) {
+            $this->json(['success' => false, 'message' => 'ID inválido'], 400);
+        }
         
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            echo json_encode(['success' => false, 'message' => 'Sessão expirada']);
-            exit;
-        }
-
-        $restaurant_id = $_SESSION['loja_ativa_id'];
-        $order_id = $_GET['id'] ?? null;
-
-        if (!$order_id) {
-            echo json_encode(['success' => false, 'message' => 'ID não informado']);
-            exit;
-        }
-
-        $queryService = new DeliveryQueryService();
-        $data = $queryService->getOrderDetails((int)$order_id, $restaurant_id);
-
+        $data = $this->service->getOrderDetails($orderId, $rid);
+        
         if (!$data) {
-            echo json_encode(['success' => false, 'message' => 'Pedido não encontrado']);
-            exit;
+            $this->json(['success' => false, 'message' => 'Pedido não encontrado'], 404);
         }
-
-        echo json_encode([
+        
+        $this->json([
             'success' => true,
             'order' => $data['order'],
             'items' => $data['items']
         ]);
     }
 
-    // ==========================================
-    // ATUALIZAR STATUS (API)
-    // ==========================================
     public function updateStatus() {
-        header('Content-Type: application/json');
+        $rid = $this->getRestaurantId();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
         
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            echo json_encode(['success' => false, 'message' => 'Sessão expirada']);
-            exit;
+        $errors = $this->v->validateStatusUpdate($data);
+        if ($this->v->hasErrors($errors)) {
+            $this->json(['success' => false, 'message' => reset($errors)], 400);
+            return;
         }
-
-        $restaurant_id = $_SESSION['loja_ativa_id'];
-        $input = json_decode(file_get_contents('php://input'), true);
         
-        $order_id = $input['order_id'] ?? null;
-        $new_status = $input['new_status'] ?? null;
-
-        if (!$order_id || !$new_status) {
-            echo json_encode(['success' => false, 'message' => 'Dados inválidos']);
-            exit;
-        }
-
-        $service = new UpdateOrderStatusService();
-        $result = $service->execute((int)$order_id, $new_status, $restaurant_id);
-
-        echo json_encode($result);
+        $result = $this->service->updateStatus((int)$data['order_id'], $data['new_status'], $rid);
+        $this->json($result, $result['success'] ? 200 : 400);
     }
 
-    // ==========================================
-    // ENVIAR PARA MESA (API)
-    // ==========================================
     public function sendToTable() {
-        header('Content-Type: application/json');
+        $rid = $this->getRestaurantId();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
         
-        if (session_status() === PHP_SESSION_NONE) session_start();
+        $errors = $this->v->validateSendToTable($data);
+        if ($this->v->hasErrors($errors)) {
+            $this->json(['success' => false, 'message' => reset($errors)], 400);
+            return;
+        }
         
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            echo json_encode(['success' => false, 'message' => 'Sessão expirada']);
-            exit;
-        }
-
-        $restaurant_id = $_SESSION['loja_ativa_id'];
-        $input = json_decode(file_get_contents('php://input'), true);
-        
-        $order_id = $input['order_id'] ?? null;
-
-        if (!$order_id) {
-            echo json_encode(['success' => false, 'message' => 'ID do pedido não informado']);
-            exit;
-        }
-
-        $service = new SendToTableService();
-        $result = $service->execute((int)$order_id, $restaurant_id);
-
-        echo json_encode($result);
-    }
-
-    // ==========================================
-    // SESSÃO
-    // ==========================================
-    private function checkSession() {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            header('Location: ' . BASE_URL . '/admin');
-            exit;
-        }
+        $result = $this->service->sendToTable((int)$data['order_id'], $rid);
+        $this->json($result, $result['success'] ? 200 : 400);
     }
 }

@@ -118,7 +118,7 @@
         <!-- Botões de Ação -->
         <div style="display: flex; gap: 10px; margin-top: 20px;">
             <!-- Botão SALVAR COMANDA: Exibe se for Comanda NÃO paga -->
-            <?php $showSalvar = (!empty($contaAberta) && !$mesa_id && !$isEditingPaid); ?>
+            <?php $showSalvar = (!empty($contaAberta['id']) && !$mesa_id && !$isEditingPaid); ?>
             <button id="btn-save-command" onclick="saveClientOrder()" 
                     style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: <?= $showSalvar ? 'flex' : 'none' ?>; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                 Salvar
@@ -132,13 +132,13 @@
             </button>
             <?php endif; ?>
 
-            <!-- Botão FINALIZAR (Venda Rápida): Só exibe se NÃO for Comanda aberta -->
+            <!-- Botão FINALIZAR (Venda Rápida): Só exibe se NÃO for Comanda aberta (com ID) -->
             <button id="btn-finalizar" class="btn-primary" disabled onclick="finalizeSale()" 
-                    style="flex: 1; display: <?= (!empty($contaAberta) && !$mesa_id) ? 'none' : 'flex' ?>; padding: 16px; font-size: 1.1rem; align-items: center; justify-content: center;">
+                    style="flex: 1; display: <?= (!empty($contaAberta['id']) && !$mesa_id) ? 'none' : 'flex' ?>; padding: 16px; font-size: 1.1rem; align-items: center; justify-content: center;">
                 Finalizar
             </button>
 
-            <?php if (!empty($contaAberta)): ?>
+            <?php if (!empty($contaAberta['id'])): ?>
                 <?php if ($mesa_id): ?>
                     <button onclick="fecharContaMesa(<?= $mesa_id ?>)" 
                             style="flex: 1; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">

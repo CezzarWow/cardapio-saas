@@ -1,149 +1,149 @@
 <?php
+
 namespace App\Controllers\Admin;
 
-use App\Core\Database;
-use PDO;
+use App\Services\RestaurantService;
+use App\Validators\RestaurantValidator;
+use Exception;
 
-class RestaurantController {
+/**
+ * RestaurantController - Super Thin
+ * 
+ * Gerencia CRUD de restaurantes.
+ * Lógica de negócio no RestaurantService.
+ * Validações no RestaurantValidator.
+ */
+class RestaurantController extends BaseController
+{
+    private RestaurantService $service;
+    private RestaurantValidator $validator;
 
-    public function create() {
-        // Agora que você arrumou a pasta, essa linha vai funcionar
+    public function __construct()
+    {
+        $this->service = new RestaurantService();
+        $this->validator = new RestaurantValidator();
+    }
+
+    /**
+     * Formulário de criação
+     */
+    public function create(): void
+    {
         require __DIR__ . '/../../../views/admin/restaurants/create.php';
     }
 
-    public function store() {
-        $name = $_POST['name'];
-        $slug = $_POST['slug'];
-        
-        $conn = Database::connect();
-        
-        // Verifica/Cria usuário dono (Gambiarra temporária pro teste)
-        $check = $conn->query("SELECT id FROM users WHERE id = 1");
-        if ($check->rowCount() == 0) {
-            $conn->query("INSERT INTO users (id, email, password) VALUES (1, 'admin@teste.com', '123')");
+    /**
+     * Salvar novo restaurante
+     */
+    public function store(): void
+    {
+        $data = [
+            'name' => $_POST['name'] ?? '',
+            'slug' => $_POST['slug'] ?? ''
+        ];
+
+        $errors = $this->validator->validateStore($data);
+        if ($this->validator->hasErrors($errors)) {
+            // Redireciona de volta com erro
+            $this->redirect('/admin/restaurantes/criar?error=' . urlencode($this->validator->getFirstError($errors)));
         }
 
         try {
-            $sql = "INSERT INTO restaurants (user_id, name, slug) VALUES (1, :name, :slug)";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute(['name' => $name, 'slug' => $slug]);
+            $userId = $this->getUserId();
+            $restaurantId = $this->service->create($data, $userId);
             
-            // Pega o ID do restaurante recém-criado
-            $restaurantId = $conn->lastInsertId();
-            
-            // ========================================
-            // CRIA AUTOMATICAMENTE AS CATEGORIAS DE SISTEMA
-            // ========================================
-            $systemCategories = [
-                ['name' => 'Destaques', 'type' => 'featured', 'order' => 1],
-                ['name' => 'Combos', 'type' => 'combos', 'order' => 2],
-            ];
-            
-            $catSql = "INSERT INTO categories (restaurant_id, name, category_type, sort_order, is_active) 
-                       VALUES (:rid, :name, :type, :sort_order, 1)";
-            $catStmt = $conn->prepare($catSql);
-            
-            foreach ($systemCategories as $cat) {
-                $catStmt->execute([
-                    'rid' => $restaurantId,
-                    'name' => $cat['name'],
-                    'type' => $cat['type'],
-                    'sort_order' => $cat['order']
-                ]);
-            }
-
-            echo "<h1>✅ Sucesso!</h1><p>Restaurante <strong>$name</strong> criado com categorias de sistema.</p>";
-            echo "<a href='../../admin'>Voltar ao Painel</a>";
-
-        } catch (\PDOException $e) {
-            echo "<h1>❌ Erro!</h1><p>" . $e->getMessage() . "</p>";
+            $this->redirect('/admin?success=restaurante_criado');
+        } catch (Exception $e) {
+            error_log('RestaurantController::store Error: ' . $e->getMessage());
+            $this->redirect('/admin/restaurantes/criar?error=falha_ao_criar');
         }
     }
-    // --- 3. EDITAR (Busca dados e abre Formulário Preenchido) ---
-    // [NOVA FUNÇÃO QUE ADICIONAMOS AGORA]
-    public function edit() {
-        // Pega o ID que veio na URL (?id=1)
-        $id = $_GET['id'] ?? null;
 
-        if (!$id) {
-            die("ID do restaurante não informado!");
-        }
-
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM restaurants WHERE id = :id");
-        $stmt->execute(['id' => $id]);
+    /**
+     * Formulário de edição
+     */
+    public function edit(): void
+    {
+        $id = $this->getInt('id');
         
-        $restaurant = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$restaurant) {
-            die("Restaurante não encontrado!");
+        $errors = $this->validator->validateId($id);
+        if ($this->validator->hasErrors($errors)) {
+            $this->redirect('/admin?error=id_invalido');
         }
 
-        // Carrega a view de edição
+        $restaurant = $this->service->findById($id);
+        
+        if (!$restaurant) {
+            $this->redirect('/admin?error=restaurante_nao_encontrado');
+        }
+
         require __DIR__ . '/../../../views/admin/restaurants/edit.php';
     }
-    
-    // --- 4. ATUALIZAR (Recebe o POST e atualiza no Banco) ---
-    public function update() {
-        // Recebe os dados do formulário
-        $id = $_POST['id'];
-        $name = $_POST['name'];
-        $slug = $_POST['slug'];
 
-        $conn = Database::connect();
+    /**
+     * Atualizar restaurante
+     */
+    public function update(): void
+    {
+        $data = [
+            'id' => $_POST['id'] ?? 0,
+            'name' => $_POST['name'] ?? '',
+            'slug' => $_POST['slug'] ?? ''
+        ];
+
+        $errors = $this->validator->validateUpdate($data);
+        if ($this->validator->hasErrors($errors)) {
+            $this->redirect('/admin/restaurantes/editar?id=' . $data['id'] . '&error=validacao_falhou');
+        }
 
         try {
-            // SQL de Atualização
-            $sql = "UPDATE restaurants SET name = :name, slug = :slug WHERE id = :id";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute([
-                'name' => $name,
-                'slug' => $slug,
-                'id' => $id
-            ]);
-
-            // Redireciona de volta para o painel com sucesso
-            // O header manda o navegador mudar de página
-            // Sai de 'atualizar', sai de 'restaurantes', entra em 'admin'
-
-            header('Location: ../../admin');
-            exit;
-
-        } catch (\PDOException $e) {
-            echo "<h1>❌ Erro ao atualizar!</h1><p>" . $e->getMessage() . "</p>";
+            $this->service->update((int)$data['id'], $data);
+            $this->redirect('/admin?success=restaurante_atualizado');
+        } catch (Exception $e) {
+            error_log('RestaurantController::update Error: ' . $e->getMessage());
+            $this->redirect('/admin/restaurantes/editar?id=' . $data['id'] . '&error=falha_ao_atualizar');
         }
     }
-    // --- 5. DELETAR (Apaga do Banco) ---
-    public function delete() {
-        $id = $_GET['id'] ?? null;
 
-        if ($id) {
-            $conn = Database::connect();
-            // Prepara a guilhotina
-            $stmt = $conn->prepare("DELETE FROM restaurants WHERE id = :id");
-            $stmt->execute(['id' => $id]);
+    /**
+     * Deletar restaurante
+     */
+    public function delete(): void
+    {
+        $id = $this->getInt('id');
+
+        $errors = $this->validator->validateId($id);
+        if ($this->validator->hasErrors($errors)) {
+            $this->redirect('/admin?error=id_invalido');
         }
 
-        // Volta para a lista (como se nada tivesse acontecido)
-        header('Location: ../../admin');
-        exit;
+        try {
+            $this->service->delete($id);
+            $this->redirect('/admin?success=restaurante_deletado');
+        } catch (Exception $e) {
+            error_log('RestaurantController::delete Error: ' . $e->getMessage());
+            $this->redirect('/admin?error=falha_ao_deletar');
+        }
     }
-    // --- 6. ALTERAR STATUS (Suspender/Ativar) ---
-    public function toggleStatus() {
-        $id = $_GET['id'] ?? null;
 
-        if ($id) {
-            $conn = Database::connect();
-            
-            // Esse comando SQL mágico inverte o valor:
-            // Se for 1 vira 0. Se for 0 vira 1. (NOT is_active)
-            $sql = "UPDATE restaurants SET is_active = NOT is_active WHERE id = :id";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute(['id' => $id]);
+    /**
+     * Alternar status ativo/inativo
+     */
+    public function toggleStatus(): void
+    {
+        $id = $this->getInt('id');
+
+        $errors = $this->validator->validateId($id);
+        if ($this->validator->hasErrors($errors)) {
+            $this->redirect('/admin?error=id_invalido');
         }
 
-        // Volta para o painel
-        header('Location: ../../admin');
-        exit;
+        try {
+            $this->service->toggleStatus($id);
+            $this->redirect('/admin');
+        } catch (Exception $e) {
+            error_log('RestaurantController::toggleStatus Error: ' . $e->getMessage());
+            $this->redirect('/admin?error=falha_ao_alterar_status');
+        }
     }
 }

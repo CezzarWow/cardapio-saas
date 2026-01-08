@@ -1,85 +1,40 @@
 <?php
+
 namespace App\Controllers\Admin;
 
-use App\Core\Database;
-use PDO;
+use App\Services\Stock\StockService;
 
 /**
- * [FASE 4] Controller de Movimentações de Estoque
- * Responsável pela listagem do histórico de movimentações
- * Somente leitura - sem edição ou exclusão
+ * StockMovementController - Super Thin
+ * Responsável somente pela exibição do relatório de movimentações
  */
-class StockMovementController {
+class StockMovementController extends BaseController
+{
+    private StockService $service;
 
-    // LISTAR MOVIMENTAÇÕES
-    public function index() {
-        $this->checkSession();
-        $conn = Database::connect();
-        $restaurantId = $_SESSION['loja_ativa_id'];
-        
-        // Filtros opcionais
-        $productFilter = $_GET['product'] ?? '';
-        $categoryFilter = $_GET['category'] ?? '';
-
-        // Query base com JOIN para pegar nome do produto e categoria
-        $sql = "SELECT m.*, p.name as product_name, p.image as product_image, c.name as category_name
-                FROM stock_movements m
-                INNER JOIN products p ON m.product_id = p.id
-                LEFT JOIN categories c ON p.category_id = c.id
-                WHERE m.restaurant_id = :rid";
-        
-        $params = ['rid' => $restaurantId];
-
-        // Filtro por produto
-        if (!empty($productFilter)) {
-            $sql .= " AND p.id = :pid";
-            $params['pid'] = $productFilter;
-        }
-
-        // Filtro por categoria
-        if (!empty($categoryFilter)) {
-            $sql .= " AND c.name = :cat";
-            $params['cat'] = $categoryFilter;
-        }
-
-        // Filtro por Data (Início)
-        $startDate = $_GET['start_date'] ?? '';
-        if (!empty($startDate)) {
-            $sql .= " AND m.created_at >= :start";
-            $params['start'] = $startDate . ' 00:00:00';
-        }
-
-        // Filtro por Data (Fim)
-        $endDate = $_GET['end_date'] ?? '';
-        if (!empty($endDate)) {
-            $sql .= " AND m.created_at <= :end";
-            $params['end'] = $endDate . ' 23:59:59';
-        }
-
-        $sql .= " ORDER BY m.created_at DESC LIMIT 100";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
-        $movements = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Busca produtos para o filtro
-        $stmtProd = $conn->prepare("SELECT id, name FROM products WHERE restaurant_id = :rid ORDER BY name");
-        $stmtProd->execute(['rid' => $restaurantId]);
-        $products = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
-
-        // Busca categorias para o filtro
-        $stmtCat = $conn->prepare("SELECT DISTINCT name FROM categories WHERE restaurant_id = :rid ORDER BY name");
-        $stmtCat->execute(['rid' => $restaurantId]);
-        $categories = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
-
-        require __DIR__ . '/../../../views/admin/movements/index.php';
+    public function __construct() {
+        $this->service = new StockService();
     }
 
-    private function checkSession() {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            header('Location: ' . BASE_URL . '/admin');
-            exit;
-        }
+    /**
+     * Listar Movimentações (Relatório)
+     */
+    public function index(): void {
+        $restaurantId = $this->getRestaurantId();
+        
+        // Coleta filtros
+        $filters = [
+            'product'    => $_GET['product'] ?? '',
+            'category'   => $_GET['category'] ?? '',
+            'start_date' => $_GET['start_date'] ?? '',
+            'end_date'   => $_GET['end_date'] ?? ''
+        ];
+
+        // Busca dados via Service
+        $movements = $this->service->getMovements($restaurantId, $filters);
+        $products = $this->service->getProducts($restaurantId);
+        $categories = $this->service->getCategories($restaurantId);
+
+        require __DIR__ . '/../../../views/admin/movements/index.php';
     }
 }

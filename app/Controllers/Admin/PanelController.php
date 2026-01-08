@@ -1,19 +1,17 @@
 <?php
 namespace App\Controllers\Admin;
 
-class PanelController {
-    
+/**
+ * PanelController - Super Thin
+ * Redirecionador para o PDV (antigo dashboard)
+ */
+class PanelController extends BaseController
+{
     public function index() {
-        // 1. Segurança: Verifica se tem loja na sessão
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            die("Acesso negado. Selecione uma loja no Admin Geral.");
-        }
-
-        $nomeLoja = $_SESSION['loja_ativa_nome'];
-        $idLoja = $_SESSION['loja_ativa_id'];
-
-        // 2. Carrega a View do Painel da Loja
-        // Vamos criar essa view no Passo 3
-        require __DIR__ . '/../../../views/admin/panel/dashboard.php';
+        // Valida sessão (BaseController)
+        $this->getRestaurantId(); 
+        
+        // Redireciona para o controller real do PDV
+        $this->redirect('/admin/loja/pdv');
     }
 }

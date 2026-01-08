@@ -1,120 +1,63 @@
 <?php
+
 namespace App\Controllers\Admin;
 
-use App\Core\Database;
-use PDO;
+use App\Services\Stock\StockService;
+use App\Validators\StockValidator;
+use Exception;
 
 /**
- * [FASE 3] Controller de Reposição de Estoque
- * Responsável pelo ajuste operacional de estoque (entrada/saída)
- * Separado do cadastro de produtos (StockController)
+ * StockRepositionController - Super Thin
+ * Responsável pelo ajuste operacional de estoque usando Service e Validator
  */
-class StockRepositionController {
+class StockRepositionController extends BaseController
+{
+    private StockService $service;
+    private StockValidator $validator;
+
+    public function __construct() {
+        $this->service = new StockService();
+        $this->validator = new StockValidator();
+    }
 
     // 1. LISTAR PRODUTOS PARA REPOSIÇÃO
-    public function index() {
-        $this->checkSession();
-        $conn = Database::connect();
+    public function index(): void {
+        $rid = $this->getRestaurantId();
         
-        // Busca produtos com o nome da categoria
-        $sql = "SELECT p.*, c.name as category_name 
-                FROM products p 
-                LEFT JOIN categories c ON p.category_id = c.id 
-                WHERE p.restaurant_id = :rid 
-                ORDER BY p.name ASC";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->execute(['rid' => $_SESSION['loja_ativa_id']]);
-        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Busca categorias para o filtro
-        $stmtCat = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :rid ORDER BY name");
-        $stmtCat->execute(['rid' => $_SESSION['loja_ativa_id']]);
-        $categories = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
+        $products = $this->service->getProducts($rid);
+        $categories = $this->service->getCategories($rid);
 
         require __DIR__ . '/../../../views/admin/reposition/index.php';
     }
 
     // 2. AJUSTAR ESTOQUE (INCREMENTAL)
-    public function adjust() {
-        header('Content-Type: application/json');
-        $this->checkSession();
+    public function adjust(): void {
+        $rid = $this->getRestaurantId(); // Valida sessão
         
-        $data = json_decode(file_get_contents('php://input'), true);
+        $data = $this->getJsonBody(); // Helper do BaseController
         
-        $productId = intval($data['product_id'] ?? 0);
-        $amount = intval($data['amount'] ?? 0);
-        $restaurantId = $_SESSION['loja_ativa_id'];
-
-        if ($productId <= 0) {
-            echo json_encode(['success' => false, 'message' => 'Produto inválido']);
-            return;
+        // Validação
+        $errors = $this->validator->validateReposition($data);
+        if ($this->validator->hasErrors($errors)) {
+            $this->json(['success' => false, 'message' => $this->validator->getFirstError($errors)], 400);
         }
-
-        if ($amount == 0) {
-            echo json_encode(['success' => false, 'message' => 'Quantidade não pode ser zero']);
-            return;
-        }
-
-        $conn = Database::connect();
 
         try {
-            // Verifica se produto pertence à loja (multi-tenant)
-            $stmt = $conn->prepare("SELECT id, stock, name FROM products WHERE id = :id AND restaurant_id = :rid");
-            $stmt->execute(['id' => $productId, 'rid' => $restaurantId]);
-            $product = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$product) {
-                echo json_encode(['success' => false, 'message' => 'Produto não encontrado']);
-                return;
-            }
-
-            // Guarda estoque antes do ajuste
-            $stockBefore = intval($product['stock']);
-            $stockAfter = $stockBefore + $amount;
-
-            // Ajuste INCREMENTAL: stock = stock + amount
-            // (amount pode ser positivo ou negativo)
-            $stmtUpdate = $conn->prepare("UPDATE products SET stock = stock + :amount WHERE id = :id AND restaurant_id = :rid");
-            $stmtUpdate->execute([
-                'amount' => $amount,
-                'id' => $productId,
-                'rid' => $restaurantId
-            ]);
-
-            // [FASE 4] Registra movimentação no histórico
-            $movementType = $amount > 0 ? 'entrada' : 'saida';
-            $movementQty = abs($amount); // Sempre positivo
+            $productId = (int)$data['product_id'];
+            $amount = (int)$data['amount'];
             
-            $stmtMov = $conn->prepare("INSERT INTO stock_movements 
-                (restaurant_id, product_id, type, quantity, stock_before, stock_after, source) 
-                VALUES (:rid, :pid, :type, :qty, :before, :after, 'reposicao')");
-            $stmtMov->execute([
-                'rid' => $restaurantId,
-                'pid' => $productId,
-                'type' => $movementType,
-                'qty' => $movementQty,
-                'before' => $stockBefore,
-                'after' => $stockAfter
-            ]);
-
-            echo json_encode([
-                'success' => true,
+            $result = $this->service->adjustStock($rid, $productId, $amount);
+            
+            // Retorna sucesso com mensagem do service
+            $this->json([
+                'success' => true, 
                 'message' => 'Estoque ajustado com sucesso',
-                'new_stock' => $stockAfter,
-                'product_name' => $product['name']
+                'new_stock' => $result['new_stock'],
+                'product_name' => $result['product_name']
             ]);
 
-        } catch (\Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Erro ao ajustar estoque: ' . $e->getMessage()]);
-        }
-    }
-
-    private function checkSession() {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            header('Location: ' . BASE_URL . '/admin');
-            exit;
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => 'Erro ao ajustar estoque: ' . $e->getMessage()], 400);
         }
     }
 }

@@ -1,101 +1,75 @@
 <?php
+
 namespace App\Controllers\Admin;
 
-use App\Core\Database;
-use PDO;
+use App\Services\ConfigService;
+use App\Validators\ConfigValidator;
+use Exception;
 
-class ConfigController {
+/**
+ * ConfigController - Super Thin
+ * Gerencia configurações gerais da loja (nome, logo, contato)
+ */
+class ConfigController extends BaseController
+{
+    private ConfigService $service;
+    private ConfigValidator $validator;
 
-    public function index() {
-        $this->checkSession();
-        $conn = Database::connect();
+    public function __construct() {
+        $this->service = new ConfigService();
+        $this->validator = new ConfigValidator();
+    }
 
-        // Busca os dados da loja atual
-        $stmt = $conn->prepare("SELECT * FROM restaurants WHERE id = :id");
-        $stmt->execute(['id' => $_SESSION['loja_ativa_id']]);
-        $loja = $stmt->fetch(PDO::FETCH_ASSOC);
+    /**
+     * Tela de Configurações
+     */
+    public function index(): void {
+        $restaurantId = $this->getRestaurantId();
+        
+        $loja = $this->service->getStoreData($restaurantId);
 
         require __DIR__ . '/../../../views/admin/config/index.php';
     }
 
-    public function update() {
-        $this->checkSession();
-        $id = $_SESSION['loja_ativa_id'];
+    /**
+     * Atualizar Configurações
+     */
+    public function update(): void {
+        $restaurantId = $this->getRestaurantId();
         
-        $name = $_POST['name'];
-        $phone = $_POST['phone'];
-        $address = $_POST['address'];
-        $address_number = $_POST['address_number'];
-        $zip_code = $_POST['zip_code'];
-        $primary_color = $_POST['primary_color'];
+        // Coleta arquivo de upload se houver
+        $file = !empty($_FILES['logo']) ? $_FILES['logo'] : null;
 
-        $conn = Database::connect();
-
-        // --- Upload da Logo ---
-        $logoSql = ""; 
-        $params = [
-            'name' => $name,
-            'phone' => $phone,
-            'address' => $address,
-            'address_number' => $address_number,
-            'zip_code' => $zip_code,
-            'color' => $primary_color,
-            'id' => $id
-        ];
-
-        if (!empty($_FILES['logo']['name'])) {
-            // Verifica Erros
-            if ($_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
-                // Erros comuns: 1 = File too large (php.ini), 2 = Too large (form), 3 = Partial, 4 = No file
-                $errorMsg = 'Erro no upload: código ' . $_FILES['logo']['error'];
-                echo "<script>alert('$errorMsg'); window.location.href='" . BASE_URL . "/admin/loja/config';</script>";
-                exit;
-            }
-
-            $ext = pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
-            $logoName = 'logo_' . $id . '_' . time() . '.' . $ext;
-            $destination = __DIR__ . '/../../../public/uploads/' . $logoName;
-            
-            // Tenta mover
-            if (move_uploaded_file($_FILES['logo']['tmp_name'], $destination)) {
-                $logoSql = ", logo = :logo";
-                $params['logo'] = $logoName;
-                $_SESSION['loja_ativa_logo'] = $logoName; // Atualiza Sessão
-            } else {
-                echo "<script>alert('Falha ao salvar arquivo no servidor. Verifique permissões.'); window.location.href='" . BASE_URL . "/admin/loja/config';</script>";
-                exit;
-            }
+        // Validação
+        $errors = $this->validator->validateUpdate($_POST, $file);
+        if ($this->validator->hasErrors($errors)) {
+            // Como o form original não parece ter exibição de erro por campo detalhado, 
+            // e o anterior usava alert JS, vamos mandar o primeiro erro na URL
+            // ou poderíamos injetar um script se fosse crítico, mas padronizaremos.
+            $msg = urlencode($this->validator->getFirstError($errors));
+            // Usamos um script inline para manter comportamento similar ao alert se desejado,
+            // ou apenas redirect com error param. Vou usar redirect com param para consistência.
+            $this->redirect("/admin/loja/config?error={$msg}");
+            return;
         }
 
-        // Atualiza no Banco
-        $sql = "UPDATE restaurants SET 
-                name = :name, 
-                phone = :phone, 
-                address = :address, 
-                address_number = :address_number,
-                zip_code = :zip_code,
-                primary_color = :color
-                $logoSql 
-                WHERE id = :id";
+        try {
+            // Atualiza
+            $result = $this->service->updateConfig($restaurantId, $_POST, $file);
 
-        $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
+            // Atualiza Sessão (para refletir mudanças imediatamente no header do admin)
+            if (!empty($result['name'])) {
+                $_SESSION['loja_ativa_nome'] = $result['name'];
+            }
+            if (!empty($result['logo'])) {
+                $_SESSION['loja_ativa_logo'] = $result['logo'];
+            }
 
-        // Atualiza a sessão para o nome mudar na hora lá em cima
-        $_SESSION['loja_ativa_nome'] = $name;
+            $this->redirect('/admin/loja/config?success=Configurações salvas!');
 
-        // Redireciona usando BASE_URL (Assumindo que BASE_URL está definido no index.php, mas aqui é PHP puro antes de output)
-        // Como o header Location é relativo ao script ou absoluto, vamos usar ../config que é seguro se a estrutura de rotas se mantiver,
-        // mas para garantir, vamos injetar o JS de alerta que o usuário pediu, que faz o redirect.
-        
-        echo "<script>alert('Configurações salvas! ⚙️✅'); window.location.href='" . BASE_URL . "/admin/loja/config';</script>";
-    }
-
-    private function checkSession() {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            header('Location: ' . BASE_URL . '/admin');
-            exit;
+        } catch (Exception $e) {
+            error_log('ConfigController::update Error: ' . $e->getMessage());
+            $this->redirect('/admin/loja/config?error=Falha ao salvar configurações');
         }
     }
 }

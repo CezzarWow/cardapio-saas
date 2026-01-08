@@ -18,7 +18,7 @@ class DeliveryOrderRepository
     {
         $conn = Database::connect();
         
-        // Query base - busca delivery, retirada e local (regras específicas)
+        // Query base - busca APENAS delivery e retirada (Local vai para Mesas/Comandas)
         $sql = "
             SELECT o.id, o.total, o.status, o.created_at, o.payment_method, o.order_type, o.is_paid,
                    c.name as client_name, 
@@ -28,16 +28,11 @@ class DeliveryOrderRepository
             FROM orders o
             LEFT JOIN clients c ON o.client_id = c.id
             WHERE o.restaurant_id = :rid 
-              AND (
-                  o.order_type IN ('delivery', 'pickup')
-                  OR (o.order_type = 'local' AND (o.status = 'novo' OR o.status = :status_filter_check))
-              )
+              AND o.order_type IN ('delivery', 'pickup')
         ";
         
-        $statusFilterCheck = $statusFilter ?? 'novo';
         $params = [
-            'rid' => $restaurantId,
-            'status_filter_check' => $statusFilterCheck
+            'rid' => $restaurantId
         ];
         
         // Filtro por status (se fornecido)

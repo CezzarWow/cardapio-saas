@@ -35,6 +35,23 @@ class StockValidator {
         return $errors;
     }
 
+    public function validateReposition(array $data): array {
+        $errors = [];
+
+        $productId = intval($data['product_id'] ?? 0);
+        $amount = intval($data['amount'] ?? 0);
+
+        if ($productId <= 0) {
+            $errors['product_id'] = 'Produto inválido';
+        }
+
+        if ($amount == 0) {
+            $errors['amount'] = 'Quantidade não pode ser zero';
+        }
+
+        return $errors;
+    }
+
     public function sanitizeProduct(array $data): array {
         return [
             'id' => intval($data['id'] ?? 0),

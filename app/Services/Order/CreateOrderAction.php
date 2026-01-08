@@ -58,12 +58,17 @@ class CreateOrderAction
             $isPaid = isset($data['is_paid']) && $data['is_paid'] == 1 ? 1 : 0;
             $paymentMethod = $data['payment_method'] ?? 'dinheiro';
             $payments = $data['payments'] ?? [];
+            
+            // SAVE_ACCOUNT: Se true, cria como comanda aberta (status 'aberto' aparece em Mesas/Comandas)
+            $saveAccount = isset($data['save_account']) && $data['save_account'] == true;
+            $orderStatus = $saveAccount ? 'aberto' : 'novo';
 
             $stmt = $conn->prepare("INSERT INTO orders (restaurant_id, order_type, status, total, created_at, is_paid, payment_method) 
-                                   VALUES (:rid, :type, 'novo', :total, NOW(), :paid, :pay)");
+                                   VALUES (:rid, :type, :status, :total, NOW(), :paid, :pay)");
             $stmt->execute([
                 'rid' => $restaurantId,
                 'type' => $orderType,
+                'status' => $orderStatus,
                 'total' => $finalTotal,
                 'paid' => $isPaid,
                 'pay' => $paymentMethod

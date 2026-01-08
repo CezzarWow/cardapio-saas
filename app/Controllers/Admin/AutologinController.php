@@ -1,42 +1,49 @@
 <?php
+
 namespace App\Controllers\Admin;
 
-use App\Core\Database;
-use PDO;
+use App\Services\RestaurantService;
 
-class AutologinController {
+/**
+ * AutologinController - Super Thin
+ * Gerencia a seleção de loja pelo painel administrativo
+ */
+class AutologinController extends BaseController
+{
+    private RestaurantService $service;
+
+    public function __construct() {
+        $this->service = new RestaurantService();
+    }
 
     public function login() {
-        // 1. Inicia a sessão (caso não esteja iniciada)
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        // Valida sessão de usuário (login geral)
+        $userId = $this->getUserId();
+        
+        // Pega ID da loja
+        $restaurantId = $this->getInt('id');
+
+        if ($restaurantId <= 0) {
+            $this->redirect('/admin?error=loja_invalida');
         }
 
-        // 2. Pega o ID da URL (?id=1)
-        $id = $_GET['id'] ?? null;
+        // Busca loja verificando propriedade
+        // Poderíamos usar $service->findById($id), mas precisamos checar o user_id
+        // Para ser RESTRICT, vou fazer o select via service filtrado, ou buscar e comparar
+        
+        $loja = $this->service->findById($restaurantId);
 
-        if (!$id) {
-            die('ID da loja não informado.');
-        }
-
-        // 3. Verifica no banco se a loja existe
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM restaurants WHERE id = :id");
-        $stmt->execute(['id' => $id]);
-        $loja = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($loja) {
-            // 4. A MÁGICA: Salva na sessão que estamos gerenciando ESSA loja
+        if ($loja && (int)$loja['user_id'] === $userId) {
+            // A MÁGICA: Salva na sessão que estamos gerenciando ESSA loja
             $_SESSION['loja_ativa_id'] = $loja['id'];
             $_SESSION['loja_ativa_nome'] = $loja['name'];
-            $_SESSION['loja_ativa_logo'] = $loja['logo']; // Salva a logo na sessão
+            $_SESSION['loja_ativa_logo'] = $loja['logo'] ?? null; 
 
-            // 5. Redireciona para o Painel da Loja (onde cadastraremos produtos)
-            // Obs: Vamos criar essa rota '/admin/loja/painel' no próximo passo
-            header('Location: loja/painel');    // O correto (segue em frente dentro do admin)
-            exit;
+            // Redireciona para o Painel da Loja (dashboard PDV ou Config)
+            $this->redirect('/admin/loja/painel'); 
         } else {
-            die('Loja não encontrada.');
+            // Loja não encontrada ou não pertence ao usuário
+            $this->redirect('/admin?error=acesso_negado');
         }
     }
 }
