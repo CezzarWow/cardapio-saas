@@ -2,60 +2,76 @@
  * TABLES.JS - Orquestrador de Mesas e Comandas
  * Namespace: TablesAdmin
  * 
- * Dependências (carregar ANTES deste arquivo):
+ * Dependências (carregar ANTES):
  * - tables-crud.js
  * - tables-clients.js
  * - tables-paid-orders.js
  * - tables-dossier.js
+ * - clientes.js (ClientManager)
  */
 
-const TablesAdmin = {
+(function () {
+    'use strict';
+
+    const TablesAdmin = {
+
+        // ==========================================
+        // DELEGAÇÃO - CRUD DE MESAS
+        // ==========================================
+        openNewTableModal: () => TablesAdmin.Crud.openNewModal(),
+        saveTable: () => TablesAdmin.Crud.save(),
+        openRemoveTableModal: () => TablesAdmin.Crud.openRemoveModal(),
+        removeTable: () => TablesAdmin.Crud.remove(),
+        abrirMesa: (id, numero) => TablesAdmin.Crud.abrir(id, numero),
+
+        // ==========================================
+        // DELEGAÇÃO - CLIENTES (via Wrapper)
+        // ==========================================
+        openNewClientModal: (startType) => TablesAdmin.Clients.openModal(startType),
+
+        // ==========================================
+        // DELEGAÇÃO - PEDIDOS PAGOS
+        // ==========================================
+        showPaidOrderOptions: (orderId, clientName, total, clientId) =>
+            TablesAdmin.PaidOrders.showOptions(orderId, clientName, total, clientId),
+        closePaidOrderModal: () => TablesAdmin.PaidOrders.closeModal(),
+        deliverOrder: () => TablesAdmin.PaidOrders.deliver(),
+        editPaidOrder: () => TablesAdmin.PaidOrders.edit(),
+
+        // ==========================================
+        // DELEGAÇÃO - DOSSIÊ
+        // ==========================================
+        openDossier: (clientId) => TablesAdmin.Dossier.open(clientId)
+    };
 
     // ==========================================
-    // DELEGAÇÃO PARA MÓDULOS
+    // EXPORTAR GLOBALMENTE
     // ==========================================
+    window.TablesAdmin = TablesAdmin;
 
-    // CRUD de Mesas (tables-crud.js)
-    openNewTableModal: () => TablesAdmin.Crud.openNewModal(),
-    saveTable: () => TablesAdmin.Crud.save(),
-    openRemoveTableModal: () => TablesAdmin.Crud.openRemoveModal(),
-    removeTable: () => TablesAdmin.Crud.remove(),
-    abrirMesa: (id, numero) => TablesAdmin.Crud.abrir(id, numero),
+    // ==========================================
+    // ALIASES DE COMPATIBILIDADE (HTML onclicks)
+    // ==========================================
+    window.openNewTableModal = () => TablesAdmin.openNewTableModal();
+    window.saveTable = () => TablesAdmin.saveTable();
+    window.openRemoveTableModal = () => TablesAdmin.openRemoveTableModal();
+    window.removeTable = () => TablesAdmin.removeTable();
+    window.abrirMesa = (id, numero) => TablesAdmin.abrirMesa(id, numero);
 
-    // Clientes (tables-clients.js)
-    openNewClientModal: (startType) => TablesAdmin.Clients.openModal(startType),
+    // Alias para Clientes (Prioriza ClientManager direto se possível, fallback pro TablesAdmin)
+    window.openNewClientModal = (type) => {
+        if (window.ClientManager) window.ClientManager.ui.openModal(type);
+        else TablesAdmin.openNewClientModal(type);
+    };
 
-    // Pedidos Pagos (tables-paid-orders.js)
-    showPaidOrderOptions: (orderId, clientName, total, clientId) =>
-        TablesAdmin.PaidOrders.showOptions(orderId, clientName, total, clientId),
-    closePaidOrderModal: () => TablesAdmin.PaidOrders.closeModal(),
-    deliverOrder: () => TablesAdmin.PaidOrders.deliver(),
-    editPaidOrder: () => TablesAdmin.PaidOrders.edit(),
+    window.showPaidOrderOptions = (orderId, clientName, total, clientId) =>
+        TablesAdmin.showPaidOrderOptions(orderId, clientName, total, clientId);
 
-    // Dossiê (tables-dossier.js)
-    openDossier: (clientId) => TablesAdmin.Dossier.open(clientId)
-};
+    window.closePaidOrderModal = () => TablesAdmin.closePaidOrderModal();
+    window.deliverOrder = () => TablesAdmin.deliverOrder();
+    window.editPaidOrder = () => TablesAdmin.editPaidOrder();
+    window.openDossier = (id) => TablesAdmin.openDossier(id);
 
-// ==========================================
-// EXPÕE GLOBALMENTE
-// ==========================================
+    console.log('[TablesAdmin] Orquestrador carregado e vinculado.');
 
-window.TablesAdmin = TablesAdmin;
-
-// ==========================================
-// ALIASES DE COMPATIBILIDADE (HTML usa esses)
-// ==========================================
-
-window.openNewTableModal = () => TablesAdmin.openNewTableModal();
-window.saveTable = () => TablesAdmin.saveTable();
-window.openRemoveTableModal = () => TablesAdmin.openRemoveTableModal();
-window.removeTable = () => TablesAdmin.removeTable();
-window.abrirMesa = (id, numero) => TablesAdmin.abrirMesa(id, numero);
-window.openNewClientModal = (type) => TablesAdmin.openNewClientModal(type);
-window.showPaidOrderOptions = (a, b, c, d) => TablesAdmin.showPaidOrderOptions(a, b, c, d);
-window.closePaidOrderModal = () => TablesAdmin.closePaidOrderModal();
-window.deliverOrder = () => TablesAdmin.deliverOrder();
-window.editPaidOrder = () => TablesAdmin.editPaidOrder();
-window.openDossier = (id) => TablesAdmin.openDossier(id);
-
-console.log('[TablesAdmin] Orquestrador carregado');
+})();

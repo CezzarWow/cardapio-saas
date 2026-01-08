@@ -1,173 +1,189 @@
 /**
  * CARDAPIO.JS - Ponto de Entrada (Main Entry Point)
- * Refatorado em Módulos: Utils, Cart, Modals, Checkout
+ * Refatorado: Utils, Cart, Modals, Checkout, CardapioManager
  */
 
-// Referências Globais para Debug e Compatibilidade
-// window.CardapioCart, window.CardapioModals, etc já estão definidos nos módulos.
+(function () {
+    'use strict';
 
-document.addEventListener('DOMContentLoaded', function () {
-// Inicialização dos Módulos (se tiverem init)
-    if (window.CardapioModals && CardapioModals.init) CardapioModals.init();
-    if (window.CardapioCheckout && CardapioCheckout.init) CardapioCheckout.init();
+    const CardapioManager = {
+        // ==========================================
+        // INICIALIZAÇÃO
+        // ==========================================
+        init: function () {
+            this.initModules();
+            this.bindEvents();
+            this.recoverCart();
+            this.initIcons();
+            console.log('[CardapioManager] Initialized');
+        },
 
-    initializeEventListeners();
+        initModules: function () {
+            if (window.CardapioModals && CardapioModals.init) CardapioModals.init();
+            if (window.CardapioCheckout && CardapioCheckout.init) CardapioCheckout.init();
+        },
 
-    // Recupera carrinho se tiver (futuro: localStorage)
-    if (window.CardapioCart) CardapioCart.updateUI();
+        recoverCart: function () {
+            // Recupera carrinho se tiver (futuro: localStorage)
+            if (window.CardapioCart) CardapioCart.updateUI();
+        },
 
-    // Ícones
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-});
+        initIcons: function () {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        },
 
-// ========== EVENT LISTENERS GLOBAIS ==========
-// ========== EVENT LISTENERS GLOBAIS ==========
-function initializeEventListeners() {
-    // 1. Scroll e Ajustes de Viewport (Mantido do original)
-    // Esses hacks são específicos para Safari iOS e teclados virtuais
+        // ==========================================
+        // EVENTOS GLOBAIS
+        // ==========================================
+        bindEvents: function () {
+            // 1. Viewport e Ajustes Mobile
+            this.ui.bindViewportAdjustments();
 
-    // Monitora redimensionamento (teclado virtual) - só se a função existir
-    if (window.visualViewport && typeof onVV === 'function') {
-        window.visualViewport.addEventListener('resize', onVV);
-        window.visualViewport.addEventListener('scroll', onVV);
-    }
-
-    // Ajuste de padding para inputs quando focados - só se as funções existirem
-    if (typeof adjustPaddingForKeyboard === 'function' && typeof ensureVisible === 'function') {
-        document.querySelectorAll('input, textarea').forEach(input => {
-            input.addEventListener('focus', () => {
-                adjustPaddingForKeyboard(true);
-                ensureVisible(input);
-            });
-            input.addEventListener('blur', () => {
-                adjustPaddingForKeyboard(false);
-            });
-        });
-    }
-
-    // 2. Busca e Filtros
-    const searchInput = document.getElementById('cardapioSearchInput'); // ID corrigido conforme HTML
-    if (searchInput) {
-        searchInput.addEventListener('input', handleSearch);
-    }
-
-    // 3. Listeners de Categoria
-    const categoryButtons = document.querySelectorAll('.cardapio-category-btn');
-categoryButtons.forEach(btn => {
-        btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const category = this.getAttribute('data-category');
-filterByCategory(category);
-        });
-    });
-
-    // Fallback: Event Delegation (caso os listeners diretos não funcionem)
-    const categoriesContainer = document.querySelector('.cardapio-categories');
-    if (categoriesContainer) {
-        categoriesContainer.addEventListener('click', function (e) {
-            const btn = e.target.closest('.cardapio-category-btn');
-            if (btn) {
-                e.preventDefault();
-                const category = btn.getAttribute('data-category');
-filterByCategory(category);
+            // 2. Busca
+            const searchInput = document.getElementById('cardapioSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => this.ui.handleSearch(e));
             }
-        });
-    }
-}
 
-// ... (Funções de UI mantidas) ...
+            // 3. Filtros
+            this.ui.bindCategoryFilters();
 
-// ========== BUSCA E FILTROS ==========
+            // 4. Botões de Adicionar
+            this.ui.bindAddButtons();
+        },
 
-function handleSearch(e) {
-    const term = e.target.value.toLowerCase();
-    const products = document.querySelectorAll('.cardapio-product-card');
-    const categories = document.querySelectorAll('.cardapio-category-section');
-
-    products.forEach(product => {
-        const name = (product.getAttribute('data-product-name') || '').toLowerCase();
-        const desc = (product.getAttribute('data-product-description') || '').toLowerCase(); // Garante busca na descrição
-
-        if (name.includes(term) || desc.includes(term)) {
-            product.style.display = 'flex';
-        } else {
-            product.style.display = 'none';
-        }
-    });
-
-    // Esconde categorias vazias
-    categories.forEach(category => {
-        const visibleProducts = category.querySelectorAll('.cardapio-product-card[style="display: flex;"]');
-        if (visibleProducts.length === 0 && term !== '') {
-            category.style.display = 'none';
-        } else {
-            category.style.display = 'block';
-        }
-    });
-}
-
-function filterByCategory(categoryName) {
-const sections = document.querySelectorAll('.cardapio-category-section');
-    const buttons = document.querySelectorAll('.cardapio-category-btn');
-
-    // Visual botões - Simplificado
-    buttons.forEach(btn => {
-        const btnCategory = btn.getAttribute('data-category');
-        if (btnCategory === categoryName) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-
-    // Filtra seções
-    sections.forEach(sec => {
-        const secId = sec.getAttribute('data-category-id');
-// Se for 'todos', mostra tudo. Se não, mostra só se o ID bater.
-        if (categoryName === 'todos' || secId === categoryName) {
-            sec.style.display = 'block';
-        } else {
-            sec.style.display = 'none';
-        }
-    });
-
-    // Reset da busca ao filtrar
-    const searchInput = document.getElementById('cardapioSearchInput');
-    if (searchInput) {
-        searchInput.value = '';
-        // Reseta display dos produtos
-        document.querySelectorAll('.cardapio-product-card').forEach(p => p.style.display = 'flex');
-    }
-}
-
-// 3. LISTENERS PARA BOTÕES DE ADICIONAR (Restaurado)
-// A função original permitia que o botão "+" abrisse o modal explicitamente
-function initAddButtons() {
-    document.querySelectorAll('.cardapio-add-btn').forEach(btn => {
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation(); // Evita duplo clique se o card pai tiver onclick
-
-            // Busca o ID do pai
-            const card = this.closest('.cardapio-product-card');
-            if (card) {
-                const productId = card.getAttribute('data-product-id');
-                const comboId = card.getAttribute('data-combo-id');
-
-                if (productId) {
-                    if (window.openProductModal) window.openProductModal(productId);
-                } else if (comboId) {
-                    // Suporte a Combos
-                    if (window.CardapioModals && CardapioModals.openCombo) {
-                        CardapioModals.openCombo(comboId);
-                    }
+        // ==========================================
+        // UI - Lógica de Interface
+        // ==========================================
+        ui: {
+            // --- Viewport ---
+            bindViewportAdjustments: function () {
+                // Monitora redimensionamento (teclado virtual)
+                if (window.visualViewport && typeof window.onVV === 'function') {
+                    window.visualViewport.addEventListener('resize', window.onVV);
+                    window.visualViewport.addEventListener('scroll', window.onVV);
                 }
-            }
-        });
-    });
-}
-// Chama na inicialização
-document.addEventListener('DOMContentLoaded', initAddButtons); // Adiciona ao ciclo
 
-// Expor filtro globalmente
-window.filterByCategory = filterByCategory;
+                // Ajuste de padding para inputs
+                if (typeof window.adjustPaddingForKeyboard === 'function' && typeof window.ensureVisible === 'function') {
+                    document.querySelectorAll('input, textarea').forEach(input => {
+                        input.addEventListener('focus', () => {
+                            window.adjustPaddingForKeyboard(true);
+                            window.ensureVisible(input);
+                        });
+                        input.addEventListener('blur', () => {
+                            window.adjustPaddingForKeyboard(false);
+                        });
+                    });
+                }
+            },
+
+            // --- Busca ---
+            handleSearch: function (e) {
+                const term = e.target.value.toLowerCase();
+                const products = document.querySelectorAll('.cardapio-product-card');
+                const categories = document.querySelectorAll('.cardapio-category-section');
+
+                products.forEach(product => {
+                    const name = (product.getAttribute('data-product-name') || '').toLowerCase();
+                    const desc = (product.getAttribute('data-product-description') || '').toLowerCase();
+
+                    if (name.includes(term) || desc.includes(term)) {
+                        product.style.display = 'flex';
+                    } else {
+                        product.style.display = 'none';
+                    }
+                });
+
+                // Esconde categorias vazias
+                categories.forEach(category => {
+                    const visibleProducts = category.querySelectorAll('.cardapio-product-card[style="display: flex;"]');
+                    category.style.display = (visibleProducts.length === 0 && term !== '') ? 'none' : 'block';
+                });
+            },
+
+            // --- Filtros ---
+            bindCategoryFilters: function () {
+                // Listeners diretos
+                document.querySelectorAll('.cardapio-category-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.filterByCategory(btn.getAttribute('data-category'));
+                    });
+                });
+
+                // Fallback: Event Delegation
+                const container = document.querySelector('.cardapio-categories');
+                if (container) {
+                    container.addEventListener('click', (e) => {
+                        const btn = e.target.closest('.cardapio-category-btn');
+                        if (btn) {
+                            e.preventDefault();
+                            this.filterByCategory(btn.getAttribute('data-category'));
+                        }
+                    });
+                }
+            },
+
+            filterByCategory: function (categoryName) {
+                const sections = document.querySelectorAll('.cardapio-category-section');
+                const buttons = document.querySelectorAll('.cardapio-category-btn');
+
+                // Visual botões
+                buttons.forEach(btn => {
+                    const isActive = btn.getAttribute('data-category') === categoryName;
+                    btn.classList.toggle('active', isActive);
+                });
+
+                // Filtra seções
+                sections.forEach(sec => {
+                    const secId = sec.getAttribute('data-category-id');
+                    const isVisible = categoryName === 'todos' || secId === categoryName;
+                    sec.style.display = isVisible ? 'block' : 'none';
+                });
+
+                // Reset da busca
+                const searchInput = document.getElementById('cardapioSearchInput');
+                if (searchInput) {
+                    searchInput.value = '';
+                    document.querySelectorAll('.cardapio-product-card').forEach(p => p.style.display = 'flex');
+                }
+            },
+
+            // --- Botões Adicionar ---
+            bindAddButtons: function () {
+                document.querySelectorAll('.cardapio-add-btn').forEach(btn => {
+                    btn.addEventListener('click', function (e) {
+                        e.stopPropagation(); // Evita clique no card pai
+
+                        const card = this.closest('.cardapio-product-card');
+                        if (card) {
+                            const productId = card.getAttribute('data-product-id');
+                            const comboId = card.getAttribute('data-combo-id');
+
+                            if (productId) {
+                                if (window.CardapioModals) CardapioModals.openProduct(productId);
+                                else if (window.openProductModal) window.openProductModal(productId);
+                            } else if (comboId) {
+                                if (window.CardapioModals && CardapioModals.openCombo) CardapioModals.openCombo(comboId);
+                            }
+                        }
+                    });
+                });
+            }
+        }
+    };
+
+    // ==========================================
+    // EXPORTAR GLOBALMENTE
+    // ==========================================
+    window.CardapioManager = CardapioManager;
+
+    // Aliases Legado
+    window.filterByCategory = (cat) => CardapioManager.ui.filterByCategory(cat);
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', () => CardapioManager.init());
+
+})();

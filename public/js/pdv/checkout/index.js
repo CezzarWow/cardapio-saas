@@ -10,6 +10,8 @@
  * - CheckoutPayments
  * - CheckoutSubmit
  * - CheckoutOrderType
+ * - CheckoutFlow
+ * - CheckoutEntrega
  */
 
 const PDVCheckout = {
@@ -71,230 +73,58 @@ const PDVCheckout = {
     // HELPERS (delegados)
     // ==========================================
 
-    formatMoneyInput: function (input) {
-        return CheckoutHelpers.formatMoneyInput(input);
-    },
-
-    formatCurrency: function (val) {
-        return CheckoutHelpers.formatCurrency(val);
-    },
-
-    formatMethodLabel: function (method) {
-        return CheckoutHelpers.formatMethodLabel(method);
-    },
+    formatMoneyInput: (input) => CheckoutHelpers.formatMoneyInput(input),
+    formatCurrency: (val) => CheckoutHelpers.formatCurrency(val),
+    formatMethodLabel: (method) => CheckoutHelpers.formatMethodLabel(method),
 
     // ==========================================
     // DESCONTO / TOTAIS (delegados)
     // ==========================================
 
-    applyDiscount: function (valStr) {
-        return CheckoutTotals.applyDiscount(valStr);
-    },
-
-    getFinalTotal: function () {
-        return CheckoutTotals.getFinalTotal();
-    },
+    applyDiscount: (valStr) => CheckoutTotals.applyDiscount(valStr),
+    getFinalTotal: () => CheckoutTotals.getFinalTotal(),
 
     // ==========================================
     // UI (delegados)
     // ==========================================
 
-    updatePaymentList: function () {
-        return CheckoutUI.updatePaymentList();
-    },
-
-    updateCheckoutUI: function () {
-        return CheckoutUI.updateCheckoutUI();
-    },
-
-    showSuccessModal: function () {
-        return CheckoutUI.showSuccessModal();
-    },
+    updatePaymentList: () => CheckoutUI.updatePaymentList(),
+    updateCheckoutUI: () => CheckoutUI.updateCheckoutUI(),
+    showSuccessModal: () => CheckoutUI.showSuccessModal(),
 
     // ==========================================
     // PAGAMENTOS (delegados)
     // ==========================================
 
-    setMethod: function (method) {
-        return CheckoutPayments.setMethod(method);
-    },
-
-    addPayment: function () {
-        return CheckoutPayments.addPayment();
-    },
-
-    removePayment: function (index) {
-        return CheckoutPayments.removePayment(index);
-    },
+    setMethod: (method) => CheckoutPayments.setMethod(method),
+    addPayment: () => CheckoutPayments.addPayment(),
+    removePayment: (index) => CheckoutPayments.removePayment(index),
 
     // ==========================================
     // TIPO DE PEDIDO (delegado)
     // ==========================================
 
-    selectOrderType: function (type, element) {
-        return CheckoutOrderType.selectOrderType(type, element);
-    },
+    selectOrderType: (type, element) => CheckoutOrderType.selectOrderType(type, element),
 
     // ==========================================
     // SUBMIT (delegados)
     // ==========================================
 
-    submitSale: function () {
-        return CheckoutSubmit.submitSale();
-    },
-
-    saveClientOrder: function () {
-        return CheckoutSubmit.saveClientOrder();
-    },
-
-    forceDelivery: function (orderId) {
-        return CheckoutSubmit.forceDelivery(orderId);
-    },
+    submitSale: () => CheckoutSubmit.submitSale(),
+    saveClientOrder: () => CheckoutSubmit.saveClientOrder(),
+    savePickupOrder: () => CheckoutSubmit.savePickupOrder(),
+    forceDelivery: (orderId) => CheckoutSubmit.forceDelivery(orderId),
 
     // ==========================================
-    // LÓGICA DE ABERTURA DO CHECKOUT
+    // FLUXO (delegado para CheckoutFlow)
     // ==========================================
 
-    finalizeSale: function () {
-        const tableId = document.getElementById('current_table_id').value;
-
-        // VERIFICAÇÃO ESPECIAL: Edição de Pedido Pago
-        if (typeof isEditingPaidOrder !== 'undefined' && isEditingPaidOrder) {
-            this.handlePaidOrderInclusion();
-            return;
-        }
-
-        if (tableId) {
-            if (PDVCart.items.length === 0) { alert('Carrinho vazio!'); return; }
-            this.openCheckoutModal();
-            return;
-        }
-
-        // BALCÃO
-        const stateBalcao = PDVState.getState();
-        if (!tableId && stateBalcao.modo !== 'retirada') {
-            PDVState.set({ modo: 'balcao' });
-        }
-
-        if (PDVCart.items.length === 0) { alert('Carrinho vazio!'); return; }
-
-        this.openCheckoutModal();
-    },
-
-    handlePaidOrderInclusion: function () {
-        const cartTotal = PDVCart.calculateTotal();
-
-        if (PDVCart.items.length > 0 && cartTotal > 0.01) {
-            CheckoutState.resetPayments();
-            document.getElementById('checkout-total-display').innerText = CheckoutHelpers.formatCurrency(cartTotal);
-            document.getElementById('checkoutModal').style.display = 'flex';
-            this.setMethod('dinheiro');
-            this.updateCheckoutUI();
-            window.isPaidOrderInclusion = true;
-        } else {
-            alert('Carrinho vazio! Adicione novos itens para cobrar.');
-        }
-    },
-
-    fecharContaMesa: function (mesaId) {
-        PDVState.set({ modo: 'mesa', mesaId: mesaId, fechandoConta: true });
-        const state = PDVState.getState();
-
-        if (state.status === 'editando_pago') {
-            alert('Mesa não permite editar pedido pago.');
-            return;
-        }
-
-        CheckoutState.resetPayments();
-
-        const tableTotalStr = document.getElementById('table-initial-total').value;
-        const tableTotal = parseFloat(tableTotalStr);
-
-        document.getElementById('checkout-total-display').innerText = CheckoutHelpers.formatCurrency(tableTotal);
-        document.getElementById('checkoutModal').style.display = 'flex';
-        this.setMethod('dinheiro');
-        this.updateCheckoutUI();
-    },
-
-    fecharComanda: function (orderId) {
-        const isPaid = document.getElementById('current_order_is_paid') ? document.getElementById('current_order_is_paid').value == '1' : false;
-
-        PDVState.set({
-            modo: 'comanda',
-            pedidoId: orderId ? parseInt(orderId) : null,
-            fechandoConta: true
-        });
-
-        if (isPaid) {
-            if (!confirm('Este pedido já está PAGO. Deseja entregá-lo e finalizar?')) return;
-            this.forceDelivery(orderId);
-            return;
-        }
-
-        CheckoutState.closingOrderId = orderId;
-        CheckoutState.resetPayments();
-
-        const totalStr = document.getElementById('table-initial-total').value;
-        document.getElementById('checkout-total-display').innerText = CheckoutHelpers.formatCurrency(parseFloat(totalStr));
-
-        const cards = document.querySelectorAll('.order-type-card');
-        if (cards.length > 0) this.selectOrderType('local', cards[0]);
-
-        document.getElementById('checkoutModal').style.display = 'flex';
-        this.setMethod('dinheiro');
-        this.updateCheckoutUI();
-    },
-
-    openCheckoutModal: function () {
-        CheckoutState.reset();
-
-        // Calcula o total
-        let cartTotal = 0;
-        if (typeof calculateTotal === 'function') {
-            cartTotal = calculateTotal();
-        } else if (typeof PDVCart !== 'undefined') {
-            cartTotal = PDVCart.calculateTotal();
-        }
-        let tableInitialTotal = parseFloat(document.getElementById('table-initial-total')?.value || 0);
-        CheckoutState.cachedTotal = cartTotal + tableInitialTotal;
-
-        // Reset Inputs
-        const discInput = document.getElementById('discount-amount');
-        if (discInput) discInput.value = '';
-
-        this.updatePaymentList();
-
-        document.getElementById('checkout-total-display').innerText = CheckoutHelpers.formatCurrency(CheckoutState.cachedTotal);
-        document.getElementById('checkoutModal').style.display = 'flex';
-        this.setMethod('dinheiro');
-
-        // SEMPRE abre com "Local" selecionado
-        const localCard = document.querySelector('.order-type-card:first-child');
-        if (localCard) {
-            this.selectOrderType('local', localCard);
-        } else {
-            document.getElementById('keep_open_value').value = 'false';
-            const alertBox = document.getElementById('retirada-client-alert');
-            if (alertBox) alertBox.style.display = 'none';
-        }
-
-        this.updateCheckoutUI();
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    },
-
-    closeCheckout: function () {
-        document.getElementById('checkoutModal').style.display = 'none';
-        CheckoutState.resetPayments();
-
-        // Limpa visual
-        const alertBox = document.getElementById('retirada-client-alert');
-        if (alertBox) alertBox.style.display = 'none';
-
-        // Reset dados de entrega
-        if (typeof _resetDeliveryOnClose === 'function') {
-            _resetDeliveryOnClose();
-        }
-    }
+    finalizeSale: () => CheckoutFlow.finalizeSale(),
+    fecharContaMesa: (mesaId) => CheckoutFlow.fecharContaMesa(mesaId),
+    fecharComanda: (orderId) => CheckoutFlow.fecharComanda(orderId),
+    openCheckoutModal: () => CheckoutFlow.openCheckoutModal(),
+    closeCheckout: () => CheckoutFlow.closeCheckout(),
+    handlePaidOrderInclusion: () => CheckoutFlow.handlePaidOrderInclusion()
 
 };
 

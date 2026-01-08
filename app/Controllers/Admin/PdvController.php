@@ -19,29 +19,71 @@ class PdvController extends BaseController {
         $rid = $this->getRestaurantId();
         
         // Contexto (Mesa ou Comanda)
-        $mesaId = $this->getInt('mesa_id'); // getInt retorna 0 se nulo
+        $mesaId = $this->getInt('mesa_id'); 
         $mesaNumero = $_GET['mesa_numero'] ?? null;
         $orderId = $this->getInt('order_id');
 
-        // Busca dados do contexto (Conta aberta, itens já pedidos)
+        // Busca dados do contexto
         $context = $this->service->getContextData($rid, $mesaId > 0 ? $mesaId : null, $orderId > 0 ? $orderId : null);
         
-        // Extrai variáveis para a View
         $contaAberta = $context['contaAberta'];
         $itensJaPedidos = $context['itensJaPedidos'];
-        $isComanda = $context['isComanda'];
         
-        // Passa variáveis de contexto mesa para a view (previne Undefined variable)
-        $mesa_id = $mesaId; // View usa snake_case
+        // Variáveis para View (snake_case)
+        $mesa_id = $mesaId;
         $mesa_numero = $mesaNumero;
 
-        // Carrega Cardápio (Categorias + Produtos)
+        // --- Lógica movida da View (dashboard.php) ---
+        
+        // 1. Detecta modo edição (Pedido Pago/Retirada)
+        $isEditingPaid = isset($_GET['edit_paid']) && $_GET['edit_paid'] == '1';
+        $editingOrderId = $orderId;
+
+        $originalPaidTotalFromDB = 0;
+        if ($isEditingPaid && $editingOrderId) {
+            $conn = \App\Core\Database::connect();
+            $stmt = $conn->prepare("SELECT total FROM orders WHERE id = :oid");
+            $stmt->execute(['oid' => $editingOrderId]);
+            $orderData = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $originalPaidTotalFromDB = floatval($orderData['total'] ?? 0);
+        }
+
+        // 2. Carrega Configurações (Taxa de Entrega)
+        $deliveryFee = 5.0;
+        $settingsPath = __DIR__ . '/../../../data/restaurants/' . $rid . '/cardapio_settings.json';
+        if (file_exists($settingsPath)) {
+            $settings = json_decode(file_get_contents($settingsPath), true);
+            $deliveryFee = floatval($settings['delivery_fee'] ?? 5.0);
+        }
+
+        // 3. Lógica de Exibição de Botões (TableViewFlags)
+        $showQuickSale = false;   // Botão "Finalizar" (Venda Rápida)
+        $showCloseTable = false;  // Botão "Finalizar Mesa"
+        $showCloseCommand = false;// Botão "Entregar/Finalizar" (Comanda)
+        $showSaveCommand = false; // Botão "Salvar" (Comanda)
+        $showIncludePaid = false; // Botão "Incluir" (Edição Pago)
+
+        if ($mesa_id) {
+            // Contexto: MESA
+            $showCloseTable = true; 
+        } elseif (!empty($contaAberta['id'])) {
+            // Contexto: COMANDA EXISTENTE
+            if ($isEditingPaid) {
+                $showIncludePaid = true;
+            } else {
+                $showCloseCommand = true;
+                $showSaveCommand = true;
+            }
+        } else {
+            // Contexto: BALCÃO LIVRE (Nova Venda)
+            // Se não tem mesa e não tem comanda aberta, é venda rápida
+            $showQuickSale = true;
+        }
+
+        // Carrega Cardápio
         $categories = $this->service->getMenu($rid);
 
-        // Verifica recuperação de carrinho (Modo Edição)
-        $cartRecovery = $_SESSION['cart_recovery'] ?? [];
-        $isEditing = isset($_SESSION['cart_recovery']);
-
+        // Renderiza
         require __DIR__ . '/../../../views/admin/panel/dashboard.php';
     }
 
@@ -52,17 +94,18 @@ class PdvController extends BaseController {
         if (session_status() === PHP_SESSION_NONE) session_start();
         
         if (!isset($_SESSION['edit_backup'])) {
-            $this->redirect('../../admin/loja/pdv');
+            header('Location: ../../admin/loja/pdv');
+            exit;
         }
 
         try {
             $this->service->restoreOrder($_SESSION['edit_backup']);
 
-            // Limpa sessões
             unset($_SESSION['edit_backup']);
             unset($_SESSION['cart_recovery']);
 
-            $this->redirect('../../admin/loja/caixa');
+            header('Location: ../../admin/loja/caixa');
+            exit;
 
         } catch (\Exception $e) {
             die("Erro crítico ao cancelar edição: " . $e->getMessage());

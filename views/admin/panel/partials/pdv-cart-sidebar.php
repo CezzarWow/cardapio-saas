@@ -117,50 +117,54 @@
 
         <!-- Botões de Ação -->
         <div style="display: flex; gap: 10px; margin-top: 20px;">
-            <!-- Botão SALVAR COMANDA: Exibe se for Comanda NÃO paga -->
-            <?php $showSalvar = (!empty($contaAberta['id']) && !$mesa_id && !$isEditingPaid); ?>
+            
+            <!-- 1. Botão SALVAR COMANDA (Sem pagar) -->
+            <?php if (!empty($showSaveCommand)): ?>
             <button id="btn-save-command" onclick="saveClientOrder()" 
-                    style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: <?= $showSalvar ? 'flex' : 'none' ?>; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
+                    style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                 Salvar
             </button>
+            <?php endif; ?>
 
-            <!-- Botão INCLUIR: Só para pedido PAGO em edição (cobra antes de incluir) -->
-            <?php if ($isEditingPaid ?? false): ?>
+            <!-- 2. Botão INCLUIR (Edição de Pedido Pago) -->
+            <?php if (!empty($showIncludePaid)): ?>
             <button id="btn-include-paid" onclick="includePaidOrderItems()" 
                     style="flex: 1; background: #16a34a; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                 <i data-lucide="plus-circle" size="20"></i> Incluir
             </button>
             <?php endif; ?>
 
-            <!-- Botão FINALIZAR (Venda Rápida): Só exibe se NÃO for Comanda aberta (com ID) -->
-            <button id="btn-finalizar" class="btn-primary" disabled onclick="finalizeSale()" 
-                    style="flex: 1; display: <?= (!empty($contaAberta['id']) && !$mesa_id) ? 'none' : 'flex' ?>; padding: 16px; font-size: 1.1rem; align-items: center; justify-content: center;">
+            <!-- 3. Botão FINALIZAR (Balcão - Venda Rápida) -->
+            <?php if (!empty($showQuickSale)): ?>
+            <button id="btn-finalizar" class="btn-primary" onclick="finalizeSale()" 
+                    style="flex: 1; display: flex; padding: 16px; font-size: 1.1rem; align-items: center; justify-content: center;">
                 Finalizar
             </button>
-
-            <?php if (!empty($contaAberta['id'])): ?>
-                <?php if ($mesa_id): ?>
-                    <button onclick="fecharContaMesa(<?= $mesa_id ?>)" 
-                            style="flex: 1; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
-                        Finalizar
-                    </button>
-                <?php else: ?>
-                    <?php 
-                        $isPaid = !empty($contaAberta['is_paid']) && $contaAberta['is_paid'] == 1;
-                        $btnText = $isPaid ? 'Entregar (Concluir)' : 'Finalizar';
-                        $btnColor = $isPaid ? '#059669' : '#2563eb';
-                    ?>
-                    <button onclick="fecharComanda(<?= $contaAberta['id'] ?>)" 
-                            style="flex: 1; background: <?= $btnColor ?>; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
-                        <?= $btnText ?>
-                    </button>
-                <?php endif; ?>
-                
-                <!-- Hidden input para o JS ler o valor inicial -->
-                <input type="hidden" id="table-initial-total" value="<?= $contaAberta['total'] ?>">
-            <?php else: ?>
-                <input type="hidden" id="table-initial-total" value="0">
             <?php endif; ?>
+
+            <!-- 4. Botão FECHAR MESA -->
+            <?php if (!empty($showCloseTable)): ?>
+                <button onclick="fecharContaMesa(<?= $mesa_id ?>)" 
+                        style="flex: 1; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
+                    Finalizar Mesa
+                </button>
+            <?php endif; ?>
+
+            <!-- 5. Botão ENTREGAR/BAIXAR (Comanda) -->
+            <?php if (!empty($showCloseCommand)): ?>
+                <?php 
+                    $isPaid = !empty($contaAberta['is_paid']) && $contaAberta['is_paid'] == 1;
+                    $btnText = $isPaid ? 'Entregar (Concluir)' : 'Finalizar';
+                    $btnColor = $isPaid ? '#059669' : '#2563eb';
+                ?>
+                <button onclick="fecharComanda(<?= $contaAberta['id'] ?>)" 
+                        style="flex: 1; background: <?= $btnColor ?>; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
+                    <?= $btnText ?>
+                </button>
+            <?php endif; ?>
+                
+            <!-- Hidden input para o JS ler o valor inicial -->
+            <input type="hidden" id="table-initial-total" value="<?= $contaAberta['total'] ?? 0 ?>">
         </div>
     </div>
 </aside>

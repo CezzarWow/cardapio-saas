@@ -3,10 +3,14 @@
  * 
  * Gerencia salvamento de combos (criar/atualizar).
  * Parte do módulo CardapioAdmin.
+ * Refatorado para usar BASE_URL
  */
 
 (function (CardapioAdmin) {
     'use strict';
+
+    // Helper URL
+    const getBaseUrl = () => typeof BASE_URL !== 'undefined' ? BASE_URL : '/cardapio-saas/public';
 
     /**
      * Salva Combo via AJAX (simula form submission)
@@ -20,7 +24,6 @@
         // 1. Coleta dados básicos
         const nameInput = document.getElementById('combo_name');
         const priceInput = document.getElementById('combo_price');
-        const originalPrice = document.getElementById('combo_original_price');
         const descInput = document.getElementById('combo_description');
         const validityType = document.getElementById('combo_validity_type');
         const validUntilInput = document.getElementById('combo_valid_until');
@@ -103,7 +106,7 @@
             }
         });
 
-        // 4. Detecta modo edição
+        // 4. Detecta modo edição e define URL
         const comboIdInput = document.getElementById('combo_id');
         const isEditMode = comboIdInput && comboIdInput.value && comboIdInput.value !== '';
 
@@ -111,19 +114,18 @@
             formData.append('id', comboIdInput.value);
         }
 
+        // URL robusta usando BASE_URL
+        const endpoint = isEditMode
+            ? '/admin/cardapio/combo/atualizar'
+            : '/admin/cardapio/combo/salvar';
+
+        const url = getBaseUrl() + endpoint;
+
         // 5. Envia via AJAX
         btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Salvando...';
         btn.disabled = true;
 
-        const mainForm = document.getElementById('formCardapio');
-        const action = isEditMode ? '/combo/atualizar' : '/combo/salvar';
-        let baseUrl = mainForm ? mainForm.action.replace('/salvar', action) : window.location.href;
-
-        if (!baseUrl.includes('combo/')) {
-            baseUrl = isEditMode ? 'cardapio/combo/atualizar' : 'cardapio/combo/salvar';
-        }
-
-        fetch(baseUrl, {
+        fetch(url, {
             method: 'POST',
             body: formData
         })
@@ -133,14 +135,12 @@
                 } else if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Erro ao salvar combo. Tente novamente.');
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
+                    return response.text().then(text => { throw new Error(text || 'Erro desconhecido'); });
                 }
             })
             .catch(error => {
-                console.error('Erro:', error);
-                alert('Erro de conexão ao salvar combo.');
+                console.error('Erro ao salvar combo:', error);
+                alert('Erro ao salvar combo. Verifique o console.');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             });

@@ -65,76 +65,24 @@
 <?php require __DIR__ . '/cardapio/partials/modals/payment.php'; ?>
 
 <script>
-    <?php
-    // Achata array de produtos para JS
-    $allProducts = [];
-    if (!empty($productsByCategory)) {
-        foreach ($productsByCategory as $cat => $prods) {
-            foreach ($prods as $p) {
-                // Garante que additionals seja array
-                if (empty($p['additionals'])) $p['additionals'] = [];
-                // Sanitiza descrição - remove quebras de linha que quebram JS
-                if (isset($p['description'])) {
-                    $p['description'] = preg_replace('/[\r\n]+/', ' ', $p['description']);
-                }
-                if (isset($p['name'])) {
-                    $p['name'] = preg_replace('/[\r\n]+/', ' ', $p['name']);
-                }
-                $allProducts[] = $p;
-            }
-        }
-    }
-    // Sanitiza combos também
-    $safeCombos = [];
-    if (!empty($combos)) {
-        foreach ($combos as $c) {
-            if (isset($c['description'])) {
-                $c['description'] = preg_replace('/[\r\n]+/', ' ', $c['description']);
-            }
-            $safeCombos[] = $c;
-        }
-    }
-    
-    $jsProducts = json_encode($allProducts, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
-    if ($jsProducts === false) $jsProducts = '[]';
-    
-    $jsCombos = json_encode($safeCombos, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
-    if ($jsCombos === false) $jsCombos = '[]';
-    ?>
-    
-    // Injeção Segura - variáveis no escopo global
+    // Variables injected by CardapioPublicoController
     window.products = <?= $jsProducts ?>;
     window.combos = <?= $jsCombos ?>;
-    window.PRODUCT_RELATIONS = <?= json_encode($productRelations ?? []) ?>;
+    window.PRODUCT_RELATIONS = <?= $jsRelations ?>;
     window.BASE_URL = '<?= BASE_URL ?>';
     
-    // [ETAPA 1.1] Configurações do cardápio admin
-    window.CARDAPIO_CONFIG = {
-        isOpen: <?= ($cardapioConfig['is_open'] ?? 1) ? 'true' : 'false' ?>,
-        deliveryEnabled: <?= ($cardapioConfig['delivery_enabled'] ?? 1) ? 'true' : 'false' ?>,
-        pickupEnabled: <?= ($cardapioConfig['pickup_enabled'] ?? 1) ? 'true' : 'false' ?>,
-        dineInEnabled: <?= ($cardapioConfig['dine_in_enabled'] ?? 1) ? 'true' : 'false' ?>,
-        deliveryFee: <?= floatval($cardapioConfig['delivery_fee'] ?? 5) ?>,
-        minOrderValue: <?= floatval($cardapioConfig['min_order_value'] ?? 20) ?>,
-        acceptCash: <?= ($cardapioConfig['accept_cash'] ?? 1) ? 'true' : 'false' ?>,
-        acceptCredit: <?= ($cardapioConfig['accept_credit'] ?? 1) ? 'true' : 'false' ?>,
-        acceptDebit: <?= ($cardapioConfig['accept_debit'] ?? 1) ? 'true' : 'false' ?>,
-        acceptPix: <?= ($cardapioConfig['accept_pix'] ?? 1) ? 'true' : 'false' ?>,
-        whatsappNumber: '<?= htmlspecialchars($cardapioConfig['whatsapp_number'] ?? '') ?>',
-        closedMessage: '<?= htmlspecialchars($cardapioConfig['closed_message'] ?? 'Estamos fechados no momento') ?>'
-    };
+    // Configurações do cardápio admin
+    window.CARDAPIO_CONFIG = <?= $jsConfig ?>;
 
     // Configurações completas (usado pelo checkout-order.js)
-    window.cardapioConfig = <?= json_encode($cardapioConfig ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+    window.cardapioConfig = <?= $jsConfigRaw ?>;
 
     // Diagnóstico
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof openProductModal === 'undefined') {
             console.error('CRITICAL: openProductModal not defined!');
-            alert('Erro: Sistema não carregou corretamente. Verifique o console.');
         } else {
-            console.log('✅ Sistema inicializado. Produtos carregados:', products.length);
-            console.log('✅ Configs do cardápio:', window.CARDAPIO_CONFIG);
+            console.log('✅ Sistema inicializado. Produtos:', products.length);
         }
     });
 </script>

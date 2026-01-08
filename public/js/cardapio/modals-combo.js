@@ -16,14 +16,108 @@
     CardapioModals.comboSelections = {}; // { productId: [ {id, name, price} ] }
 
     // ==========================================
-    // HELPER: CALCULAR TOTAL DE EXTRAS
+    // HELPERS INTERNOS
     // ==========================================
+
+    /**
+     * Calcula total de extras selecionados
+     */
     CardapioModals.calculateExtrasTotal = function () {
         let total = 0;
         Object.values(this.comboSelections).forEach(list => {
             list.forEach(item => total += item.price);
         });
         return total;
+    };
+
+    /**
+     * Cria o header de um item do combo
+     * @private
+     */
+    CardapioModals._createComboItemHeader = function (item, hasAdditionals, wrapper) {
+        const header = document.createElement('div');
+        header.className = 'combo-product-header';
+
+        if (hasAdditionals) {
+            header.onclick = () => wrapper.classList.toggle('open');
+        } else {
+            wrapper.classList.remove('open');
+        }
+
+        header.innerHTML = `
+            <div class="combo-product-info">
+                <span>${item.product_name}</span>
+                ${hasAdditionals ? `<span class="combo-extras-badge" id="badge-${item.product_id}">0 extras</span>` : ''}
+            </div>
+            ${hasAdditionals ? `<i data-lucide="chevron-down" class="combo-toggle-icon" size="16"></i>` : ''}
+        `;
+
+        return header;
+    };
+
+    /**
+     * Configura um input de adicional clonado
+     * @private
+     */
+    CardapioModals._setupAdditionalInput = function (input, item, clone) {
+        const addId = input.getAttribute('data-additional-id');
+        const price = parseFloat(input.getAttribute('data-additional-price'));
+        const name = input.getAttribute('data-additional-name');
+        const uniqueId = `combo-${item.product_id}-${addId}`;
+
+        input.id = uniqueId;
+        input.name = `combo_extras_${item.product_id}[]`;
+        input.checked = false;
+
+        // Atualiza Label
+        let label = clone.querySelector(`label[for="${input.getAttribute('id')}"]`);
+        if (!label) label = input.nextElementSibling;
+        if (label && label.tagName === 'LABEL') {
+            label.setAttribute('for', uniqueId);
+        } else {
+            const parentLabel = input.closest('label');
+            if (parentLabel) parentLabel.setAttribute('for', uniqueId);
+        }
+
+        // Eventos
+        input.onclick = (e) => e.stopPropagation();
+        input.onchange = (e) => {
+            this.toggleComboAdditional(item.product_id, addId, name, price, e.target.checked);
+        };
+
+        // Remove classe global
+        input.classList.remove('cardapio-additional-checkbox');
+    };
+
+    /**
+     * Cria o body de adicionais para um item do combo
+     * @private
+     */
+    CardapioModals._createComboItemBody = function (item, fullProduct, relations) {
+        const body = document.createElement('div');
+        body.className = 'combo-product-body';
+
+        const list = document.createElement('div');
+        list.className = 'combo-additional-list';
+
+        const groupIds = [...new Set(relations[fullProduct.id])];
+
+        groupIds.forEach(groupId => {
+            const originalGroup = document.querySelector(`.cardapio-additional-group[data-group-id="${groupId}"]`);
+            if (originalGroup) {
+                const clone = originalGroup.cloneNode(true);
+                clone.style.display = 'block';
+
+                clone.querySelectorAll('input').forEach(input => {
+                    this._setupAdditionalInput(input, item, clone);
+                });
+
+                list.appendChild(clone);
+            }
+        });
+
+        body.appendChild(list);
+        return body;
     };
 
     // ==========================================
@@ -60,22 +154,8 @@
             imgEl.style.display = 'none';
         }
 
-        // Check for existing instruction or create it
-        let instruction = document.getElementById('comboInstructionText');
-        if (!instruction) {
-            instruction = document.createElement('p');
-            instruction.id = 'comboInstructionText';
-            instruction.style.textAlign = 'left';
-            instruction.style.marginBottom = '15px';
-            instruction.style.marginTop = '10px';
-            instruction.style.fontWeight = '700';
-            instruction.style.fontSize = '0.9rem';
-            instruction.style.color = '#e63946';
-            instruction.textContent = 'Itens inclusos no combo. Clique para adicionar.';
-
-            const container = document.getElementById('comboProductsContainer');
-            container.parentNode.insertBefore(instruction, container);
-        }
+        // Instrução
+        this._ensureInstructionText();
 
         // Renderiza Produtos
         const container = document.getElementById('comboProductsContainer');
@@ -96,9 +176,25 @@
         this.updateComboPrice();
 
         // Abre
-        const modal = document.getElementById('comboModal');
-        modal.classList.add('show');
+        document.getElementById('comboModal').classList.add('show');
         Utils.initIcons();
+    };
+
+    /**
+     * Garante que o texto de instrução existe
+     * @private
+     */
+    CardapioModals._ensureInstructionText = function () {
+        let instruction = document.getElementById('comboInstructionText');
+        if (!instruction) {
+            instruction = document.createElement('p');
+            instruction.id = 'comboInstructionText';
+            instruction.style.cssText = 'text-align:left; margin-bottom:15px; margin-top:10px; font-weight:700; font-size:0.9rem; color:#e63946;';
+            instruction.textContent = 'Itens inclusos no combo. Clique para adicionar.';
+
+            const container = document.getElementById('comboProductsContainer');
+            container.parentNode.insertBefore(instruction, container);
+        }
     };
 
     CardapioModals.closeCombo = function () {
@@ -107,92 +203,22 @@
     };
 
     // ==========================================
-    // RENDERIZAR ITEM DO COMBO
+    // RENDERIZAR ITEM DO COMBO (Refatorado)
     // ==========================================
     CardapioModals.renderComboProductItem = function (item) {
         const fullProduct = (typeof products !== 'undefined') ? products.find(p => p.id == item.product_id) : null;
-
-        // Verifica se tem adicionais E se está permitido
         const relations = (typeof PRODUCT_RELATIONS !== 'undefined') ? PRODUCT_RELATIONS : {};
         const hasAdditionals = (item.allow_additionals == 1) && fullProduct && relations[fullProduct.id] && relations[fullProduct.id].length > 0;
 
         const wrapper = document.createElement('div');
         wrapper.className = 'combo-product-collapse open';
 
-        const header = document.createElement('div');
-        header.className = 'combo-product-header';
+        // Header
+        wrapper.appendChild(this._createComboItemHeader(item, hasAdditionals, wrapper));
 
+        // Body (se tiver adicionais)
         if (hasAdditionals) {
-            header.onclick = () => {
-                wrapper.classList.toggle('open');
-            };
-        } else {
-            wrapper.classList.remove('open');
-        }
-
-        header.innerHTML = `
-            <div class="combo-product-info">
-                <span>${item.product_name}</span>
-                ${hasAdditionals ? `<span class="combo-extras-badge" id="badge-${item.product_id}">0 extras</span>` : ''}
-            </div>
-            ${hasAdditionals ? `<i data-lucide="chevron-down" class="combo-toggle-icon" size="16"></i>` : ''}
-        `;
-
-        wrapper.appendChild(header);
-
-        if (hasAdditionals) {
-            const body = document.createElement('div');
-            body.className = 'combo-product-body';
-
-            const list = document.createElement('div');
-            list.className = 'combo-additional-list';
-
-            const groupIds = [...new Set(relations[fullProduct.id])];
-
-            groupIds.forEach(groupId => {
-                // Clona do DOM oculto existente
-                const originalGroup = document.querySelector(`.cardapio-additional-group[data-group-id="${groupId}"]`);
-                if (originalGroup) {
-                    const clone = originalGroup.cloneNode(true);
-                    clone.style.display = 'block';
-
-                    clone.querySelectorAll('input').forEach(input => {
-                        const addId = input.getAttribute('data-additional-id');
-                        const price = parseFloat(input.getAttribute('data-additional-price'));
-                        const name = input.getAttribute('data-additional-name');
-                        const uniqueId = `combo-${item.product_id}-${addId}`;
-
-                        input.id = uniqueId;
-                        input.name = `combo_extras_${item.product_id}[]`;
-                        input.checked = false;
-
-                        // Atualiza Label
-                        let label = clone.querySelector(`label[for="${input.getAttribute('id')}"]`);
-                        if (!label) label = input.nextElementSibling;
-                        if (label && label.tagName === 'LABEL') label.setAttribute('for', uniqueId);
-                        else {
-                            const parentLabel = input.closest('label');
-                            if (parentLabel) parentLabel.setAttribute('for', uniqueId);
-                        }
-
-                        // Evento manual
-                        input.onclick = (e) => {
-                            e.stopPropagation();
-                        };
-                        input.onchange = (e) => {
-                            this.toggleComboAdditional(item.product_id, addId, name, price, e.target.checked);
-                        };
-
-                        // Remove classe global
-                        input.classList.remove('cardapio-additional-checkbox');
-                    });
-
-                    list.appendChild(clone);
-                }
-            });
-
-            body.appendChild(list);
-            wrapper.appendChild(body);
+            wrapper.appendChild(this._createComboItemBody(item, fullProduct, relations));
         }
 
         return wrapper;

@@ -21,12 +21,12 @@ foreach ($products as $p) {
     <?php require __DIR__ . '/../panel/layout/messages.php'; ?>
     <div style="padding: 2rem; width: 100%; overflow-y: auto;">
         
-        <!-- Header com título -->
+        <!-- Header com título e botão -->
         <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-            <h1 style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">Dashboard de Estoque</h1>
-            <div style="color: #6b7280; font-size: 0.9rem;">
-                <i data-lucide="info" size="14"></i> A gestão de produtos (criar/editar) agora fica em <a href="<?= BASE_URL ?>/admin/loja/produtos" style="color: #2563eb; text-decoration: none; font-weight: 600;">Catálogo</a>
-            </div>
+            <h1 style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">Gerenciar Catálogo</h1>
+            <a href="<?= BASE_URL ?>/admin/loja/produtos/novo" class="btn" style="background: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="plus" size="18"></i> Novo Produto
+            </a>
         </div>
 
         <!-- Sub-abas do Estoque (STICKY) -->
@@ -148,11 +148,16 @@ foreach ($products as $p) {
                         </div>
                     </div>
                     
-                    <!-- Ações (Apenas Atalho) -->
+                    <!-- Ações -->
                     <div class="stock-product-card-actions">
-                        <a href="<?= BASE_URL ?>/admin/loja/reposicao" class="btn-edit" style="width: 100%; justify-content: center; background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd;">
-                            <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
-                            Repor Estoque
+                        <a href="<?= BASE_URL ?>/admin/loja/produtos/editar?id=<?= $prod['id'] ?>" class="btn-edit">
+                            <i data-lucide="pencil" style="width: 14px; height: 14px;"></i>
+                            Editar
+                        </a>
+                        <a href="javascript:void(0)" 
+                           onclick="openDeleteModal(<?= $prod['id'] ?>, '<?= htmlspecialchars(addslashes($prod['name'])) ?>')" class="btn-delete">
+                            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                            Excluir
                         </a>
                     </div>
                 </div>
@@ -199,6 +204,43 @@ document.querySelectorAll('.category-chip').forEach(chip => {
         // Aplica filtro
         filterProducts();
     });
+});
+</script>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 2rem; border-radius: 16px; width: 100%; max-width: 400px; margin: 20px; text-align: center;">
+        <div style="width: 60px; height: 60px; background: #fef2f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+            <i data-lucide="trash-2" style="width: 28px; height: 28px; color: #dc2626;"></i>
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Excluir Produto</h3>
+        <p style="color: #6b7280; margin-bottom: 1.5rem;">Tem certeza que deseja excluir <strong id="deleteProductName"></strong>?</p>
+        <p style="color: #dc2626; font-size: 0.85rem; margin-bottom: 1.5rem;">⚠️ Esta ação não pode ser desfeita.</p>
+        
+        <div style="display: flex; gap: 10px;">
+            <button onclick="closeDeleteModal()" style="flex: 1; padding: 12px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                Cancelar
+            </button>
+            <a id="deleteConfirmBtn" href="#" style="flex: 1; padding: 12px; background: #dc2626; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                🗑️ Excluir
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function openDeleteModal(productId, productName) {
+    document.getElementById('deleteProductName').textContent = productName;
+    document.getElementById('deleteConfirmBtn').href = '<?= BASE_URL ?>/admin/loja/produtos/deletar?id=' + productId;
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
 });
 </script>
 

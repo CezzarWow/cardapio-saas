@@ -2,182 +2,239 @@
  * REPOSITION.JS - Reposição de Estoque
  * 
  * Funções para gerenciar reposição e ajuste de estoque.
- * Extraído de views/admin/reposition/index.php
+ * Refatorado para modularização (RepositionManager).
  */
 
-// ==========================================
-// STATE
-// ==========================================
-let currentProductId = null;
-let currentStock = 0;
-let selectedCategory = '';
+(function () {
+    'use strict';
 
-// ==========================================
-// INICIALIZAÇÃO
-// ==========================================
-document.addEventListener('DOMContentLoaded', function () {
-    // Filtro por chips de categoria
-    document.querySelectorAll('.category-chip').forEach(chip => {
-        chip.addEventListener('click', function () {
-            document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
-            this.classList.add('active');
-            selectedCategory = this.dataset.category;
-            filterProducts();
-        });
-    });
+    const RepositionManager = {
+        // ==========================================
+        // ESTADO
+        // ==========================================
+        state: {
+            currentProductId: null,
+            currentStock: 0,
+            selectedCategory: ''
+        },
 
-    // Preview do resultado no modal
-    const adjustAmountInput = document.getElementById('adjustAmount');
-    if (adjustAmountInput) {
-        adjustAmountInput.addEventListener('input', handlePreviewUpdate);
-    }
+        // ==========================================
+        // INICIALIZAÇÃO
+        // ==========================================
+        init: function () {
+            this.bindEvents();
+            console.log('[RepositionManager] Initialized');
+        },
 
-    // Fechar modal ao clicar fora
-    const modal = document.getElementById('adjustModal');
-    if (modal) {
-        modal.addEventListener('click', function (e) {
-            if (e.target === this) closeAdjustModal();
-        });
-    }
+        bindEvents: function () {
+            // Filtro por chips de categoria
+            document.querySelectorAll('.category-chip').forEach(chip => {
+                chip.addEventListener('click', (e) => {
+                    this.ui.handleCategoryClick(e.target);
+                });
+            });
 
-    console.log('Reposition JS Loaded');
-});
-
-// ==========================================
-// FILTROS
-// ==========================================
-function filterProducts() {
-    const searchInput = document.getElementById('searchProduct');
-    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-    const rows = document.querySelectorAll('.product-row');
-
-    rows.forEach(row => {
-        const cat = row.dataset.category;
-        const name = row.dataset.name || '';
-        const matchCategory = !selectedCategory || cat === selectedCategory;
-        const matchSearch = !searchTerm || name.includes(searchTerm);
-        row.style.display = (matchCategory && matchSearch) ? '' : 'none';
-    });
-}
-
-// ==========================================
-// MODAL DE AJUSTE
-// ==========================================
-function openAdjustModal(productId, productName, stock) {
-    currentProductId = productId;
-    currentStock = stock;
-
-    document.getElementById('modalProductName').textContent = productName;
-    document.getElementById('modalCurrentStock').textContent = stock;
-    document.getElementById('adjustAmount').value = '';
-    document.getElementById('previewResult').style.display = 'none';
-
-    document.getElementById('adjustModal').style.display = 'flex';
-    document.getElementById('adjustAmount').focus();
-}
-
-function closeAdjustModal() {
-    document.getElementById('adjustModal').style.display = 'none';
-    currentProductId = null;
-}
-
-function handlePreviewUpdate() {
-    const amount = parseInt(this.value) || 0;
-    if (amount !== 0) {
-        const newStock = currentStock + amount;
-        document.getElementById('previewStock').textContent = newStock;
-        document.getElementById('previewResult').style.display = 'block';
-
-        const preview = document.getElementById('previewResult');
-        if (newStock < 0) {
-            preview.style.background = '#fecaca';
-            preview.querySelector('span').style.color = '#dc2626';
-        } else if (newStock <= 5) {
-            preview.style.background = '#fef3c7';
-            preview.querySelector('span').style.color = '#d97706';
-        } else {
-            preview.style.background = '#d1fae5';
-            preview.querySelector('span').style.color = '#059669';
-        }
-    } else {
-        document.getElementById('previewResult').style.display = 'none';
-    }
-}
-
-// ==========================================
-// SUBMIT DE AJUSTE
-// ==========================================
-function submitAdjust() {
-    const amount = parseInt(document.getElementById('adjustAmount').value) || 0;
-
-    if (amount === 0) {
-        alert('Quantidade não pode ser zero');
-        return;
-    }
-
-    // Obtém base URL do pathname atual
-    const pathParts = window.location.pathname.split('/');
-    const publicIndex = pathParts.indexOf('public');
-    const baseUrl = publicIndex !== -1 ? pathParts.slice(0, publicIndex + 1).join('/') : '';
-
-    fetch(baseUrl + '/admin/loja/reposicao/ajustar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            product_id: currentProductId,
-            amount: amount
-        })
-    })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                updateStockDisplay(currentProductId, data.new_stock);
-                closeAdjustModal();
-                alert('Estoque ajustado com sucesso!');
-            } else {
-                alert('Erro: ' + data.message);
+            // Preview do resultado
+            const adjustAmountInput = document.getElementById('adjustAmount');
+            if (adjustAmountInput) {
+                adjustAmountInput.addEventListener('input', (e) => {
+                    this.ui.handlePreviewUpdate(e.target.value);
+                });
             }
-        })
-        .catch(err => {
-            alert('Erro ao ajustar estoque');
-            console.error(err);
-        });
-}
 
-function updateStockDisplay(productId, newStock) {
-    const stockEl = document.getElementById('stock-' + productId);
-    const row = stockEl?.closest('.product-row');
+            // Fechar modal ao clicar fora
+            const modal = document.getElementById('adjustModal');
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) this.ui.closeModal();
+                });
+            }
+        },
 
-    if (stockEl && row) {
-        stockEl.textContent = newStock;
+        // ==========================================
+        // UI - INTERFACE
+        // ==========================================
+        ui: {
+            handleCategoryClick: function (chip) {
+                document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                RepositionManager.state.selectedCategory = chip.dataset.category;
+                RepositionManager.ui.filterProducts();
+            },
 
-        // Atualiza cor baseada no estoque
-        if (newStock < 0) {
-            stockEl.style.color = '#dc2626';
-        } else if (newStock <= 5) {
-            stockEl.style.color = '#d97706';
-        } else {
-            stockEl.style.color = '#059669';
-        }
+            filterProducts: function () {
+                const searchInput = document.getElementById('searchProduct');
+                const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+                const rows = document.querySelectorAll('.product-row');
 
-        row.dataset.stock = newStock;
+                rows.forEach(row => {
+                    const cat = row.dataset.category;
+                    const name = row.dataset.name || '';
+                    const matchCategory = !RepositionManager.state.selectedCategory || cat === RepositionManager.state.selectedCategory;
+                    const matchSearch = !searchTerm || name.includes(searchTerm);
+                    row.style.display = (matchCategory && matchSearch) ? '' : 'none';
+                });
+            },
 
-        // Atualiza badge de status
-        const statusBadge = row.querySelector('.stock-product-card-footer span:last-child');
-        if (statusBadge) {
-            if (newStock < 0) {
-                statusBadge.textContent = 'Negativo';
-                statusBadge.style.background = '#fecaca';
-                statusBadge.style.color = '#dc2626';
-            } else if (newStock <= 5) {
-                statusBadge.textContent = 'Crítico';
-                statusBadge.style.background = '#fef3c7';
-                statusBadge.style.color = '#d97706';
-            } else {
-                statusBadge.textContent = 'Normal';
-                statusBadge.style.background = '#d1fae5';
-                statusBadge.style.color = '#059669';
+            openModal: function (productId, productName, stock) {
+                RepositionManager.state.currentProductId = productId;
+                RepositionManager.state.currentStock = stock;
+
+                const modal = document.getElementById('adjustModal');
+                if (!modal) return;
+
+                document.getElementById('modalProductName').textContent = productName;
+                document.getElementById('modalCurrentStock').textContent = stock;
+
+                const input = document.getElementById('adjustAmount');
+                input.value = '';
+
+                document.getElementById('previewResult').style.display = 'none';
+                modal.style.display = 'flex';
+
+                setTimeout(() => input.focus(), 50);
+            },
+
+            closeModal: function () {
+                const modal = document.getElementById('adjustModal');
+                if (modal) modal.style.display = 'none';
+                RepositionManager.state.currentProductId = null;
+            },
+
+            handlePreviewUpdate: function (value) {
+                const amount = parseInt(value) || 0;
+                const previewResult = document.getElementById('previewResult');
+                const previewStock = document.getElementById('previewStock');
+
+                if (amount !== 0) {
+                    const newStock = RepositionManager.state.currentStock + amount;
+                    previewStock.textContent = newStock;
+                    previewResult.style.display = 'block';
+
+                    const span = previewResult.querySelector('span');
+
+                    if (newStock < 0) {
+                        previewResult.style.background = '#fecaca';
+                        if (span) span.style.color = '#dc2626';
+                    } else if (newStock <= 5) {
+                        previewResult.style.background = '#fef3c7';
+                        if (span) span.style.color = '#d97706';
+                    } else {
+                        previewResult.style.background = '#d1fae5';
+                        if (span) span.style.color = '#059669';
+                    }
+                } else {
+                    previewResult.style.display = 'none';
+                }
+            },
+
+            updateStockDisplay: function (productId, newStock) {
+                const stockEl = document.getElementById('stock-' + productId);
+                const row = stockEl?.closest('.product-row');
+
+                if (stockEl && row) {
+                    stockEl.textContent = newStock;
+                    row.dataset.stock = newStock;
+
+                    // Cores
+                    if (newStock < 0) stockEl.style.color = '#dc2626';
+                    else if (newStock <= 5) stockEl.style.color = '#d97706';
+                    else stockEl.style.color = '#059669';
+
+                    // Badge
+                    const statusBadge = row.querySelector('.stock-product-card-footer span:last-child');
+                    if (statusBadge) {
+                        if (newStock < 0) {
+                            statusBadge.textContent = 'Negativo';
+                            statusBadge.style.background = '#fecaca';
+                            statusBadge.style.color = '#dc2626';
+                        } else if (newStock <= 5) {
+                            statusBadge.textContent = 'Crítico';
+                            statusBadge.style.background = '#fef3c7';
+                            statusBadge.style.color = '#d97706';
+                        } else {
+                            statusBadge.textContent = 'Normal';
+                            statusBadge.style.background = '#d1fae5';
+                            statusBadge.style.color = '#059669';
+                        }
+                    }
+                }
+            }
+        },
+
+        // ==========================================
+        // API - SERVER
+        // ==========================================
+        api: {
+            _getBaseUrl: function () {
+                if (typeof window.BASE_URL !== 'undefined') return window.BASE_URL;
+
+                // Fallback: Detecta base via URL
+                const parts = window.location.pathname.split('/');
+
+                // Se estiver dentro de /public/ (ex: localhost/cardapio/public/admin...)
+                const publicIndex = parts.indexOf('public');
+                if (publicIndex !== -1) return parts.slice(0, publicIndex + 1).join('/');
+
+                // Se estiver na raiz (ex: localhost/cardapio/admin...)
+                const adminIndex = parts.indexOf('admin');
+                if (adminIndex !== -1) return parts.slice(0, adminIndex).join('/');
+
+                return '';
+            },
+
+            adjustStock: function () {
+                const amountInput = document.getElementById('adjustAmount');
+                const amount = parseInt(amountInput.value) || 0;
+
+                if (amount === 0) {
+                    alert('Quantidade não pode ser zero');
+                    return;
+                }
+
+                const productId = RepositionManager.state.currentProductId;
+                if (!productId) return;
+
+                const baseUrl = this._getBaseUrl();
+
+                fetch(`${baseUrl}/admin/loja/reposicao/ajustar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        amount: amount
+                    })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            RepositionManager.ui.updateStockDisplay(productId, data.new_stock);
+                            RepositionManager.ui.closeModal();
+                            alert('Estoque ajustado com sucesso!');
+                        } else {
+                            alert('Erro: ' + (data.message || 'Erro desconhecido'));
+                        }
+                    })
+                    .catch(err => {
+                        console.error('[RepositionManager] Error:', err);
+                        alert('Erro ao ajustar estoque. Verifique o console.');
+                    });
             }
         }
-    }
-}
+    };
+
+    // ==========================================
+    // EXPORTAR GLOBALMENTE (Compatibilidade)
+    // ==========================================
+    window.RepositionManager = RepositionManager;
+
+    // Aliases para onclicks do HTML
+    window.openAdjustModal = (id, name, stock) => RepositionManager.ui.openModal(id, name, stock);
+    window.closeAdjustModal = () => RepositionManager.ui.closeModal();
+    window.submitAdjust = () => RepositionManager.api.adjustStock();
+    window.filterProducts = () => RepositionManager.ui.filterProducts();
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => RepositionManager.init());
+
+})();

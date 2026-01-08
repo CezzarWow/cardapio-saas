@@ -45,6 +45,7 @@
 <script src="<?= BASE_URL ?>/js/pdv/checkout/retirada.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/pdv/checkout/entrega.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/pdv/checkout/pickup.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/pdv/checkout/flow.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/pdv/checkout/index.js?v=<?= time() ?>"></script>
 
 <script src="<?= BASE_URL ?>/js/pdv.js?v=<?= time() ?>"></script>

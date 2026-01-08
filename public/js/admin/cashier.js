@@ -1,130 +1,137 @@
 /**
  * CASHIER.JS - Gerenciamento do Caixa/Financeiro
  * Namespace: CashierAdmin
- * 
- * Dependências: BASE_URL (definida no PHP antes deste script)
+ * Refatorado para usar BASE_URL
  */
 
-const CashierAdmin = {
+(function () {
+    'use strict';
 
-    // ==========================================
-    // MODAL DE MOVIMENTAÇÃO (SANGRIA/SUPRIMENTO)
-    // ==========================================
+    // Helper URL
+    const getBaseUrl = () => typeof BASE_URL !== 'undefined' ? BASE_URL : '/cardapio-saas/public';
 
-    Movimento: {
-        open: function (type) {
-            const modal = document.getElementById('modalMovimento');
-            const title = document.getElementById('modalTitle');
-            const inputType = document.getElementById('movType');
+    const CashierAdmin = {
 
-            inputType.value = type;
-
-            if (type === 'sangria') {
-                title.innerText = "Retirar Valor (Saída)";
-                title.style.color = "#b91c1c";
-            } else {
-                title.innerText = "Adicionar Dinheiro (Entrada)";
-                title.style.color = "#1d4ed8";
+        init: function () {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
             }
-
-            modal.style.display = 'flex';
+            console.log('[CashierAdmin] Initialized');
         },
 
-        close: function () {
-            document.getElementById('modalMovimento').style.display = 'none';
-        }
-    },
+        // ==========================================
+        // MODAL DE MOVIMENTAÇÃO (SANGRIA/SUPRIMENTO)
+        // ==========================================
 
-    // ==========================================
-    // MODAL DE DETALHES DO PEDIDO (COMANDA)
-    // ==========================================
+        Movimento: {
+            open: function (type) {
+                const modal = document.getElementById('modalMovimento');
+                if (!modal) return;
 
-    OrderDetails: {
-        open: function (orderId, total, date) {
-            const modal = document.getElementById('orderDetailsModal');
-            const list = document.getElementById('modalItemsList');
-            const dateEl = document.getElementById('receiptDate');
-            const totalEl = document.getElementById('receiptTotal');
+                const title = document.getElementById('modalTitle');
+                const inputType = document.getElementById('movType');
 
-            dateEl.innerText = 'PEDIDO #' + orderId + ' • ' + date;
-            totalEl.innerText = 'R$ ' + total;
+                inputType.value = type;
 
-            modal.style.display = 'flex';
-            list.innerHTML = '<p style="text-align:center; padding: 20px 0;">Impressora conectando...</p>';
+                if (type === 'sangria') {
+                    title.innerText = "Retirar Valor (Saída)";
+                    title.style.color = "#b91c1c";
+                } else {
+                    title.innerText = "Adicionar Dinheiro (Entrada)";
+                    title.style.color = "#1d4ed8";
+                }
 
-            fetch(BASE_URL + '/admin/loja/vendas/itens?id=' + orderId)
-                .then(response => response.json())
-                .then(data => this._renderItems(data, list))
-                .catch(err => {
-                    console.error(err);
-                    list.innerHTML = '<p style="color:red; text-align:center;">Erro de conexão.</p>';
-                });
-        },
+                modal.style.display = 'flex';
+                // Focus no input de valor
+                setTimeout(() => {
+                    const valInput = document.getElementById('movValue');
+                    if (valInput) valInput.focus();
+                }, 50);
+            },
 
-        close: function () {
-            document.getElementById('orderDetailsModal').style.display = 'none';
-        },
-
-        _renderItems: function (data, list) {
-            if (data.length === 0) {
-                list.innerHTML = '<p style="text-align:center;">Sem itens.</p>';
-                return;
+            close: function () {
+                const modal = document.getElementById('modalMovimento');
+                if (modal) modal.style.display = 'none';
             }
+        },
 
-            let html = '<table style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">';
+        // ==========================================
+        // MODAL DE DETALHES DO PEDIDO (COMANDA)
+        // ==========================================
 
-            data.forEach(item => {
-                let unitPrice = parseFloat(item.price);
-                let subTotal = unitPrice * item.quantity;
+        OrderDetails: {
+            open: function (orderId, total, date) {
+                const modal = document.getElementById('orderDetailsModal');
+                if (!modal) return;
 
-                html += `
-                    <tr>
-                        <td style="padding: 4px 0; vertical-align: top;">
-                            <div style="font-weight:bold;">${item.quantity}x ${item.name}</div>
-                            <div style="font-size:0.7rem; color:#666;">Unit: R$ ${unitPrice.toFixed(2).replace('.', ',')}</div>
-                        </td>
-                        <td style="padding: 4px 0; text-align: right; vertical-align: top; font-weight:bold;">
-                            R$ ${subTotal.toFixed(2).replace('.', ',')}
-                        </td>
-                    </tr>
+                const list = document.getElementById('modalItemsList');
+                const dateEl = document.getElementById('receiptDate');
+                const totalEl = document.getElementById('receiptTotal');
+
+                if (dateEl) dateEl.innerText = 'PEDIDO #' + orderId + ' • ' + date;
+                if (totalEl) totalEl.innerText = 'R$ ' + total;
+
+                modal.style.display = 'flex';
+                list.innerHTML = '<p style="text-align:center; padding: 20px 0;">Impressora conectando...</p>';
+
+                fetch(getBaseUrl() + '/admin/loja/vendas/itens?id=' + orderId)
+                    .then(response => response.json())
+                    .then(data => this._renderItems(data, list))
+                    .catch(err => {
+                        console.error(err);
+                        list.innerHTML = '<p style="color:red; text-align:center;">Erro de conexão.</p>';
+                    });
+            },
+
+            close: function () {
+                const modal = document.getElementById('orderDetailsModal');
+                if (modal) modal.style.display = 'none';
+            },
+
+            _renderItems: function (data, list) {
+                if (data.length === 0) {
+                    list.innerHTML = '<p style="text-align:center;">Sem itens.</p>';
+                    return;
+                }
+
+                const rows = data.map(item => {
+                    let unitPrice = parseFloat(item.price);
+                    let subTotal = unitPrice * item.quantity;
+                    return `
+                        <tr>
+                            <td style="padding: 4px 0; vertical-align: top;">
+                                <div style="font-weight:bold;">${item.quantity}x ${item.name}</div>
+                                <div style="font-size:0.7rem; color:#666;">Unit: R$ ${unitPrice.toFixed(2).replace('.', ',')}</div>
+                            </td>
+                            <td style="padding: 4px 0; text-align: right; vertical-align: top; font-weight:bold;">
+                                R$ ${subTotal.toFixed(2).replace('.', ',')}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                const html = `
+                    <table style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">
+                        ${rows}
+                    </table>
+                    <div style="margin-top:10px; border-top:1px solid #000; padding-top:5px; font-size:0.7rem; text-align:center;">*** FIM DO COMPROVANTE ***</div>
                 `;
-            });
 
-            html += '</table>';
-            html += '<div style="margin-top:10px; border-top:1px solid #000; padding-top:5px; font-size:0.7rem; text-align:center;">*** FIM DO COMPROVANTE ***</div>';
-
-            list.innerHTML = html;
+                list.innerHTML = html;
+            }
         }
-    },
+    };
 
     // ==========================================
-    // INICIALIZAÇÃO
+    // EXPORTAR GLOBALMENTE
     // ==========================================
+    window.CashierAdmin = CashierAdmin;
 
-    init: function () {
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
-    }
-};
+    // Aliases
+    window.openModal = (type) => CashierAdmin.Movimento.open(type);
+    window.openOrderDetails = (id, total, date) => CashierAdmin.OrderDetails.open(id, total, date);
 
-// ==========================================
-// EXPÕE GLOBALMENTE
-// ==========================================
+    // Auto-init
+    document.addEventListener('DOMContentLoaded', () => CashierAdmin.init());
 
-window.CashierAdmin = CashierAdmin;
-
-// ==========================================
-// ALIASES DE COMPATIBILIDADE (HTML usa esses)
-// ==========================================
-
-window.openModal = (type) => CashierAdmin.Movimento.open(type);
-window.openOrderDetails = (id, total, date) => CashierAdmin.OrderDetails.open(id, total, date);
-
-// ==========================================
-// AUTO-INIT
-// ==========================================
-
-document.addEventListener('DOMContentLoaded', () => CashierAdmin.init());
-
-console.log('[CashierAdmin] Módulo carregado');
+})();

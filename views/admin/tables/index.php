@@ -24,7 +24,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 <?php require __DIR__ . '/partials/modals/cliente.php'; ?>
 
 <script>const BASE_URL = '<?= BASE_URL ?>';</script>
-<script src="<?= BASE_URL ?>/js/clientes.js"></script>
+<script src="<?= BASE_URL ?>/js/admin/clientes.js?v=<?= time() ?>"></script>
 
 <!-- TablesAdmin Modules (carregar SUB-MÓDULOS primeiro) -->
 <script src="<?= BASE_URL ?>/js/admin/tables-crud.js?v=<?= time() ?>"></script>

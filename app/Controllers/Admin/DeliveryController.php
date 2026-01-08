@@ -53,6 +53,22 @@ class DeliveryController extends BaseController {
         $businessHour = $result['business_hour'];
         $periodStart = $result['period_start'];
         $periodEnd = $result['period_end'];
+
+        // Calcula totais (Moved from View)
+        $totalPedidos = count($orders);
+        $totalValor = 0;
+        $totalCancelado = 0;
+
+        foreach ($orders as $order) {
+            $st = $order['status'] ?? 'novo';
+            $val = floatval($order['total'] ?? 0);
+            
+            if ($st === 'entregue') {
+                $totalValor += $val;
+            } elseif ($st === 'cancelado') {
+                $totalCancelado += $val;
+            }
+        }
         
         require __DIR__ . '/../../../views/admin/delivery/history.php';
     }

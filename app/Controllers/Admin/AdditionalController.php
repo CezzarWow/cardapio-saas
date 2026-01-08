@@ -27,6 +27,10 @@ class AdditionalController extends BaseController {
         $groups = $this->service->getAllGroupsWithItems($rid);
         $allItems = $this->service->getAllItems($rid);
         
+        // Totais para a View
+        $totalGroups = count($groups);
+        $totalItems = count($allItems);
+        
         // Mantendo o repository direto para categorias por enquanto,
         // já que o AdditionalService foca em grupos/itens/vínculos.
         $categories = (new \App\Repositories\AdditionalCategoryRepository())->findAllCategories($rid); 

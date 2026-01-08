@@ -25,36 +25,10 @@ require __DIR__ . '/layout/sidebar.php';
 <main class="main-content">
     <section class="catalog-section">
 
-<?php 
-// ==========================================
-// VARIÁVEIS DO PDV
-// ==========================================
-
-// Detecta modo edição de pedido PAGO (Retirada)
-$isEditingPaid = isset($_GET['edit_paid']) && $_GET['edit_paid'] == '1';
-$editingOrderId = isset($_GET['order_id']) ? intval($_GET['order_id']) : null;
-
-// Se está editando pedido pago, busca o total original do banco
-$originalPaidTotalFromDB = 0;
-if ($isEditingPaid && $editingOrderId) {
-    $conn = \App\Core\Database::connect();
-    $stmt = $conn->prepare("SELECT total FROM orders WHERE id = :oid");
-    $stmt->execute(['oid' => $editingOrderId]);
-    $orderData = $stmt->fetch(PDO::FETCH_ASSOC);
-    $originalPaidTotalFromDB = floatval($orderData['total'] ?? 0);
-}
-
-// Carrega taxa de entrega do cardápio
-$deliveryFee = 5.0; // default
-$restaurantId = $_SESSION['loja_ativa_id'] ?? null;
-if ($restaurantId) {
-    $settingsPath = __DIR__ . '/../../../data/restaurants/' . $restaurantId . '/cardapio_settings.json';
-    if (file_exists($settingsPath)) {
-        $settings = json_decode(file_get_contents($settingsPath), true);
-        $deliveryFee = floatval($settings['delivery_fee'] ?? 5.0);
-    }
-}
-?>
+        <?php 
+          // Variáveis já inicializadas no PdvController
+          // ($isEditingPaid, $originalPaidTotalFromDB, $deliveryFee, etc)
+        ?>
 
         <?php // HEADER (Banners + Título + Busca) ?>
         <?php require __DIR__ . '/partials/pdv-header.php'; ?>

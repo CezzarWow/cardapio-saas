@@ -35,20 +35,15 @@ require __DIR__ . '/partials/_summary_card.php';
                 </h3>
                 
                 <div style="max-height: 400px; overflow-y: auto;">
-                    <?php if (empty($movimentos)): ?>
+                    <?php if (empty($movimentosView)): ?>
                         <p style="color: #9ca3af; text-align: center; padding: 20px;">Nenhuma movimentação ainda.</p>
                     <?php else: ?>
-                        <?php foreach($movimentos as $mov): 
-                            $cor = ($mov['type'] == 'sangria') ? '#fee2e2' : '#dcfce7';
-                            $texto = ($mov['type'] == 'sangria') ? '#991b1b' : '#166534';
-                            $sinal = ($mov['type'] == 'sangria') ? '-' : '+';
-                            $icone = ($mov['type'] == 'sangria') ? 'arrow-up-right' : 'arrow-down-left';
-                        ?>
+                        <?php foreach($movimentosView as $mov): ?>
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f3f4f6;">
                             
                             <div style="display: flex; gap: 10px; align-items: center;">
-                                <div style="background: <?= $cor ?>; padding: 8px; border-radius: 8px; color: <?= $texto ?>;">
-                                    <i data-lucide="<?= $icone ?>" size="18"></i>
+                                <div style="background: <?= $mov['color_bg'] ?>; padding: 8px; border-radius: 8px; color: <?= $mov['color_text'] ?>;">
+                                    <i data-lucide="<?= $mov['icon'] ?>" size="18"></i>
                                 </div>
                                 <div>
                                     <strong style="color: #374151; text-transform: capitalize;"><?= htmlspecialchars($mov['type']) ?></strong>
@@ -66,7 +61,7 @@ require __DIR__ . '/partials/_summary_card.php';
                                                     <i data-lucide="edit-3" size="12"></i> Editar
                                                 </a>
 
-                                                <?php if (strpos($mov['description'], 'Mesa') !== false): ?>
+                                                <?php if ($mov['is_table_reopen']): ?>
                                                     <a href="caixa/estornar-mesa?id=<?= $mov['id'] ?>" 
                                                        onclick="return confirm('Reabrir mesa? A mesa ficará ocupada novamente.')"
                                                        style="font-size: 0.75rem; color: #d97706; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 3px;">
@@ -92,8 +87,8 @@ require __DIR__ . '/partials/_summary_card.php';
                             </div>
 
                             <div style="text-align: right;">
-                                <div style="font-weight: 700; color: <?= $texto ?>;">
-                                    <?= $sinal ?> R$ <?= number_format($mov['amount'], 2, ',', '.') ?>
+                                <div style="font-weight: 700; color: <?= $mov['color_text'] ?>;">
+                                    <?= $mov['sign'] ?> R$ <?= number_format($mov['amount'], 2, ',', '.') ?>
                                 </div>
                                 <div style="font-size: 0.75rem; color: #9ca3af;">
                                     <?= date('H:i', strtotime($mov['created_at'])) ?>

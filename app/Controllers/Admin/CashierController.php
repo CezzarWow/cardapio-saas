@@ -35,10 +35,31 @@ class CashierController extends BaseController {
 
         $resumo = $this->dashboard->calculateSalesSummary($rid, $caixa['opened_at']);
         $movimentos = $this->dashboard->getMovements($caixa['id']);
+        // Calcular totais
         list($totalSuprimentos, $totalSangrias) = $this->dashboard->sumMovements($movimentos);
         $dinheiroEmCaixa = $this->dashboard->calculateCashInDrawer(
             $caixa['opening_balance'], $resumo['dinheiro'], $totalSuprimentos, $totalSangrias
         );
+
+        // Decorar movimentos para a View (ViewModel)
+        $movimentosView = array_map(function($m) {
+            $isSangria = $m['type'] == 'sangria';
+            return [
+                'id' => $m['id'],
+                'type' => $m['type'],
+                'description' => $m['description'],
+                'amount' => $m['amount'],
+                'created_at' => $m['created_at'],
+                'order_id' => $m['order_id'],
+                // UI Helpers
+                'is_sangria' => $isSangria,
+                'color_bg' => $isSangria ? '#fee2e2' : '#dcfce7',
+                'color_text' => $isSangria ? '#991b1b' : '#166534',
+                'icon' => $isSangria ? 'arrow-up-right' : 'arrow-down-left',
+                'sign' => $isSangria ? '-' : '+',
+                'is_table_reopen' => strpos($m['description'] ?? '', 'Mesa') !== false
+            ];
+        }, $movimentos);
 
         require __DIR__ . '/../../../views/admin/cashier/dashboard.php';
     }

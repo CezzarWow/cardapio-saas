@@ -6,13 +6,9 @@ $productFilter = $_GET['product'] ?? '';
 $categoryFilter = $_GET['category'] ?? '';
 $totalMovements = count($movements);
 
-// Contar entradas e saídas
-$entradas = 0;
-$saidas = 0;
-foreach ($movements as $m) {
-    if ($m['type'] == 'entrada') $entradas++;
-    else $saidas++;
-}
+// Estatísticas vêm do Controller ($stats)
+$entradas = $stats['entradas'] ?? 0;
+$saidas = $stats['saidas'] ?? 0;
 ?>
 
 <!-- CSS Estoque v2 (modernização) -->

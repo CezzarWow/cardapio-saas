@@ -29,6 +29,14 @@ class CategoryController extends BaseController
         $restaurantId = $this->getRestaurantId();
         $categories = $this->service->list($restaurantId);
 
+        // Separar categorias de sistema das normais para exibir no topo (Lógica movida da View)
+        $systemCategories = array_filter($categories, fn($c) => in_array($c['category_type'] ?? 'default', ['featured', 'combos']));
+        $normalCategories = array_filter($categories, fn($c) => !in_array($c['category_type'] ?? 'default', ['featured', 'combos']));
+        $sortedCategories = array_merge($systemCategories, $normalCategories);
+        
+        // Totais
+        $totalCategories = count($categories);
+
         require __DIR__ . '/../../../views/admin/categories/index.php';
     }
 

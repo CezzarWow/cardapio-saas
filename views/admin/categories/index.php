@@ -1,8 +1,5 @@
-<?php 
 require __DIR__ . '/../panel/layout/header.php'; 
 require __DIR__ . '/../panel/layout/sidebar.php';
-
-$totalCategories = count($categories);
 ?>
 
 <!-- CSS Estoque v2 (modernização) -->
@@ -62,7 +59,7 @@ $totalCategories = count($categories);
         </div>
 
         <!-- Tabela de Categorias -->
-        <?php if (empty($categories)): ?>
+        <?php if (empty($sortedCategories)): ?>
             <div style="background: white; padding: 3rem; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                 <i data-lucide="tags" size="48" style="color: #d1d5db; margin-bottom: 15px;"></i>
                 <h3 style="color: #6b7280; font-size: 1.1rem; margin-bottom: 10px;">Nenhuma categoria cadastrada</h3>
@@ -81,12 +78,6 @@ $totalCategories = count($categories);
                         </tr>
                     </thead>
                     <tbody id="categoriesTable">
-                        <?php 
-                        // Separar categorias de sistema das normais para exibir no topo
-                        $systemCategories = array_filter($categories, fn($c) => in_array($c['category_type'] ?? 'default', ['featured', 'combos']));
-                        $normalCategories = array_filter($categories, fn($c) => !in_array($c['category_type'] ?? 'default', ['featured', 'combos']));
-                        $sortedCategories = array_merge($systemCategories, $normalCategories);
-                        ?>
                         <?php foreach ($sortedCategories as $cat): ?>
                         <?php 
                             $isSystemCategory = in_array($cat['category_type'] ?? 'default', ['featured', 'combos']);
@@ -151,25 +142,6 @@ $totalCategories = count($categories);
     </div>
 </div>
 
-<script>
-function openCategoryModal() {
-    document.getElementById('categoryModal').style.display = 'flex';
-}
-function closeCategoryModal() {
-    document.getElementById('categoryModal').style.display = 'none';
-}
-
-document.getElementById('categoryModal').addEventListener('click', function(e) {
-    if (e.target === this) closeCategoryModal();
-});
-
-function filterCategories(query) {
-    const rows = document.querySelectorAll('.category-row');
-    const q = query.toLowerCase().trim();
-    rows.forEach(row => {
-        row.style.display = row.dataset.name.includes(q) ? '' : 'none';
-    });
-}
-</script>
+<script src="<?= BASE_URL ?>/js/admin/categories.js?v=<?= time() ?>"></script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>

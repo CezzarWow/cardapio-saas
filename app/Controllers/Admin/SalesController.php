@@ -31,6 +31,9 @@ class SalesController extends BaseController
         $rid = $this->getRestaurantId();
         $orders = $this->service->listOrders($rid);
         
+        // Calcular total para a View
+        $totalSales = array_sum(array_column($orders, 'calculated_total'));
+        
         require __DIR__ . '/../../../views/admin/sales/index.php';
     }
 

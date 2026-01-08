@@ -17,65 +17,57 @@
     CardapioModals.basePrice = 0;
 
     // ==========================================
-    // ABRIR MODAL DE PRODUTO
+    // HELPERS INTERNOS
     // ==========================================
-    CardapioModals.openProduct = function (productId) {
-        let product = null;
 
-        // 1. Tenta buscar no array global (melhor cenário, tem adicionais)
+    /**
+     * Busca produto por ID (array global ou fallback DOM)
+     * @private
+     */
+    CardapioModals._findProduct = function (productId) {
+        // 1. Tenta buscar no array global
         if (typeof window.products !== 'undefined' && Array.isArray(window.products)) {
-            product = window.products.find(p => p.id == productId);
+            const product = window.products.find(p => p.id == productId);
+            if (product) return product;
         }
 
-        // 2. Fallback: Busca no DOM (se array falhar ou produto não achado)
-        if (!product) {
-            console.warn('[CardapioModals] Produto não encontrado no array global. Tentando ler do DOM. ID:', productId);
-            const card = document.querySelector(`.cardapio-product-card[data-product-id="${productId}"]`);
+        // 2. Fallback: DOM
+        console.warn('[CardapioModals] Produto não encontrado no array. Tentando DOM. ID:', productId);
+        const card = document.querySelector(`.cardapio-product-card[data-product-id="${productId}"]`);
 
-            if (card) {
-                product = {
-                    id: productId,
-                    name: card.getAttribute('data-product-name'),
-                    price: parseFloat(card.getAttribute('data-product-price')),
-                    description: card.getAttribute('data-product-description'),
-                    image: card.getAttribute('data-product-image'),
-                    additionals: [] // DOM não tem dados de adicionais complexos
-                };
-            }
+        if (card) {
+            return {
+                id: productId,
+                name: card.getAttribute('data-product-name'),
+                price: parseFloat(card.getAttribute('data-product-price')),
+                description: card.getAttribute('data-product-description'),
+                image: card.getAttribute('data-product-image'),
+                additionals: []
+            };
         }
 
-        if (!product) {
-            console.error('[CardapioModals] Produto não encontrado nem no array nem no DOM.', productId);
-            return;
-        }
+        console.error('[CardapioModals] Produto não encontrado.', productId);
+        return null;
+    };
 
-        // ============================================
-        // LÓGICA ORIGINAL: SE NÃO TEM ADICIONAIS, ADICIONA DIRETO
-        // ============================================
-        const productRelations = (typeof window.PRODUCT_RELATIONS !== 'undefined') ? window.PRODUCT_RELATIONS : {};
-        const relatedGroups = productRelations[product.id] || [];
-        const hasAdditionals = relatedGroups.length > 0;
+    /**
+     * Verifica se produto tem adicionais vinculados
+     * @private
+     */
+    CardapioModals._getProductRelations = function (productId) {
+        const relations = (typeof window.PRODUCT_RELATIONS !== 'undefined') ? window.PRODUCT_RELATIONS : {};
+        return relations[productId] || [];
+    };
 
-        if (!hasAdditionals) {
-            // Adiciona direto ao carrinho sem abrir modal
-            CardapioCart.addDirect(product.id, product.name, parseFloat(product.price), product.image);
-            return;
-        }
-
-        // ============================================
-        // SE TEM ADICIONAIS: ABRE O MODAL
-        // ============================================
-        this.currentProduct = product;
-        this.currentQuantity = 1;
-        this.selectedAdditionals = [];
-        this.basePrice = parseFloat(product.price);
-
-        // Preenche info básica
+    /**
+     * Preenche informações básicas no modal
+     * @private
+     */
+    CardapioModals._fillProductInfo = function (product) {
         document.getElementById('modalProductName').textContent = product.name;
         document.getElementById('modalProductDescription').textContent = product.description || '';
         document.getElementById('modalProductPrice').textContent = Utils.formatCurrency(this.basePrice);
 
-        // Imagem
         const imgEl = document.getElementById('modalProductImage');
         if (product.image) {
             imgEl.src = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/uploads/' + product.image;
@@ -83,29 +75,64 @@
         } else {
             imgEl.style.display = 'none';
         }
+    };
 
-        // Renderiza Adicionais usando PRODUCT_RELATIONS
-        this.renderAdditionals(relatedGroups);
-
-        // Reset inputs
+    /**
+     * Reseta inputs do modal
+     * @private
+     */
+    CardapioModals._resetModalInputs = function () {
         const obsInput = document.getElementById('modalObservation');
         if (obsInput) obsInput.value = '';
         document.getElementById('modalQuantity').textContent = '1';
+    };
 
-        // Atualiza preço total
-        this.updateModalPrice();
-
-        // Abre modal (adiciona classe e scroll reset)
+    /**
+     * Abre modal e reseta scroll
+     * @private
+     */
+    CardapioModals._showModal = function () {
         const modal = document.getElementById('productModal');
         modal.classList.add('show');
 
-        // Fix de Scroll
         requestAnimationFrame(() => {
             const content = modal.querySelector('.cardapio-modal-content');
             const body = modal.querySelector('.cardapio-modal-body');
             if (content) content.scrollTop = 0;
             if (body) body.scrollTop = 0;
         });
+    };
+
+    // ==========================================
+    // ABRIR MODAL DE PRODUTO (Refatorado)
+    // ==========================================
+    CardapioModals.openProduct = function (productId) {
+        const product = this._findProduct(productId);
+        if (!product) return;
+
+        const relatedGroups = this._getProductRelations(product.id);
+        const hasAdditionals = relatedGroups.length > 0;
+
+        // Se não tem adicionais, adiciona direto
+        if (!hasAdditionals) {
+            CardapioCart.addDirect(product.id, product.name, parseFloat(product.price), product.image);
+            return;
+        }
+
+        // Inicializa estado
+        this.currentProduct = product;
+        this.currentQuantity = 1;
+        this.selectedAdditionals = [];
+        this.basePrice = parseFloat(product.price);
+
+        // Preenche modal
+        this._fillProductInfo(product);
+        this.renderAdditionals(relatedGroups);
+        this._resetModalInputs();
+        this.updateModalPrice();
+
+        // Abre
+        this._showModal();
     };
 
     CardapioModals.closeProduct = function () {
@@ -134,20 +161,17 @@
     };
 
     // ==========================================
-    // CONTROLE DE ADICIONAIS
+    // CONTROLE DE ADICIONAIS (Refatorado)
     // ==========================================
     CardapioModals.renderAdditionals = function (groupIds) {
-        // 1. Resetar Checkboxes e Estado
+        // Reset
         this.selectedAdditionals = [];
-        document.querySelectorAll('.cardapio-additional-checkbox').forEach(cb => {
-            cb.checked = false;
-        });
+        document.querySelectorAll('.cardapio-additional-checkbox').forEach(cb => cb.checked = false);
 
-        const container = document.getElementById('modalAdditionals');
         const groups = document.querySelectorAll('.cardapio-additional-group');
         const title = document.querySelector('.cardapio-modal-additionals-title');
 
-        // Se não tem grupos vinculados
+        // Se não tem grupos
         if (!groupIds || !Array.isArray(groupIds) || groupIds.length === 0) {
             if (title) title.style.display = 'none';
             groups.forEach(g => g.style.display = 'none');
@@ -156,22 +180,16 @@
 
         if (title) title.style.display = 'block';
 
-        // 2. Converter para Set de strings para comparação rápida
+        // Mostra apenas grupos permitidos
         const allowedGroupIds = new Set(groupIds.map(id => String(id)));
-
-        // 3. Mostrar apenas os grupos permitidos
         let hasVisible = false;
+
         groups.forEach(group => {
-            const groupId = group.getAttribute('data-group-id');
-            if (allowedGroupIds.has(String(groupId))) {
-                group.style.display = 'block';
-                hasVisible = true;
-            } else {
-                group.style.display = 'none';
-            }
+            const isAllowed = allowedGroupIds.has(String(group.getAttribute('data-group-id')));
+            group.style.display = isAllowed ? 'block' : 'none';
+            if (isAllowed) hasVisible = true;
         });
 
-        // Se nenhum grupo for visível, esconde título
         if (!hasVisible && title) title.style.display = 'none';
     };
 
@@ -191,14 +209,14 @@
     };
 
     // ==========================================
-    // ADICIONAR AO CARRINHO (AÇÃO DO MODAL)
+    // ADICIONAR AO CARRINHO
     // ==========================================
     CardapioModals.addToCartAction = function () {
         if (!this.currentProduct) return;
 
         const observation = document.getElementById('modalObservation').value.trim();
+        const addTotal = this.selectedAdditionals.reduce((sum, a) => sum + a.price, 0);
 
-        // Cria objeto item compatível com Cart.js
         const item = {
             id: Date.now() + Math.random(),
             productId: this.currentProduct.id,
@@ -207,7 +225,7 @@
             quantity: this.currentQuantity,
             additionals: [...this.selectedAdditionals],
             observation: observation,
-            unitPrice: this.basePrice + this.selectedAdditionals.reduce((sum, item) => sum + item.price, 0)
+            unitPrice: this.basePrice + addTotal
         };
 
         CardapioCart.add(item);
