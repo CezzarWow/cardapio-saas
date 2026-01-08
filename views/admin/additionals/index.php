@@ -231,5 +231,9 @@ $totalItems = count($allItems);
 <script>window.BASE_URL = '<?= BASE_URL ?>';</script>
 <script src="<?= BASE_URL ?>/js/components/multi-select.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/admin/additionals.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/admin/additionals-group-modal.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/admin/additionals-item-modal.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/admin/additionals-delete-modal.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/admin/additionals-ui.js?v=<?= time() ?>"></script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>

@@ -322,7 +322,13 @@ if ($restaurantId) {
     <!-- Scripts do PDV -->
     <script src="<?= BASE_URL ?>/js/pdv/state.js?v=<?= time() ?>"></script>
     <script src="<?= BASE_URL ?>/js/pdv/cart.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/cart-core.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/cart-ui.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/cart-extras-modal.js?v=<?= time() ?>"></script>
     <script src="<?= BASE_URL ?>/js/pdv/tables.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/tables-mesa.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/tables-cliente.js?v=<?= time() ?>"></script>
+    <script src="<?= BASE_URL ?>/js/pdv/tables-client-modal.js?v=<?= time() ?>"></script>
     
     <!-- Módulos de Checkout (ordem de dependência obrigatória) -->
     <script src="<?= BASE_URL ?>/js/pdv/checkout/helpers.js?v=<?= time() ?>"></script>
