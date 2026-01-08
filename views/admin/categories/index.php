@@ -1,3 +1,4 @@
+<?php 
 require __DIR__ . '/../panel/layout/header.php'; 
 require __DIR__ . '/../panel/layout/sidebar.php';
 ?>

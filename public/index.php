@@ -15,6 +15,9 @@ define('BASE_URL', rtrim($baseUrl, '/'));
 
 require '../vendor/autoload.php';
 
+$dotenv = \Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv->safeLoad();
+
 use App\Controllers\Admin\DashboardController;
 use App\Controllers\Admin\RestaurantController;
 use App\Controllers\Admin\AutologinController;

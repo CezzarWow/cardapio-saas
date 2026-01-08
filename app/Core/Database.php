@@ -9,11 +9,11 @@ class Database {
     private static $instance = null;
 
     public static function connect() {
-        // Configurações do XAMPP
-        $host = 'localhost';
-        $db   = 'cardapio_saas';
-        $user = 'root';
-        $pass = ''; // No XAMPP a senha padrão é vazia mesmo
+        // Configurações via Environment (.env)
+        $host = $_ENV['DB_HOST'] ?? 'localhost';
+        $db   = $_ENV['DB_NAME'] ?? 'cardapio_saas';
+        $user = $_ENV['DB_USER'] ?? 'root';
+        $pass = $_ENV['DB_PASS'] ?? '';
 
         if (self::$instance === null) {
             try {
