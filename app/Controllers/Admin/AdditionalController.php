@@ -11,273 +11,153 @@ use App\Services\Additional\LinkItemService;
 use App\Services\Additional\UnlinkItemService;
 use App\Services\Additional\LinkCategoryService;
 use App\Repositories\AdditionalCategoryRepository;
-use Exception;
+use App\Validators\AdditionalValidator;
 
 /**
- * Controller de Adicionais - DDD Lite
- * Apenas HTTP handling: parse request → call service → redirect/json
+ * Controller de Adicionais - Super Thin (v3)
+ * Usa handleValidatedPost() e handleDelete() do BaseController
  */
-class AdditionalController {
+class AdditionalController extends BaseController {
 
-    // ==========================================
-    // LISTAGEM PRINCIPAL (VIEW)
-    // ==========================================
+    private const BASE = '/admin/loja/adicionais';
+    private AdditionalValidator $v;
+
+    public function __construct() {
+        $this->v = new AdditionalValidator();
+    }
+
+    // === VIEW ===
     public function index() {
-        $this->checkSession();
-        $restaurantId = $_SESSION['loja_ativa_id'];
+        $rid = $this->getRestaurantId();
+        $query = new AdditionalQueryService();
         
-        $queryService = new AdditionalQueryService();
-        $categoryRepository = new AdditionalCategoryRepository();
-        
-        $groups = $queryService->getAllGroupsWithItems($restaurantId);
-        $allItems = $queryService->getAllItems($restaurantId);
-        $categories = $categoryRepository->findAllCategories($restaurantId);
+        $groups = $query->getAllGroupsWithItems($rid);
+        $allItems = $query->getAllItems($rid);
+        $categories = (new AdditionalCategoryRepository())->findAllCategories($rid);
 
         require __DIR__ . '/../../../views/admin/additionals/index.php';
     }
 
-    // ==========================================
-    // GRUPO: CRIAR
-    // ==========================================
+    // === GRUPO CRUD ===
     public function storeGroup() {
-        $this->checkSession();
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
-                $service = new CreateAdditionalGroupService();
-                $service->execute($_SESSION['loja_ativa_id'], [
-                    'name' => $_POST['name'] ?? '',
-                    'item_ids' => $_POST['item_ids'] ?? []
-                ]);
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=grupo_criado');
-            } catch (Exception $e) {
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=' . urlencode($e->getMessage()));
-            }
-            exit;
-        }
+        $this->handleValidatedPost(
+            fn() => $this->v->validateGroup($_POST),
+            fn() => $this->v->sanitizeGroup($_POST),
+            fn($data, $rid) => (new CreateAdditionalGroupService())->execute($rid, $data),
+            self::BASE, 'grupo_criado'
+        );
     }
 
-    // ==========================================
-    // GRUPO: DELETAR
-    // ==========================================
     public function deleteGroup() {
-        $this->checkSession();
-        
-        $id = intval($_GET['id'] ?? 0);
-        $service = new DeleteGroupService();
-        $service->execute($id, $_SESSION['loja_ativa_id']);
-
-        header('Location: ' . BASE_URL . '/admin/loja/adicionais');
-        exit;
+        $this->handleDelete(
+            fn($id, $rid) => (new DeleteGroupService())->execute($id, $rid),
+            self::BASE
+        );
     }
 
-    // ==========================================
-    // ITEM: CRIAR
-    // ==========================================
+    // === ITEM CRUD ===
     public function storeItemWithGroups() {
-        $this->checkSession();
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
-                $service = new CreateItemService();
-                $service->execute($_SESSION['loja_ativa_id'], [
-                    'name' => $_POST['name'] ?? '',
-                    'price' => $_POST['price'] ?? '0',
-                    'group_ids' => $_POST['group_ids'] ?? []
-                ]);
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=item_criado');
-            } catch (Exception $e) {
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=' . urlencode($e->getMessage()));
-            }
-            exit;
-        }
+        $this->handleValidatedPost(
+            fn() => $this->v->validateItem($_POST),
+            fn() => $this->v->sanitizeItem($_POST),
+            fn($data, $rid) => (new CreateItemService())->execute($rid, $data),
+            self::BASE, 'item_criado'
+        );
     }
 
-    // ==========================================
-    // ITEM: ATUALIZAR
-    // ==========================================
     public function updateItemWithGroups() {
-        $this->checkSession();
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
-                $service = new UpdateItemService();
-                $service->execute($_SESSION['loja_ativa_id'], [
-                    'id' => $_POST['id'] ?? 0,
-                    'name' => $_POST['name'] ?? '',
-                    'price' => $_POST['price'] ?? '0',
-                    'group_ids' => $_POST['group_ids'] ?? []
-                ]);
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=item_atualizado');
-            } catch (Exception $e) {
-                header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=' . urlencode($e->getMessage()));
-            }
-            exit;
-        }
+        $this->handleValidatedPost(
+            fn() => $this->v->validateItemUpdate($_POST),
+            fn() => $this->v->sanitizeItem($_POST),
+            fn($data, $rid) => (new UpdateItemService())->execute($rid, $data),
+            self::BASE, 'item_atualizado'
+        );
     }
 
-    // ==========================================
-    // ITEM: DELETAR
-    // ==========================================
     public function deleteItem() {
-        $this->checkSession();
-        
-        $id = intval($_GET['id'] ?? 0);
-        $service = new DeleteItemService();
-        $service->execute($id, $_SESSION['loja_ativa_id']);
-
-        header('Location: ' . BASE_URL . '/admin/loja/adicionais/itens');
-        exit;
+        $this->handleDelete(
+            fn($id, $rid) => (new DeleteItemService())->execute($id, $rid),
+            self::BASE . '/itens'
+        );
     }
 
-    // ==========================================
-    // VÍNCULO: ITEM → GRUPO (SIMPLES)
-    // ==========================================
+    // === VÍNCULOS ===
     public function linkItem() {
-        $this->checkSession();
+        if (!$this->isPost()) return;
         
-        $groupId = intval($_POST['group_id'] ?? 0);
-        $itemId = intval($_POST['item_id'] ?? 0);
+        $rid = $this->getRestaurantId();
+        $groupId = $this->postInt('group_id');
+        $itemId = $this->postInt('item_id');
         
-        $service = new LinkItemService();
-        $service->linkSingle($groupId, $itemId, $_SESSION['loja_ativa_id']);
-
-        header('Location: ' . BASE_URL . '/admin/loja/adicionais');
-        exit;
+        if ($groupId <= 0 || $itemId <= 0) {
+            $this->redirect(self::BASE . '?error=dados_invalidos');
+        }
+        
+        (new LinkItemService())->linkSingle($groupId, $itemId, $rid);
+        $this->redirect(self::BASE);
     }
 
-    // ==========================================
-    // VÍNCULO: MÚLTIPLOS ITENS → GRUPO
-    // ==========================================
     public function linkMultipleItems() {
-        $this->checkSession();
-        
-        $groupId = intval($_POST['group_id'] ?? 0);
-        $itemIds = $_POST['item_ids'] ?? [];
-        
-        $service = new LinkItemService();
-        $service->linkMultiple($groupId, $itemIds, $_SESSION['loja_ativa_id']);
-
-        header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=itens_vinculados');
-        exit;
+        $this->handleValidatedPost(
+            fn() => $this->v->validateMultipleLink($_POST),
+            fn() => ['group_id' => $this->postInt('group_id'), 'item_ids' => $_POST['item_ids'] ?? []],
+            fn($data, $rid) => (new LinkItemService())->linkMultiple($data['group_id'], $data['item_ids'], $rid),
+            self::BASE, 'itens_vinculados'
+        );
     }
 
-    // ==========================================
-    // DESVÍNCULO: ITEM ← GRUPO
-    // ==========================================
     public function unlinkItem() {
-        $this->checkSession();
+        $rid = $this->getRestaurantId();
+        $groupId = $this->getInt('grupo');
+        $itemId = $this->getInt('item');
         
-        $groupId = intval($_GET['grupo'] ?? 0);
-        $itemId = intval($_GET['item'] ?? 0);
+        if ($groupId <= 0 || $itemId <= 0) {
+            $this->redirect(self::BASE . '?error=dados_invalidos');
+        }
         
-        $service = new UnlinkItemService();
-        $service->execute($groupId, $itemId, $_SESSION['loja_ativa_id']);
-
-        header('Location: ' . BASE_URL . '/admin/loja/adicionais');
-        exit;
+        (new UnlinkItemService())->execute($groupId, $itemId, $rid);
+        $this->redirect(self::BASE);
     }
 
-    // ==========================================
-    // VÍNCULO: CATEGORIA → GRUPO (BULK)
-    // ==========================================
     public function linkCategory() {
-        $this->checkSession();
-        
-        $groupId = intval($_POST['group_id'] ?? 0);
-        $categoryIds = $_POST['category_ids'] ?? [];
-        
-        $service = new LinkCategoryService();
-        $result = $service->execute($groupId, $categoryIds, $_SESSION['loja_ativa_id']);
-
-        if ($result) {
-            header('Location: ' . BASE_URL . '/admin/loja/adicionais?success=vinculo_sincronizado');
-        } else {
-            header('Location: ' . BASE_URL . '/admin/loja/adicionais?error=grupo_invalido');
-        }
-        exit;
+        $this->handleValidatedPost(
+            fn() => $this->v->validateCategoryLink($_POST),
+            fn() => ['group_id' => $this->postInt('group_id'), 'category_ids' => $_POST['category_ids'] ?? []],
+            fn($data, $rid) => (new LinkCategoryService())->execute($data['group_id'], $data['category_ids'], $rid),
+            self::BASE, 'vinculo_sincronizado'
+        );
     }
 
-    // ==========================================
-    // API: CATEGORIAS VINCULADAS (AJAX)
-    // ==========================================
+    // === APIs JSON ===
     public function getLinkedCategories() {
-        $this->checkSession();
-        header('Content-Type: application/json');
-
-        $groupId = intval($_GET['group_id'] ?? 0);
+        $rid = $this->getRestaurantId();
+        $groupId = $this->getInt('group_id');
         
-        if ($groupId <= 0) {
-            echo json_encode([]);
-            exit;
-        }
-
-        $service = new LinkCategoryService();
-        echo json_encode($service->getLinkedCategories($groupId, $_SESSION['loja_ativa_id']));
-        exit;
+        $this->json($groupId <= 0 ? [] : (new LinkCategoryService())->getLinkedCategories($groupId, $rid));
     }
 
-    // ==========================================
-    // API: DADOS DO ITEM (AJAX)
-    // ==========================================
     public function getItemData() {
-        header('Content-Type: application/json');
-
         try {
-            $this->checkSession();
-            $id = intval($_GET['id'] ?? 0);
-
+            $rid = $this->getRestaurantId();
+            $id = $this->getInt('id');
+            
             if ($id <= 0) {
-                echo json_encode(['error' => 'ID inválido']);
-                exit;
+                $this->json(['error' => 'ID inválido'], 400);
             }
-
-            $queryService = new AdditionalQueryService();
-            $data = $queryService->getItemData($id, $_SESSION['loja_ativa_id']);
-
-            if (!$data) {
-                echo json_encode(['error' => 'Item não encontrado']);
-                exit;
-            }
-
-            echo json_encode($data);
-            exit;
-
+            
+            $data = (new AdditionalQueryService())->getItemData($id, $rid);
+            $this->json($data ?: ['error' => 'Item não encontrado'], $data ? 200 : 404);
+            
         } catch (\Throwable $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Erro no Servidor: ' . $e->getMessage()]);
-            exit;
+            error_log('getItemData Error: ' . $e->getMessage());
+            $this->json(['error' => 'Erro no servidor'], 500);
         }
     }
 
-    // ==========================================
-    // API: ADICIONAIS DO PRODUTO (PDV)
-    // ==========================================
     public function getProductExtras() {
-        header('Content-Type: application/json');
+        $rid = $this->getRestaurantId();
+        $productId = $this->getInt('product_id');
         
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        $productId = intval($_GET['product_id'] ?? 0);
-        $restaurantId = $_SESSION['loja_ativa_id'] ?? 0;
-
-        if ($productId <= 0 || $restaurantId <= 0) {
-            echo json_encode([]);
-            exit;
-        }
-
-        $queryService = new AdditionalQueryService();
-        echo json_encode($queryService->getProductExtras($productId, $restaurantId));
-        exit;
-    }
-
-    // ==========================================
-    // SESSÃO
-    // ==========================================
-    private function checkSession() {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        if (empty($_SESSION['loja_ativa_id'])) {
-            header('Location: ' . BASE_URL . '/admin/escolher-loja');
-            exit;
-        }
+        $this->json($productId <= 0 ? [] : (new AdditionalQueryService())->getProductExtras($productId, $rid));
     }
 }

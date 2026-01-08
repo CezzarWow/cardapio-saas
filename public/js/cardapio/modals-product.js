@@ -23,8 +23,8 @@
         let product = null;
 
         // 1. Tenta buscar no array global (melhor cenário, tem adicionais)
-        if (typeof products !== 'undefined' && Array.isArray(products)) {
-            product = products.find(p => p.id == productId);
+        if (typeof window.products !== 'undefined' && Array.isArray(window.products)) {
+            product = window.products.find(p => p.id == productId);
         }
 
         // 2. Fallback: Busca no DOM (se array falhar ou produto não achado)
@@ -52,7 +52,7 @@
         // ============================================
         // LÓGICA ORIGINAL: SE NÃO TEM ADICIONAIS, ADICIONA DIRETO
         // ============================================
-        const productRelations = (typeof PRODUCT_RELATIONS !== 'undefined') ? PRODUCT_RELATIONS : {};
+        const productRelations = (typeof window.PRODUCT_RELATIONS !== 'undefined') ? window.PRODUCT_RELATIONS : {};
         const relatedGroups = productRelations[product.id] || [];
         const hasAdditionals = relatedGroups.length > 0;
 

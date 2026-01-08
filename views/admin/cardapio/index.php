@@ -84,7 +84,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 
             <!-- Aba Operação (antiga WhatsApp + Status) -->
             <div class="cardapio-admin-tab-content active" id="tab-operacao">
-                <?php require __DIR__ . '/partials/_tab_whatsapp.php'; ?>
+                <?php require __DIR__ . '/partials/_tab_operacao.php'; ?>
             </div>
 
             <!-- Aba Horários -->

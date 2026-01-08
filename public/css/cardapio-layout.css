@@ -1,0 +1,79 @@
+/**
+ * CARDAPIO-LAYOUT.CSS
+ * Layout Mobile Flex para Cardápio Público
+ * Extraído de cardapio_publico.php
+ */
+
+/* ========== ANTI-ZOOM MOBILE ========== */
+* {
+    touch-action: manipulation;
+}
+
+/* ========== LAYOUT FLEX MOBILE ========== */
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+    /* Scroll NÃO fica no body */
+    background: transparent !important;
+}
+
+/* Container principal - 100vh flex column */
+.main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: transparent;
+}
+
+/* Container do cardápio - cresce */
+.cardapio-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: #f3f4f6;
+    /* Pega a área do safe-area */
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Header - tamanho fixo, não encolhe */
+.cardapio-header {
+    flex-shrink: 0;
+}
+
+/* Busca - tamanho fixo */
+.cardapio-search-container {
+    flex-shrink: 0;
+}
+
+/* Categorias - tamanho fixo */
+.cardapio-categories {
+    flex-shrink: 0;
+}
+
+/* Lista de produtos - ELEMENTO QUE SCROLLA */
+.cardapio-products {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    background: transparent;
+}
+
+.sidebar {
+    display: none !important;
+}
+
+/* Opções desabilitadas */
+.disabled-option {
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(100%);
+    background-color: #f1f5f9;
+    cursor: not-allowed;
+    border-color: #cbd5e1;
+}

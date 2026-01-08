@@ -13,74 +13,10 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cart.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/checkout.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-layout.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-badges.css?v=<?= time() ?>">
     
     <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <style>
-        /* ========== ANTI-ZOOM MOBILE ========== */
-        * {
-            touch-action: manipulation;
-        }
-        
-        /* ========== LAYOUT FLEX MOBILE ========== */
-        html, body { 
-            height: 100%;
-            overflow: hidden; /* Scroll NÃO fica no body */
-            background: transparent !important;
-        }
-        
-        /* Container principal - 100vh flex column */
-        .main-content {
-            margin-left: 0 !important; 
-            width: 100% !important;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            background: transparent;
-        }
-        
-        /* Container do cardápio - cresce */
-        .cardapio-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-            background: #f3f4f6;
-            /* Pega a área do safe-area */
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-        
-        /* Header - tamanho fixo, não encolhe */
-        .cardapio-header { flex-shrink: 0; }
-        
-        /* Busca - tamanho fixo */
-        .cardapio-search-container { flex-shrink: 0; }
-        
-        /* Categorias - tamanho fixo */
-        .cardapio-categories { flex-shrink: 0; }
-        
-        /* Lista de produtos - ELEMENTO QUE SCROLLA */
-        .cardapio-products {
-            flex: 1;
-            min-height: 0;
-            overflow-y: auto;
-            overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
-            background: transparent;
-        }
-        
-        .sidebar { display: none !important; }
-
-        /* Opções desabilitadas */
-        .disabled-option {
-            opacity: 0.5;
-            pointer-events: none;
-            filter: grayscale(100%);
-            background-color: #f1f5f9;
-            cursor: not-allowed;
-            border-color: #cbd5e1;
-        }
-    </style>
 </head>
 <body>
 
@@ -137,18 +73,39 @@
             foreach ($prods as $p) {
                 // Garante que additionals seja array
                 if (empty($p['additionals'])) $p['additionals'] = [];
+                // Sanitiza descrição - remove quebras de linha que quebram JS
+                if (isset($p['description'])) {
+                    $p['description'] = preg_replace('/[\r\n]+/', ' ', $p['description']);
+                }
+                if (isset($p['name'])) {
+                    $p['name'] = preg_replace('/[\r\n]+/', ' ', $p['name']);
+                }
                 $allProducts[] = $p;
             }
         }
     }
+    // Sanitiza combos também
+    $safeCombos = [];
+    if (!empty($combos)) {
+        foreach ($combos as $c) {
+            if (isset($c['description'])) {
+                $c['description'] = preg_replace('/[\r\n]+/', ' ', $c['description']);
+            }
+            $safeCombos[] = $c;
+        }
+    }
+    
     $jsProducts = json_encode($allProducts, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
-    if ($jsProducts === false) $jsProducts = '[]'; // Fallback
+    if ($jsProducts === false) $jsProducts = '[]';
+    
+    $jsCombos = json_encode($safeCombos, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+    if ($jsCombos === false) $jsCombos = '[]';
     ?>
     
-    // Injeção Segura
-    const products = <?= $jsProducts ?>;
-    const combos = <?= json_encode($combos ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
-    const PRODUCT_RELATIONS = <?= json_encode($productRelations ?? []) ?>;
+    // Injeção Segura - variáveis no escopo global
+    window.products = <?= $jsProducts ?>;
+    window.combos = <?= $jsCombos ?>;
+    window.PRODUCT_RELATIONS = <?= json_encode($productRelations ?? []) ?>;
     window.BASE_URL = '<?= BASE_URL ?>';
     
     // [ETAPA 1.1] Configurações do cardápio admin
@@ -166,6 +123,9 @@
         whatsappNumber: '<?= htmlspecialchars($cardapioConfig['whatsapp_number'] ?? '') ?>',
         closedMessage: '<?= htmlspecialchars($cardapioConfig['closed_message'] ?? 'Estamos fechados no momento') ?>'
     };
+
+    // Configurações completas (usado pelo checkout-order.js)
+    window.cardapioConfig = <?= json_encode($cardapioConfig ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
 
     // Diagnóstico
     document.addEventListener('DOMContentLoaded', () => {
@@ -195,88 +155,5 @@
 <script>
     lucide.createIcons();
 </script>
-
-    <!-- CSS para Etapa 4 (Badges) -->
-    <style>
-    /* Badges */
-    .cardapio-badge {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        font-size: 0.70rem;
-        font-weight: 700;
-        padding: 4px 10px;
-        border-radius: 20px;
-        color: white;
-        text-transform: uppercase;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        z-index: 10;
-        letter-spacing: 0.5px;
-    }
-
-    .cardapio-badge-combo {
-        background: #f59e0b;
-    }
-
-    .cardapio-badge-featured {
-        background: #ef4444;
-    }
-
-    .cardapio-card-combo {
-        border: 2px solid #f59e0b;
-        background: #fffbeb;
-    }
-
-    .price-combo {
-        color: #d97706;
-        font-weight: 700;
-        font-size: 1.1rem;
-    }
-    
-    .placeholder-combo {
-        background: linear-gradient(135deg, #fef3c7, #fde68a);
-        color: #d97706;
-    }
-
-    .cardapio-product-includes {
-        font-size: 0.8rem; 
-        color: #6b7280; 
-        margin-top: 4px; 
-        line-height: 1.3;
-    }
-
-    .cardapio-card-featured {
-        border: 1px solid #fecaca;
-        background: #fef2f2;
-    }
-    
-    /* Smooth Scroll no Modal */
-    .cardapio-modal-content {
-        scroll-behavior: smooth;
-    }
-    </style>
-
-    <script>
-    // Configurações Globais (para acesso no JS)
-    window.cardapioConfig = <?= json_encode($cardapioConfig) ?>;
-    
-    // [ETAPA 4] Micro UX - Wrapper para compatibilidade
-    function openProductModal(productId) {
-        // Usa CardapioModals (módulo refatorado)
-        if (window.CardapioModals) {
-            window.CardapioModals.openProduct(productId);
-            
-            // UX: Scroll suave pro topo da imagem (se modal abrir)
-            setTimeout(() => {
-                const modalImg = document.querySelector('#modalProductImage');
-                if (modalImg && modalImg.offsetParent) {
-                    modalImg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }, 100);
-        } else {
-            console.error('[Cardápio] CardapioModals não carregado!');
-        }
-    }
-    </script>
 </body>
 </html>

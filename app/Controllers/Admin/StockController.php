@@ -2,254 +2,227 @@
 namespace App\Controllers\Admin;
 
 use App\Core\Database;
+use App\Validators\StockValidator;
 use PDO;
 
-// Helper de Conversão de Imagens
 require_once __DIR__ . '/../../Helpers/ImageConverter.php';
 use ImageConverter;
 
-class StockController {
+/**
+ * StockController - Gerenciamento de Produtos (Super Thin v2)
+ */
+class StockController extends BaseController {
 
-    // 1. LISTAR PRODUTOS
+    private const BASE = '/admin/loja/produtos';
+    private StockValidator $v;
+
+    public function __construct() {
+        $this->v = new StockValidator();
+    }
+
+    // === LISTAGEM ===
     public function index() {
-        $this->checkSession();
+        $rid = $this->getRestaurantId();
         $conn = Database::connect();
         
-        // Busca produtos com o nome da categoria
-        $sql = "SELECT p.*, c.name as category_name 
-                FROM products p 
-                LEFT JOIN categories c ON p.category_id = c.id 
-                WHERE p.restaurant_id = :rid 
-                ORDER BY p.name ASC";
+        $products = $conn->prepare("
+            SELECT p.*, c.name as category_name 
+            FROM products p 
+            LEFT JOIN categories c ON p.category_id = c.id 
+            WHERE p.restaurant_id = :rid ORDER BY p.name
+        ");
+        $products->execute(['rid' => $rid]);
+        $products = $products->fetchAll(PDO::FETCH_ASSOC);
+
+        $categories = $this->getCategories($conn, $rid);
         
-        $stmt = $conn->prepare($sql);
-        $stmt->execute(['rid' => $_SESSION['loja_ativa_id']]);
-        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Busca TODAS as categorias cadastradas (para chips)
-        $stmtCat = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :rid ORDER BY name");
-        $stmtCat->execute(['rid' => $_SESSION['loja_ativa_id']]);
-        $categories = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
-
         require __DIR__ . '/../../../views/admin/stock/index.php';
     }
 
-    // 2. TELA DE CRIAR (Formulário)
+    // === FORMULÁRIO CRIAR ===
     public function create() {
-        $this->checkSession();
+        $rid = $this->getRestaurantId();
         $conn = Database::connect();
-
-        // Precisa listar as categorias para o <select>
-        $stmt = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :rid ORDER BY name");
-        $stmt->execute(['rid' => $_SESSION['loja_ativa_id']]);
-        $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // [NOVO] Busca Grupos de Adicionais disponíveis
-        $stmtGroups = $conn->prepare("SELECT * FROM additional_groups WHERE restaurant_id = :rid ORDER BY name");
-        $stmtGroups->execute(['rid' => $_SESSION['loja_ativa_id']]);
-        $additionalGroups = $stmtGroups->fetchAll(PDO::FETCH_ASSOC);
+        
+        $categories = $this->getCategories($conn, $rid);
+        $additionalGroups = $this->getAdditionalGroups($conn, $rid);
 
         require __DIR__ . '/../../../views/admin/stock/create.php';
     }
 
-    // 3. SALVAR NO BANCO (Recebe o POST)
+    // === SALVAR NOVO ===
     public function store() {
-        $this->checkSession();
-        
-        $name = $_POST['name'];
-        $price = str_replace(',', '.', $_POST['price']); // Troca vírgula por ponto
-        $category_id = $_POST['category_id'];
-        $description = $_POST['description'] ?? '';
-        $restaurant_id = $_SESSION['loja_ativa_id'];
-        
-        // [FASE 1] Estoque vem do formulário (padrão 0 se vazio)
-        $stock = isset($_POST['stock']) && $_POST['stock'] !== '' ? intval($_POST['stock']) : 0;
-        
-        // [NOVO] Ícone do produto
-        $icon = $_POST['icon'] ?? 'package';
-        $icon_as_photo = isset($_POST['icon_as_photo']) ? 1 : 0;
-        
-        // Arrays de grupos selecionados
-        $selectedGroups = $_POST['additional_groups'] ?? [];
-
-        // --- Lógica de Upload de Imagem com Conversão WebP ---
-        $imageName = null;
-        if (!empty($_FILES['image']['name'])) {
-            $uploadDir = __DIR__ . '/../../../public/uploads/';
-            $imageName = \ImageConverter::uploadAndConvert($_FILES['image'], $uploadDir, 85);
-        }
-
-        $conn = Database::connect();
-        
-        // [NOVO] Calcula próximo item_number para este restaurante
-        $stmtMax = $conn->prepare("SELECT COALESCE(MAX(item_number), 0) + 1 AS next_num FROM products WHERE restaurant_id = :rid");
-        $stmtMax->execute(['rid' => $restaurant_id]);
-        $nextNumber = $stmtMax->fetch(PDO::FETCH_ASSOC)['next_num'];
-        
-        $sql = "INSERT INTO products (restaurant_id, category_id, name, description, price, image, icon, icon_as_photo, item_number, stock) 
-                VALUES (:rid, :cid, :name, :desc, :price, :img, :icon, :iap, :inum, :stock)";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            'rid' => $restaurant_id,
-            'cid' => $category_id,
-            'name' => $name,
-            'desc' => $description,
-            'price' => $price,
-            'img' => $imageName,
-            'icon' => $icon,
-            'iap' => $icon_as_photo,
-            'inum' => $nextNumber,
-            'stock' => $stock
-        ]);
-        
-        // [NOVO] Salvar Vínculos
-        $newProductId = $conn->lastInsertId();
-        if ($newProductId && !empty($selectedGroups)) {
-            $stmtIns = $conn->prepare("INSERT INTO product_additional_relations (product_id, group_id) VALUES (:pid, :gid)");
-            foreach ($selectedGroups as $gid) {
-                $stmtIns->execute(['pid' => $newProductId, 'gid' => $gid]);
-            }
-        }
-
-        header('Location: ../produtos?success=criado');
+        $this->handleValidatedPost(
+            fn() => $this->v->validateProduct($_POST),
+            fn() => $this->v->sanitizeProduct($_POST),
+            fn($data, $rid) => $this->createProduct($data, $rid),
+            self::BASE, 'criado'
+        );
     }
 
-    // 4. DELETAR
+    // === DELETAR ===
     public function delete() {
-        $this->checkSession();
-        $id = $_GET['id'];
-        
-        $conn = Database::connect();
-        // Só apaga se for da loja logada
-        $stmt = $conn->prepare("DELETE FROM products WHERE id = :id AND restaurant_id = :rid");
-        $stmt->execute(['id' => $id, 'rid' => $_SESSION['loja_ativa_id']]);
-
-        header('Location: ../produtos?success=deletado');
+        $this->handleDelete(
+            fn($id, $rid) => $this->deleteProduct($id, $rid),
+            self::BASE
+        );
     }
 
-    // 5. TELA DE EDITAR (Formulário) [FASE 1]
+    // === FORMULÁRIO EDITAR ===
     public function edit() {
-        $this->checkSession();
-        $id = $_GET['id'];
+        $rid = $this->getRestaurantId();
+        $id = $this->getInt('id');
         $conn = Database::connect();
 
-        // Busca o produto (respeitando multi-tenant)
-        $stmt = $conn->prepare("SELECT * FROM products WHERE id = :id AND restaurant_id = :rid");
-        $stmt->execute(['id' => $id, 'rid' => $_SESSION['loja_ativa_id']]);
-        $product = $stmt->fetch(PDO::FETCH_ASSOC);
-
+        $product = $this->getProduct($conn, $id, $rid);
         if (!$product) {
-            header('Location: ../produtos');
-            exit;
+            $this->redirect(self::BASE);
         }
 
-        // Busca categorias para o select
-        $stmtCat = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :rid ORDER BY name");
-        $stmtCat->execute(['rid' => $_SESSION['loja_ativa_id']]);
-        $categories = $stmtCat->fetchAll(PDO::FETCH_ASSOC);
-
-        // [NOVO] Busca Grupos de Adicionais disponíveis
-        $stmtGroups = $conn->prepare("SELECT * FROM additional_groups WHERE restaurant_id = :rid ORDER BY name");
-        $stmtGroups->execute(['rid' => $_SESSION['loja_ativa_id']]);
-        $additionalGroups = $stmtGroups->fetchAll(PDO::FETCH_ASSOC);
-
-        // [NOVO] Busca Grupos já vinculados ao produto
-        $stmtLinked = $conn->prepare("SELECT group_id FROM product_additional_relations WHERE product_id = :pid");
-        $stmtLinked->execute(['pid' => $id]);
-        $linkedGroups = $stmtLinked->fetchAll(PDO::FETCH_COLUMN);
+        $categories = $this->getCategories($conn, $rid);
+        $additionalGroups = $this->getAdditionalGroups($conn, $rid);
+        $linkedGroups = $this->getLinkedGroups($conn, $id);
 
         require __DIR__ . '/../../../views/admin/stock/edit.php';
     }
 
-    // 6. ATUALIZAR NO BANCO (Recebe o POST) [FASE 1]
+    // === ATUALIZAR ===
     public function update() {
-        $this->checkSession();
-        
-        $id = $_POST['id'];
-        $name = $_POST['name'];
-        $price = str_replace(',', '.', $_POST['price']);
-        $category_id = $_POST['category_id'];
-        $description = $_POST['description'] ?? '';
-        $stock = isset($_POST['stock']) && $_POST['stock'] !== '' ? intval($_POST['stock']) : 0;
-        $restaurant_id = $_SESSION['loja_ativa_id'];
-        
-        // [NOVO] Ícone do produto
-        $icon = $_POST['icon'] ?? 'package';
-        $icon_as_photo = isset($_POST['icon_as_photo']) ? 1 : 0;
-        
-        // Arrays de grupos selecionados
-        $selectedGroups = $_POST['additional_groups'] ?? [];
-
-        $conn = Database::connect();
-
-        // Verifica se pertence à loja
-        $stmt = $conn->prepare("SELECT id, image FROM products WHERE id = :id AND restaurant_id = :rid");
-        $stmt->execute(['id' => $id, 'rid' => $restaurant_id]);
-        $product = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$product) {
-            header('Location: ../produtos');
-            exit;
-        }
-
-        // Lógica de Upload de Imagem com Conversão WebP (só se enviar nova)
-        $imageName = $product['image']; // Mantém a atual
-        if (!empty($_FILES['image']['name'])) {
-            $uploadDir = __DIR__ . '/../../../public/uploads/';
-            $newImage = \ImageConverter::uploadAndConvert($_FILES['image'], $uploadDir, 85);
-            if ($newImage) {
-                $imageName = $newImage;
-            }
-        }
-
-        // Atualiza o produto
-        $sql = "UPDATE products SET 
-                    name = :name, 
-                    price = :price, 
-                    category_id = :cid, 
-                    description = :desc, 
-                    stock = :stock, 
-                    image = :img,
-                    icon = :icon,
-                    icon_as_photo = :iap
-                WHERE id = :id AND restaurant_id = :rid";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            'name' => $name,
-            'price' => $price,
-            'cid' => $category_id,
-            'desc' => $description,
-            'stock' => $stock,
-            'img' => $imageName,
-            'icon' => $icon,
-            'iap' => $icon_as_photo,
-            'id' => $id,
-            'rid' => $restaurant_id
-        ]);
-
-        // [NOVO] Atualiza Vínculos com Adicionais
-        // 1. Limpa anteriores
-        $stmtDel = $conn->prepare("DELETE FROM product_additional_relations WHERE product_id = :pid");
-        $stmtDel->execute(['pid' => $id]);
-
-        // 2. Insere novos
-        if (!empty($selectedGroups)) {
-            $stmtIns = $conn->prepare("INSERT INTO product_additional_relations (product_id, group_id) VALUES (:pid, :gid)");
-            foreach ($selectedGroups as $gid) {
-                $stmtIns->execute(['pid' => $id, 'gid' => $gid]);
-            }
-        }
-
-        header('Location: ../produtos?success=atualizado');
+        $this->handleValidatedPost(
+            fn() => $this->v->validateProductUpdate($_POST),
+            fn() => $this->v->sanitizeProduct($_POST),
+            fn($data, $rid) => $this->updateProduct($data, $rid),
+            self::BASE, 'atualizado'
+        );
     }
 
-    private function checkSession() {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        if (!isset($_SESSION['loja_ativa_id'])) {
-            header('Location: ' . BASE_URL . '/admin'); // Usando BASE_URL ajustado
-            exit;
+    // ============================================
+    // MÉTODOS PRIVADOS (Lógica de Negócio)
+    // ============================================
+
+    private function createProduct(array $data, int $rid): void {
+        $conn = Database::connect();
+        
+        // Upload de imagem
+        $imageName = $this->handleImageUpload();
+        
+        // Próximo item_number
+        $stmtMax = $conn->prepare("SELECT COALESCE(MAX(item_number), 0) + 1 AS next_num FROM products WHERE restaurant_id = :rid");
+        $stmtMax->execute(['rid' => $rid]);
+        $nextNumber = $stmtMax->fetch(PDO::FETCH_ASSOC)['next_num'];
+        
+        // Insert
+        $stmt = $conn->prepare("
+            INSERT INTO products (restaurant_id, category_id, name, description, price, image, icon, icon_as_photo, item_number, stock) 
+            VALUES (:rid, :cid, :name, :desc, :price, :img, :icon, :iap, :inum, :stock)
+        ");
+        $stmt->execute([
+            'rid' => $rid,
+            'cid' => $data['category_id'],
+            'name' => $data['name'],
+            'desc' => $data['description'],
+            'price' => $data['price'],
+            'img' => $imageName,
+            'icon' => $data['icon'],
+            'iap' => $data['icon_as_photo'],
+            'inum' => $nextNumber,
+            'stock' => $data['stock']
+        ]);
+        
+        // Vínculos com adicionais
+        $this->syncAdditionalGroups($conn, $conn->lastInsertId(), $data['additional_groups']);
+    }
+
+    private function updateProduct(array $data, int $rid): void {
+        $conn = Database::connect();
+        $id = $data['id'];
+        
+        // Verifica se pertence à loja
+        $product = $this->getProduct($conn, $id, $rid);
+        if (!$product) {
+            throw new \Exception('Produto não encontrado');
         }
+        
+        // Upload de imagem (só se nova)
+        $imageName = $this->handleImageUpload() ?? $product['image'];
+        
+        // Update
+        $stmt = $conn->prepare("
+            UPDATE products SET 
+                name = :name, price = :price, category_id = :cid, description = :desc, 
+                stock = :stock, image = :img, icon = :icon, icon_as_photo = :iap
+            WHERE id = :id AND restaurant_id = :rid
+        ");
+        $stmt->execute([
+            'name' => $data['name'],
+            'price' => $data['price'],
+            'cid' => $data['category_id'],
+            'desc' => $data['description'],
+            'stock' => $data['stock'],
+            'img' => $imageName,
+            'icon' => $data['icon'],
+            'iap' => $data['icon_as_photo'],
+            'id' => $id,
+            'rid' => $rid
+        ]);
+        
+        // Atualiza vínculos
+        $this->syncAdditionalGroups($conn, $id, $data['additional_groups']);
+    }
+
+    private function deleteProduct(int $id, int $rid): void {
+        $conn = Database::connect();
+        $stmt = $conn->prepare("DELETE FROM products WHERE id = :id AND restaurant_id = :rid");
+        $stmt->execute(['id' => $id, 'rid' => $rid]);
+    }
+
+    // ============================================
+    // HELPERS
+    // ============================================
+
+    private function getCategories($conn, int $rid): array {
+        $stmt = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :rid ORDER BY name");
+        $stmt->execute(['rid' => $rid]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function getAdditionalGroups($conn, int $rid): array {
+        $stmt = $conn->prepare("SELECT * FROM additional_groups WHERE restaurant_id = :rid ORDER BY name");
+        $stmt->execute(['rid' => $rid]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function getProduct($conn, int $id, int $rid): ?array {
+        $stmt = $conn->prepare("SELECT * FROM products WHERE id = :id AND restaurant_id = :rid");
+        $stmt->execute(['id' => $id, 'rid' => $rid]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    private function getLinkedGroups($conn, int $productId): array {
+        $stmt = $conn->prepare("SELECT group_id FROM product_additional_relations WHERE product_id = :pid");
+        $stmt->execute(['pid' => $productId]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    private function syncAdditionalGroups($conn, int $productId, array $groupIds): void {
+        // Limpa anteriores
+        $conn->prepare("DELETE FROM product_additional_relations WHERE product_id = :pid")->execute(['pid' => $productId]);
+        
+        // Insere novos
+        if (!empty($groupIds)) {
+            $stmt = $conn->prepare("INSERT INTO product_additional_relations (product_id, group_id) VALUES (:pid, :gid)");
+            foreach ($groupIds as $gid) {
+                $stmt->execute(['pid' => $productId, 'gid' => $gid]);
+            }
+        }
+    }
+
+    private function handleImageUpload(): ?string {
+        if (empty($_FILES['image']['name'])) {
+            return null;
+        }
+        
+        $uploadDir = __DIR__ . '/../../../public/uploads/';
+        return \ImageConverter::uploadAndConvert($_FILES['image'], $uploadDir, 85);
     }
 }
