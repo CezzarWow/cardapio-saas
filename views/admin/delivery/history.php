@@ -8,18 +8,8 @@
 require __DIR__ . '/../panel/layout/header.php'; 
 require __DIR__ . '/../panel/layout/sidebar.php'; 
 
-// Formata datas para exibição
-$displayDate = date('d/m/Y', strtotime($selectedDate));
-$dayName = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][date('w', strtotime($selectedDate))];
-
-// Status labels
-$statusLabels = [
-    'novo' => ['label' => 'Novo', 'color' => '#3b82f6'],
-    'preparo' => ['label' => 'Preparo', 'color' => '#8b5cf6'],
-    'rota' => ['label' => 'Em Rota', 'color' => '#22c55e'],
-    'entregue' => ['label' => 'Entregue', 'color' => '#059669'],
-    'cancelado' => ['label' => 'Cancelado', 'color' => '#dc2626'],
-];
+// [VIEW CLEANUP] Lógica de datas e status movida para o Controller (ViewModel)
+// Variáveis disponíveis: $displayDate, $dayName, $orders (com formatted_* e status_*), $total*Formatted
 ?>
 
 <!-- CSS do Delivery -->
@@ -59,13 +49,13 @@ $statusLabels = [
             <!-- 3. Valor Total (Entregue) -->
             <div class="history-summary-card" style="margin-bottom: 0; flex: 1; min-width: 180px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <span style="color: #64748b; font-weight: 600;">Receita:</span>
-                <span style="font-size: 1.3rem; font-weight: 800; color: #059669;">R$ <?= number_format($totalValor, 2, ',', '.') ?></span>
+                <span style="font-size: 1.3rem; font-weight: 800; color: #059669;">R$ <?= $totalValorFormatted ?></span>
             </div>
 
             <!-- 4. Valor Cancelado -->
             <div class="history-summary-card" style="margin-bottom: 0; flex: 1; min-width: 180px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <span style="color: #64748b; font-weight: 600;">Cancelado:</span>
-                <span style="font-size: 1.3rem; font-weight: 800; color: #dc2626;">R$ <?= number_format($totalCancelado, 2, ',', '.') ?></span>
+                <span style="font-size: 1.3rem; font-weight: 800; color: #dc2626;">R$ <?= $totalCanceladoFormatted ?></span>
             </div>
         </div>
 
@@ -91,21 +81,18 @@ $statusLabels = [
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($orders as $order): 
-                            $status = $order['status'] ?? 'novo';
-                            $statusInfo = $statusLabels[$status] ?? ['label' => $status, 'color' => '#64748b'];
-                        ?>
+                        <?php foreach ($orders as $order): ?>
                             <tr onclick="HistoryModal.open(<?= $order['id'] ?>)" style="cursor: pointer;">
                                 <td><strong>#<?= $order['id'] ?></strong></td>
                                 <td><?= htmlspecialchars($order['client_name'] ?? 'Cliente') ?></td>
-                                <td><?= date('H:i', strtotime($order['created_at'])) ?></td>
+                                <td><?= $order['formatted_time'] ?></td>
                                 <td>
-                                    <span class="history-badge" style="background: <?= $statusInfo['color'] ?>20; color: <?= $statusInfo['color'] ?>;">
-                                        <?= $statusInfo['label'] ?>
+                                    <span class="history-badge" style="background: <?= $order['status_bg_rgba'] ?>; color: <?= $order['status_color'] ?>;">
+                                        <?= $order['status_label'] ?>
                                     </span>
                                 </td>
-                                <td><?= ucfirst($order['payment_method'] ?? '-') ?></td>
-                                <td><strong>R$ <?= number_format($order['total'] ?? 0, 2, ',', '.') ?></strong></td>
+                                <td><?= $order['payment_method_label'] ?></td>
+                                <td><strong><?= $order['formatted_total'] ?></strong></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

@@ -1,0 +1,27 @@
+/**
+ * ============================================
+ * STOCK CSS - Orquestrador
+ * Arquivo: public/css/stock/index.css
+ * 
+ * Este arquivo apenas importa os módulos.
+ * Editado via módulos em vez de arquivo monolítico.
+ * ============================================
+ */
+
+/* Animações e transições */
+@import 'animations.css';
+
+/* Base: Tabs, breadcrumb, toggle, category chips */
+@import 'base.css';
+
+/* Cards de produtos */
+@import 'cards.css';
+
+/* Tabela de estoque */
+@import 'table.css';
+
+/* Busca e indicadores */
+@import 'search.css';
+
+/* Chips de itens e group cards (adicionais) */
+@import 'chips.css';

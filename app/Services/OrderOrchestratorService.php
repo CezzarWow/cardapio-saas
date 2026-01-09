@@ -26,15 +26,22 @@ class OrderOrchestratorService
     private $includePaidItemsAction;
     private $deliverOrderAction;
 
-    public function __construct()
-    {
-        $this->createOrderAction = new CreateOrderAction();
-        $this->closeTableAction = new CloseTableAction();
-        $this->closeCommandAction = new CloseCommandAction();
-        $this->removeItemAction = new RemoveItemAction();
-        $this->cancelOrderAction = new CancelOrderAction();
-        $this->includePaidItemsAction = new IncludePaidItemsAction();
-        $this->deliverOrderAction = new DeliverOrderAction();
+    public function __construct(
+        CreateOrderAction $createOrderAction,
+        CloseTableAction $closeTableAction,
+        CloseCommandAction $closeCommandAction,
+        RemoveItemAction $removeItemAction,
+        CancelOrderAction $cancelOrderAction,
+        IncludePaidItemsAction $includePaidItemsAction,
+        DeliverOrderAction $deliverOrderAction
+    ) {
+        $this->createOrderAction = $createOrderAction;
+        $this->closeTableAction = $closeTableAction;
+        $this->closeCommandAction = $closeCommandAction;
+        $this->removeItemAction = $removeItemAction;
+        $this->cancelOrderAction = $cancelOrderAction;
+        $this->includePaidItemsAction = $includePaidItemsAction;
+        $this->deliverOrderAction = $deliverOrderAction;
     }
 
     public function createOrder(int $restaurantId, int $userId, array $data): int

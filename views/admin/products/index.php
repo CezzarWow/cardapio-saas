@@ -2,20 +2,10 @@
 require __DIR__ . '/../panel/layout/header.php'; 
 require __DIR__ . '/../panel/layout/sidebar.php';
 
-// [FASE 1] Cálculo de indicadores
-$totalProducts = count($products);
-$criticalStock = 0;
-$STOCK_CRITICAL_LIMIT = 5; // Limite definido pelo técnico
-
-foreach ($products as $p) {
-    if (intval($p['stock']) <= $STOCK_CRITICAL_LIMIT) {
-        $criticalStock++;
-    }
-}
+// [VIEW CLEANUP] Dados pré-calculados pelo Controller ($totalProducts, $criticalStockCount)
 ?>
 
-<!-- CSS Estoque v2 (modernização) -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/stock-v2.css">
+<!-- stock-v2 removido - usando stock-consolidated.css global -->
 
 <main class="main-content">
     <?php require __DIR__ . '/../panel/layout/messages.php'; ?>
@@ -68,11 +58,11 @@ foreach ($products as $p) {
                 </div>
                 
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="background: <?= $criticalStock > 0 ? '#fecaca' : '#fef3c7' ?>; padding: 6px; border-radius: 6px;">
-                        <i data-lucide="alert-triangle" style="width: 18px; height: 18px; color: <?= $criticalStock > 0 ? '#dc2626' : '#d97706' ?>;"></i>
+                    <div style="background: <?= $criticalStockCount > 0 ? '#fecaca' : '#fef3c7' ?>; padding: 6px; border-radius: 6px;">
+                        <i data-lucide="alert-triangle" style="width: 18px; height: 18px; color: <?= $criticalStockCount > 0 ? '#dc2626' : '#d97706' ?>;"></i>
                     </div>
                     <div>
-                        <span style="font-weight: 700; color: <?= $criticalStock > 0 ? '#dc2626' : '#d97706' ?>;"><?= $criticalStock ?></span>
+                        <span style="font-weight: 700; color: <?= $criticalStockCount > 0 ? '#dc2626' : '#d97706' ?>;"><?= $criticalStockCount ?></span>
                         <span style="font-size: 0.8rem; color: #6b7280;"> críticos</span>
                     </div>
                 </div>
@@ -103,12 +93,7 @@ foreach ($products as $p) {
                 </div>
             <?php else: ?>
                 <?php foreach ($products as $prod): ?>
-                <?php 
-                    $stock = intval($prod['stock']);
-                    $isCritical = $stock <= $STOCK_CRITICAL_LIMIT;
-                    $isNegative = $stock < 0;
-                    $stockClass = $isNegative ? 'stock-product-card-stock--danger' : ($isCritical ? 'stock-product-card-stock--warning' : 'stock-product-card-stock--ok');
-                ?>
+                
                 <div class="stock-product-card product-row" 
                      data-name="<?= strtolower($prod['name']) ?>" 
                      data-category="<?= htmlspecialchars($prod['category_name']) ?>">
@@ -121,14 +106,10 @@ foreach ($products as $p) {
                              alt="<?= htmlspecialchars($prod['name']) ?>">
                     <?php elseif(($prod['icon_as_photo'] ?? 0) == 1): ?>
                         <div style="width: 100%; height: 140px; background: #eff6ff; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                            <?php 
-                                $icon = $prod['icon'] ?? '📦';
-                                // Se for ícone antigo (texto), usa lucide, senão é emoji
-                                if (preg_match('/^[a-z-]+$/', $icon) && strlen($icon) > 4): 
-                            ?>
-                                <i data-lucide="<?= $icon ?>" style="width: 64px; height: 64px; color: #3b82f6;"></i>
+                            <?php if ($prod['is_lucide_icon']): ?>
+                                <i data-lucide="<?= $prod['display_icon'] ?>" style="width: 64px; height: 64px; color: #3b82f6;"></i>
                             <?php else: ?>
-                                <span style="font-size: 4rem; line-height: 1;"><?= $icon ?></span>
+                                <span style="font-size: 4rem; line-height: 1;"><?= $prod['display_icon'] ?></span>
                             <?php endif; ?>
                         </div>
                     <?php else: ?>
@@ -143,8 +124,8 @@ foreach ($products as $p) {
                         <span class="stock-product-card-category"><?= htmlspecialchars($prod['category_name']) ?></span>
                         
                         <div class="stock-product-card-footer">
-                            <span class="stock-product-card-price">R$ <?= number_format($prod['price'], 2, ',', '.') ?></span>
-                            <span class="stock-product-card-stock <?= $stockClass ?>"><?= $stock ?></span>
+                            <span class="stock-product-card-price">R$ <?= $prod['formatted_price'] ?></span>
+                            <span class="stock-product-card-stock <?= $prod['stock_class'] ?>"><?= $prod['stock_int'] ?></span>
                         </div>
                     </div>
                     

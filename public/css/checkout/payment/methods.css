@@ -1,0 +1,91 @@
+/**
+ * PAYMENT - Métodos de Pagamento
+ * Arquivo: public/css/checkout/payment/methods.css
+ * Opções Pix, Dinheiro, Cartão
+ */
+
+.payment-methods-list {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.payment-method-option {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 6px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    font-weight: 700;
+    box-sizing: border-box;
+}
+
+.payment-method-option:hover {
+    border-color: #d1d5db;
+}
+
+.payment-method-option input[type="radio"] {
+    display: none;
+}
+
+.payment-method-check {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    order: 3;
+}
+
+.payment-method-option input:checked~.payment-method-check {
+    border-color: var(--accent-color, #ea580c);
+    background: var(--accent-color, #ea580c);
+}
+
+.payment-method-option input:checked~.payment-method-check::after {
+    content: '';
+    width: 4px;
+    height: 4px;
+    background: white;
+    border-radius: 50%;
+}
+
+/* Estilo quando selecionado */
+.payment-method-option:has(input:checked) {
+    border-color: var(--accent-color, #ea580c);
+    background: #fff7ed;
+    color: var(--accent-color, #ea580c);
+}
+
+.payment-method-option input:checked~.payment-method-label {
+    font-weight: 700;
+    color: var(--accent-color, #ea580c);
+}
+
+.payment-method-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.payment-method-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-dark, #1f2937);
+    line-height: 1;
+}

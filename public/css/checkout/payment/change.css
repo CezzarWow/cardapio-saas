@@ -1,0 +1,125 @@
+/**
+ * PAYMENT - Troco
+ * Arquivo: public/css/checkout/payment/change.css
+ * Container de troco, inputs e botões relacionados
+ */
+
+.change-container {
+    margin-top: 8px;
+    margin-bottom: 0;
+    padding: 8px;
+    background: #fef9c3;
+    border-radius: 10px;
+    border: 1px solid #facc15;
+}
+
+/* Modo compacto específico para o resumo */
+.change-container.summary-mode {
+    padding: 2px 8px;
+    margin-top: 4px;
+}
+
+/* Modo Resumo do Troco */
+.change-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 2px;
+}
+
+.change-summary-text {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #854d0e;
+}
+
+.btn-edit-change {
+    background: transparent;
+    border: 1px solid #eab308;
+    color: #a16207;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-edit-change:hover {
+    background: rgba(234, 179, 8, 0.1);
+}
+
+.change-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #854d0e;
+    margin-bottom: 6px;
+}
+
+.change-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.change-amount-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.change-amount-input:disabled {
+    background: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.no-change-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 10px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-dark, #1f2937);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.no-change-btn:hover {
+    border-color: #d1d5db;
+}
+
+.no-change-btn.active {
+    background: var(--accent-color, #ea580c);
+    border-color: var(--accent-color, #ea580c);
+    color: white;
+}
+
+.btn-confirm-change {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #10b981;
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.btn-confirm-change:active {
+    transform: scale(0.95);
+}

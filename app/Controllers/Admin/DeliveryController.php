@@ -13,9 +13,9 @@ class DeliveryController extends BaseController {
     private DeliveryService $service;
     private DeliveryValidator $v;
 
-    public function __construct() {
-        $this->service = new DeliveryService();
-        $this->v = new DeliveryValidator();
+    public function __construct(DeliveryService $service, DeliveryValidator $validator) {
+        $this->service = $service;
+        $this->v = $validator;
     }
 
     // === VIEWS ===
@@ -48,27 +48,72 @@ class DeliveryController extends BaseController {
         
         $result = $this->service->getOrdersByOperationalDay($rid, $selectedDate);
         
-        // Extrai variáveis para a view
-        $orders = $result['orders'];
+        $rawOrders = $result['orders'];
         $businessHour = $result['business_hour'];
         $periodStart = $result['period_start'];
         $periodEnd = $result['period_end'];
 
-        // Calcula totais (Moved from View)
-        $totalPedidos = count($orders);
-        $totalValor = 0;
-        $totalCancelado = 0;
+        // --- PREPARAÇÃO DO VIEWMODEL (Lógica de Apresentação) ---
+        
+        // 1. Definições de Status (Centralizado no Controller)
+        $statusLabels = [
+            'novo' => ['label' => 'Novo', 'color' => '#3b82f6'],
+            'preparo' => ['label' => 'Preparo', 'color' => '#8b5cf6'],
+            'rota' => ['label' => 'Em Rota', 'color' => '#22c55e'],
+            'entregue' => ['label' => 'Entregue', 'color' => '#059669'],
+            'cancelado' => ['label' => 'Cancelado', 'color' => '#dc2626'],
+        ];
 
-        foreach ($orders as $order) {
-            $st = $order['status'] ?? 'novo';
+        // 2. Formatação de Cabeçalho (Datas)
+        $timestamp = strtotime($selectedDate);
+        $displayDate = date('d/m/Y', $timestamp);
+        $dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+        $dayName = $dayNames[date('w', $timestamp)];
+
+        // 3. Cálculos de Totais e Preparação de Pedidos
+        $totalPedidos = count($rawOrders);
+        $totalValorVal = 0;
+        $totalCanceladoVal = 0;
+
+        $orders = array_map(function($order) use (&$totalValorVal, &$totalCanceladoVal, $statusLabels) {
+            $status = $order['status'] ?? 'novo';
             $val = floatval($order['total'] ?? 0);
             
-            if ($st === 'entregue') {
-                $totalValor += $val;
-            } elseif ($st === 'cancelado') {
-                $totalCancelado += $val;
+            // Lógica de Totais
+            if ($status === 'entregue') {
+                $totalValorVal += $val;
+            } elseif ($status === 'cancelado') {
+                $totalCanceladoVal += $val;
             }
-        }
+
+            // Status Badge
+            $statusInfo = $statusLabels[$status] ?? ['label' => $status, 'color' => '#64748b'];
+
+            return array_merge($order, [
+                'formatted_date' => date('d/m/Y', strtotime($order['created_at'])),
+                'formatted_time' => date('H:i', strtotime($order['created_at'])),
+                'formatted_total' => 'R$ ' . number_format($val, 2, ',', '.'),
+                'payment_method_label' => ucfirst($order['payment_method'] ?? '-'),
+                'status_label' => $statusInfo['label'],
+                'status_color' => $statusInfo['color'],
+                'status_bg_rgba' => $statusInfo['color'] . '20' // 20 hex = ~12% opacity
+            ]);
+        }, $rawOrders);
+
+        $totalValorFormatted = number_format($totalValorVal, 2, ',', '.');
+        $totalCanceladoFormatted = number_format($totalCanceladoVal, 2, ',', '.');
+        
+        // Dados prontos para a View
+        $viewData = compact(
+            'orders',
+            'displayDate', 
+            'dayName',
+            'totalPedidos',
+            'totalValorFormatted',
+            'totalCanceladoFormatted',
+            'selectedDate'
+        );
+        extract($viewData);
         
         require __DIR__ . '/../../../views/admin/delivery/history.php';
     }

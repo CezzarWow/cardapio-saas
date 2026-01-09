@@ -15,9 +15,12 @@ class StockRepositionController extends BaseController
     private StockService $service;
     private StockValidator $validator;
 
-    public function __construct() {
-        $this->service = new StockService();
-        $this->validator = new StockValidator();
+    public function __construct(
+        StockService $service,
+        StockValidator $validator
+    ) {
+        $this->service = $service;
+        $this->validator = $validator;
     }
 
     // 1. LISTAR PRODUTOS PARA REPOSIÇÃO

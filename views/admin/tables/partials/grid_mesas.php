@@ -17,7 +17,7 @@
                 $textColor = '#b91c1c';
                 $iconColor = '#ef4444';
                 $statusText = 'OCUPADA';
-                $valor = 'R$ ' . number_format($mesa['current_total'], 2, ',', '.');
+                $valor = 'R$ ' . number_format($mesa['order_total'] ?? 0, 2, ',', '.');
             } else {
                 // LIVRE: Fundo Branco, Borda Verde/Cinza
                 $bg = 'white';

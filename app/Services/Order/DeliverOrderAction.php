@@ -3,22 +3,25 @@
 namespace App\Services\Order;
 
 use App\Core\Database;
-use PDO;
+use App\Repositories\Order\OrderRepository;
 use Exception;
 
 class DeliverOrderAction
 {
+    private OrderRepository $orderRepo;
+
+    public function __construct(OrderRepository $orderRepo)
+    {
+        $this->orderRepo = $orderRepo;
+    }
+
     public function execute(int $orderId, int $restaurantId): void
     {
-        $conn = Database::connect();
         try {
-            $stmt = $conn->prepare("SELECT * FROM orders WHERE id = :oid AND restaurant_id = :rid");
-            $stmt->execute(['oid' => $orderId, 'rid' => $restaurantId]);
-            if (!$stmt->fetch()) throw new Exception('Pedido não encontrado');
+            $order = $this->orderRepo->find($orderId, $restaurantId);
+            if (!$order) throw new Exception('Pedido não encontrado');
 
-            $conn->prepare("UPDATE orders SET status = 'concluido' WHERE id = :oid")
-                 ->execute(['oid' => $orderId]);
-
+            $this->orderRepo->updateStatus($orderId, 'concluido');
         } catch (Exception $e) {
             throw $e;
         }

@@ -12,8 +12,8 @@ class StockMovementController extends BaseController
 {
     private StockService $service;
 
-    public function __construct() {
-        $this->service = new StockService();
+    public function __construct(StockService $service) {
+        $this->service = $service;
     }
 
     /**

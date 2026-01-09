@@ -1,0 +1,121 @@
+/**
+ * PAYMENT - Formulários
+ * Arquivo: public/css/checkout/payment/form.css
+ * Inputs, Labels, Textarea e Rows
+ */
+
+.payment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.payment-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    color: #1f2937;
+    transition: all 0.2s;
+    background: #f9fafb;
+    box-sizing: border-box;
+}
+
+.payment-input:focus {
+    outline: none;
+    border-color: var(--accent-color, #ea580c);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+}
+
+.payment-input.error {
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+
+/* Estilo específico para input readonly (bairro, etc) */
+.payment-input[readonly] {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    cursor: default;
+    border-color: #e5e7eb;
+}
+
+/* Forçar visual de readonly mesmo ao focar */
+.payment-input[readonly]:focus {
+    border-color: #e5e7eb;
+    box-shadow: none;
+    background-color: #f3f4f6;
+}
+
+/* Destaque visual melhor para seleção ativa */
+.payment-input.filled {
+    border-color: #d1d5db;
+    background: white;
+}
+
+.payment-input.filled:focus {
+    border-color: var(--accent-color, #ea580c);
+}
+
+/* Campo de observação de pagamento - mais compacto */
+.payment-note-input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    resize: vertical;
+    margin-bottom: 0 !important;
+}
+
+.payment-row {
+    display: flex;
+    gap: 10px;
+}
+
+/* Row especial para número com botão "Sem nº" */
+.payment-number-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    max-width: 100%;
+}
+
+.payment-number-row .payment-input:first-child {
+    flex: 1;
+    min-width: 0;
+}
+
+.no-number-btn {
+    white-space: nowrap;
+    height: 44px;
+    padding: 0 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #4b5563;
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.no-number-btn.active {
+    background: #4b5563;
+    border-color: #4b5563;
+    color: white;
+}
+
+.payment-number-row .payment-input:last-child {
+    flex: 2;
+}
+
+/* Textarea de observação */
+.payment-textarea {
+    resize: none;
+    min-height: 60px;
+}

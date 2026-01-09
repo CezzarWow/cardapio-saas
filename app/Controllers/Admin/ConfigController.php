@@ -15,9 +15,9 @@ class ConfigController extends BaseController
     private ConfigService $service;
     private ConfigValidator $validator;
 
-    public function __construct() {
-        $this->service = new ConfigService();
-        $this->validator = new ConfigValidator();
+    public function __construct(ConfigService $service, ConfigValidator $validator) {
+        $this->service = $service;
+        $this->validator = $validator;
     }
 
     /**

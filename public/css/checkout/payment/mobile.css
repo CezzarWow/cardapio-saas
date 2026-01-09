@@ -1,0 +1,11 @@
+/**
+ * PAYMENT - Mobile Specifics
+ * Arquivo: public/css/checkout/payment/mobile.css
+ * Ajustes para iOS Safe Area
+ */
+
+.payment-modal .cardapio-modal-body {
+    /* ⚠️ IMPORTANTE: Substituir 73px pelo valor medido no Safari Remote Inspector
+       se os campos de baixo continuarem cortados/escondidos atrás da barra */
+    padding-bottom: calc(73px + env(safe-area-inset-bottom));
+}

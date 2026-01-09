@@ -28,8 +28,7 @@ foreach ($products as $p) {
 }
 ?>
 
-<!-- CSS Estoque v2 -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/stock-v2.css">
+<!-- stock-v2 removido - usando stock-consolidated.css global -->
 
 <main class="main-content">
     <div style="padding: 2rem; width: 100%; overflow-y: auto;">

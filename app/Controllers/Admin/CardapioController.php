@@ -20,12 +20,16 @@ class CardapioController extends BaseController
     private ComboService $comboService;
     private CardapioValidator $validator;
 
-    public function __construct()
-    {
-        $this->queryService = new CardapioQueryService();
-        $this->configService = new UpdateCardapioConfigService();
-        $this->comboService = new ComboService();
-        $this->validator = new CardapioValidator();
+    public function __construct(
+        CardapioQueryService $queryService,
+        UpdateCardapioConfigService $configService,
+        ComboService $comboService,
+        CardapioValidator $validator
+    ) {
+        $this->queryService = $queryService;
+        $this->configService = $configService;
+        $this->comboService = $comboService;
+        $this->validator = $validator;
     }
 
     /**

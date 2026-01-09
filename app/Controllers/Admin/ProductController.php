@@ -12,20 +12,71 @@ class ProductController extends BaseController {
 
     private const BASE = '/admin/loja/produtos';
     
-    private StockValidator $v; // Reutilizando Validator existente por enquanto
+    private StockValidator $v; 
     private ProductService $service;
 
-    public function __construct() {
-        $this->v = new StockValidator();
-        $this->service = new ProductService();
+    public function __construct(ProductService $service, StockValidator $validator) {
+        $this->service = $service;
+        $this->v = $validator;
     }
 
     // === LISTAGEM (CATÁLOGO) ===
     public function index() {
         $rid = $this->getRestaurantId();
         
-        $products = $this->service->getProducts($rid);
+        $rawProducts = $this->service->getProducts($rid);
         $categories = $this->service->getCategories($rid);
+
+        // --- PREPARAÇÃO DO VIEWMODEL (Lógica de Apresentação) ---
+        $stockCriticalLimit = 5; 
+        $totalProducts = count($rawProducts);
+        $criticalStockCount = 0;
+        
+        $products = array_map(function($prod) use ($stockCriticalLimit, &$criticalStockCount) {
+            $stock = intval($prod['stock']);
+            $isNegative = $stock < 0;
+            $isCritical = $stock <= $stockCriticalLimit;
+
+            if ($isCritical) {
+                $criticalStockCount++;
+            }
+
+            // Definição de Classes CSS baseada em estado
+            $stockClass = 'stock-product-card-stock--ok';
+            if ($isNegative) {
+                $stockClass = 'stock-product-card-stock--danger';
+            } elseif ($isCritical) {
+                $stockClass = 'stock-product-card-stock--warning';
+            }
+
+            // Lógica de Ícone (Lucide vs Emoji/Texto)
+            $icon = $prod['icon'] ?? '📦';
+            $isLucideIcon = (preg_match('/^[a-z-]+$/', $icon) && strlen($icon) > 4);
+
+            return array_merge($prod, [
+                'stock_int' => $stock,
+                'is_critical' => $isCritical,
+                'is_negative' => $isNegative,
+                'stock_class' => $stockClass,
+                'formatted_price' => number_format($prod['price'], 2, ',', '.'),
+                'is_lucide_icon' => $isLucideIcon,
+                'display_icon' => $icon
+            ]);
+        }, $rawProducts);
+        
+        // Dados para a View (ViewModel)
+        $viewData = [
+            'products' => $products,
+            'categories' => $categories,
+            'totalProducts' => $totalProducts,
+            'criticalStockCount' => $criticalStockCount,
+            'hasProducts' => !empty($products)
+        ];
+        
+        // Extrai para variáveis locais para manter compatibilidade com a View atual se necessário,
+        // mas o ideal é a view usar $viewData ou variáveis extraídas.
+        // Vamos extrair para manter o padrão de variáveis soltas
+        extract($viewData);
         
         require __DIR__ . '/../../../views/admin/products/index.php';
     }

@@ -1,0 +1,32 @@
+/**
+ * PAYMENT - Scrollbars
+ * Arquivo: public/css/checkout/payment/scroll.css
+ * Lógica para esconder scrollbars mantendo funcionalidade
+ */
+
+/* Esconde scroll no container do checkout quando muda tipo */
+#checkout-main {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
+}
+
+#checkout-main::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    /* Chrome/Safari/Opera */
+}
+
+/* Esconde scroll em todos elementos filhos do checkout */
+#checkoutModal * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+#checkoutModal *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+}

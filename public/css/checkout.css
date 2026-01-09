@@ -11,7 +11,7 @@
 @import 'review.css';
 
 /* 3. PAGAMENTO (Formulário, troca, finalização) */
-@import 'payment.css';
+@import 'checkout/payment/index.css';
 
 /* 4. COMPATIBILIDADE (Fixes para Samsung, iOS e telas pequenas) */
 /* Sempre por último para garantir overrides */

@@ -12,12 +12,18 @@ class AdditionalController extends BaseController {
 
     private const BASE = '/admin/loja/adicionais';
     
-    private AdditionalValidator $v;
     private AdditionalService $service;
+    private AdditionalValidator $v;
+    private \App\Repositories\AdditionalCategoryRepository $catRepo;
 
-    public function __construct() {
-        $this->v = new AdditionalValidator();
-        $this->service = new AdditionalService();
+    public function __construct(
+        AdditionalService $service,
+        AdditionalValidator $validator,
+        \App\Repositories\AdditionalCategoryRepository $catRepo
+    ) {
+        $this->service = $service;
+        $this->v = $validator;
+        $this->catRepo = $catRepo;
     }
 
     // === VIEW ===
@@ -33,7 +39,7 @@ class AdditionalController extends BaseController {
         
         // Mantendo o repository direto para categorias por enquanto,
         // já que o AdditionalService foca em grupos/itens/vínculos.
-        $categories = (new \App\Repositories\AdditionalCategoryRepository())->findAllCategories($rid); 
+        $categories = $this->catRepo->findAllCategories($rid); 
 
         require __DIR__ . '/../../../views/admin/additionals/index.php';
     }
@@ -154,8 +160,22 @@ class AdditionalController extends BaseController {
     }
 
     public function getProductExtras() {
-        $rid = $this->getRestaurantId();
-        $productId = $this->getInt('product_id');
-        $this->json($productId <= 0 ? [] : $this->service->getProductExtras($productId, $rid));
+        try {
+            $rid = $this->getRestaurantId();
+            $productId = $this->getInt('product_id');
+            
+            if ($productId <= 0) {
+                $this->json([]);
+                return;
+            }
+
+            $extras = $this->service->getProductExtras($productId, $rid);
+            $this->json($extras);
+
+        } catch (\Throwable $e) {
+            error_log('getProductExtras Error: ' . $e->getMessage());
+            // Return JSON with error to avoid "Unexpected token <" in frontend
+            $this->json(['error' => 'Erro interno: ' . $e->getMessage()], 500);
+        }
     }
 }

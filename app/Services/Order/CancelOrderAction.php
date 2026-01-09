@@ -4,16 +4,25 @@ namespace App\Services\Order;
 
 use App\Core\Database;
 use App\Services\StockService;
+use App\Repositories\Order\OrderRepository;
+use App\Repositories\TableRepository;
 use PDO;
 use Exception;
 
 class CancelOrderAction
 {
-    private $stockService;
+    private StockService $stockService;
+    private OrderRepository $orderRepo;
+    private TableRepository $tableRepo;
 
-    public function __construct()
-    {
-        $this->stockService = new StockService();
+    public function __construct(
+        StockService $stockService,
+        OrderRepository $orderRepo,
+        TableRepository $tableRepo
+    ) {
+        $this->stockService = $stockService;
+        $this->orderRepo = $orderRepo;
+        $this->tableRepo = $tableRepo;
     }
 
     public function execute(int $orderId, ?int $tableId = null): void
@@ -23,20 +32,19 @@ class CancelOrderAction
         try {
             $conn->beginTransaction();
 
-            $stmtItems = $conn->prepare("SELECT product_id, quantity FROM order_items WHERE order_id = :oid");
-            $stmtItems->execute(['oid' => $orderId]);
-            $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+            $items = $this->orderRepo->findItems($orderId);
 
             foreach ($items as $item) {
+                // StockService ainda precisa de connection para Transaction?
+                // Sim, ele usa $conn passado. Idealmente refatorar Stock para Repo também no futuro.
                 $this->stockService->increment($conn, $item['product_id'], $item['quantity']);
             }
 
-            $conn->prepare("DELETE FROM order_items WHERE order_id = :oid")->execute(['oid' => $orderId]);
-            $conn->prepare("DELETE FROM orders WHERE id = :oid")->execute(['oid' => $orderId]);
+            $this->orderRepo->deleteItems($orderId);
+            $this->orderRepo->delete($orderId);
 
             if ($tableId) {
-                $conn->prepare("UPDATE tables SET status = 'livre', current_order_id = NULL WHERE id = :tid")
-                     ->execute(['tid' => $tableId]);
+                $this->tableRepo->free($tableId);
             }
 
             $conn->commit();

@@ -11,8 +11,8 @@ class PdvController extends BaseController {
 
     private PdvService $service;
 
-    public function __construct() {
-        $this->service = new PdvService();
+    public function __construct(PdvService $service) {
+        $this->service = $service;
     }
 
     public function index() {

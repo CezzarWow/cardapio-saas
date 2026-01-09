@@ -28,17 +28,17 @@
                 }
             ?>
             <?php if ($isPaid): ?>
-                <div onclick="showPaidOrderOptions(<?= $order['order_id'] ?>, '<?= addslashes($order['client_name']) ?>', <?= $order['total'] ?>, <?= $order['client_id'] ?>)" 
+                <div onclick="showPaidOrderOptions(<?= $order['id'] ?>, '<?= addslashes($order['client_name'] ?? '') ?>', <?= $order['total'] ?>, <?= $order['client_id'] ?? 0 ?>)" 
                      style="background: <?= $bg ?>; border: 2px solid <?= $border ?>; border-radius: 10px; cursor: pointer; transition: transform 0.1s; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 10px;">
             <?php else: ?>
-                <div onclick="window.location.href='<?= BASE_URL ?>/admin/loja/pdv?order_id=<?= $order['order_id'] ?>'" 
+                <div onclick="window.location.href='<?= BASE_URL ?>/admin/loja/pdv?order_id=<?= $order['id'] ?>'" 
                      style="background: <?= $bg ?>; border: 2px solid <?= $border ?>; border-radius: 10px; cursor: pointer; transition: transform 0.1s; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 10px;">
             <?php endif; ?>
                 
                 <!-- Nome (truncado) -->
                 <!-- Nome (truncado com CSS) -->
                 <span style="font-size: 1.1rem; font-weight: 700; color: #1e293b; text-align: center; max-width: 100%; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
-                    <?= htmlspecialchars($order['client_name']) ?>
+                    <?= htmlspecialchars($order['client_name'] ?? 'Cliente') ?>
                 </span>
                 
                 <!-- Status -->

@@ -1,0 +1,84 @@
+/**
+ * MODALS - Combos
+ * Arquivo: public/css/modals/combo.css
+ */
+
+/* ========== MODAL DE COMBOS ========== */
+.combo-products-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.combo-product-collapse {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+}
+
+.combo-product-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f9fafb;
+    cursor: pointer;
+    transition: background 0.2s;
+    user-select: none;
+}
+
+.combo-product-header:hover {
+    background: #f3f4f6;
+}
+
+.combo-product-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    color: var(--text-dark, #1f2937);
+    font-size: 0.9rem;
+}
+
+.combo-extras-badge {
+    background: var(--accent-color, #ea580c);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    display: none;
+    /* Só mostra se > 0 */
+}
+
+.combo-toggle-icon {
+    transition: transform 0.3s ease;
+    color: #9ca3af;
+}
+
+/* Estado Aberto */
+.combo-product-collapse.open .combo-toggle-icon {
+    transform: rotate(180deg);
+}
+
+.combo-product-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    background: white;
+}
+
+.combo-product-collapse.open .combo-product-body {
+    max-height: 300px;
+    overflow-y: auto;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Área interna de scroll dos adicionais */
+.combo-additional-list {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}

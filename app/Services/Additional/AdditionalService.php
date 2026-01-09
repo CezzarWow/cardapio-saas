@@ -19,12 +19,16 @@ class AdditionalService
     private AdditionalPivotRepository $pivotRepo;
     private AdditionalCategoryRepository $categoryRepo;
 
-    public function __construct()
-    {
-        $this->itemRepo = new AdditionalItemRepository();
-        $this->groupRepo = new AdditionalGroupRepository();
-        $this->pivotRepo = new AdditionalPivotRepository();
-        $this->categoryRepo = new AdditionalCategoryRepository();
+    public function __construct(
+        AdditionalItemRepository $itemRepo,
+        AdditionalGroupRepository $groupRepo,
+        AdditionalPivotRepository $pivotRepo,
+        AdditionalCategoryRepository $categoryRepo
+    ) {
+        $this->itemRepo = $itemRepo;
+        $this->groupRepo = $groupRepo;
+        $this->pivotRepo = $pivotRepo;
+        $this->categoryRepo = $categoryRepo;
     }
 
     // ====================================================

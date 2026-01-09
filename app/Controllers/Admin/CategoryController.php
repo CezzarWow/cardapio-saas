@@ -15,10 +15,10 @@ class CategoryController extends BaseController
     private CategoryService $service;
     private CategoryValidator $validator;
 
-    public function __construct()
+    public function __construct(CategoryService $service, CategoryValidator $validator)
     {
-        $this->service = new CategoryService();
-        $this->validator = new CategoryValidator();
+        $this->service = $service;
+        $this->validator = $validator;
     }
 
     /**

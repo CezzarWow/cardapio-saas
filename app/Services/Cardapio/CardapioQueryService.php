@@ -2,12 +2,12 @@
 
 namespace App\Services\Cardapio;
 
-use App\Core\Database;
 use App\Repositories\Cardapio\CardapioConfigRepository;
 use App\Repositories\Cardapio\BusinessHoursRepository;
 use App\Repositories\Cardapio\CategoryRepository;
 use App\Repositories\Cardapio\ProductRepository;
-use PDO;
+use App\Repositories\ComboRepository;
+use App\Repositories\RestaurantRepository;
 
 /**
  * Query Service para leituras do Cardápio
@@ -19,13 +19,23 @@ class CardapioQueryService
     private BusinessHoursRepository $hoursRepository;
     private CategoryRepository $categoryRepository;
     private ProductRepository $productRepository;
+    private ComboRepository $comboRepository;
+    private RestaurantRepository $restaurantRepository;
 
-    public function __construct()
-    {
-        $this->configRepository = new CardapioConfigRepository();
-        $this->hoursRepository = new BusinessHoursRepository();
-        $this->categoryRepository = new CategoryRepository();
-        $this->productRepository = new ProductRepository();
+    public function __construct(
+        CardapioConfigRepository $configRepository,
+        BusinessHoursRepository $hoursRepository,
+        CategoryRepository $categoryRepository,
+        ProductRepository $productRepository,
+        ComboRepository $comboRepository,
+        RestaurantRepository $restaurantRepository
+    ) {
+        $this->configRepository = $configRepository;
+        $this->hoursRepository = $hoursRepository;
+        $this->categoryRepository = $categoryRepository;
+        $this->productRepository = $productRepository;
+        $this->comboRepository = $comboRepository;
+        $this->restaurantRepository = $restaurantRepository;
     }
 
     /**
@@ -55,7 +65,8 @@ class CardapioQueryService
         $combos = $this->getCombosWithItems($restaurantId);
         
         // Slug do restaurante
-        $restaurantSlug = $this->getRestaurantSlug($restaurantId);
+        $restaurant = $this->restaurantRepository->find($restaurantId);
+        $restaurantSlug = $restaurant['slug'] ?? (string) $restaurantId;
 
         return [
             'config' => $config,
@@ -83,39 +94,14 @@ class CardapioQueryService
      */
     private function getCombosWithItems(int $restaurantId): array
     {
-        $conn = Database::connect();
-        
-        // Buscar combos
-        $stmtCombos = $conn->prepare("SELECT * FROM combos WHERE restaurant_id = :rid ORDER BY display_order, name");
-        $stmtCombos->execute(['rid' => $restaurantId]);
-        $combos = $stmtCombos->fetchAll(PDO::FETCH_ASSOC);
+        // Usa Repository otimizado
+        $combos = $this->comboRepository->findAllWithItems($restaurantId);
 
-        if (empty($combos)) {
-            return [];
-        }
-
-        // Buscar itens dos combos
-        $comboIds = array_column($combos, 'id');
-        $inQuery = implode(',', array_fill(0, count($comboIds), '?'));
-        
-        $stmtItems = $conn->prepare("
-            SELECT ci.combo_id, p.name, p.price 
-            FROM combo_items ci
-            JOIN products p ON ci.product_id = p.id
-            WHERE ci.combo_id IN ($inQuery)
-        ");
-        $stmtItems->execute($comboIds);
-        $allItems = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
-
-        // Agrupar itens por combo
-        $itemsByCombo = [];
-        foreach ($allItems as $item) {
-            $itemsByCombo[$item['combo_id']][] = $item;
-        }
-
-        // Processar dados para a view
+        // Processar dados para a view (lógica de apresentação)
         foreach ($combos as &$combo) {
-            $items = $itemsByCombo[$combo['id']] ?? [];
+            $items = $combo['items'] ?? [];
+            unset($combo['items']); // Limpa array bruto se não for necessário na view, ou mantem.
+
             $counts = [];
             $originalPrice = 0;
 
@@ -142,21 +128,7 @@ class CardapioQueryService
                 $combo['discount_percent'] = 0;
             }
         }
-        unset($combo);
-
+        
         return $combos;
-    }
-
-    /**
-     * Busca slug do restaurante
-     */
-    private function getRestaurantSlug(int $restaurantId): string
-    {
-        $conn = Database::connect();
-        
-        $stmt = $conn->prepare("SELECT slug FROM restaurants WHERE id = :rid");
-        $stmt->execute(['rid' => $restaurantId]);
-        
-        return $stmt->fetchColumn() ?: (string) $restaurantId;
     }
 }

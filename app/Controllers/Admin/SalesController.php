@@ -17,10 +17,10 @@ class SalesController extends BaseController
     private SalesService $service;
     private SalesValidator $validator;
 
-    public function __construct()
+    public function __construct(SalesService $service, SalesValidator $validator)
     {
-        $this->service = new SalesService();
-        $this->validator = new SalesValidator();
+        $this->service = $service;
+        $this->validator = $validator;
     }
 
     /**
@@ -29,10 +29,36 @@ class SalesController extends BaseController
     public function index(): void
     {
         $rid = $this->getRestaurantId();
-        $orders = $this->service->listOrders($rid);
+        $rawOrders = $this->service->listOrders($rid);
         
+        // --- PREPARAÇÃO DO VIEWMODEL ---
         // Calcular total para a View
-        $totalSales = array_sum(array_column($orders, 'calculated_total'));
+        $totalSalesVal = array_sum(array_column($rawOrders, 'calculated_total'));
+        $totalSalesFormatted = number_format($totalSalesVal, 2, ',', '.');
+
+        $orders = array_map(function($sale) {
+            $isConcluido = ($sale['status'] === 'concluido');
+            $isCancelado = ($sale['status'] === 'cancelado');
+            
+            return array_merge($sale, [
+                'formatted_id' => '#' . str_pad($sale['id'], 4, '0', STR_PAD_LEFT),
+                'formatted_date' => date('d/m/Y H:i', strtotime($sale['created_at'])),
+                'formatted_total' => 'R$ ' . number_format($sale['calculated_total'], 2, ',', '.'),
+                // Flags de permissão/estado
+                'can_reopen' => $isConcluido,
+                'can_cancel' => $isConcluido,
+                'is_canceled' => $isCancelado,
+                'status_label' => ucfirst($sale['status']) // Fallback simples se precisar
+            ]);
+        }, $rawOrders);
+        
+        // Passa variáveis prontas para a View
+        $viewData = [
+            'orders' => $orders,
+            'totalSales' => $totalSalesVal, // Mantendo original por compatibilidade se algo usar
+            'totalSalesFormatted' => $totalSalesFormatted
+        ];
+        extract($viewData);
         
         require __DIR__ . '/../../../views/admin/sales/index.php';
     }

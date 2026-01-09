@@ -18,12 +18,16 @@ class UpdateCardapioConfigService
     private CategoryRepository $categoryRepository;
     private ProductRepository $productRepository;
 
-    public function __construct()
-    {
-        $this->configRepository = new CardapioConfigRepository();
-        $this->hoursRepository = new BusinessHoursRepository();
-        $this->categoryRepository = new CategoryRepository();
-        $this->productRepository = new ProductRepository();
+    public function __construct(
+        CardapioConfigRepository $configRepository,
+        BusinessHoursRepository $hoursRepository,
+        CategoryRepository $categoryRepository,
+        ProductRepository $productRepository
+    ) {
+        $this->configRepository = $configRepository;
+        $this->hoursRepository = $hoursRepository;
+        $this->categoryRepository = $categoryRepository;
+        $this->productRepository = $productRepository;
     }
 
     /**

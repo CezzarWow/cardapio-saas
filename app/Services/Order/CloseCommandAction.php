@@ -5,18 +5,24 @@ namespace App\Services\Order;
 use App\Core\Database;
 use App\Services\PaymentService;
 use App\Services\CashRegisterService;
+use App\Repositories\Order\OrderRepository;
 use PDO;
 use Exception;
 
 class CloseCommandAction
 {
-    private $paymentService;
-    private $cashRegisterService;
+    private PaymentService $paymentService;
+    private CashRegisterService $cashRegisterService;
+    private OrderRepository $orderRepo;
 
-    public function __construct()
-    {
-        $this->paymentService = new PaymentService();
-        $this->cashRegisterService = new CashRegisterService();
+    public function __construct(
+        PaymentService $paymentService,
+        CashRegisterService $cashRegisterService,
+        OrderRepository $orderRepo
+    ) {
+        $this->paymentService = $paymentService;
+        $this->cashRegisterService = $cashRegisterService;
+        $this->orderRepo = $orderRepo;
     }
 
     public function execute(int $restaurantId, int $orderId, array $payments): void
@@ -28,9 +34,7 @@ class CloseCommandAction
         try {
             $conn->beginTransaction();
 
-            $stmt = $conn->prepare("SELECT * FROM orders WHERE id = :oid AND restaurant_id = :rid");
-            $stmt->execute(['oid' => $orderId, 'rid' => $restaurantId]);
-            $currentOrder = $stmt->fetch(PDO::FETCH_ASSOC);
+            $currentOrder = $this->orderRepo->find($orderId, $restaurantId);
 
             if (!$currentOrder) {
                 throw new Exception('Pedido não encontrado');
@@ -55,8 +59,7 @@ class CloseCommandAction
                     $orderId
                 );
 
-                $conn->prepare("UPDATE orders SET is_paid = 1, payment_method = :method WHERE id = :oid")
-                     ->execute(['oid' => $orderId, 'method' => $paymentMethodDesc]);
+                $this->orderRepo->updatePayment($orderId, true, $paymentMethodDesc);
             }
 
             $conn->commit();

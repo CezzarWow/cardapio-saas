@@ -2,202 +2,152 @@
 namespace App\Services\Cashier;
 
 use App\Core\Database;
-use PDO;
+use App\Repositories\Order\OrderRepository;
+use App\Repositories\TableRepository;
+use App\Repositories\StockRepository;
+use App\Repositories\CashRegisterRepository;
 use Exception;
+use PDO;
 
 /**
- * CashierTransactionService - Lógica de Transações e Reversões
- * 
- * Responsabilidades:
- * - Reverter vendas para PDV (edição)
- * - Reverter vendas para Mesa
- * - Remover/Cancelar movimentos
+ * Service para operações transacionais complexas do Caixa
+ * (Cancelamento, Estorno, etc)
  */
 class CashierTransactionService {
 
-    /**
-     * Reverte venda para PDV (modo edição)
-     * 
-     * @return array Itens para recuperar no carrinho
-     * @throws Exception
-     */
-    public function reverseToPdv(int $movementId): array {
-        $conn = Database::connect();
-        
-        try {
-            $conn->beginTransaction();
-            
-            // Busca movimento
-            $mov = $this->getMovement($conn, $movementId);
-            if (!$mov || !$mov['order_id']) {
-                throw new Exception('Movimento inválido ou sem pedido associado');
-            }
-            
-            // Busca pedido e itens
-            $order = $this->getOrder($conn, $mov['order_id']);
-            $items = $this->getOrderItemsWithDetails($conn, $mov['order_id']);
-            
-            // Devolve estoque
-            $this->restoreStock($conn, $items);
-            
-            // Apaga registros
-            $this->deleteMovement($conn, $movementId);
-            $this->deleteOrderItems($conn, $mov['order_id']);
-            $this->deleteOrder($conn, $mov['order_id']);
-            
-            $conn->commit();
-            
-            return [
-                'movement' => $mov,
-                'order' => $order,
-                'items' => $items
-            ];
-            
-        } catch (Exception $e) {
-            $conn->rollBack();
-            throw $e;
-        }
+    private OrderRepository $orderRepo;
+    private TableRepository $tableRepo;
+    private StockRepository $stockRepo;
+    private CashRegisterRepository $cashRepo;
+
+    public function __construct(
+        OrderRepository $orderRepo,
+        TableRepository $tableRepo,
+        StockRepository $stockRepo,
+        CashRegisterRepository $cashRepo
+    ) {
+        $this->orderRepo = $orderRepo;
+        $this->tableRepo = $tableRepo;
+        $this->stockRepo = $stockRepo;
+        $this->cashRepo = $cashRepo;
     }
 
     /**
-     * Reverte venda para Mesa
-     * 
-     * @throws Exception
+     * Cancela uma venda/movimentação no caixa
+     * Reverte: Movimento Caixa -> Pedido (Status) -> Mesa (Status) -> Estoque
      */
-    public function reverseToTable(int $movementId, int $restaurantId): int {
-        $conn = Database::connect();
-        
+    public function cancelSale(int $movementId, int $restaurantId): array {
+        $conn = Database::connect(); // Transaction management
+
         try {
             $conn->beginTransaction();
-            
-            // Busca movimento
-            $mov = $this->getMovement($conn, $movementId);
+
+            // 1. Busca Movimento
+            $mov = $this->cashRepo->findMovement($movementId);
+
             if (!$mov) {
-                throw new Exception('Movimento não encontrado');
+                throw new Exception("Movimentação não encontrada.");
             }
-            
-            // Extrai número da mesa da descrição
-            preg_match('/#(\d+)/', $mov['description'], $matches);
-            $mesaNumero = $matches[1] ?? null;
-            
-            if (!$mesaNumero) {
-                throw new Exception('Não foi possível identificar o número da mesa');
+
+            if ($mov['type'] !== 'venda') {
+                // Se for suprimento/sangria, só apaga
+                $this->cashRepo->deleteMovement($movementId);
+                $conn->commit();
+                return ['success' => true, 'message' => 'Movimentação removida.'];
             }
-            
-            // Busca mesa
-            $mesa = $this->getTableByNumber($conn, $mesaNumero, $restaurantId);
-            if (!$mesa) {
-                throw new Exception('Mesa não encontrada');
+
+            $orderId = $mov['order_id'];
+
+            // 2. Busca Pedido
+            $order = $this->orderRepo->find($orderId);
+
+            if ($order) {
+                // 3. Reverte Estoque
+                $items = $this->orderRepo->findItems($orderId);
+
+                foreach ($items as $item) {
+                     // Incrementa estoque (Estorno)
+                     $this->stockRepo->increment($item['product_id'], $item['quantity']);
+                }
+
+                // 4. Libera Mesa (se houver)
+                if ($order['order_type'] === 'mesa') {
+                    // Busca mesa vinculada pelo current_order_id
+                    // TableRepo doesn't have findByOrder, let's assume we fetch all or add a method.
+                    // Or iterate. Tables are few.
+                    // Better: add findByCurrentOrder to TableRepo.
+                    // I will add it briefly or use raw SQL? NO.
+                    // Use `findAll` and filter in PHP (safe for small number of tables).
+                    $tables = $this->tableRepo->findAll($restaurantId);
+                    foreach ($tables as $t) {
+                        if ($t['current_order_id'] == $orderId) {
+                            $this->tableRepo->free($t['id']);
+                            break;
+                        }
+                    }
+                }
+
+                 // 5. Marca pedido como cancelado
+                 $this->orderRepo->updateStatus($orderId, 'cancelado');
             }
-            
-            // Reverte status do pedido
-            $conn->prepare("UPDATE orders SET status = 'aberto' WHERE id = :oid")
-                 ->execute(['oid' => $mov['order_id']]);
-            
-            // Ocupa a mesa novamente
-            $conn->prepare("UPDATE tables SET status = 'ocupada', current_order_id = :oid WHERE id = :tid")
-                 ->execute(['oid' => $mov['order_id'], 'tid' => $mesa['id']]);
-            
-            // Apaga movimento
-            $this->deleteMovement($conn, $movementId);
+
+            // 6. Apaga movimento
+            $this->cashRepo->deleteMovement($movementId);
             
             $conn->commit();
-            
-            return $mesa['id'];
-            
+            return ['success' => true, 'message' => 'Venda cancelada e estornada com sucesso!'];
+
         } catch (Exception $e) {
             $conn->rollBack();
-            throw $e;
+            return ['success' => false, 'message' => 'Erro ao cancelar: ' . $e->getMessage()];
         }
     }
 
     /**
-     * Remove movimento (cancela venda se necessário)
-     * 
-     * @throws Exception
+     * Remove pedido completamente (Admin) - CUIDADO
+     * Usado para limpar dados de teste ou erros graves
      */
-    public function removeMovement(int $movementId): void {
+    public function deleteRef(int $orderId): void {
         $conn = Database::connect();
-        
         try {
             $conn->beginTransaction();
-            
-            // Busca movimento
-            $mov = $this->getMovement($conn, $movementId);
-            if (!$mov) {
-                throw new Exception('Movimento não encontrado');
+
+            $items = $this->orderRepo->findItems($orderId);
+
+            foreach ($items as $item) {
+                 $this->stockRepo->increment($item['product_id'], $item['quantity']);
             }
             
-            // Se for venda, cancela pedido e devolve estoque
-            if ($mov['type'] == 'venda' && $mov['order_id']) {
-                $items = $this->getOrderItemsSimple($conn, $mov['order_id']);
-                $this->restoreStock($conn, $items);
-                
-                $conn->prepare("UPDATE orders SET status = 'cancelado' WHERE id = :oid")
-                     ->execute(['oid' => $mov['order_id']]);
+            // Mesa logic similar to above
+            // We need restaurantId to find tables safely? Or assuming order has restaurant_id?
+            // Use orderRepo find first to get restaurantId?
+            // Assuming we loop tables of current restaurant?
+            // Or add `freeByOrder` to TableRepo later.
+            // For now, let's leave table clearing if we can't easily find it without raw SQL.
+            // But `deleteRef` is critical cleanup.
+            // I'll skip table freeing here for now or use `findAll` if I can get restaurantId.
+            // This method `deleteRef` signature only has `orderId`. 
+            // I'll fetch order to get restaurantId.
+            $order = $this->orderRepo->find($orderId);
+            if ($order) {
+                 $tables = $this->tableRepo->findAll($order['restaurant_id']);
+                 foreach ($tables as $t) {
+                     if ($t['current_order_id'] == $orderId) {
+                         $this->tableRepo->free($t['id']);
+                         break;
+                     }
+                 }
             }
-            
-            // Apaga movimento
-            $this->deleteMovement($conn, $movementId);
-            
+
+            $this->cashRepo->deleteMovementByOrder($orderId);
+            $this->orderRepo->deleteItems($orderId);
+            $this->orderRepo->deletePayments($orderId); 
+            $this->orderRepo->delete($orderId); 
+
             $conn->commit();
-            
         } catch (Exception $e) {
             $conn->rollBack();
             throw $e;
         }
-    }
-
-    // ============================================
-    // MÉTODOS PRIVADOS
-    // ============================================
-
-    private function getMovement($conn, int $id): ?array {
-        $stmt = $conn->prepare("SELECT * FROM cash_movements WHERE id = :id");
-        $stmt->execute(['id' => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-
-    private function getOrder($conn, int $orderId): ?array {
-        $stmt = $conn->prepare("SELECT * FROM orders WHERE id = :oid");
-        $stmt->execute(['oid' => $orderId]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-
-    private function getOrderItemsWithDetails($conn, int $orderId): array {
-        $stmt = $conn->prepare("SELECT product_id as id, name, price, quantity FROM order_items WHERE order_id = :oid");
-        $stmt->execute(['oid' => $orderId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    private function getOrderItemsSimple($conn, int $orderId): array {
-        $stmt = $conn->prepare("SELECT product_id as id, quantity FROM order_items WHERE order_id = :oid");
-        $stmt->execute(['oid' => $orderId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    private function getTableByNumber($conn, int $number, int $rid): ?array {
-        $stmt = $conn->prepare("SELECT id FROM tables WHERE number = :num AND restaurant_id = :rid");
-        $stmt->execute(['num' => $number, 'rid' => $rid]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-
-    private function restoreStock($conn, array $items): void {
-        foreach ($items as $item) {
-            $conn->prepare("UPDATE products SET stock = stock + :qtd WHERE id = :pid")
-                 ->execute(['qtd' => $item['quantity'], 'pid' => $item['id']]);
-        }
-    }
-
-    private function deleteMovement($conn, int $id): void {
-        $conn->prepare("DELETE FROM cash_movements WHERE id = :id")->execute(['id' => $id]);
-    }
-
-    private function deleteOrderItems($conn, int $orderId): void {
-        $conn->prepare("DELETE FROM order_items WHERE order_id = :oid")->execute(['oid' => $orderId]);
-    }
-
-    private function deleteOrder($conn, int $orderId): void {
-        $conn->prepare("DELETE FROM orders WHERE id = :oid")->execute(['oid' => $orderId]);
     }
 }

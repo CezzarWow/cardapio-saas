@@ -12,7 +12,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                 <p style="color: #6b7280;">Extrato completo de pedidos</p>
             </div>
             <div style="background: #eff6ff; color: #1d4ed8; padding: 10px 20px; border-radius: 8px; font-weight: 700; border: 1px solid #dbeafe;">
-                Total: R$ <?= number_format($totalSales, 2, ',', '.') ?>
+                Total: R$ <?= $totalSalesFormatted ?>
             </div>
         </div>
 
@@ -33,13 +33,13 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                         <?php foreach ($orders as $sale): ?>
                         <tr style="border-bottom: 1px solid #f3f4f6;">
                             <td style="padding: 1rem; font-weight: 600; color: #1f2937;">
-                                #<?= str_pad($sale['id'], 4, '0', STR_PAD_LEFT) ?>
+                                <?= $sale['formatted_id'] ?>
                             </td>
                             <td style="padding: 1rem; color: #4b5563;">
-                                <?= date('d/m/Y H:i', strtotime($sale['created_at'])) ?>
+                                <?= $sale['formatted_date'] ?>
                             </td>
                             <td style="padding: 1rem; font-weight: 700; color: #2563eb;">
-                                R$ <?= number_format($sale['calculated_total'], 2, ',', '.') ?>
+                                <?= $sale['formatted_total'] ?>
                             </td>
                                 <td style="padding: 1rem; display: flex; gap: 8px;">
                                     <button onclick="openOrderDetails(<?= $sale['id'] ?>)" 
@@ -48,7 +48,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                                         <i data-lucide="eye" style="width: 18px;"></i>
                                     </button>
 
-                                    <?php if ($sale['status'] == 'concluido'): ?>
+                                    <?php if ($sale['can_reopen']): ?>
                                         
                                         <button onclick="reabrirMesa(<?= $sale['id'] ?>)" 
                                                 title="Reabrir Mesa (Estornar e Editar)"
@@ -62,7 +62,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                                             <i data-lucide="trash-2" style="width: 18px;"></i>
                                         </button>
 
-                                    <?php elseif ($sale['status'] == 'cancelado'): ?>
+                                    <?php elseif ($sale['is_canceled']): ?>
                                         <span style="font-size: 0.8rem; color: #ef4444; font-weight: bold;">Cancelado</span>
                                     <?php endif; ?>
                                 </td>

@@ -1,0 +1,110 @@
+/**
+ * STOCK - Item Chips e Group Cards (Adicionais)
+ * Arquivo: public/css/stock/chips.css
+ */
+
+/* ========== ITEM CHIPS ========== */
+.item-chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.item-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.item-chip:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+.item-chip-name {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.item-chip-price {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.item-chip-price.paid {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.item-chip-price.free {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.item-chip-unlink {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fef2f2;
+    color: #dc2626;
+    border-radius: 50%;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.item-chip-unlink:hover {
+    background: #fecaca;
+    transform: scale(1.1);
+}
+
+/* ========== GROUP CARDS ========== */
+.group-card {
+    background: white !important;
+    border-radius: 16px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid #e5e7eb !important;
+    margin-bottom: 16px !important;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+.group-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    border-color: #d1d5db !important;
+}
+
+.group-card-header {
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.group-card-body {
+    padding: 16px 20px !important;
+}
+
+.group-card-empty {
+    color: #9ca3af;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 20px;
+    background: #fafafa;
+    border-radius: 8px;
+    border: 2px dashed #e5e7eb;
+}

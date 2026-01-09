@@ -2,8 +2,9 @@
 
 namespace App\Services;
 
+use App\Repositories\RestaurantRepository;
+use App\Repositories\CategoryRepository;
 use App\Core\Database;
-use PDO;
 use Exception;
 
 /**
@@ -14,6 +15,9 @@ use Exception;
  */
 class RestaurantService
 {
+    private RestaurantRepository $restaurantRepo;
+    private CategoryRepository $categoryRepo;
+
     /**
      * Categorias criadas automaticamente em novos restaurantes
      */
@@ -22,29 +26,41 @@ class RestaurantService
         ['name' => 'Combos', 'type' => 'combos', 'order' => 2],
     ];
 
+    public function __construct(RestaurantRepository $restaurantRepo, CategoryRepository $categoryRepo)
+    {
+        $this->restaurantRepo = $restaurantRepo;
+        $this->categoryRepo = $categoryRepo;
+    }
+
     /**
      * Cria um novo restaurante com categorias de sistema
      */
     public function create(array $data, int $userId): int
     {
+        // Transaction control logic requires Database connection usually.
+        // Or we assume Repo methods are atomic, but here we have a transaction spanning multiple repos.
+        // We need to keep Transaction logic here, likely.
+        // But Repositories use `Database::connect()` which is singleton PDO.
+        // So `beginTransaction` on `Database::connect()` works across repos.
+        
         $conn = Database::connect();
 
         try {
             $conn->beginTransaction();
 
             // Insere restaurante
-            $stmt = $conn->prepare(
-                "INSERT INTO restaurants (user_id, name, slug) VALUES (:uid, :name, :slug)"
-            );
-            $stmt->execute([
-                'uid' => $userId,
-                'name' => trim($data['name']),
-                'slug' => trim($data['slug'])
-            ]);
-            $restaurantId = (int) $conn->lastInsertId();
+            $restaurantId = $this->restaurantRepo->create(array_merge($data, ['user_id' => $userId]));
 
             // Cria categorias de sistema
-            $this->createSystemCategories($conn, $restaurantId);
+            foreach (self::SYSTEM_CATEGORIES as $cat) {
+                $this->categoryRepo->create([
+                    'restaurant_id' => $restaurantId,
+                    'name' => $cat['name'],
+                    'category_type' => $cat['type'],
+                    'sort_order' => $cat['order'],
+                    'is_active' => 1
+                ]);
+            }
 
             $conn->commit();
             return $restaurantId;
@@ -60,12 +76,7 @@ class RestaurantService
      */
     public function findById(int $id): ?array
     {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM restaurants WHERE id = :id");
-        $stmt->execute(['id' => $id]);
-        
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result ?: null;
+        return $this->restaurantRepo->find($id);
     }
 
     /**
@@ -73,11 +84,7 @@ class RestaurantService
      */
     public function getByUser(int $userId): array
     {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM restaurants WHERE user_id = :uid ORDER BY id DESC");
-        $stmt->execute(['uid' => $userId]);
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->restaurantRepo->findByUser($userId);
     }
 
     /**
@@ -85,16 +92,7 @@ class RestaurantService
      */
     public function update(int $id, array $data): void
     {
-        $conn = Database::connect();
-        
-        $stmt = $conn->prepare(
-            "UPDATE restaurants SET name = :name, slug = :slug WHERE id = :id"
-        );
-        $stmt->execute([
-            'name' => trim($data['name']),
-            'slug' => trim($data['slug']),
-            'id' => $id
-        ]);
+        $this->restaurantRepo->update($id, $data);
     }
 
     /**
@@ -102,9 +100,7 @@ class RestaurantService
      */
     public function delete(int $id): void
     {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("DELETE FROM restaurants WHERE id = :id");
-        $stmt->execute(['id' => $id]);
+        $this->restaurantRepo->delete($id);
     }
 
     /**
@@ -112,30 +108,6 @@ class RestaurantService
      */
     public function toggleStatus(int $id): void
     {
-        $conn = Database::connect();
-        $stmt = $conn->prepare(
-            "UPDATE restaurants SET is_active = NOT is_active WHERE id = :id"
-        );
-        $stmt->execute(['id' => $id]);
-    }
-
-    /**
-     * Cria categorias de sistema para um restaurante
-     */
-    private function createSystemCategories(PDO $conn, int $restaurantId): void
-    {
-        $stmt = $conn->prepare(
-            "INSERT INTO categories (restaurant_id, name, category_type, sort_order, is_active) 
-             VALUES (:rid, :name, :type, :sort_order, 1)"
-        );
-
-        foreach (self::SYSTEM_CATEGORIES as $cat) {
-            $stmt->execute([
-                'rid' => $restaurantId,
-                'name' => $cat['name'],
-                'type' => $cat['type'],
-                'sort_order' => $cat['order']
-            ]);
-        }
+        $this->restaurantRepo->toggleStatus($id);
     }
 }

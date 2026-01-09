@@ -1,0 +1,148 @@
+/**
+ * STOCK - Base (Tabs, Breadcrumb, Toggle, Category Chips)
+ * Arquivo: public/css/stock/base.css
+ */
+
+/* ========== BREADCRUMB ========== */
+.breadcrumb {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-bottom: 15px;
+}
+
+.breadcrumb a {
+    color: var(--primary-color, #2563eb);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+/* ========== STICKY TABS ========== */
+.sticky-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #f1f5f9;
+    padding: 6px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.stock-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.stock-tab {
+    padding: 10px 18px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #64748b;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.stock-tab:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.stock-tab.active {
+    background: white;
+    color: #2563eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ========== TOGGLE VISUALIZAÇÃO ========== */
+.stock-view-toggle {
+    display: inline-flex;
+    gap: 6px;
+    background: #f8fafc;
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.stock-view-btn {
+    padding: 8px 20px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stock-view-btn:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.stock-view-btn.active {
+    background: #2563eb;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+    transform: translateY(-1px);
+}
+
+/* ========== CATEGORY CHIPS ========== */
+.category-chips-container {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.category-chips {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+}
+
+.category-chips::-webkit-scrollbar {
+    height: 6px;
+}
+
+.category-chips::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+}
+
+.category-chip {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    background: #f3f4f6;
+    color: #6b7280;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-size: 0.9rem;
+}
+
+.category-chip:hover {
+    background: #e5e7eb;
+}
+
+.category-chip.active {
+    background: var(--primary-color, #2563eb);
+    color: white;
+}

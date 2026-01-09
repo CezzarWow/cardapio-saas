@@ -10,9 +10,9 @@ class TableController extends BaseController {
     private TableService $service;
     private TableValidator $validator;
 
-    public function __construct() {
-        $this->service = new TableService();
-        $this->validator = new TableValidator();
+    public function __construct(TableService $service, TableValidator $validator) {
+        $this->service = $service;
+        $this->validator = $validator;
     }
 
     /**

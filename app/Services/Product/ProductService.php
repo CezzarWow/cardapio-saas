@@ -1,76 +1,71 @@
 <?php
 namespace App\Services\Product;
 
-use App\Core\Database;
-use PDO;
+use App\Repositories\ProductRepository;
+use App\Repositories\CategoryRepository;
+use App\Repositories\AdditionalGroupRepository;
 
 require_once __DIR__ . '/../../Helpers/ImageConverter.php';
 
 /**
  * ProductService - Gerenciamento do Catálogo de Produtos
- * Responsável por CRUD, Imagens e Vinculação de Adicionais
+ * CAMADA: Application Layer
  */
 class ProductService {
+
+    private ProductRepository $productRepo;
+    private CategoryRepository $categoryRepo;
+    private AdditionalGroupRepository $groupRepo;
+
+    public function __construct(
+        ProductRepository $productRepo,
+        CategoryRepository $categoryRepo,
+        AdditionalGroupRepository $groupRepo
+    ) {
+        $this->productRepo = $productRepo;
+        $this->categoryRepo = $categoryRepo;
+        $this->groupRepo = $groupRepo;
+    }
 
     /**
      * Lista produtos com categoria
      */
     public function getProducts(int $restaurantId): array {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("
-            SELECT p.*, c.name as category_name 
-            FROM products p 
-            LEFT JOIN categories c ON p.category_id = c.id 
-            WHERE p.restaurant_id = :rid ORDER BY p.name
-        ");
-        $stmt->execute(['rid' => $restaurantId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->productRepo->findAll($restaurantId);
     }
 
     /**
      * Busca produto por ID
      */
     public function getProduct(int $id, int $restaurantId): ?array {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM products WHERE id = :id AND restaurant_id = :rid");
-        $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        return $this->productRepo->find($id, $restaurantId);
     }
 
     /**
      * Cria novo produto
      */
     public function create(int $restaurantId, array $data, ?string $imageName = null): int {
-        $conn = Database::connect();
-        
-        // Próximo item_number
-        $stmtMax = $conn->prepare("SELECT COALESCE(MAX(item_number), 0) + 1 AS next_num FROM products WHERE restaurant_id = :rid");
-        $stmtMax->execute(['rid' => $restaurantId]);
-        $nextNumber = $stmtMax->fetch(PDO::FETCH_ASSOC)['next_num'];
-        
+        // Regra de Negócio: Calcular próximo número se não enviado
+        $nextNumber = $this->productRepo->getNextItemNumber($restaurantId);
         $stockValue = isset($data['stock']) ? $data['stock'] : 0;
 
-        $stmt = $conn->prepare("
-            INSERT INTO products (restaurant_id, category_id, name, description, price, image, icon, icon_as_photo, item_number, stock) 
-            VALUES (:rid, :cid, :name, :desc, :price, :img, :icon, :iap, :inum, :stock)
-        ");
-        $stmt->execute([
-            'rid' => $restaurantId,
-            'cid' => $data['category_id'],
+        $productData = [
+            'restaurant_id' => $restaurantId,
+            'category_id' => $data['category_id'],
             'name' => $data['name'],
-            'desc' => $data['description'],
+            'description' => $data['description'],
             'price' => $data['price'],
-            'img' => $imageName,
+            'image' => $imageName,
             'icon' => $data['icon'],
-            'iap' => $data['icon_as_photo'],
-            'inum' => $nextNumber,
+            'icon_as_photo' => $data['icon_as_photo'],
+            'item_number' => $nextNumber,
             'stock' => $stockValue
-        ]);
-        
-        $productId = $conn->lastInsertId();
+        ];
+
+        $productId = $this->productRepo->create($productData);
         
         if (isset($data['additional_groups'])) {
-            $this->syncAdditionalGroups($productId, $data['additional_groups']);
+            $this->productRepo->syncAdditionalGroups($productId, $data['additional_groups']);
         }
         
         return $productId;
@@ -80,10 +75,9 @@ class ProductService {
      * Atualiza produto existente
      */
     public function update(int $restaurantId, array $data, ?string $newImageName = null): void {
-        $conn = Database::connect();
         $id = $data['id'];
         
-        // Verifica se pertence à loja
+        // Regra de Negócio: Verifica se pertence à loja
         $product = $this->getProduct($id, $restaurantId);
         if (!$product) {
             throw new \Exception('Produto não encontrado');
@@ -91,27 +85,23 @@ class ProductService {
         
         $imageName = $newImageName ?? $product['image'];
         
-        $stmt = $conn->prepare("
-            UPDATE products SET 
-                name = :name, price = :price, category_id = :cid, description = :desc, 
-                stock = :stock, image = :img, icon = :icon, icon_as_photo = :iap
-            WHERE id = :id AND restaurant_id = :rid
-        ");
-        $stmt->execute([
-            'name' => $data['name'],
-            'price' => $data['price'],
-            'cid' => $data['category_id'],
-            'desc' => $data['description'],
-            'stock' => $data['stock'],
-            'img' => $imageName,
-            'icon' => $data['icon'],
-            'iap' => $data['icon_as_photo'],
+        $updateData = [
             'id' => $id,
-            'rid' => $restaurantId
-        ]);
+            'restaurant_id' => $restaurantId,
+            'category_id' => $data['category_id'],
+            'name' => $data['name'],
+            'description' => $data['description'],
+            'price' => $data['price'],
+            'stock' => $data['stock'],
+            'image' => $imageName,
+            'icon' => $data['icon'],
+            'icon_as_photo' => $data['icon_as_photo']
+        ];
+
+        $this->productRepo->update($updateData);
         
         if (isset($data['additional_groups'])) {
-            $this->syncAdditionalGroups($id, $data['additional_groups']);
+            $this->productRepo->syncAdditionalGroups($id, $data['additional_groups']);
         }
     }
 
@@ -119,30 +109,12 @@ class ProductService {
      * Deleta produto
      */
     public function delete(int $id, int $restaurantId): void {
-        $conn = Database::connect();
-        $conn->prepare("DELETE FROM products WHERE id = :id AND restaurant_id = :rid")
-             ->execute(['id' => $id, 'rid' => $restaurantId]);
-    }
-
-    /**
-     * Sincroniza grupos de adicionais
-     */
-    private function syncAdditionalGroups(int $productId, array $groupIds): void {
-        $conn = Database::connect();
-        
-        $conn->prepare("DELETE FROM product_additional_relations WHERE product_id = :pid")
-             ->execute(['pid' => $productId]);
-        
-        if (!empty($groupIds)) {
-            $stmt = $conn->prepare("INSERT INTO product_additional_relations (product_id, group_id) VALUES (:pid, :gid)");
-            foreach ($groupIds as $gid) {
-                $stmt->execute(['pid' => $productId, 'gid' => $gid]);
-            }
-        }
+        $this->productRepo->delete($id, $restaurantId);
     }
 
     /**
      * Processa upload de imagem
+     * (Mantido como helper wrapper por enquanto)
      */
     public function handleImageUpload(?array $file): ?string {
         if (empty($file['name'])) {
@@ -150,7 +122,6 @@ class ProductService {
         }
         
         $uploadDir = __DIR__ . '/../../../public/uploads/';
-        // Helper global ImageConverter
         return \ImageConverter::uploadAndConvert($file, $uploadDir, 85);
     }
     
@@ -158,29 +129,36 @@ class ProductService {
      * Lista categorias (Helper para Forms de Produto)
      */
     public function getCategories(int $restaurantId): array {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :rid ORDER BY name");
-        $stmt->execute(['rid' => $restaurantId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->categoryRepo->findAll($restaurantId);
     }
 
     /**
      * Lista grupos de adicionais (Helper para Forms de Produto)
+     * Agora usa o AdditionalGroupRepository existente
      */
     public function getAdditionalGroups(int $restaurantId): array {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM additional_groups WHERE restaurant_id = :rid ORDER BY name");
-        $stmt->execute(['rid' => $restaurantId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Adaptador: O repositório retorna o array, só repassamos
+        // Nota: O método findAllWithItems do repo traz itens juntos, se quisermos só grupos simples talvez precise ajustar
+        // Mas o código original fazia SELECT * FROM additional_groups.
+        // O método findById do repository busca um.
+        // Vamos verificar se existe um findAll simples no repo.
+        // Olhando o arquivo: findAllWithItems existe. Mas findAll simples não.
+        // Pelo contrato "Stage 2 increments", se faltar método, adicionamos no repo.
+        // Mas vou usar o findAllWithItems por equanto ou adicionar um findAll simples no AdditionalGroupRepository se precisar.
+        // O código original era: SELECT * FROM additional_groups ordered by name.
+        // Vou adicionar findAll no AdditionalGroupRepository rapidinho ou usar SQL aqui? JAMAIS SQL AQUI.
+        // Vou adicionar findAll no AdditionalGroupRepository em um passo separado se falhar, mas
+        // por enquanto vou assumir que posso adicionar o método findAll no repo.
+        
+        // Espera, eu tenho acesso de escrita. Vou adicionar findAll ao AdditionalGroupRepository na próxima tool call se precisar.
+        // Por ora, vou deixar o código chamando um método que vou criar.
+        return $this->groupRepo->findAll($restaurantId);
     }
     
     /**
      * Lista grupos vinculados a um produto (Helper para Edição)
      */
     public function getLinkedGroups(int $productId): array {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT group_id FROM product_additional_relations WHERE product_id = :pid");
-        $stmt->execute(['pid' => $productId]);
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return $this->productRepo->getLinkedGroups($productId);
     }
 }

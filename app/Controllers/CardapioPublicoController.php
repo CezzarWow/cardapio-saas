@@ -16,9 +16,18 @@ class CardapioPublicoController {
      * Exibe o cardápio público de um restaurante
      * @param int $restaurantId ID do restaurante
      */
+    private CardapioPublicoQueryService $queryService;
+
+    public function __construct(CardapioPublicoQueryService $queryService) {
+        $this->queryService = $queryService;
+    }
+
+    /**
+     * Exibe o cardápio público de um restaurante
+     * @param int $restaurantId ID do restaurante
+     */
     public function show($restaurantId) {
-        $queryService = new CardapioPublicoQueryService();
-        $data = $queryService->getCardapioData((int) $restaurantId);
+        $data = $this->queryService->getCardapioData((int) $restaurantId);
         
         if (!$data) {
             echo "Restaurante não encontrado ou inativo.";
@@ -105,8 +114,7 @@ class CardapioPublicoController {
      * @param string $slug Slug do restaurante
      */
     public function showBySlug($slug) {
-        $queryService = new CardapioPublicoQueryService();
-        $restaurantId = $queryService->findRestaurantBySlug($slug);
+        $restaurantId = $this->queryService->findRestaurantBySlug($slug);
         
         if (!$restaurantId) {
             echo "<h1>404 - Restaurante não encontrado 😢</h1>";

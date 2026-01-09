@@ -105,4 +105,14 @@ class AdditionalGroupRepository
         $stmt = $conn->prepare("DELETE FROM additional_groups WHERE id = :id");
         $stmt->execute(['id' => $id]);
     }
+    /**
+     * Lista todos os grupos de forma simples
+     */
+    public function findAll(int $restaurantId): array
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare("SELECT * FROM additional_groups WHERE restaurant_id = :rid ORDER BY name");
+        $stmt->execute(['rid' => $restaurantId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

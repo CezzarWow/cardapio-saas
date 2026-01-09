@@ -1,0 +1,31 @@
+/**
+ * PAYMENT - Botão de Ação
+ * Arquivo: public/css/checkout/payment/button.css
+ */
+
+.send-order-btn {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    width: 100%;
+    margin-top: 24px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    font-weight: 700;
+    box-sizing: border-box;
+}

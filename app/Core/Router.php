@@ -19,6 +19,15 @@ class Router
     private static array $routes = [];
     private static array $patterns = [];
     private static $defaultHandler = null;
+    private static ?Container $container = null;
+
+    /**
+     * Define o Container de Dependências
+     */
+    public static function setContainer(Container $container): void
+    {
+        self::$container = $container;
+    }
 
     /**
      * Registra uma rota estática
@@ -62,6 +71,17 @@ class Router
     }
 
     /**
+     * Resolve o Controller (via Container ou new direto)
+     */
+    private static function resolveController(string $class)
+    {
+        if (self::$container) {
+            return self::$container->get($class);
+        }
+        return new $class();
+    }
+
+    /**
      * Processa a requisição atual
      * 
      * @param string $path Caminho da URL atual
@@ -72,7 +92,7 @@ class Router
         // 1. Tenta rotas estáticas primeiro (mais rápido)
         if (isset(self::$routes[$path])) {
             $route = self::$routes[$path];
-            $controller = new $route['controller']();
+            $controller = self::resolveController($route['controller']);
             $controller->{$route['method']}();
             return true;
         }
@@ -80,7 +100,7 @@ class Router
         // 2. Tenta rotas com padrão (regex)
         foreach (self::$patterns as $route) {
             if (preg_match($route['pattern'], $path, $matches)) {
-                $controller = new $route['controller']();
+                $controller = self::resolveController($route['controller']);
                 // Remove o match completo, passa só os grupos capturados
                 array_shift($matches);
                 $controller->{$route['method']}(...$matches);
@@ -113,5 +133,6 @@ class Router
         self::$routes = [];
         self::$patterns = [];
         self::$defaultHandler = null;
+        self::$container = null;
     }
 }

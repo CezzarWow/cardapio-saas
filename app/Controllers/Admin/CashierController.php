@@ -17,10 +17,14 @@ class CashierController extends BaseController {
     private CashierDashboardService $dashboard;
     private CashierTransactionService $transaction;
 
-    public function __construct() {
-        $this->v = new CashierValidator();
-        $this->dashboard = new CashierDashboardService();
-        $this->transaction = new CashierTransactionService();
+    public function __construct(
+        CashierDashboardService $dashboard,
+        CashierTransactionService $transaction,
+        CashierValidator $validator
+    ) {
+        $this->dashboard = $dashboard;
+        $this->transaction = $transaction;
+        $this->v = $validator;
     }
 
     // === DASHBOARD ===

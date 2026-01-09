@@ -5,21 +5,32 @@ namespace App\Services\Order;
 use App\Core\Database;
 use App\Services\PaymentService;
 use App\Services\CashRegisterService;
-use App\Services\StockService;
+use App\Repositories\StockRepository;
+use App\Repositories\Order\OrderRepository;
+use App\Repositories\TableRepository;
 use PDO;
 use Exception;
 
 class CreateOrderAction
 {
-    private $paymentService;
-    private $cashRegisterService;
-    private $stockService;
+    private PaymentService $paymentService;
+    private CashRegisterService $cashRegisterService;
+    private StockRepository $stockRepo;
+    private OrderRepository $orderRepo;
+    private TableRepository $tableRepo;
 
-    public function __construct()
-    {
-        $this->paymentService = new PaymentService();
-        $this->cashRegisterService = new CashRegisterService();
-        $this->stockService = new StockService();
+    public function __construct(
+        PaymentService $paymentService,
+        CashRegisterService $cashRegisterService,
+        StockRepository $stockRepo,
+        OrderRepository $orderRepo,
+        TableRepository $tableRepo
+    ) {
+        $this->paymentService = $paymentService;
+        $this->cashRegisterService = $cashRegisterService;
+        $this->stockRepo = $stockRepo;
+        $this->orderRepo = $orderRepo;
+        $this->tableRepo = $tableRepo;
     }
 
     public function execute(int $restaurantId, int $userId, array $data): int
@@ -43,11 +54,12 @@ class CreateOrderAction
 
             if ($orderType === 'mesa') {
                 if (!$tableId) throw new Exception('Mesa não identificada');
-                // Lógica de mesa ocupada simplificada
+                // Lógica de mesa ocupada simplificada (poderia validar no TableRepo)
             }
 
             $totalVenda = 0;
             foreach ($cart as $item) {
+                // TODO: Validar preço unitário no back-end (ProductRepo->find)
                 $totalVenda += $item['price'] * $item['quantity'];
             }
 
@@ -59,45 +71,42 @@ class CreateOrderAction
             $paymentMethod = $data['payment_method'] ?? 'dinheiro';
             $payments = $data['payments'] ?? [];
             
-            // SAVE_ACCOUNT: Se true, cria como comanda aberta (status 'aberto' aparece em Mesas/Comandas)
+            // SAVE_ACCOUNT: Cria como comanda aberta
             $saveAccount = isset($data['save_account']) && $data['save_account'] == true;
             $orderStatus = $saveAccount ? 'aberto' : 'novo';
 
-            $stmt = $conn->prepare("INSERT INTO orders (restaurant_id, order_type, status, total, created_at, is_paid, payment_method) 
-                                   VALUES (:rid, :type, :status, :total, NOW(), :paid, :pay)");
-            $stmt->execute([
-                'rid' => $restaurantId,
-                'type' => $orderType,
-                'status' => $orderStatus,
+            // Cria Pedido via Repository
+            $orderId = $this->orderRepo->create([
+                'restaurant_id' => $restaurantId,
+                'client_id' => $data['client_id'] ?? null,
                 'total' => $finalTotal,
-                'paid' => $isPaid,
-                'pay' => $paymentMethod
+                'status' => $orderStatus, 
+                'order_type' => $orderType,
+                'payment_method' => $paymentMethod,
+                'observation' => $data['observation'] ?? null,
+                'change_for' => $data['change_for'] ?? null,
+                'is_paid' => $isPaid 
             ]);
-            $orderId = $conn->lastInsertId();
-
-            if (!empty($data['client_id'])) {
-                $conn->prepare("UPDATE orders SET client_id = :cid WHERE id = :oid")
-                     ->execute(['cid' => $data['client_id'], 'oid' => $orderId]);
-            }
-
-            if ($orderType === 'mesa' && $tableId) {
-                $conn->prepare("UPDATE tables SET status = 'ocupada', current_order_id = :oid WHERE id = :tid")
-                     ->execute(['oid' => $orderId, 'tid' => $tableId]);
-            }
-
-            $stmtItem = $conn->prepare("INSERT INTO order_items (order_id, product_id, name, quantity, price) VALUES (:oid, :pid, :name, :qtd, :price)");
             
-            foreach ($cart as $item) {
-                $stmtItem->execute([
-                    'oid' => $orderId,
-                    'pid' => $item['id'],
-                    'name' => $item['name'],
-                    'qtd' => $item['quantity'],
-                    'price' => $item['price']
-                ]);
+            // Correção Pós-Criação
+            if ($orderStatus !== 'novo') {
+                $this->orderRepo->updateStatus($orderId, $orderStatus);
+            }
+            if ($isPaid) {
+                $this->orderRepo->updatePayment($orderId, true, $paymentMethod);
+            }
 
-                // Baixa Estoque
-                $this->stockService->decrement($conn, $item['id'], $item['quantity']);
+            // Mesa
+            if ($orderType === 'mesa' && $tableId) {
+                $this->tableRepo->occupy($tableId, $orderId);
+            }
+
+            // Itens com Repo
+            $this->orderRepo->insertItems($orderId, $cart);
+
+            // Baixa Estoque via Repository
+            foreach ($cart as $item) {
+                $this->stockRepo->decrement($item['id'], $item['quantity']);
             }
 
             $this->paymentService->registerPayments($conn, $orderId, $payments);

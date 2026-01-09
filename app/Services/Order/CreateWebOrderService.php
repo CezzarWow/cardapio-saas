@@ -3,7 +3,7 @@
 namespace App\Services\Order;
 
 use App\Core\Database;
-use App\Repositories\Order\ClientRepository;
+use App\Repositories\ClientRepository;
 use App\Repositories\Order\OrderRepository;
 
 /**
@@ -26,10 +26,12 @@ class CreateWebOrderService
         'pickup' => 'pickup'
     ];
 
-    public function __construct()
-    {
-        $this->clientRepository = new ClientRepository();
-        $this->orderRepository = new OrderRepository();
+    public function __construct(
+        ClientRepository $clientRepository,
+        OrderRepository $orderRepository
+    ) {
+        $this->clientRepository = $clientRepository;
+        $this->orderRepository = $orderRepository;
     }
 
     /**

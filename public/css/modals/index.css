@@ -1,0 +1,20 @@
+/**
+ * ============================================
+ * MODALS CSS - Orquestrador
+ * Arquivo: public/css/modals/index.css
+ * 
+ * Este arquivo apenas importa os módulos.
+ * ============================================
+ */
+
+/* Estrutura base do modal */
+@import 'base.css';
+
+/* Modal de produto (header, body, qty, observations) */
+@import 'product.css';
+
+/* Seção de adicionais */
+@import 'additionals.css';
+
+/* Modal de combos */
+@import 'combo.css';

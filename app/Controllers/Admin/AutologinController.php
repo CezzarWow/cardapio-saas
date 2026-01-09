@@ -12,8 +12,8 @@ class AutologinController extends BaseController
 {
     private RestaurantService $service;
 
-    public function __construct() {
-        $this->service = new RestaurantService();
+    public function __construct(RestaurantService $service) {
+        $this->service = $service;
     }
 
     public function login() {

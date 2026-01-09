@@ -1,0 +1,20 @@
+/**
+ * STOCK - Animações
+ * Arquivo: public/css/stock/animations.css
+ */
+
+@keyframes stockFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stock-fade-in {
+    animation: stockFadeIn 0.2s ease;
+}

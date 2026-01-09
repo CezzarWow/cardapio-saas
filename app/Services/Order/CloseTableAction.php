@@ -5,18 +5,28 @@ namespace App\Services\Order;
 use App\Core\Database;
 use App\Services\PaymentService;
 use App\Services\CashRegisterService;
+use App\Repositories\Order\OrderRepository;
+use App\Repositories\TableRepository;
 use PDO;
 use Exception;
 
 class CloseTableAction
 {
-    private $paymentService;
-    private $cashRegisterService;
+    private PaymentService $paymentService;
+    private CashRegisterService $cashRegisterService;
+    private OrderRepository $orderRepo;
+    private TableRepository $tableRepo;
 
-    public function __construct()
-    {
-        $this->paymentService = new PaymentService();
-        $this->cashRegisterService = new CashRegisterService();
+    public function __construct(
+        PaymentService $paymentService,
+        CashRegisterService $cashRegisterService,
+        OrderRepository $orderRepo,
+        TableRepository $tableRepo
+    ) {
+        $this->paymentService = $paymentService;
+        $this->cashRegisterService = $cashRegisterService;
+        $this->orderRepo = $orderRepo;
+        $this->tableRepo = $tableRepo;
     }
 
     public function execute(int $restaurantId, int $tableId, array $payments): void
@@ -27,12 +37,7 @@ class CloseTableAction
         try {
             $conn->beginTransaction();
 
-            $stmt = $conn->prepare("SELECT t.current_order_id, t.number, o.total 
-                                    FROM tables t 
-                                    JOIN orders o ON t.current_order_id = o.id 
-                                    WHERE t.id = :tid AND t.restaurant_id = :rid");
-            $stmt->execute(['tid' => $tableId, 'rid' => $restaurantId]);
-            $mesa = $stmt->fetch(PDO::FETCH_ASSOC);
+            $mesa = $this->tableRepo->findWithCurrentOrder($tableId, $restaurantId);
 
             if (!$mesa || !$mesa['current_order_id']) {
                 throw new Exception("Mesa não encontrada ou sem pedido aberto.");
@@ -43,22 +48,23 @@ class CloseTableAction
             $mainMethod = $payments[0]['method'] ?? 'dinheiro';
             $paymentMethodDesc = (count($payments) > 1) ? 'multiplo' : $mainMethod;
 
-            $conn->prepare("UPDATE orders SET status = 'concluido', is_paid = 1, payment_method = :method WHERE id = :oid")
-                 ->execute(['oid' => $orderId, 'method' => $paymentMethodDesc]);
+            // Updates usando Repository (sem SQL direto)
+            $this->orderRepo->updateStatus($orderId, 'concluido');
+            $this->orderRepo->updatePayment($orderId, true, $paymentMethodDesc);
 
             $this->paymentService->registerPayments($conn, $orderId, $payments);
 
             $desc = "Mesa #" . $mesa['number'];
+            // TODO: registerMovement deveria ser via repo em breve, por enquanto usa Service que tem SQL encapsulado
             $this->cashRegisterService->registerMovement(
                 $conn,
                 $caixa['id'],
-                $mesa['total'],
+                $mesa['order_total'], // Veio do join no TableRepo
                 $desc,
                 $orderId
             );
 
-            $conn->prepare("UPDATE tables SET status = 'livre', current_order_id = NULL WHERE id = :tid")
-                 ->execute(['tid' => $tableId]);
+            $this->tableRepo->free($tableId);
 
             $conn->commit();
 

@@ -24,6 +24,10 @@ use App\Controllers\Admin\AutologinController;
 use App\Controllers\Admin\PanelController; // <--- Vamos criar esse cara já já
 use App\Core\Router;
 
+// 2. Container e Dependências
+$container = require __DIR__ . '/../app/Config/dependencies.php';
+Router::setContainer($container);
+
 $url = $_SERVER['REQUEST_URI'];
 $url_clean = parse_url($url, PHP_URL_PATH);
 $path = str_replace('/cardapio-saas/public', '', $url_clean);
@@ -78,12 +82,12 @@ Router::add('/admin/loja/cardapio/combo/status', \App\Controllers\Admin\Cardapio
 // ============================================================
 // GRUPO 6: Estoque/Produtos (migradas para Router)
 // ============================================================
-Router::add('/admin/loja/produtos', \App\Controllers\Admin\StockController::class, 'index');
-Router::add('/admin/loja/produtos/novo', \App\Controllers\Admin\StockController::class, 'create');
-Router::add('/admin/loja/produtos/salvar', \App\Controllers\Admin\StockController::class, 'store');
-Router::add('/admin/loja/produtos/deletar', \App\Controllers\Admin\StockController::class, 'delete');
-Router::add('/admin/loja/produtos/editar', \App\Controllers\Admin\StockController::class, 'edit');
-Router::add('/admin/loja/produtos/atualizar', \App\Controllers\Admin\StockController::class, 'update');
+Router::add('/admin/loja/produtos', \App\Controllers\Admin\ProductController::class, 'index');
+Router::add('/admin/loja/produtos/novo', \App\Controllers\Admin\ProductController::class, 'create');
+Router::add('/admin/loja/produtos/salvar', \App\Controllers\Admin\ProductController::class, 'store');
+Router::add('/admin/loja/produtos/deletar', \App\Controllers\Admin\ProductController::class, 'delete');
+Router::add('/admin/loja/produtos/editar', \App\Controllers\Admin\ProductController::class, 'edit');
+Router::add('/admin/loja/produtos/atualizar', \App\Controllers\Admin\ProductController::class, 'update');
 Router::add('/admin/loja/reposicao', \App\Controllers\Admin\StockRepositionController::class, 'index');
 Router::add('/admin/loja/reposicao/ajustar', \App\Controllers\Admin\StockRepositionController::class, 'adjust');
 Router::add('/admin/loja/movimentacoes', \App\Controllers\Admin\StockMovementController::class, 'index');
@@ -172,7 +176,9 @@ Router::setDefault(function($path) {
     // Tenta carregar o cardápio pelo slug
     $slug = ltrim($path, '/');
     if ($slug) {
-        (new \App\Controllers\CardapioPublicoController())->showBySlug($slug);
+        global $container; // Fallback access to container since we are in a closure in global scope
+        $controller = $container->get(\App\Controllers\CardapioPublicoController::class);
+        $controller->showBySlug($slug);
     }
 });
 

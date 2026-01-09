@@ -3,17 +3,19 @@
 namespace App\Services\Order;
 
 use App\Core\Database;
-use App\Services\StockService;
-use PDO;
+use App\Repositories\StockRepository;
+use App\Repositories\Order\OrderRepository;
 use Exception;
 
 class RemoveItemAction
 {
-    private $stockService;
+    private StockRepository $stockRepo;
+    private OrderRepository $orderRepo;
 
-    public function __construct()
+    public function __construct(StockRepository $stockRepo, OrderRepository $orderRepo)
     {
-        $this->stockService = new StockService();
+        $this->stockRepo = $stockRepo;
+        $this->orderRepo = $orderRepo;
     }
 
     public function execute(int $itemId, int $orderId): void
@@ -23,28 +25,27 @@ class RemoveItemAction
         try {
             $conn->beginTransaction();
 
-            $stmtItem = $conn->prepare("SELECT product_id, quantity, price FROM order_items WHERE id = :id AND order_id = :oid");
-            $stmtItem->execute(['id' => $itemId, 'oid' => $orderId]);
-            $item = $stmtItem->fetch(PDO::FETCH_ASSOC);
+            $item = $this->orderRepo->findItem($itemId, $orderId);
 
             if (!$item) {
                 throw new Exception('Item não encontrado');
             }
 
+            $currentOrder = $this->orderRepo->find($orderId);
             $valueToDeduct = 0;
 
             if ($item['quantity'] > 1) {
-                $conn->prepare("UPDATE order_items SET quantity = quantity - 1 WHERE id = :id")->execute(['id' => $itemId]);
+                $this->orderRepo->updateItemQuantity($itemId, $item['quantity'] - 1);
                 $valueToDeduct = $item['price'];
             } else {
-                $conn->prepare("DELETE FROM order_items WHERE id = :id")->execute(['id' => $itemId]);
+                $this->orderRepo->deleteItem($itemId);
                 $valueToDeduct = $item['price'];
             }
 
-            $this->stockService->increment($conn, $item['product_id'], 1);
+            $this->stockRepo->increment($item['product_id'], 1);
 
-            $conn->prepare("UPDATE orders SET total = GREATEST(0, total - :val) WHERE id = :oid")
-                 ->execute(['val' => $valueToDeduct, 'oid' => $orderId]);
+            $newTotal = max(0, floatval($currentOrder['total']) - $valueToDeduct);
+            $this->orderRepo->updateTotal($orderId, $newTotal);
 
             $conn->commit();
 

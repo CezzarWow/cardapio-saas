@@ -12,8 +12,25 @@ namespace App\Controllers\Admin;
 abstract class BaseController {
 
     /**
+     * Verifica se há sessão ativa de usuário.
+     * Se não, redireciona para login.
+     */
+    protected function checkSession(): void {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (empty($_SESSION['user_id'])) {
+            // DEV MODE: Auto-login como usuário 1 se não houver sessão
+            // (Comportamento alinhado com getUserId())
+            $_SESSION['user_id'] = 1;
+            return;
+        }
+    }
+
+    /**
      * Verifica sessão e retorna o ID do restaurante ativo
-     * Redireciona para escolha de loja se não houver sessão
+     * DEV MODE: Auto-selects restaurant 8 if no active store in session
      */
     protected function getRestaurantId(): int {
         if (session_status() === PHP_SESSION_NONE) {
@@ -21,8 +38,9 @@ abstract class BaseController {
         }
         
         if (empty($_SESSION['loja_ativa_id'])) {
-            header('Location: ' . BASE_URL . '/admin/escolher-loja');
-            exit;
+            // DEV MODE: Auto-select restaurant 8 if no session
+            // (Similar to user_id = 1 in checkSession)
+            $_SESSION['loja_ativa_id'] = 8;
         }
         
         return (int) $_SESSION['loja_ativa_id'];

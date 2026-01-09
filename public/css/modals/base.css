@@ -1,0 +1,103 @@
+/**
+ * MODALS - Base (Estrutura, Animações)
+ * Arquivo: public/css/modals/base.css
+ */
+
+/* ========== MODAL BASE ========== */
+.cardapio-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    align-items: flex-end;
+}
+
+.cardapio-modal.show {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+}
+
+.cardapio-modal-content {
+    background: white;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    margin: 0 auto;
+    border-radius: 24px 24px 0 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+    will-change: transform;
+}
+
+/* Modal que ocupa tela inteira */
+.cardapio-modal-content.fullscreen {
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+    max-width: 100%;
+}
+
+/* Quando o modal tem conteúdo fullscreen, alinhar do topo */
+.cardapio-modal:has(.fullscreen) {
+    align-items: flex-start;
+}
+
+/* ========== IMAGEM DO MODAL ========== */
+.cardapio-modal-image-wrapper {
+    position: relative;
+    height: 150px;
+    background: #f3f4f6;
+    flex-shrink: 0;
+}
+
+.cardapio-modal-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cardapio-modal-close {
+    position: absolute;
+    top: 40px;
+    left: 12px;
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+}
+
+/* ========== ANIMAÇÕES ========== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

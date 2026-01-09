@@ -18,10 +18,10 @@ class RestaurantController extends BaseController
     private RestaurantService $service;
     private RestaurantValidator $validator;
 
-    public function __construct()
+    public function __construct(RestaurantService $service, RestaurantValidator $validator)
     {
-        $this->service = new RestaurantService();
-        $this->validator = new RestaurantValidator();
+        $this->service = $service;
+        $this->validator = $validator;
     }
 
     /**

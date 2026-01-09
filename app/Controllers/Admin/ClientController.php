@@ -12,9 +12,9 @@ class ClientController extends BaseController {
     private ClientValidator $v;
     private ClientService $service;
 
-    public function __construct() {
-        $this->v = new ClientValidator();
-        $this->service = new ClientService();
+    public function __construct(ClientService $service, ClientValidator $validator) {
+        $this->service = $service;
+        $this->v = $validator;
     }
 
     /**

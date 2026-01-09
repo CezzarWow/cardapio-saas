@@ -1,0 +1,79 @@
+/**
+ * MODALS - Adicionais
+ * Arquivo: public/css/modals/additionals.css
+ */
+
+/* ========== ADICIONAIS ========== */
+.cardapio-additionals {
+    margin-bottom: 24px;
+}
+
+.cardapio-additionals-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-light, #6b7280);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 12px 0;
+}
+
+.cardapio-additionals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cardapio-additional-group {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.cardapio-additional-group-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-dark, #1f2937);
+    margin: 0 0 8px 0;
+}
+
+.cardapio-additional-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+
+.cardapio-additional-item:hover {
+    background: #fafafa;
+}
+
+.cardapio-additional-item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cardapio-additional-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--accent-color, #ea580c);
+}
+
+.cardapio-additional-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-dark, #1f2937);
+}
+
+.cardapio-additional-price {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent-color, #ea580c);
+}

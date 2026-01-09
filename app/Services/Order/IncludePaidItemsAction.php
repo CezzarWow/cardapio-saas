@@ -4,19 +4,28 @@ namespace App\Services\Order;
 
 use App\Core\Database;
 use App\Services\PaymentService;
-use App\Services\StockService;
-use PDO;
+use App\Services\CashRegisterService;
+use App\Repositories\StockRepository;
+use App\Repositories\Order\OrderRepository;
 use Exception;
 
 class IncludePaidItemsAction
 {
-    private $paymentService;
-    private $stockService;
+    private PaymentService $paymentService;
+    private CashRegisterService $cashRegisterService;
+    private StockRepository $stockRepo;
+    private OrderRepository $orderRepo;
 
-    public function __construct()
-    {
-        $this->paymentService = new PaymentService();
-        $this->stockService = new StockService();
+    public function __construct(
+        PaymentService $paymentService,
+        CashRegisterService $cashRegisterService,
+        StockRepository $stockRepo,
+        OrderRepository $orderRepo
+    ) {
+        $this->paymentService = $paymentService;
+        $this->cashRegisterService = $cashRegisterService;
+        $this->stockRepo = $stockRepo;
+        $this->orderRepo = $orderRepo;
     }
 
     public function execute(int $orderId, array $cart, array $payments, int $restaurantId): float
@@ -26,10 +35,7 @@ class IncludePaidItemsAction
         try {
             $conn->beginTransaction();
 
-            $stmt = $conn->prepare("SELECT total FROM orders WHERE id = :oid");
-            $stmt->execute(['oid' => $orderId]);
-            $order = $stmt->fetch(PDO::FETCH_ASSOC);
-
+            $order = $this->orderRepo->find($orderId);
             if (!$order) throw new Exception("Pedido não encontrado");
 
             $newTotal = 0;
@@ -40,32 +46,37 @@ class IncludePaidItemsAction
                 $itemTotal = $qty * $price;
                 $newTotal += $itemTotal;
                 
-                $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (:oid, :pid, :qty, :price)")
-                     ->execute([
-                         'oid' => $orderId,
-                         'pid' => $item['id'],
-                         'qty' => $qty,
-                         'price' => $price
-                     ]);
+                $this->orderRepo->addItem($orderId, [
+                    'product_id' => $item['id'],
+                    'qty' => $qty,
+                    'price' => $price,
+                    // 'name' => ... Repository defaults to 'Produto' if not set. Cart items usually have names.
+                    'name' => $item['name'] ?? 'Produto'
+                ]);
 
-                $this->stockService->decrement($conn, $item['id'], $qty);
+                $this->stockRepo->decrement($item['id'], $qty);
             }
 
             $this->paymentService->registerPayments($conn, $orderId, $payments);
 
             $updatedTotal = floatval($order['total']) + $newTotal;
-            $conn->prepare("UPDATE orders SET total = :total WHERE id = :oid")
-                 ->execute(['total' => $updatedTotal, 'oid' => $orderId]);
+            $this->orderRepo->updateTotal($orderId, $updatedTotal);
 
             if (!empty($payments)) {
                 $paymentTotal = array_sum(array_column($payments, 'amount'));
-                $conn->prepare("INSERT INTO cash_movements (restaurant_id, type, amount, description, date, order_id) VALUES (:rid, 'entrada', :amount, :desc, NOW(), :oid)")
-                     ->execute([
-                         'rid' => $restaurantId,
-                         'amount' => $paymentTotal,
-                         'desc' => 'Inclusão Pedido #' . $orderId,
-                         'oid' => $orderId
-                     ]);
+                $desc = 'Inclusão Pedido #' . $orderId;
+                
+                // Agora delegamos ao CashRegisterService em vez de SQL direto
+                // Mas preciso do ID do caixa aberto.
+                $caixa = $this->cashRegisterService->assertOpen($conn, $restaurantId);
+                
+                $this->cashRegisterService->registerMovement(
+                    $conn,
+                    $caixa['id'],
+                    $paymentTotal,
+                    $desc,
+                    $orderId
+                );
             }
 
             $conn->commit();

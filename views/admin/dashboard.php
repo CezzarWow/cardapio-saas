@@ -32,7 +32,7 @@
                     <td>#<?php echo $loja['id']; ?></td>
                     <td>
                         <strong><?php echo $loja['name']; ?></strong><br>
-                        <small style="color:#777">/<?php echo $loja['slug']; ?></small>
+                        <small style="color:#777"><?php echo $loja['slug_display']; ?></small>
                     </td>
                     
                     <td class="text-center">
@@ -48,11 +48,9 @@
                     </td>
                     
                     <td class="text-center">
-                        <?php if ($loja['is_active'] == 1): ?>
-                            <a href="admin/restaurantes/status?id=<?php echo $loja['id']; ?>" class="badge status-ativo">Ativo</a>
-                        <?php else: ?>
-                            <a href="admin/restaurantes/status?id=<?php echo $loja['id']; ?>" class="badge status-suspenso">Suspenso</a>
-                        <?php endif; ?>
+                        <a href="admin/restaurantes/status?id=<?php echo $loja['id']; ?>" class="badge <?php echo $loja['status_class']; ?>">
+                            <?php echo $loja['status_label']; ?>
+                        </a>
                     </td>
 
                     <td class="text-center">

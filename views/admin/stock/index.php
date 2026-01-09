@@ -14,8 +14,7 @@ foreach ($products as $p) {
 }
 ?>
 
-<!-- CSS Estoque v2 (modernização) -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/stock-v2.css">
+<!-- stock-v2.css removido - usando stock-consolidated.css global -->
 
 <main class="main-content">
     <?php require __DIR__ . '/../panel/layout/messages.php'; ?>
@@ -24,9 +23,10 @@ foreach ($products as $p) {
         <!-- Header com título -->
         <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <h1 style="font-size: 1.5rem; font-weight: 700; color: #1f2937;">Dashboard de Estoque</h1>
-            <div style="color: #6b7280; font-size: 0.9rem;">
-                <i data-lucide="info" size="14"></i> A gestão de produtos (criar/editar) agora fica em <a href="<?= BASE_URL ?>/admin/loja/produtos" style="color: #2563eb; text-decoration: none; font-weight: 600;">Catálogo</a>
-            </div>
+            <a href="<?= BASE_URL ?>/admin/loja/produtos/novo" 
+               style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: none;">
+                <i data-lucide="plus" size="18"></i> Novo Produto
+            </a>
         </div>
 
         <!-- Sub-abas do Estoque (STICKY) -->

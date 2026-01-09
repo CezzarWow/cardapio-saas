@@ -1,0 +1,27 @@
+/**
+ * ============================================
+ * PAYMENT CSS - Orquestrador
+ * Arquivo: public/css/checkout/payment/index.css
+ * ============================================
+ */
+
+/* 1. Layout Base (Modal container, header) */
+@import 'layout.css';
+
+/* 2. Formulários (Inputs, Rows, Address) */
+@import 'form.css';
+
+/* 3. Métodos de Pagamento (Formas, Radios) */
+@import 'methods.css';
+
+/* 4. Troco (Container, Botões, Lógica) */
+@import 'change.css';
+
+/* 5. Botão de Ação (Enviar Pedido) */
+@import 'button.css';
+
+/* 6. Ajustes de Scroll (Scrollbar hidden) */
+@import 'scroll.css';
+
+/* 7. Ajustes Mobile Específicos (Safe Area, etc) */
+@import 'mobile.css';

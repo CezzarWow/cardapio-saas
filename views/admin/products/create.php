@@ -17,7 +17,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
     <div style="padding: 2rem; width: 100%; display: flex; justify-content: center; overflow-y: auto;">
         
         <div style="background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 1100px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); height: fit-content;">
-            <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700; color: #1f2937;">Cadastrar Produto</h2>
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700; color: #1f2937;">Novo Produto</h2>
             
             <form action="<?= BASE_URL ?>/admin/loja/produtos/salvar" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 15px;">
                 
@@ -35,8 +35,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                             <?php endforeach; ?>
                         </select>
                     </div>
-
-                    <!-- MULTI-SELECT CUSTOMIZADO -->
+                    
                     <div style="flex: 1; position: relative;">
                         <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Vincular Adicionais</label>
                         
@@ -137,14 +136,8 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                 </div>
 
                 <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; align-items: center;">
-            <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
-                <a href="<?= BASE_URL ?>/admin/loja/produtos" style="text-decoration: none; color: #6b7280; display: flex; align-items: center; gap: 5px; font-weight: 500;">
-                    <i data-lucide="arrow-left" size="20"></i> Voltar
-                </a>
-                <h1 style="margin-bottom: 0; font-size: 1.5rem; font-weight: 700; color: #1f2937;">Novo Produto</h1>
-            </div>
-
-            <form action="<?= BASE_URL ?>/admin/loja/produtos/salvar" method="POST" enctype="multipart/form-data" class="stock-form">
+                    <a href="<?= BASE_URL ?>/admin/loja/produtos" style="width: 150px; text-align: center; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; color: #374151; text-decoration: none; font-weight: 600; background: white; transition: background 0.15s;">Cancelar</a>
+                    <button type="submit" class="btn-primary" style="width: 150px; padding: 12px; border-radius: 8px; font-weight: 600;">Salvar</button>
                 </div>
 
             </form>

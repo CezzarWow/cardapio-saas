@@ -20,10 +20,10 @@ class OrderController extends BaseController
     private OrderOrchestratorService $service;
     private OrderValidator $validator;
 
-    public function __construct()
+    public function __construct(OrderOrchestratorService $service, OrderValidator $validator)
     {
-        $this->service = new OrderOrchestratorService();
-        $this->validator = new OrderValidator();
+        $this->service = $service;
+        $this->validator = $validator;
     }
 
     /**

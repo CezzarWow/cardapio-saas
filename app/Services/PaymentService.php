@@ -1,19 +1,21 @@
 <?php
-
 namespace App\Services;
 
+use App\Repositories\Order\OrderRepository;
 use PDO;
 
 class PaymentService
 {
+    private OrderRepository $orderRepo;
+
+    public function __construct(OrderRepository $orderRepo) {
+        $this->orderRepo = $orderRepo;
+    }
+
     /**
      * Registra os pagamentos de um pedido
-     * ⚠️ NÃO gerencia transaction (deve ser chamado dentro de uma)
      * 
-     * @param PDO $conn Conexão ativa com transaction iniciada
-     * @param int $orderId ID do pedido
-     * @param array $payments Array de pagamentos com 'method' e 'amount'
-     * @return float Valor total dos pagamentos registrados
+     * @param PDO $conn (Unused in new repo implementation but kept for signature compatibility if needed)
      */
     public function registerPayments(PDO $conn, int $orderId, array $payments): float
     {
@@ -21,17 +23,13 @@ class PaymentService
             return 0.0;
         }
 
-        $stmt = $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)");
         $total = 0.0;
 
         foreach ($payments as $pay) {
             $amount = floatval($pay['amount']);
             
-            $stmt->execute([
-                'oid' => $orderId,
-                'method' => $pay['method'],
-                'amount' => $amount
-            ]);
+            // Delegate to Repository
+            $this->orderRepo->addPayment($orderId, $pay['method'], $amount);
             
             $total += $amount;
         }

@@ -1,0 +1,107 @@
+/**
+ * PAYMENT - Layout Base
+ * Arquivo: public/css/checkout/payment/layout.css
+ * Estrutura do modal, total box e transições
+ */
+
+.payment-modal .cardapio-modal-body {
+    background: white;
+    /* Importante para scroll em iOS */
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Header fixo no topo do modal de pagamento */
+.payment-modal .cardapio-modal-header {
+    flex-shrink: 0;
+    background: white;
+    z-index: 10;
+    position: sticky;
+    top: 0;
+}
+
+/* Seções do Formulário */
+.payment-section {
+    margin-top: 12px;
+}
+
+.payment-section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #4b5563;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Card de Total com destaque */
+.payment-total-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 14px;
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    border-radius: 10px;
+    margin-bottom: 3px;
+}
+
+.payment-total-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.payment-total-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: white;
+}
+
+/* Aviso de tipo de pedido (retirada/local) */
+.order-type-alert {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #fff7ed;
+    border: 1px solid #fdba74;
+    color: #c2410c;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* ========== TRANSIÇÕES SUAVES ========== */
+/* Evita "jagualada" ao trocar entre Local/Retirada/Entrega */
+
+.order-type-card {
+    transition: all 0.2s ease-in-out !important;
+}
+
+#entrega-alert,
+#retirada-alert,
+#entrega-dados-ok,
+#entrega-dados-pendente,
+#retirada-client-selected,
+#retirada-no-client {
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+#btn-save-pickup {
+    transition: all 0.2s ease-in-out;
+}
+
+#checkout-total-display,
+#checkout-remaining {
+    transition: color 0.2s ease-in-out;
+}
+
+/* Container dos alertas - altura fixa para evitar "pulo" ao trocar tipo */
+#retirada-client-alert,
+#entrega-alert {
+    height: 55px;
+    overflow: hidden;
+}

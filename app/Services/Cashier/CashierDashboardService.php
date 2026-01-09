@@ -2,7 +2,10 @@
 namespace App\Services\Cashier;
 
 use App\Core\Database;
+use App\Repositories\CashRegisterRepository;
+use App\Repositories\Order\OrderRepository;
 use PDO;
+use Exception;
 
 /**
  * CashierDashboardService - Lógica de Dashboard do Caixa
@@ -14,33 +17,31 @@ use PDO;
  */
 class CashierDashboardService {
 
+    private OrderRepository $orderRepo;
+
+    private CashRegisterRepository $repo;
+
+    public function __construct(
+        CashRegisterRepository $repo,
+        OrderRepository $orderRepo
+    ) {
+        $this->repo = $repo;
+        $this->orderRepo = $orderRepo;
+    }
+
     /**
      * Retorna caixa aberto ou null
+     * (Mantido para compatibilidade se algum controller usar, mas agora delega ao Repo)
      */
     public function getOpenCashier(int $restaurantId): ?array {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM cash_registers WHERE restaurant_id = :rid AND status = 'aberto'");
-        $stmt->execute(['rid' => $restaurantId]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        return $this->repo->findOpen($restaurantId);
     }
 
     /**
      * Calcula resumo de vendas por método de pagamento
      */
     public function calculateSalesSummary(int $restaurantId, string $openedAt): array {
-        $conn = Database::connect();
-        
-        $stmt = $conn->prepare("
-            SELECT op.method, SUM(op.amount) as total 
-            FROM order_payments op
-            INNER JOIN orders o ON o.id = op.order_id
-            WHERE o.restaurant_id = :rid 
-            AND o.created_at >= :opened_at 
-            AND o.status = 'concluido'
-            GROUP BY op.method
-        ");
-        $stmt->execute(['rid' => $restaurantId, 'opened_at' => $openedAt]);
-        $vendas = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+        $vendas = $this->orderRepo->getSalesSummary($restaurantId, $openedAt);
         
         $resumo = [
             'total_bruto' => 0,
@@ -55,61 +56,116 @@ class CashierDashboardService {
     }
 
     /**
-     * Retorna movimentações do caixa
+     * Busca dados iniciais do dashboard (Método principal refatorado)
      */
-    public function getMovements(int $cashierId): array {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM cash_movements WHERE cash_register_id = :cid ORDER BY created_at DESC");
-        $stmt->execute(['cid' => $cashierId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    public function getDashboardData(int $restaurantId): array {
+        $caixaAberto = $this->repo->findOpen($restaurantId);
+
+        if (!$caixaAberto) {
+            return [
+                'status' => 'fechado',
+                'movements' => [],
+                'totals' => ['entrada' => 0, 'saida' => 0, 'saldo' => 0]
+            ];
+        }
+
+        $movements = $this->repo->findMovements($caixaAberto['id']);
+        $totals = $this->calculateTotals($movements, $caixaAberto['opening_balance']);
+
+        return [
+            'status' => 'aberto',
+            'caixa' => $caixaAberto,
+            'movements' => $movements,
+            'totals' => $totals
+        ];
     }
 
     /**
-     * Soma suprimentos e sangrias
+     * Abre um novo caixa
      */
-    public function sumMovements(array $movimentos): array {
+    public function openRegister(int $restaurantId, float $amount): array {
+        $caixaAberto = $this->repo->findOpen($restaurantId);
+
+        if ($caixaAberto) {
+            throw new Exception("Já existe um caixa aberto!");
+        }
+
+        $id = $this->repo->open($restaurantId, $amount);
+
+        return ['success' => true, 'message' => 'Caixa aberto com sucesso!', 'id' => $id];
+    }
+
+    /**
+     * Fecha o caixa atual
+     */
+    public function closeRegister(int $restaurantId): array {
+        $this->repo->close($restaurantId);
+        return ['success' => true, 'message' => 'Caixa fechado com sucesso!'];
+    }
+
+    /**
+     * Adiciona sangria ou suprimento
+     */
+    public function addMovement(int $restaurantId, string $type, float $amount, string $description): array {
+        $caixaAberto = $this->repo->findOpen($restaurantId);
+
+        if (!$caixaAberto) {
+            throw new Exception("Não há caixa aberto para realizar movimentação.");
+        }
+
+        $this->repo->addMovement($caixaAberto['id'], $type, $amount, $description);
+
+        return ['success' => true, 'message' => 'Movimentação registrada!'];
+    }
+
+    /**
+     * Retorna movimentos de um caixa
+     */
+    public function getMovements(int $cashRegisterId): array {
+        return $this->repo->findMovements($cashRegisterId);
+    }
+
+    /**
+     * Soma movimentos por tipo (suprimentos e sangrias)
+     */
+    public function sumMovements(array $movements): array {
         $suprimentos = 0;
         $sangrias = 0;
         
-        foreach ($movimentos as $mov) {
-            if ($mov['type'] == 'suprimento') $suprimentos += $mov['amount'];
-            if ($mov['type'] == 'sangria') $sangrias += $mov['amount'];
+        foreach ($movements as $mov) {
+            if ($mov['type'] === 'suprimento') {
+                $suprimentos += floatval($mov['amount']);
+            } elseif ($mov['type'] === 'sangria') {
+                $sangrias += floatval($mov['amount']);
+            }
         }
         
         return [$suprimentos, $sangrias];
     }
 
     /**
-     * Calcula dinheiro físico em gaveta
+     * Calcula dinheiro em caixa
      */
-    public function calculateCashInDrawer(float $openingBalance, float $salesCash, float $suprimentos, float $sangrias): float {
-        return $openingBalance + $salesCash + $suprimentos - $sangrias;
+    public function calculateCashInDrawer(float $abertura, float $vendaDinheiro, float $suprimentos, float $sangrias): float {
+        return $abertura + $vendaDinheiro + $suprimentos - $sangrias;
     }
 
-    /**
-     * Abre novo caixa
-     */
-    public function openCashier(int $restaurantId, float $openingBalance): void {
-        $conn = Database::connect();
-        $conn->prepare("INSERT INTO cash_registers (restaurant_id, opening_balance, status, opened_at) VALUES (:rid, :val, 'aberto', NOW())")
-             ->execute(['rid' => $restaurantId, 'val' => $openingBalance]);
-    }
+    private function calculateTotals(array $movements, float $openingBalance): array {
+        $entradas = 0;
+        $saidas = 0;
 
-    /**
-     * Fecha caixa aberto
-     */
-    public function closeCashier(int $restaurantId): void {
-        $conn = Database::connect();
-        $conn->prepare("UPDATE cash_registers SET status = 'fechado', closed_at = NOW() WHERE restaurant_id = :rid AND status = 'aberto'")
-             ->execute(['rid' => $restaurantId]);
-    }
+        foreach ($movements as $mov) {
+            if ($mov['type'] == 'venda' || $mov['type'] == 'suprimento') {
+                $entradas += $mov['amount'];
+            } else {
+                $saidas += $mov['amount'];
+            }
+        }
 
-    /**
-     * Adiciona movimento (sangria/suprimento)
-     */
-    public function addMovement(int $cashierId, string $type, float $amount, string $description): void {
-        $conn = Database::connect();
-        $conn->prepare("INSERT INTO cash_movements (cash_register_id, type, amount, description) VALUES (:cid, :type, :amount, :desc)")
-             ->execute(['cid' => $cashierId, 'type' => $type, 'amount' => $amount, 'desc' => $description]);
+        return [
+            'entrada' => $entradas,
+            'saida' => $saidas,
+            'saldo' => ($openingBalance + $entradas) - $saidas
+        ];
     }
 }

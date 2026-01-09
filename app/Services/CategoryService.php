@@ -1,9 +1,7 @@
 <?php
-
 namespace App\Services;
 
-use App\Core\Database;
-use PDO;
+use App\Repositories\CategoryRepository;
 use Exception;
 
 /**
@@ -11,15 +9,18 @@ use Exception;
  */
 class CategoryService
 {
+    private CategoryRepository $repo;
+
+    public function __construct(CategoryRepository $repo) {
+        $this->repo = $repo;
+    }
+
     /**
      * Lista todas as categorias de um restaurante
      */
     public function list(int $restaurantId): array
     {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM categories WHERE restaurant_id = :id ORDER BY name ASC");
-        $stmt->execute(['id' => $restaurantId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->repo->findAll($restaurantId);
     }
 
     /**
@@ -27,12 +28,7 @@ class CategoryService
      */
     public function findById(int $id, int $restaurantId): ?array
     {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM categories WHERE id = :id AND restaurant_id = :rid");
-        $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
-        
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result ?: null;
+        return $this->repo->find($id, $restaurantId);
     }
 
     /**
@@ -40,13 +36,7 @@ class CategoryService
      */
     public function create(array $data, int $restaurantId): int
     {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("INSERT INTO categories (restaurant_id, name) VALUES (:rid, :name)");
-        $stmt->execute([
-            'rid' => $restaurantId,
-            'name' => trim($data['name'])
-        ]);
-        return (int) $conn->lastInsertId();
+        return $this->repo->create(array_merge($data, ['restaurant_id' => $restaurantId]));
     }
 
     /**
@@ -54,13 +44,7 @@ class CategoryService
      */
     public function update(int $id, array $data, int $restaurantId): void
     {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("UPDATE categories SET name = :name WHERE id = :id AND restaurant_id = :rid");
-        $stmt->execute([
-            'name' => trim($data['name']),
-            'id' => $id,
-            'rid' => $restaurantId
-        ]);
+        $this->repo->update($id, $data);
     }
 
     /**
@@ -68,18 +52,13 @@ class CategoryService
      */
     public function delete(int $id, int $restaurantId): void
     {
-        $conn = Database::connect();
-        
         // Verifica se é categoria de sistema
-        $stmt = $conn->prepare("SELECT category_type FROM categories WHERE id = :id AND restaurant_id = :rid");
-        $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
-        $category = $stmt->fetch(PDO::FETCH_ASSOC);
+        $category = $this->repo->find($id, $restaurantId);
 
         if ($category && in_array($category['category_type'], ['featured', 'combos'])) {
             throw new Exception("Categorias de sistema não podem ser excluídas.");
         }
 
-        $stmt = $conn->prepare("DELETE FROM categories WHERE id = :id AND restaurant_id = :rid");
-        $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
+        $this->repo->delete($id, $restaurantId);
     }
 }

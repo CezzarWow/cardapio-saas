@@ -21,9 +21,9 @@ class DeliveryService
         // Adicionei suporte reverso opcional ou fluxo simplificado se necessário depois
     ];
 
-    public function __construct()
+    public function __construct(DeliveryOrderRepository $repository)
     {
-        $this->repository = new DeliveryOrderRepository();
+        $this->repository = $repository;
     }
 
     // ====================================================

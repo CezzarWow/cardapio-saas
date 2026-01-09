@@ -12,9 +12,9 @@ class CardapioPublicoQueryService
 {
     private CardapioPublicoRepository $repository;
 
-    public function __construct()
+    public function __construct(CardapioPublicoRepository $repository)
     {
-        $this->repository = new CardapioPublicoRepository();
+        $this->repository = $repository;
     }
 
     /**
