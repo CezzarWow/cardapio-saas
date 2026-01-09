@@ -218,7 +218,8 @@ abstract class BaseController {
      */
     protected function getJsonBody(): array {
         $content = file_get_contents('php://input');
-        return json_decode($content, true) ?? [];
+        $data = json_decode($content, true) ?? [];
+        return \App\Middleware\RequestSanitizerMiddleware::sanitize($data);
     }
 
     /**

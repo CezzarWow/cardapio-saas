@@ -5,6 +5,18 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
+// Security: Session Hardening
+ini_set('session.cookie_httponly', 1); // Prevent JS access
+ini_set('session.use_only_cookies', 1); // Prevent ID in URL
+ini_set('session.cookie_samesite', 'Lax'); // Prevent CSRF
+ini_set('session.gc_maxlifetime', 86400); // 1 day
+ini_set('session.use_strict_mode', 1); // Prevent Session Fixation
+
+if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+    ini_set('session.cookie_secure', 1); // Only send over HTTPS
+}
+
 session_start();
 date_default_timezone_set('America/Sao_Paulo');
 
@@ -29,6 +41,11 @@ $container = require __DIR__ . '/../app/Config/dependencies.php';
 Router::setContainer($container);
 
 // ADD GLOBAL MIDDLEWARE (Security)
+// 1. Rate Limiting (Block abuse first)
+Router::addGlobalMiddleware(\App\Middleware\ThrottleMiddleware::class);
+// 2. Sanitization (Clean Input)
+Router::addGlobalMiddleware(\App\Middleware\RequestSanitizerMiddleware::class);
+// 2. CSRF (Validate Token)
 Router::addGlobalMiddleware(\App\Middleware\CsrfMiddleware::class);
 
 $url = $_SERVER['REQUEST_URI'];

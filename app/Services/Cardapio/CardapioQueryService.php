@@ -19,8 +19,7 @@ class CardapioQueryService
     private BusinessHoursRepository $hoursRepository;
     private CategoryRepository $categoryRepository;
     private ProductRepository $productRepository;
-    private ComboRepository $comboRepository;
-    private RestaurantRepository $restaurantRepository;
+    private \App\Core\SimpleCache $cache;
 
     public function __construct(
         CardapioConfigRepository $configRepository,
@@ -28,7 +27,8 @@ class CardapioQueryService
         CategoryRepository $categoryRepository,
         ProductRepository $productRepository,
         ComboRepository $comboRepository,
-        RestaurantRepository $restaurantRepository
+        RestaurantRepository $restaurantRepository,
+        \App\Core\SimpleCache $cache
     ) {
         $this->configRepository = $configRepository;
         $this->hoursRepository = $hoursRepository;
@@ -36,6 +36,7 @@ class CardapioQueryService
         $this->productRepository = $productRepository;
         $this->comboRepository = $comboRepository;
         $this->restaurantRepository = $restaurantRepository;
+        $this->cache = $cache;
     }
 
     /**
@@ -43,6 +44,13 @@ class CardapioQueryService
      */
     public function getIndexData(int $restaurantId): array
     {
+        $cacheKey = "cardapio_index_{$restaurantId}";
+        $cached = $this->cache->get($cacheKey);
+
+        if ($cached) {
+            return $cached;
+        }
+
         // Config
         $config = $this->configRepository->findOrCreate($restaurantId);
         
@@ -71,7 +79,7 @@ class CardapioQueryService
         // Processar mensagens do WhatsApp
         $whatsappData = $this->prepareWhatsAppMessages($config['whatsapp_message'] ?? '[]');
 
-        return [
+        $data = [
             'config' => $config,
             'businessHours' => $businessHours,
             'categories' => $categories,
@@ -83,6 +91,11 @@ class CardapioQueryService
             'afterList' => $whatsappData['after'],
             'businessHoursList' => $this->prepareBusinessHours($businessHours)
         ];
+
+        // Cache por 5 minutos (300s)
+        $this->cache->put($cacheKey, $data, 300);
+
+        return $data;
     }
 
     /**

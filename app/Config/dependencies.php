@@ -57,6 +57,9 @@ $container->bind(\App\Validators\CashierValidator::class, fn() => new \App\Valid
 $container->bind(\App\Validators\CardapioValidator::class, fn() => new \App\Validators\CardapioValidator());
 $container->bind(\App\Validators\AdditionalValidator::class, fn() => new \App\Validators\AdditionalValidator());
 
+// --- CACHE ---
+$container->singleton(\App\Core\SimpleCache::class, fn() => new \App\Core\SimpleCache());
+
 // --- SERVICES ---
 // ProductService needs 3 Repositories injected
 $container->singleton(ProductService::class, function($c) {
@@ -167,7 +170,8 @@ $container->singleton(\App\Services\Cardapio\CardapioQueryService::class, functi
         $c->get(\App\Repositories\Cardapio\CategoryRepository::class),
         $c->get(\App\Repositories\Cardapio\ProductRepository::class),
         $c->get(\App\Repositories\ComboRepository::class),
-        $c->get(RestaurantRepository::class)
+        $c->get(RestaurantRepository::class),
+        $c->get(\App\Core\SimpleCache::class)
     );
 });
 

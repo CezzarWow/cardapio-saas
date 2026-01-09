@@ -25,7 +25,8 @@ class OrderApiController {
         header('Content-Type: application/json');
         
         // Recebe dados JSON
-        $input = json_decode(file_get_contents('php://input'), true);
+        $rawInput = json_decode(file_get_contents('php://input'), true);
+        $input = \App\Middleware\RequestSanitizerMiddleware::sanitize($rawInput ?? []);
         
         if (!$input) {
             echo json_encode(['success' => false, 'message' => 'Dados inválidos']);
