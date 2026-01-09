@@ -65,7 +65,7 @@ class ServiceProvider implements Provider
 
         $container->singleton(\App\Services\PaymentService::class, function($c) {
             return new \App\Services\PaymentService(
-                $c->get(\App\Repositories\Order\OrderRepository::class)
+                $c->get(\App\Repositories\Order\OrderPaymentRepository::class)
             );
         });
 
@@ -236,6 +236,19 @@ class ServiceProvider implements Provider
         $container->singleton(\App\Services\Order\DeliverOrderAction::class, function($c) {
             return new \App\Services\Order\DeliverOrderAction(
                 $c->get(\App\Repositories\Order\OrderRepository::class)
+            );
+        });
+
+        // --- ORCHESTRATOR SERVICE ---
+        $container->singleton(\App\Services\OrderOrchestratorService::class, function($c) {
+            return new \App\Services\OrderOrchestratorService(
+                $c->get(\App\Services\Order\CreateOrderAction::class),
+                $c->get(\App\Services\Order\CloseTableAction::class),
+                $c->get(\App\Services\Order\CloseCommandAction::class),
+                $c->get(\App\Services\Order\RemoveItemAction::class),
+                $c->get(\App\Services\Order\CancelOrderAction::class),
+                $c->get(\App\Services\Order\IncludePaidItemsAction::class),
+                $c->get(\App\Services\Order\DeliverOrderAction::class)
             );
         });
     }

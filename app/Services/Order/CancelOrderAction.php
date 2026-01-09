@@ -3,7 +3,7 @@
 namespace App\Services\Order;
 
 use App\Core\Database;
-use App\Services\StockService;
+use App\Services\Stock\StockService;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\TableRepository;

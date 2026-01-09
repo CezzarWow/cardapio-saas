@@ -142,5 +142,13 @@ class ControllerProvider implements Provider
                 $c->get(\App\Services\Order\CreateWebOrderService::class)
             );
         });
+
+        // Order Controller (Admin)
+        $container->bind(\App\Controllers\Admin\OrderController::class, function($c) {
+            return new \App\Controllers\Admin\OrderController(
+                $c->get(\App\Services\OrderOrchestratorService::class),
+                $c->get(\App\Validators\OrderValidator::class)
+            );
+        });
     }
 }

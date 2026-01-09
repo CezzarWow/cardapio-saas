@@ -121,7 +121,7 @@
             <!-- 1. Botão SALVAR COMANDA (Sem pagar) -->
             <?php if (!empty($showSaveCommand)): ?>
             <button id="btn-save-command" onclick="saveClientOrder()" 
-                    style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
+                    style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: <?= empty($contaAberta['id']) ? 'none' : 'flex' ?>; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                 Salvar
             </button>
             <?php endif; ?>

@@ -34,19 +34,17 @@ class RequestSanitizerMiddleware
             if (is_array($value)) {
                 self::clean($value);
             } else {
-                // 1. Trim whitespace
-                // 2. Remove internal null bytes
-                // 3. Strip HTML tags (basic XSS prevention for this app type)
-                // Note: We avoid strip_tags on specific keys if needed, 
-                // but for this POS app, no HTML input is expected.
-                $value = trim($value);
-                $value = str_replace(chr(0), '', $value); // Null byte injection
-                
-                // Only strip tags for strings
                 if (is_string($value)) {
-                    // Normalize newlines
+                    // 1. Trim whitespace
+                    $value = trim($value);
+                    
+                    // 2. Remove internal null bytes
+                    $value = str_replace(chr(0), '', $value); // Null byte injection
+                    
+                    // 3. Normalize newlines
                     $value = str_replace(["\r\n", "\r"], "\n", $value);
-                    // Strip tags
+                    
+                    // 4. Strip tags
                     $value = strip_tags($value);
                 }
             }

@@ -78,6 +78,7 @@ class PdvController extends BaseController {
             // Contexto: BALCÃO LIVRE (Nova Venda)
             // Se não tem mesa e não tem comanda aberta, é venda rápida
             $showQuickSale = true;
+            $showSaveCommand = true; // Habilita botão salvar (oculto por padrão até selecionar cliente)
         }
 
         // Carrega Cardápio

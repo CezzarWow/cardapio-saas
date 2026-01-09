@@ -42,7 +42,7 @@ class OrderController extends BaseController
         try {
             $orderId = $this->service->createOrder($rid, $this->getUserId(), $data);
             $this->json(['success' => true, 'order_id' => $orderId]);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -63,7 +63,7 @@ class OrderController extends BaseController
         try {
             $this->service->closeTable($rid, (int)$data['table_id'], $data['payments'] ?? []);
             $this->json(['success' => true]);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -84,7 +84,7 @@ class OrderController extends BaseController
         try {
             $this->service->closeCommand($rid, (int)$data['order_id'], $data['payments'] ?? []);
             $this->json(['success' => true]);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -105,7 +105,7 @@ class OrderController extends BaseController
         try {
             $this->service->removeItem((int)$data['item_id'], (int)$data['order_id']);
             $this->json(['success' => true]);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -126,7 +126,7 @@ class OrderController extends BaseController
         try {
             $this->service->cancelOrder((int)$data['order_id'], (int)$data['table_id']);
             $this->json(['success' => true]);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -147,7 +147,7 @@ class OrderController extends BaseController
         try {
             $this->service->deliverOrder((int)$data['order_id'], $rid);
             $this->json(['success' => true, 'message' => 'Pedido entregue com sucesso!']);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -177,7 +177,7 @@ class OrderController extends BaseController
                 'message' => 'Itens incluídos com sucesso!',
                 'new_total' => $newTotal
             ]);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }

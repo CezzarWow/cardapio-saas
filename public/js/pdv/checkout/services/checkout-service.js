@@ -50,7 +50,7 @@ const CheckoutService = {
      * Envia pedido de cliente/mesa (Salvar Comanda)
      */
     saveTabOrder: async function (payload) {
-        return this.sendSaleRequest('venda/finalizar', payload);
+        return this.sendSaleRequest('/admin/loja/venda/finalizar', payload);
     }
 };
 
