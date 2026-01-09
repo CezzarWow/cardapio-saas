@@ -1,0 +1,59 @@
+/**
+ * CARRINHO - Footer e Totais
+ * Arquivo: public/css/publico/cart/footer.css
+ */
+
+.cardapio-cart-footer {
+    padding: 20px;
+    border-top: 2px solid #f3f4f6;
+    background: #f9fafb;
+}
+
+.cardapio-cart-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.cardapio-cart-total-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-light, #6b7280);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cardapio-cart-total-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-dark, #1f2937);
+}
+
+.cardapio-checkout-btn {
+    width: 100%;
+    padding: 16px 24px;
+    background: var(--text-dark, #1f2937);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cardapio-checkout-btn:hover {
+    background: #111827;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.cardapio-checkout-btn:active {
+    transform: translateY(0);
+}

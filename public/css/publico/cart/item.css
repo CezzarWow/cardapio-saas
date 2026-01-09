@@ -1,0 +1,75 @@
+/**
+ * CARRINHO - Item
+ * Arquivo: public/css/publico/cart/item.css
+ */
+
+.cardapio-cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.cardapio-cart-item-info {
+    flex: 1;
+}
+
+.cardapio-cart-item-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-dark, #1f2937);
+    margin: 0 0 4px 0;
+}
+
+.cardapio-cart-item-additionals {
+    font-size: 0.75rem;
+    color: var(--text-light, #6b7280);
+    margin: 2px 0;
+}
+
+.cardapio-cart-item-obs {
+    font-size: 0.75rem;
+    color: var(--accent-color, #ea580c);
+    font-style: italic;
+    margin: 4px 0;
+}
+
+/* Ações */
+.cardapio-cart-item-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    margin-left: 10px;
+}
+
+.cardapio-cart-item-price {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-dark, #1f2937);
+}
+
+.cardapio-cart-remove-icon-btn {
+    background: #fee2e2;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.cardapio-cart-remove-icon-btn:hover {
+    background: #fecaca;
+    transform: scale(1.05);
+}
+
+.cardapio-cart-remove-icon-btn:active {
+    transform: scale(0.95);
+}

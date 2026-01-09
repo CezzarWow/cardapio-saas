@@ -14,14 +14,12 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/base.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/sidebar.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/pdv/index.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/pdv-cart.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/stock/index.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/checkout.css?v=<?= time() ?>">
     <!-- CSS Cardápio (usado em /admin/loja/cardapio) -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cards.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/modals/index.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cart.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/publico/index.css?v=<?= time() ?>">
     <!-- Cardápio Admin - CSS Modular -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/base.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/tabs.css?v=<?= time() ?>">
@@ -31,7 +29,7 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/grids.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/buttons.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/utilities.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/featured.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/featured/index.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/responsive.css?v=<?= time() ?>">
     
     <script src="https://unpkg.com/lucide@latest"></script>

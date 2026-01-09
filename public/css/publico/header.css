@@ -1,0 +1,68 @@
+/**
+ * HEADER - Cardápio Público
+ * Arquivo: public/css/publico/header.css
+ */
+
+.cardapio-header {
+    background: linear-gradient(135deg, var(--accent-color, #ea580c) 0%, #dc2626 100%);
+    color: white;
+    padding: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.cardapio-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cardapio-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cardapio-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cardapio-logo-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cardapio-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.cardapio-subtitle {
+    font-size: 0.75rem;
+    margin: 2px 0 0 0;
+    opacity: 0.9;
+}
+
+.cardapio-info {
+    text-align: right;
+}
+
+.cardapio-delivery-time {
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin: 0;
+}

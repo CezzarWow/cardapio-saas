@@ -19,7 +19,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/grids.css?v=<?= time() ?>">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/buttons.css?v=<?= time() ?>">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/utilities.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/featured.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/featured/index.css?v=<?= time() ?>">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/responsive.css?v=<?= time() ?>">
 
 <main class="main-content">

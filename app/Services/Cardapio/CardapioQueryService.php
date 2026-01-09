@@ -68,6 +68,9 @@ class CardapioQueryService
         $restaurant = $this->restaurantRepository->find($restaurantId);
         $restaurantSlug = $restaurant['slug'] ?? (string) $restaurantId;
 
+        // Processar mensagens do WhatsApp
+        $whatsappData = $this->prepareWhatsAppMessages($config['whatsapp_message'] ?? '[]');
+
         return [
             'config' => $config,
             'businessHours' => $businessHours,
@@ -75,13 +78,77 @@ class CardapioQueryService
             'allProducts' => $allProducts,
             'productsByCategory' => $productsByCategory,
             'combos' => $combos,
-            'restaurantSlug' => $restaurantSlug
+            'restaurantSlug' => $restaurantSlug,
+            'beforeList' => $whatsappData['before'],
+            'afterList' => $whatsappData['after'],
+            'businessHoursList' => $this->prepareBusinessHours($businessHours)
         ];
     }
 
     /**
-     * Retorna dados para formulário de combo
+     * Prepara a lista de horários (Merge de defaults com DB)
      */
+    private function prepareBusinessHours(array $dbHours): array
+    {
+        $days = [
+            0 => 'Domingo',
+            1 => 'Segunda-feira',
+            2 => 'Terça-feira',
+            3 => 'Quarta-feira',
+            4 => 'Quinta-feira',
+            5 => 'Sexta-feira',
+            6 => 'Sábado'
+        ];
+
+        $list = [];
+        foreach ($days as $dayNum => $dayName) {
+            // Default config: Segunda a Sexta aberto, Sáb/Dom fechado (ou ajustável)
+            // Aqui mantemos a lógica que estava na View, mas centralizada
+            $defaultOpen = ($dayNum > 0 && $dayNum < 6);
+            
+            $current = $dbHours[$dayNum] ?? [];
+            
+            $list[$dayNum] = [
+                'name' => $dayName,
+                'is_open' => $current['is_open'] ?? $defaultOpen,
+                'open_time' => $current['open_time'] ?? '09:00',
+                'close_time' => $current['close_time'] ?? '22:00'
+            ];
+        }
+
+        return $list;
+    }
+
+    /**
+     * Processa e prepara as mensagens do WhatsApp (Lógica movida da View)
+     */
+    private function prepareWhatsAppMessages(string $json): array
+    {
+        $data = json_decode($json, true);
+
+        $beforeList = [];
+        $afterList = [];
+
+        if (isset($data['before']) || isset($data['after'])) {
+             // Formato Novo
+             $beforeList = $data['before'] ?? [];
+             $afterList = $data['after'] ?? [];
+        } else if (is_array($data)) {
+             // Formato Legado (posicional)
+             if (count($data) >= 1) $beforeList[] = $data[0];
+             if (count($data) >= 2) $afterList[] = $data[1];
+        }
+
+        // Defaults se vazio
+        if (empty($beforeList)) $beforeList[] = 'Olá! Gostaria de fazer um pedido:';
+        if (empty($afterList)) $afterList[] = 'Aguardo a confirmação.';
+
+        return [
+            'before' => $beforeList,
+            'after' => $afterList
+        ];
+    }
+
     public function getComboFormData(int $restaurantId): array
     {
         return [

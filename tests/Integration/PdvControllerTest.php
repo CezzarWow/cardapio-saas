@@ -36,6 +36,6 @@ class PdvControllerTest extends TestCase
         $service = self::$container->get(\App\Services\Pdv\PdvService::class);
         
         // Test that service methods exist and return expected types
-        $this->assertTrue(method_exists($service, 'getPdvData'));
+        $this->assertTrue(method_exists($service, 'getContextData'));
     }
 }

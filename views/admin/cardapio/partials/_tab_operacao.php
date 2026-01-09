@@ -175,28 +175,6 @@
     <div style="margin-top: 10px;">
         <label class="cardapio-admin-label" style="font-size: 0.8rem; margin-bottom: 6px;">Mensagens Automáticas</label>
         
-        <?php 
-        // Recuperar mensagens
-        $json = $config['whatsapp_message'] ?? '[]';
-        $data = json_decode($json, true);
-
-        $beforeList = [];
-        $afterList = [];
-
-        if (isset($data['before']) || isset($data['after'])) {
-             // Formato Novo
-             $beforeList = $data['before'] ?? [];
-             $afterList = $data['after'] ?? [];
-        } else if (is_array($data)) {
-             // Formato Legado (posicional)
-             if (count($data) >= 1) $beforeList[] = $data[0];
-             if (count($data) >= 2) $afterList[] = $data[1];
-        }
-
-        // Defaults se vazio
-        if (empty($beforeList)) $beforeList[] = 'Olá! Gostaria de fazer um pedido:';
-        if (empty($afterList)) $afterList[] = 'Aguardo a confirmação.';
-        ?>
 
         <div class="cardapio-admin-grid cardapio-admin-grid-2" style="gap: 16px;">
             <!-- Coluna 1: Antes do Pedido -->

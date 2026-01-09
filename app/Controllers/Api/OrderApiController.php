@@ -11,6 +11,12 @@ use App\Services\Order\CreateWebOrderService;
 
 class OrderApiController {
     
+    private CreateWebOrderService $service;
+
+    public function __construct(CreateWebOrderService $service) {
+        $this->service = $service;
+    }
+
     /**
      * Cria um novo pedido via API (cardápio web)
      * POST /api/order/create
@@ -26,9 +32,8 @@ class OrderApiController {
             exit;
         }
         
-        // Delega para o Service
-        $service = new CreateWebOrderService();
-        $result = $service->execute($input);
+        // Delega para o Service Injetado
+        $result = $this->service->execute($input);
         
         echo json_encode($result);
     }

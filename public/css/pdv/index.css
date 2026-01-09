@@ -22,3 +22,6 @@
 
 /* 6. Componentes Gerais (Botões, etc) */
 @import 'components.css';
+
+/* 7. Sidebar do Carrinho (Desktop) */
+@import 'cart-sidebar.css';

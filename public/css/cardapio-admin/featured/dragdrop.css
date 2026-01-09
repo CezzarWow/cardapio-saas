@@ -1,0 +1,39 @@
+/**
+ * FEATURED - Drag and Drop
+ * Arquivo: public/css/cardapio-admin/featured/dragdrop.css
+ */
+
+.cardapio-admin-destaques-product-card[draggable="true"] {
+    cursor: grab;
+}
+
+.cardapio-admin-destaques-product-card[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.cardapio-admin-destaques-product-card.dragging {
+    opacity: 0.5;
+    background: #e2e8f0;
+    border: 2px dashed #94a3b8;
+    transform: scale(0.98);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cardapio-admin-destaques-product-card.drag-over {
+    border: 2px dashed #2563eb;
+    border-top: 2px solid #2563eb;
+    background: #eff6ff;
+}
+
+.cardapio-admin-destaques-drag-handle {
+    cursor: grab;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.cardapio-admin-destaques-product-card:hover .cardapio-admin-destaques-drag-handle {
+    opacity: 1;
+}

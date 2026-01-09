@@ -1,0 +1,25 @@
+/**
+ * UTILS - Compatibility & Fixes Globais
+ * Arquivo: public/css/utils/compatibility.css
+ * Ajustes genéricos para navegadores específicos.
+ */
+
+/* ==========================================================================
+   SAMSUNG INTERNET BROWSER FIX
+   Bug: Samsung ignora padding-bottom para scroll interno com elementos fixed
+   ========================================================================== */
+.modal-scroll-spacer {
+    width: 100%;
+    height: 1px;
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+/* Fixes específicos de scroll para Samsung (via classe JS) */
+.samsung-browser .order-review-modal .cardapio-modal-body {
+    padding-bottom: 70px !important;
+}
+
+.samsung-browser .cardapio-products {
+    padding-bottom: 180px !important;
+}

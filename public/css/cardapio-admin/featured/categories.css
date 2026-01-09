@@ -1,0 +1,103 @@
+/**
+ * FEATURED - Lista de Categorias
+ * Arquivo: public/css/cardapio-admin/featured/categories.css
+ */
+
+/* Categorias - Lista de Prioridades */
+.cardapio-admin-destaques-category-list-scroll {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.cardapio-admin-destaques-category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cardapio-admin-destaques-category-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.cardapio-admin-destaques-category-row:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.cardapio-admin-destaques-category-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cardapio-admin-destaques-category-name {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.cardapio-admin-destaques-category-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cardapio-admin-destaques-arrows {
+    display: flex;
+    gap: 4px;
+}
+
+.cardapio-admin-destaques-arrow-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.cardapio-admin-destaques-arrow-btn:hover:not(:disabled) {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: white;
+}
+
+.cardapio-admin-destaques-arrow-btn:hover:not(:disabled) svg {
+    color: white;
+}
+
+.cardapio-admin-destaques-arrow-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.cardapio-admin-destaques-category-order {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cardapio-admin-destaques-category-order label {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.cardapio-admin-destaques-order-input {
+    width: 70px;
+    text-align: center;
+    padding: 6px 10px;
+    border-radius: 6px;
+}

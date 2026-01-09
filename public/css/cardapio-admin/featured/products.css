@@ -1,0 +1,95 @@
+/**
+ * FEATURED - Grid de Produtos e Tabs
+ * Arquivo: public/css/cardapio-admin/featured/products.css
+ */
+
+/* Produtos - Sistema de Abas */
+.cardapio-admin-destaques-tabs {
+    display: flex;
+    gap: 6px;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 1rem;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+}
+
+.cardapio-admin-destaques-tab-btn {
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #64748b;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.cardapio-admin-destaques-tab-btn:hover {
+    color: #2563eb;
+    background: #f1f5f9;
+}
+
+.cardapio-admin-destaques-tab-btn.active {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+    background: #eff6ff;
+}
+
+.cardapio-admin-destaques-tab-contents {
+    min-height: 200px;
+}
+
+.cardapio-admin-destaques-tab-content {
+    display: none;
+}
+
+.cardapio-admin-destaques-tab-content.active {
+    display: block;
+}
+
+/* Grid de Produtos */
+.cardapio-admin-destaques-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.cardapio-admin-destaques-product-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.cardapio-admin-destaques-product-card:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.cardapio-admin-destaques-product-card.featured {
+    background: #fef9c3;
+    border-color: #fde047;
+}
+
+.cardapio-admin-destaques-product-card .cardapio-admin-destaques-product-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.cardapio-admin-destaques-product-card .cardapio-admin-destaques-product-info>div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}

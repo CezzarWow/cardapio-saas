@@ -1,0 +1,13 @@
+/**
+ * ============================================
+ * FEATURED CSS - Orquestrador
+ * Arquivo: public/css/cardapio-admin/featured/index.css
+ * ============================================
+ */
+
+@import 'layout.css';
+@import 'categories.css';
+@import 'products.css';
+@import 'preview.css';
+@import 'dragdrop.css';
+@import 'actions.css';

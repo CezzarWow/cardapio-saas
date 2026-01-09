@@ -1,0 +1,44 @@
+/**
+ * CARRINHO - Botão Flutuante
+ * Arquivo: public/css/publico/cart/floating.css
+ */
+
+.cardapio-floating-cart-btn {
+    box-sizing: border-box;
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    /* Bottom com safe-area movido para mobile.css */
+    padding: 14px 24px;
+    background: var(--accent-color, #ea580c);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 800;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(234, 88, 12, 0.4);
+    z-index: 900;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cardapio-floating-cart-btn.show {
+    display: flex;
+}
+
+.cardapio-floating-cart-btn:active {
+    transform: translateX(-50%) scale(0.98);
+}
+
+/* Classes obsoletas - manter hidden */
+.cardapio-floating-cart,
+.cardapio-cart-summary,
+.cardapio-cart-count,
+.cardapio-cart-total,
+.cardapio-view-cart-btn {
+    display: none !important;
+}

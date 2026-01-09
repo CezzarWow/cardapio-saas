@@ -43,8 +43,8 @@ class CreateOrderActionTest extends TestCase
             'restaurant_id' => 1,
             'table_id' => 10,
             'user_id' => 5,
-            'items' => [
-                ['product_id' => 1, 'quantity' => 2, 'unit_price' => 10, 'total' => 20]
+            'cart' => [
+                ['id' => 1, 'product_id' => 1, 'quantity' => 2, 'unit_price' => 10, 'total' => 20]
             ],
             'payment_method' => 'dinheiro'
         ];
@@ -57,15 +57,18 @@ class CreateOrderActionTest extends TestCase
         $this->orderRepository->expects($this->once())
             ->method('insertItems');
 
-        $this->stockRepository->expects($this->once())
-             ->method('registerMovement');
+        $this->stockRepository->expects($this->atLeastOnce()) // Called for each item
+             ->method('decrement');
 
         // Act
-        $result = $this->action->execute($data);
+        // Act
+        $result = $this->action->execute(1, 5, $data);
 
         // Assert
-        $this->assertTrue($result['success']);
-        $this->assertEquals(123, $result['order_id']);
+        // The service returns the Order ID (int), not an array with success key
+        $this->assertEquals(123, $result);
+        //$this->assertTrue($result['success']); 
+        //$this->assertEquals(123, $result['order_id']);
     }
 
     public function testExecuteFailsValidation()

@@ -1,0 +1,60 @@
+/**
+ * FEATURED - Layout Principal
+ * Arquivo: public/css/cardapio-admin/featured/layout.css
+ */
+
+/* ========== ABA DESTAQUES ========== */
+.cardapio-admin-destaques-container {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.cardapio-admin-destaques-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.cardapio-admin-destaques-empty {
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+    padding: 40px 20px;
+}
+
+/* Responsivo */
+@media (max-width: 1024px) {
+    .cardapio-admin-destaques-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Overlay desabilitado */
+.cardapio-admin-destaques-content-wrapper {
+    position: relative;
+    transition: opacity 0.3s;
+}
+
+.cardapio-admin-destaques-content-wrapper.disabled-overlay {
+    opacity: 0.7;
+    pointer-events: none;
+    filter: grayscale(0.5);
+}
+
+.cardapio-admin-destaques-content-wrapper.disabled-overlay::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    cursor: not-allowed;
+}
+
+/* DEPRECATED */
+.cardapio-admin-destaques-products-list {
+    display: none;
+}

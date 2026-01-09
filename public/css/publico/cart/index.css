@@ -1,0 +1,11 @@
+/**
+ * ============================================
+ * CARRINHO CSS - Orquestrador
+ * Arquivo: public/css/publico/cart/index.css
+ * ============================================
+ */
+
+@import 'floating.css';
+@import 'modal.css';
+@import 'item.css';
+@import 'footer.css';

@@ -1,0 +1,67 @@
+/**
+ * FEATURED - Preview Lateral
+ * Arquivo: public/css/cardapio-admin/featured/preview.css
+ */
+
+.cardapio-admin-destaques-preview {
+    position: sticky;
+    top: 20px;
+}
+
+/* Ajuste Responsivo do Preview */
+@media (max-width: 1024px) {
+    .cardapio-admin-destaques-preview {
+        position: static;
+    }
+}
+
+.cardapio-admin-destaques-preview-notice {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.cardapio-admin-destaques-preview-section {
+    margin-bottom: 1rem;
+}
+
+.cardapio-admin-destaques-preview-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 8px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.cardapio-admin-destaques-preview-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+    color: #4b5563;
+    border-radius: 4px;
+}
+
+.cardapio-admin-destaques-preview-item.featured {
+    background: #fef9c3;
+}
+
+.cardapio-admin-destaques-preview-item .price {
+    color: #059669;
+    font-weight: 500;
+}
+
+.cardapio-admin-destaques-preview-empty {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    font-style: italic;
+    padding: 8px;
+    text-align: center;
+}

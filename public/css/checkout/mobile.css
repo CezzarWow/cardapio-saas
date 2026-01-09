@@ -38,3 +38,134 @@
     /* ⚠️ IMPORTANTE: Ajuste fino para iOS */
     padding-bottom: calc(73px + env(safe-area-inset-bottom));
 }
+
+/* ==========================================================================
+   REGRAS DE LAYOUT MOBILE (IMPORTADAS DE COMPATIBILITY.CSS)
+   ========================================================================== */
+
+@media (max-width: 768px) {
+
+    /* MODAL DE PAGAMENTO - Versão Super Reduzida */
+    .payment-modal .cardapio-modal-body {
+        padding: 8px 10px 12px 10px !important;
+    }
+
+    .payment-total-box {
+        padding: 10px 10px !important;
+        margin-bottom: 8px !important;
+        border-radius: 10px !important;
+    }
+
+    .payment-total-value {
+        font-size: 1.15rem !important;
+    }
+
+    .payment-section-title {
+        font-size: 0.85rem !important;
+        margin-top: 8px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .payment-form {
+        gap: 8px !important;
+    }
+
+    .payment-input {
+        padding: 10px 10px !important;
+        font-size: 0.85rem !important;
+        border-radius: 8px !important;
+        height: auto !important;
+    }
+
+    .payment-methods-list {
+        gap: 6px !important;
+    }
+
+    .payment-method-option {
+        padding: 10px 4px !important;
+        border-radius: 10px !important;
+    }
+
+    .payment-method-icon {
+        font-size: 1.25rem !important;
+    }
+
+    .payment-method-label {
+        font-size: 0.6rem !important;
+    }
+
+    .send-order-btn {
+        margin-top: 14px !important;
+        margin-bottom: 14px !important;
+        padding: 12px !important;
+        font-size: 0.95rem !important;
+    }
+
+    .change-container {
+        padding: 6px !important;
+        margin-top: 4px !important;
+    }
+}
+
+@supports (-webkit-touch-callout: none) {
+
+    /* iOS / SAFARI - Layout "LEVEMENTE REDUZIDO" */
+    .payment-modal .cardapio-modal-body {
+        padding: 9px 12px 14px 12px !important;
+    }
+
+    .payment-total-box {
+        padding: 12px 12px !important;
+        margin-bottom: 9px !important;
+        border-radius: 11px !important;
+    }
+
+    .payment-total-value {
+        font-size: 1.3rem !important;
+    }
+
+    .payment-section-title {
+        font-size: 0.95rem !important;
+        margin-top: 9px !important;
+        margin-bottom: 7px !important;
+    }
+
+    .payment-form {
+        gap: 9px !important;
+    }
+
+    .payment-input {
+        padding: 11px 11px !important;
+        font-size: 0.92rem !important;
+        border-radius: 9px !important;
+    }
+
+    .payment-methods-list {
+        gap: 7px !important;
+    }
+
+    .payment-method-option {
+        padding: 12px 5px !important;
+        border-radius: 11px !important;
+    }
+
+    .payment-method-icon {
+        font-size: 1.35rem !important;
+    }
+
+    .payment-method-label {
+        font-size: 0.6rem !important;
+    }
+
+    .send-order-btn {
+        margin-top: 16px !important;
+        margin-bottom: 16px !important;
+        padding: 14px !important;
+        font-size: 1.05rem !important;
+    }
+
+    .change-container {
+        padding: 6px !important;
+        margin-top: 6px !important;
+    }
+}

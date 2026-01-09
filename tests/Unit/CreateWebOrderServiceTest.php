@@ -27,7 +27,7 @@ class CreateWebOrderServiceTest extends TestCase
     {
         $service = self::$container->get(\App\Services\Order\CreateWebOrderService::class);
         
-        $this->assertTrue(method_exists($service, 'createOrder'));
+        $this->assertTrue(method_exists($service, 'execute'));
     }
 
     public function testValidOrderDataStructure(): void

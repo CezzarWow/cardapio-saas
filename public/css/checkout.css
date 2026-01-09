@@ -17,4 +17,4 @@
 @import 'checkout/mobile.css';
 
 /* 5. COMPATIBILIDADE GERAL (Fixes globais) */
-@import 'compatibility.css';
+@import 'utils/compatibility.css';

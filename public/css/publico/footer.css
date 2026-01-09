@@ -1,0 +1,21 @@
+/**
+ * FOOTER - Cardápio Público
+ * Arquivo: public/css/publico/footer.css
+ */
+
+.cardapio-footer {
+    text-align: center;
+    padding: 30px 16px;
+    margin-bottom: 80px;
+}
+
+.cardapio-footer p {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin: 0;
+}
+
+.cardapio-footer strong {
+    color: var(--accent-color, #ea580c);
+    font-weight: 700;
+}

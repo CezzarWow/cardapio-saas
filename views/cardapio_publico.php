@@ -10,8 +10,7 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cards.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/modals/index.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/form.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cart.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/publico/index.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/checkout.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-layout.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-badges.css?v=<?= time() ?>">

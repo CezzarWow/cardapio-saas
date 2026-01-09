@@ -1,0 +1,39 @@
+/**
+ * BUSCA - Cardápio Público
+ * Arquivo: public/css/publico/search.css
+ */
+
+.cardapio-search-container {
+    padding: 16px;
+    background: white;
+    position: sticky;
+    top: 88px;
+    z-index: 90;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.cardapio-search-box {
+    position: relative;
+}
+
+.cardapio-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+.cardapio-search-input {
+    width: 100%;
+    padding: 12px 12px 12px 40px;
+    border: 2px solid var(--border-color, #e5e7eb);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.cardapio-search-input:focus {
+    border-color: var(--accent-color, #ea580c);
+}

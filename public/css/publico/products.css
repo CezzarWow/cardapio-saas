@@ -1,0 +1,27 @@
+/**
+ * PRODUTOS - Cardápio Público
+ * Arquivo: public/css/publico/products.css
+ */
+
+.cardapio-products {
+    padding: 16px 16px 0 16px;
+    /* Padding bottom movido para mobile.css */
+}
+
+.cardapio-category-section {
+    margin-bottom: 12px;
+}
+
+.cardapio-category-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-dark, #1f2937);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cardapio-category-title svg {
+    display: none;
+}

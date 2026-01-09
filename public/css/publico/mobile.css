@@ -1,0 +1,30 @@
+/**
+ * ============================================
+ * MOBILE & HACKS - Cardápio Público
+ * Arquivo: public/css/publico/mobile.css
+ * Centraliza ajustes específicos de browser (Samsung, iOS)
+ * ============================================
+ */
+
+/* 1. LAYOUT GERAL - Ajustes Safe Area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .cardapio-products {
+        padding-bottom: calc(120px + env(safe-area-inset-bottom));
+    }
+}
+
+/* Fallback para navegadores antigos/Samsung */
+.cardapio-products {
+    padding-bottom: 130px;
+}
+
+/* Samsung Internet: padding extra garantido */
+.samsung-browser .cardapio-products {
+    padding-bottom: 180px !important;
+}
+
+/* 2. BOTÃO FLUTUANTE (CARRINHO) */
+.cardapio-floating-cart-btn {
+    /* Posição com safe-area para iPhone */
+    bottom: calc(18px + env(safe-area-inset-bottom));
+}

@@ -1,0 +1,21 @@
+/**
+ * ============================================
+ * CARDÁPIO PÚBLICO - Orquestrador
+ * Arquivo: public/css/publico/index.css
+ * ============================================
+ */
+
+/* 1. Base */
+@import 'layout.css';
+@import 'mobile.css';
+/* Hacks Browser */
+
+/* 2. Seções */
+@import 'header.css';
+@import 'search.css';
+@import 'categories.css';
+@import 'products.css';
+@import 'footer.css';
+
+/* 3. Módulo Carrinho */
+@import 'cart/index.css';

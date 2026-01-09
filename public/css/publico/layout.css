@@ -1,0 +1,13 @@
+/**
+ * LAYOUT BASE - Cardápio Público
+ * Arquivo: public/css/publico/layout.css
+ */
+
+.cardapio-container {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    background: #ffffff;
+    min-height: 100vh;
+    padding-bottom: 100px;
+}

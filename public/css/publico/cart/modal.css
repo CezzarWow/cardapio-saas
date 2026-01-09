@@ -1,0 +1,57 @@
+/**
+ * CARRINHO - Modal e Layout Interno
+ * Arquivo: public/css/publico/cart/modal.css
+ */
+
+.cardapio-cart-modal-content {
+    max-height: 85vh;
+}
+
+.cardapio-cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.cardapio-cart-header h2 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-dark, #1f2937);
+    margin: 0;
+}
+
+.cardapio-modal-close-round {
+    width: 36px;
+    height: 36px;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cardapio-modal-close-round:hover {
+    background: #e5e7eb;
+}
+
+.cardapio-cart-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.cardapio-cart-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+}
+
+.cardapio-cart-empty-icon {
+    margin-bottom: 16px;
+    opacity: 0.5;
+}

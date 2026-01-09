@@ -386,4 +386,12 @@ $container->bind(\App\Controllers\Admin\CashierController::class, function($c) {
     );
 });
 
+// Order API Controller
+$container->bind(\App\Controllers\Api\OrderApiController::class, function($c) {
+    return new \App\Controllers\Api\OrderApiController(
+        $c->get(\App\Services\Order\CreateWebOrderService::class)
+    );
+});
+
 return $container;
+

@@ -1,0 +1,117 @@
+/**
+ * FEATURED - Ações e Botões
+ * Arquivo: public/css/cardapio-admin/featured/actions.css
+ */
+
+/* Header com botões */
+.cardapio-admin-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Container de Controles */
+.cardapio-admin-edit-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cardapio-admin-save-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Estilos Base dos Botões */
+.cardapio-admin-btn-edit,
+.cardapio-admin-btn-save,
+.cardapio-admin-btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+/* Botão Editar */
+.cardapio-admin-btn-edit {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.cardapio-admin-btn-edit:hover {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+/* Botão Salvar */
+.cardapio-admin-btn-save {
+    background: #2563eb;
+    color: white;
+}
+
+.cardapio-admin-btn-save:hover {
+    background: #1d4ed8;
+}
+
+/* Botão Cancelar */
+.cardapio-admin-btn-cancel {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.cardapio-admin-btn-cancel:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+/* Botão de Highlight (Estrela) */
+.cardapio-admin-destaques-highlight-btn {
+    padding: 6px 12px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #64748b;
+    transition: all 0.2s;
+}
+
+.cardapio-admin-destaques-highlight-btn:hover {
+    background: #eab308;
+    border-color: #eab308;
+    color: white;
+}
+
+.cardapio-admin-destaques-highlight-btn.active {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+}
+
+.cardapio-admin-destaques-highlight-btn.active:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+}
+
+/* Hints alternados */
+.view-hint {
+    display: inline;
+}
+
+.edit-hint {
+    display: none;
+}
