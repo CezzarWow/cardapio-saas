@@ -1,0 +1,24 @@
+/**
+ * ============================================
+ * PDV CSS - Orquestrador
+ * Arquivo: public/css/pdv/index.css
+ * ============================================
+ */
+
+/* 1. Reset e Layout Principal */
+@import 'layout.css';
+
+/* 2. Header e Barra de Busca */
+@import 'header.css';
+
+/* 3. Grid de Produtos e Containers */
+@import 'grid.css';
+
+/* 4. Chips de Categorias */
+@import 'chips.css';
+
+/* 5. Cards de Produtos (Normal e Compacto) */
+@import 'card.css';
+
+/* 6. Componentes Gerais (Botões, etc) */
+@import 'components.css';

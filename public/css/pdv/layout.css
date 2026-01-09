@@ -1,0 +1,24 @@
+/**
+ * PDV - Layout Principal
+ * Arquivo: public/css/pdv/layout.css
+ */
+
+/* ========== LAYOUT PRINCIPAL ========== */
+body {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+.catalog-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
