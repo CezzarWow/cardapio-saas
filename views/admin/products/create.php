@@ -20,6 +20,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
             <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700; color: #1f2937;">Novo Produto</h2>
             
             <form action="<?= BASE_URL ?>/admin/loja/produtos/salvar" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 15px;">
+                <?= \App\Helpers\ViewHelper::csrfField() ?>
                 
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Nome do Produto</label>

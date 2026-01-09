@@ -4,6 +4,7 @@
         <h3 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 1.5rem;">Novo Grupo</h3>
         
         <form action="<?= BASE_URL ?>/admin/loja/adicionais/grupo/salvar" method="POST">
+            <?= \App\Helpers\ViewHelper::csrfField() ?>
             <div style="margin-bottom: 1.5rem;">
                 <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Nome do Grupo</label>
                 <input type="text" name="name" placeholder="Ex: Molhos, Extras, Bordas..." required 

@@ -19,6 +19,7 @@
         <h2>Cadastrar Loja</h2>
         
         <form action="salvar" method="POST">
+            <?= \App\Helpers\ViewHelper::csrfField() ?>
             <label>Nome do Restaurante</label>
             <input type="text" name="name" placeholder="Ex: Hamburgueria do Zé" required>
             

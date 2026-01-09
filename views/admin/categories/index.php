@@ -124,6 +124,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
         <h3 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 1.5rem;">Nova Categoria</h3>
         
         <form action="<?= BASE_URL ?>/admin/loja/categorias/salvar" method="POST">
+            <?= \App\Helpers\ViewHelper::csrfField() ?>
             <div style="margin-bottom: 1.5rem;">
                 <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Nome da Categoria</label>
                 <input type="text" name="name" placeholder="Ex: Lanches, Bebidas, Pizzas..." required 

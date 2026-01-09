@@ -37,6 +37,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 
         <!-- Formulário (inicia aqui para incluir o botão Salvar na linha das abas) -->
         <form id="formCardapio" method="POST" action="<?= BASE_URL ?>/admin/loja/cardapio/salvar" onsubmit="return window.CardapioAdmin.validateForm()">
+            <?= \App\Helpers\ViewHelper::csrfField() ?>
         
         <!-- Abas + Ações (mesma linha) -->
         <div class="cardapio-admin-tabs" style="justify-content: space-between; align-items: center;">

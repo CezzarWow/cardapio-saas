@@ -14,6 +14,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
             </div>
 
             <form action="<?= BASE_URL ?>/admin/loja/config/salvar" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 20px;">
+                <?= \App\Helpers\ViewHelper::csrfField() ?>
                 
                 <?php 
                 $isEditing = isset($_GET['edit']) && $_GET['edit'] === 'true';

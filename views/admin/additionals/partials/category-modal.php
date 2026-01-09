@@ -5,6 +5,7 @@
         <p style="color: #6b7280; margin-bottom: 1.5rem;" id="linkCategoryGroupName">Grupo: </p>
         
         <form action="<?= BASE_URL ?>/admin/loja/adicionais/vincular-categoria" method="POST">
+            <?= \App\Helpers\ViewHelper::csrfField() ?>
             <input type="hidden" name="group_id" id="linkCategoryGroupId">
             
             <div style="margin-bottom: 1.5rem;">

@@ -81,6 +81,16 @@ class Router
         return new $class();
     }
 
+    private static array $globalMiddleware = [];
+
+    /**
+     * Add a Global Middleware
+     */
+    public static function addGlobalMiddleware(string $middlewareClass): void
+    {
+        self::$globalMiddleware[] = $middlewareClass;
+    }
+
     /**
      * Processa a requisição atual
      * 
@@ -89,6 +99,18 @@ class Router
      */
     public static function dispatch(string $path): bool
     {
+        // 0. Execute Global Middleware
+        foreach (self::$globalMiddleware as $middleware) {
+            // Assumes middleware has static 'handle' or is a class with 'handle'
+            // For simplicity in this project: using static handle()
+            if (method_exists($middleware, 'handle')) {
+                $result = call_user_func([$middleware, 'handle']);
+                if ($result === false) {
+                    return true; // Middleware stopped execution (handled response)
+                }
+            }
+        }
+
         // 1. Tenta rotas estáticas primeiro (mais rápido)
         if (isset(self::$routes[$path])) {
             $route = self::$routes[$path];
@@ -132,6 +154,7 @@ class Router
     {
         self::$routes = [];
         self::$patterns = [];
+        self::$globalMiddleware = [];
         self::$defaultHandler = null;
         self::$container = null;
     }

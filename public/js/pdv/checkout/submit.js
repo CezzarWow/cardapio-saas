@@ -7,6 +7,10 @@
 
 const CheckoutSubmit = {
 
+    _getCsrf: function () {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    },
+
     /**
      * Envia venda finalizada ao servidor
      */
@@ -84,7 +88,10 @@ const CheckoutSubmit = {
 
         fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': this._getCsrf()
+            },
             body: JSON.stringify(payload)
         })
             .then(r => r.json())
@@ -116,7 +123,10 @@ const CheckoutSubmit = {
     forceDelivery: function (orderId) {
         fetch('venda/fechar-comanda', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': this._getCsrf()
+            },
             body: JSON.stringify({ order_id: orderId, payments: [], keep_open: false })
         })
             .then(r => r.json())
@@ -147,7 +157,10 @@ const CheckoutSubmit = {
 
         fetch('venda/finalizar', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': this._getCsrf()
+            },
             body: JSON.stringify({
                 cart: PDVCart.items,
                 client_id: clientId || null,
@@ -235,7 +248,10 @@ const CheckoutSubmit = {
 
         fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': this._getCsrf()
+            },
             body: JSON.stringify(payload)
         })
             .then(r => r.json())

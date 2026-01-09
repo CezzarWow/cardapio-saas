@@ -17,6 +17,7 @@
         <h2>✏️ Editar Loja</h2>
         
         <form action="atualizar" method="POST">
+            <?= \App\Helpers\ViewHelper::csrfField() ?>
             
             <input type="hidden" name="id" value="<?php echo $restaurant['id']; ?>">
 

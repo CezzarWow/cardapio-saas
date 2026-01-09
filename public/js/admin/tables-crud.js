@@ -11,6 +11,8 @@
 
     // Helper para URL Segura
     const getBaseUrl = () => typeof BASE_URL !== 'undefined' ? BASE_URL : '/cardapio-saas/public';
+    // Helper para CSRF
+    const getCsrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
     TablesAdmin.Crud = {
 
@@ -25,7 +27,10 @@
 
             fetch(getBaseUrl() + '/admin/loja/mesas/salvar', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrf()
+                },
                 body: JSON.stringify({ number: number })
             })
                 .then(r => r.json())
@@ -51,7 +56,10 @@
 
             fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrf()
+                },
                 body: JSON.stringify({ number: number, force: false })
             })
                 .then(r => r.json())
@@ -73,7 +81,10 @@
         _forceRemove: function (number, url) {
             fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrf()
+                },
                 body: JSON.stringify({ number: number, force: true })
             })
                 .then(r2 => r2.json())

@@ -197,9 +197,14 @@
 
                 const baseUrl = this._getBaseUrl();
 
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
                 fetch(`${baseUrl}/admin/loja/reposicao/ajustar`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf
+                    },
                     body: JSON.stringify({
                         product_id: productId,
                         amount: amount

@@ -20,6 +20,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
             <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700; color: #1f2937;">Editar Produto</h2>
             
             <form action="<?= BASE_URL ?>/admin/loja/produtos/atualizar" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 15px;">
+                <?= \App\Helpers\ViewHelper::csrfField() ?>
                 <input type="hidden" name="id" value="<?= $product['id'] ?>">
                 
                 <div>

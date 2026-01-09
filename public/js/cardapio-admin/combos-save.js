@@ -125,8 +125,18 @@
         btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Salvando...';
         btn.disabled = true;
 
+        // CSRF Token
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (csrf) {
+            // FormData não aceita headers diretos no objeto, 
+            // mas fetch aceita
+        }
+
         fetch(url, {
             method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrf
+            },
             body: formData
         })
             .then(response => {

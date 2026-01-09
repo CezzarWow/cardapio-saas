@@ -52,9 +52,14 @@ const SalesAdmin = {
     cancelSale(id) {
         if (!confirm('ATENÇÃO: Isso vai estornar o dinheiro do caixa e devolver os produtos ao estoque.\n\nDeseja realmente cancelar?')) return;
 
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
         fetch('vendas/cancelar', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrf
+            },
             body: JSON.stringify({ id: id })
         })
             .then(r => r.json())
@@ -75,9 +80,14 @@ const SalesAdmin = {
     reopenTable(id) {
         if (!confirm('Deseja reabrir esta mesa?\nO dinheiro sairá do caixa e a mesa voltará a ficar OCUPADA.')) return;
 
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
         fetch('vendas/reabrir', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrf
+            },
             body: JSON.stringify({ id: id })
         })
             .then(r => r.json())

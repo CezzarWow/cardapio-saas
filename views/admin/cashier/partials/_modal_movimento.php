@@ -4,6 +4,7 @@
         <h3 id="modalTitle" style="font-weight: 800; font-size: 1.2rem; margin-bottom: 15px;">Nova Movimentação</h3>
         
         <form action="caixa/movimentar" method="POST">
+            <?= \App\Helpers\ViewHelper::csrfField() ?>
             <input type="hidden" name="type" id="movType">
             
             <label style="display: block; font-weight: 600; margin-bottom: 5px;">Valor (R$)</label>

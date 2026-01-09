@@ -2,8 +2,9 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title><?= htmlspecialchars($restaurant['name']) ?> - Cardápio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="csrf-token" content="<?= \App\Helpers\ViewHelper::csrfToken() ?>">
+    <title><?= $restaurant['name'] ?> - Cardápio Digital</title>
     
     <!-- CSS Modular - Cardápio Público -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/base.css?v=<?= time() ?>">

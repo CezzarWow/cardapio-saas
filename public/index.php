@@ -28,6 +28,9 @@ use App\Core\Router;
 $container = require __DIR__ . '/../app/Config/dependencies.php';
 Router::setContainer($container);
 
+// ADD GLOBAL MIDDLEWARE (Security)
+Router::addGlobalMiddleware(\App\Middleware\CsrfMiddleware::class);
+
 $url = $_SERVER['REQUEST_URI'];
 $url_clean = parse_url($url, PHP_URL_PATH);
 $path = str_replace('/cardapio-saas/public', '', $url_clean);

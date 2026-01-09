@@ -185,9 +185,14 @@
                 // Determinar BASE_URL
                 const baseUrl = typeof window.BASE_URL !== 'undefined' ? window.BASE_URL : '/cardapio-saas/public';
 
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
                 fetch(`${baseUrl}/admin/loja/clientes/salvar`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf
+                    },
                     body: JSON.stringify(payload)
                 })
                     .then(r => r.json())

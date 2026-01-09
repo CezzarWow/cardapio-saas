@@ -39,6 +39,7 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
 
         <!-- Formulário -->
         <form method="POST" action="<?= BASE_URL ?>/admin/loja/cardapio/combo/<?= $isEdit ? 'atualizar' : 'salvar' ?>" enctype="multipart/form-data">
+            <?= \App\Helpers\ViewHelper::csrfField() ?>
             <?php if ($isEdit): ?>
                 <input type="hidden" name="id" value="<?= $combo['id'] ?>">
             <?php endif; ?>

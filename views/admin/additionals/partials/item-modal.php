@@ -4,6 +4,7 @@
         <h3 id="itemModalTitle" style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 1.5rem;">Novo Item</h3>
         
         <form id="itemForm" action="<?= BASE_URL ?>/admin/loja/adicionais/item/salvar-modal" method="POST">
+            <?= \App\Helpers\ViewHelper::csrfField() ?>
             <input type="hidden" name="id" id="itemIdInputHidden">
             <!-- Nome -->
             <div style="margin-bottom: 1rem;">
