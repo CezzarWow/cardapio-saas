@@ -7,6 +7,7 @@ use App\Services\PaymentService;
 use App\Services\CashRegisterService;
 use App\Repositories\StockRepository;
 use App\Repositories\Order\OrderRepository;
+use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\TableRepository;
 use PDO;
 use Exception;
@@ -17,6 +18,7 @@ class CreateOrderAction
     private CashRegisterService $cashRegisterService;
     private StockRepository $stockRepo;
     private OrderRepository $orderRepo;
+    private OrderItemRepository $itemRepo;
     private TableRepository $tableRepo;
 
     public function __construct(
@@ -24,12 +26,14 @@ class CreateOrderAction
         CashRegisterService $cashRegisterService,
         StockRepository $stockRepo,
         OrderRepository $orderRepo,
+        OrderItemRepository $itemRepo,
         TableRepository $tableRepo
     ) {
         $this->paymentService = $paymentService;
         $this->cashRegisterService = $cashRegisterService;
         $this->stockRepo = $stockRepo;
         $this->orderRepo = $orderRepo;
+        $this->itemRepo = $itemRepo;
         $this->tableRepo = $tableRepo;
     }
 
@@ -102,7 +106,7 @@ class CreateOrderAction
             }
 
             // Itens com Repo
-            $this->orderRepo->insertItems($orderId, $cart);
+            $this->itemRepo->insert($orderId, $cart);
 
             // Baixa Estoque via Repository
             foreach ($cart as $item) {

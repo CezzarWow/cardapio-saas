@@ -4,6 +4,7 @@ namespace App\Services\Cashier;
 use App\Core\Database;
 use App\Repositories\CashRegisterRepository;
 use App\Repositories\Order\OrderRepository;
+use App\Repositories\Order\OrderPaymentRepository;
 use PDO;
 use Exception;
 
@@ -18,15 +19,18 @@ use Exception;
 class CashierDashboardService {
 
     private OrderRepository $orderRepo;
+    private OrderPaymentRepository $paymentRepo;
 
     private CashRegisterRepository $repo;
 
     public function __construct(
         CashRegisterRepository $repo,
-        OrderRepository $orderRepo
+        OrderRepository $orderRepo,
+        OrderPaymentRepository $paymentRepo
     ) {
         $this->repo = $repo;
         $this->orderRepo = $orderRepo;
+        $this->paymentRepo = $paymentRepo;
     }
 
     /**
@@ -41,7 +45,7 @@ class CashierDashboardService {
      * Calcula resumo de vendas por método de pagamento
      */
     public function calculateSalesSummary(int $restaurantId, string $openedAt): array {
-        $vendas = $this->orderRepo->getSalesSummary($restaurantId, $openedAt);
+        $vendas = $this->paymentRepo->getSalesSummary($restaurantId, $openedAt);
         
         $resumo = [
             'total_bruto' => 0,

@@ -4,6 +4,7 @@ namespace App\Services\Pdv;
 use App\Core\Database;
 use App\Repositories\TableRepository;
 use App\Repositories\Order\OrderRepository;
+use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\CategoryRepository;
 use App\Repositories\ProductRepository;
 use App\Repositories\StockRepository;
@@ -17,6 +18,7 @@ class PdvService {
 
     private TableRepository $tableRepo;
     private OrderRepository $orderRepo;
+    private OrderItemRepository $itemRepo;
     private CategoryRepository $catRepo;
     private ProductRepository $prodRepo;
     private StockRepository $stockRepo;
@@ -25,6 +27,7 @@ class PdvService {
     public function __construct(
         TableRepository $tableRepo,
         OrderRepository $orderRepo,
+        OrderItemRepository $itemRepo,
         CategoryRepository $catRepo,
         ProductRepository $prodRepo,
         StockRepository $stockRepo,
@@ -32,6 +35,7 @@ class PdvService {
     ) {
         $this->tableRepo = $tableRepo;
         $this->orderRepo = $orderRepo;
+        $this->itemRepo = $itemRepo;
         $this->catRepo = $catRepo;
         $this->prodRepo = $prodRepo;
         $this->stockRepo = $stockRepo;
@@ -52,7 +56,7 @@ class PdvService {
 
             if ($mesaDados && $mesaDados['status'] == 'ocupada' && $mesaDados['current_order_id']) {
                 $contaAberta = $this->orderRepo->find($mesaDados['current_order_id']);
-                $itensJaPedidos = $this->orderRepo->findItems($mesaDados['current_order_id']);
+                $itensJaPedidos = $this->itemRepo->findAll($mesaDados['current_order_id']);
                 
                 // Recálculo do total real
                 if ($contaAberta) {
@@ -87,7 +91,7 @@ class PdvService {
                     // Adicionar metodo no OrderRepository seems best.
                 }
 
-                $itensJaPedidos = $this->orderRepo->findItems($orderId);
+                $itensJaPedidos = $this->itemRepo->findAll($orderId);
                 $contaAberta['total'] = $this->calculateTotal($itensJaPedidos);
                 $isComanda = true;
             }
@@ -134,7 +138,7 @@ class PdvService {
 
             // 2. Restaura Itens
             $orderId = $backup['order']['id'];
-            $this->orderRepo->insertItems($orderId, $backup['items']);
+            $this->itemRepo->insert($orderId, $backup['items']);
             
             // 3. Restaura Estoque (Decrementa pois está restaurando a venda)
             foreach ($backup['items'] as $item) {

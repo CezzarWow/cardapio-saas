@@ -3,6 +3,8 @@ namespace App\Services\Cashier;
 
 use App\Core\Database;
 use App\Repositories\Order\OrderRepository;
+use App\Repositories\Order\OrderItemRepository;
+use App\Repositories\Order\OrderPaymentRepository;
 use App\Repositories\TableRepository;
 use App\Repositories\StockRepository;
 use App\Repositories\CashRegisterRepository;
@@ -16,17 +18,23 @@ use PDO;
 class CashierTransactionService {
 
     private OrderRepository $orderRepo;
+    private OrderItemRepository $itemRepo;
+    private OrderPaymentRepository $paymentRepo;
     private TableRepository $tableRepo;
     private StockRepository $stockRepo;
     private CashRegisterRepository $cashRepo;
 
     public function __construct(
         OrderRepository $orderRepo,
+        OrderItemRepository $itemRepo,
+        OrderPaymentRepository $paymentRepo,
         TableRepository $tableRepo,
         StockRepository $stockRepo,
         CashRegisterRepository $cashRepo
     ) {
         $this->orderRepo = $orderRepo;
+        $this->itemRepo = $itemRepo;
+        $this->paymentRepo = $paymentRepo;
         $this->tableRepo = $tableRepo;
         $this->stockRepo = $stockRepo;
         $this->cashRepo = $cashRepo;
@@ -63,7 +71,7 @@ class CashierTransactionService {
 
             if ($order) {
                 // 3. Reverte Estoque
-                $items = $this->orderRepo->findItems($orderId);
+                $items = $this->itemRepo->findAll($orderId);
 
                 foreach ($items as $item) {
                      // Incrementa estoque (Estorno)
@@ -112,7 +120,7 @@ class CashierTransactionService {
         try {
             $conn->beginTransaction();
 
-            $items = $this->orderRepo->findItems($orderId);
+            $items = $this->itemRepo->findAll($orderId);
 
             foreach ($items as $item) {
                  $this->stockRepo->increment($item['product_id'], $item['quantity']);
@@ -140,8 +148,8 @@ class CashierTransactionService {
             }
 
             $this->cashRepo->deleteMovementByOrder($orderId);
-            $this->orderRepo->deleteItems($orderId);
-            $this->orderRepo->deletePayments($orderId); 
+            $this->itemRepo->deleteAll($orderId);
+            $this->paymentRepo->deleteAll($orderId); 
             $this->orderRepo->delete($orderId); 
 
             $conn->commit();

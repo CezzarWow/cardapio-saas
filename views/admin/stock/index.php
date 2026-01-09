@@ -5,7 +5,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 // [FASE 1] Cálculo de indicadores
 $totalProducts = count($products);
 $criticalStock = 0;
-$STOCK_CRITICAL_LIMIT = 5; // Limite definido pelo técnico
+$STOCK_CRITICAL_LIMIT = 5;
 
 foreach ($products as $p) {
     if (intval($p['stock']) <= $STOCK_CRITICAL_LIMIT) {
@@ -13,8 +13,6 @@ foreach ($products as $p) {
     }
 }
 ?>
-
-<!-- stock-v2.css removido - usando stock-consolidated.css global -->
 
 <main class="main-content">
     <?php require __DIR__ . '/../panel/layout/messages.php'; ?>
@@ -32,29 +30,18 @@ foreach ($products as $p) {
         <!-- Sub-abas do Estoque (STICKY) -->
         <div class="sticky-tabs">
             <div class="stock-tabs">
-                <a href="<?= BASE_URL ?>/admin/loja/produtos" class="stock-tab active">
-                    Produtos
-                </a>
-                <a href="<?= BASE_URL ?>/admin/loja/categorias" class="stock-tab">
-                    Categorias
-                </a>
-                <a href="<?= BASE_URL ?>/admin/loja/adicionais" class="stock-tab">
-                    Adicionais
-                </a>
-                <a href="<?= BASE_URL ?>/admin/loja/reposicao" class="stock-tab">
-                    Reposição
-                </a>
-                <a href="<?= BASE_URL ?>/admin/loja/movimentacoes" class="stock-tab">
-                    Movimentações
-                </a>
+                <a href="<?= BASE_URL ?>/admin/loja/produtos" class="stock-tab active">Produtos</a>
+                <a href="<?= BASE_URL ?>/admin/loja/categorias" class="stock-tab">Categorias</a>
+                <a href="<?= BASE_URL ?>/admin/loja/adicionais" class="stock-tab">Adicionais</a>
+                <a href="<?= BASE_URL ?>/admin/loja/reposicao" class="stock-tab">Reposição</a>
+                <a href="<?= BASE_URL ?>/admin/loja/movimentacoes" class="stock-tab">Movimentações</a>
             </div>
         </div>
 
-        <!-- Busca + Indicadores na mesma linha -->
+        <!-- Busca + Indicadores -->
         <div class="stock-search-container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <input type="text" id="searchProduct" placeholder="🔍 Buscar produto por nome..." 
-                   class="stock-search-input" style="width: 100%; max-width: 350px;"
-                   oninput="filterProducts()">
+                   class="stock-search-input" style="width: 100%; max-width: 350px;">
             
             <div style="display: flex; gap: 20px; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -79,12 +66,10 @@ foreach ($products as $p) {
             </div>
         </div>
 
-        <!-- Chips de Categorias (usando $categories do controller) -->
+        <!-- Chips de Categorias -->
         <div class="category-chips-container">
             <div class="category-chips">
-                <button class="category-chip active" data-category="">
-                    📂 Todas
-                </button>
+                <button class="category-chip active" data-category="">📂 Todas</button>
                 <?php foreach ($categories as $cat): ?>
                     <?php if (!in_array($cat['category_type'] ?? 'default', ['featured', 'combos'])): ?>
                         <button class="category-chip" data-category="<?= htmlspecialchars($cat['name']) ?>">
@@ -113,8 +98,7 @@ foreach ($products as $p) {
                      data-name="<?= strtolower($prod['name']) ?>" 
                      data-category="<?= htmlspecialchars($prod['category_name']) ?>">
                     
-                    <!-- Imagem (altura reduzida) -->
-                    <!-- Imagem (altura reduzida) -->
+                    <!-- Imagem -->
                     <?php if($prod['image']): ?>
                         <img src="<?= BASE_URL ?>/uploads/<?= $prod['image'] ?>" loading="lazy" 
                              style="width: 100%; height: 140px; object-fit: cover; border-radius: 12px 12px 0 0;"
@@ -123,7 +107,6 @@ foreach ($products as $p) {
                         <div style="width: 100%; height: 140px; background: #eff6ff; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                             <?php 
                                 $icon = $prod['icon'] ?? '📦';
-                                // Se for ícone antigo (texto), usa lucide, senão é emoji
                                 if (preg_match('/^[a-z-]+$/', $icon) && strlen($icon) > 4): 
                             ?>
                                 <i data-lucide="<?= $icon ?>" style="width: 64px; height: 64px; color: #3b82f6;"></i>
@@ -148,7 +131,7 @@ foreach ($products as $p) {
                         </div>
                     </div>
                     
-                    <!-- Ações (Apenas Atalho) -->
+                    <!-- Ações -->
                     <div class="stock-product-card-actions">
                         <a href="<?= BASE_URL ?>/admin/loja/reposicao" class="btn-edit" style="width: 100%; justify-content: center; background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd;">
                             <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
@@ -162,45 +145,6 @@ foreach ($products as $p) {
 
     </div>
 </main>
-
-<!-- Script de Filtro UNIFICADO (busca + chips) -->
-<script>
-// Variável para armazenar a categoria selecionada
-let selectedCategory = '';
-
-// Função unificada de filtro
-function filterProducts() {
-    const search = document.getElementById('searchProduct').value.toLowerCase();
-    const rows = document.querySelectorAll('.product-row');
-    
-    rows.forEach(row => {
-        const name = row.dataset.name;
-        const cat = row.dataset.category;
-        
-        const matchName = name.includes(search);
-        const matchCategory = !selectedCategory || cat === selectedCategory;
-        
-        row.style.display = (matchName && matchCategory) ? '' : 'none';
-    });
-}
-
-
-// Event listeners para chips de categoria
-document.querySelectorAll('.category-chip').forEach(chip => {
-    chip.addEventListener('click', function() {
-        // Remove active de todos
-        document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
-        // Adiciona no clicado
-        this.classList.add('active');
-        
-        // Atualiza categoria selecionada
-        selectedCategory = this.dataset.category;
-        
-        // Aplica filtro
-        filterProducts();
-    });
-});
-</script>
 
 <!-- Modal de Confirmação de Exclusão -->
 <div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
@@ -223,20 +167,8 @@ document.querySelectorAll('.category-chip').forEach(chip => {
     </div>
 </div>
 
-<script>
-function openDeleteModal(productId, productName) {
-    document.getElementById('deleteProductName').textContent = productName;
-    document.getElementById('deleteConfirmBtn').href = '<?= BASE_URL ?>/admin/loja/produtos/deletar?id=' + productId;
-    document.getElementById('deleteModal').style.display = 'flex';
-}
-
-function closeDeleteModal() {
-    document.getElementById('deleteModal').style.display = 'none';
-}
-
-document.getElementById('deleteModal').addEventListener('click', function(e) {
-    if (e.target === this) closeDeleteModal();
-});
-</script>
+<!-- JavaScript externo -->
+<script>const BASE_URL = '<?= BASE_URL ?>';</script>
+<script src="<?= BASE_URL ?>/js/admin/stock.js"></script>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>

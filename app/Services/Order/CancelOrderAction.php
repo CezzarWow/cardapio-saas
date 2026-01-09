@@ -5,6 +5,7 @@ namespace App\Services\Order;
 use App\Core\Database;
 use App\Services\StockService;
 use App\Repositories\Order\OrderRepository;
+use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\TableRepository;
 use PDO;
 use Exception;
@@ -13,15 +14,18 @@ class CancelOrderAction
 {
     private StockService $stockService;
     private OrderRepository $orderRepo;
+    private OrderItemRepository $itemRepo;
     private TableRepository $tableRepo;
 
     public function __construct(
         StockService $stockService,
         OrderRepository $orderRepo,
+        OrderItemRepository $itemRepo,
         TableRepository $tableRepo
     ) {
         $this->stockService = $stockService;
         $this->orderRepo = $orderRepo;
+        $this->itemRepo = $itemRepo;
         $this->tableRepo = $tableRepo;
     }
 
@@ -32,7 +36,7 @@ class CancelOrderAction
         try {
             $conn->beginTransaction();
 
-            $items = $this->orderRepo->findItems($orderId);
+            $items = $this->itemRepo->findAll($orderId);
 
             foreach ($items as $item) {
                 // StockService ainda precisa de connection para Transaction?
@@ -40,7 +44,7 @@ class CancelOrderAction
                 $this->stockService->increment($conn, $item['product_id'], $item['quantity']);
             }
 
-            $this->orderRepo->deleteItems($orderId);
+            $this->itemRepo->deleteAll($orderId);
             $this->orderRepo->delete($orderId);
 
             if ($tableId) {

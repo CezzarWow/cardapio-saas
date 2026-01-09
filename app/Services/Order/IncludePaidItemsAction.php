@@ -7,6 +7,7 @@ use App\Services\PaymentService;
 use App\Services\CashRegisterService;
 use App\Repositories\StockRepository;
 use App\Repositories\Order\OrderRepository;
+use App\Repositories\Order\OrderItemRepository;
 use Exception;
 
 class IncludePaidItemsAction
@@ -15,17 +16,20 @@ class IncludePaidItemsAction
     private CashRegisterService $cashRegisterService;
     private StockRepository $stockRepo;
     private OrderRepository $orderRepo;
+    private OrderItemRepository $itemRepo;
 
     public function __construct(
         PaymentService $paymentService,
         CashRegisterService $cashRegisterService,
         StockRepository $stockRepo,
-        OrderRepository $orderRepo
+        OrderRepository $orderRepo,
+        OrderItemRepository $itemRepo
     ) {
         $this->paymentService = $paymentService;
         $this->cashRegisterService = $cashRegisterService;
         $this->stockRepo = $stockRepo;
         $this->orderRepo = $orderRepo;
+        $this->itemRepo = $itemRepo;
     }
 
     public function execute(int $orderId, array $cart, array $payments, int $restaurantId): float
@@ -46,7 +50,7 @@ class IncludePaidItemsAction
                 $itemTotal = $qty * $price;
                 $newTotal += $itemTotal;
                 
-                $this->orderRepo->addItem($orderId, [
+                $this->itemRepo->add($orderId, [
                     'product_id' => $item['id'],
                     'qty' => $qty,
                     'price' => $price,

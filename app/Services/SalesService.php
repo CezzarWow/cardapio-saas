@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\Order\OrderRepository;
+use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\TableRepository;
 use App\Repositories\StockRepository;
 use App\Services\CashRegisterService;
@@ -17,17 +18,20 @@ use Exception;
 class SalesService
 {
     private OrderRepository $orderRepo;
+    private OrderItemRepository $itemRepo;
     private TableRepository $tableRepo;
     private StockRepository $stockRepo;
     private CashRegisterService $cashService;
 
     public function __construct(
         OrderRepository $orderRepo,
+        OrderItemRepository $itemRepo,
         TableRepository $tableRepo,
         StockRepository $stockRepo,
         CashRegisterService $cashService
     ) {
         $this->orderRepo = $orderRepo;
+        $this->itemRepo = $itemRepo;
         $this->tableRepo = $tableRepo;
         $this->stockRepo = $stockRepo;
         $this->cashService = $cashService;
@@ -46,7 +50,7 @@ class SalesService
      */
     public function getOrderItems(int $orderId): array
     {
-        return $this->orderRepo->findItems($orderId);
+        return $this->itemRepo->findAll($orderId);
     }
 
     /**
@@ -69,7 +73,7 @@ class SalesService
             }
 
             // 2. Devolve Estoque
-            $items = $this->orderRepo->findItems($orderId);
+            $items = $this->itemRepo->findAll($orderId);
 
             foreach ($items as $item) {
                 // StockService uses increment/decrement. StockRepo uses increment.

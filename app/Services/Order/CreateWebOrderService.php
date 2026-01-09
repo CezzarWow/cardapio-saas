@@ -5,6 +5,7 @@ namespace App\Services\Order;
 use App\Core\Database;
 use App\Repositories\ClientRepository;
 use App\Repositories\Order\OrderRepository;
+use App\Repositories\Order\OrderItemRepository;
 
 /**
  * Service para criar pedidos via Cardápio Web
@@ -14,6 +15,7 @@ class CreateWebOrderService
 {
     private ClientRepository $clientRepository;
     private OrderRepository $orderRepository;
+    private OrderItemRepository $itemRepository;
 
     /**
      * Mapeamento de tipos de pedido (frontend → banco)
@@ -28,10 +30,12 @@ class CreateWebOrderService
 
     public function __construct(
         ClientRepository $clientRepository,
-        OrderRepository $orderRepository
+        OrderRepository $orderRepository,
+        OrderItemRepository $itemRepository
     ) {
         $this->clientRepository = $clientRepository;
         $this->orderRepository = $orderRepository;
+        $this->itemRepository = $itemRepository;
     }
 
     /**
@@ -89,7 +93,7 @@ class CreateWebOrderService
             ]);
 
             // 6. Inserir itens
-            $this->orderRepository->insertItems($orderId, $calculatedItems);
+            $this->itemRepository->insert($orderId, $calculatedItems);
 
             $conn->commit();
 

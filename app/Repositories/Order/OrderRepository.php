@@ -7,6 +7,10 @@ use PDO;
 
 /**
  * Repository para Pedidos (API)
+ * 
+ * Responsável exclusivamente pela tabela `orders`.
+ * Para itens de pedido, use OrderItemRepository.
+ * Para pagamentos de pedido, use OrderPaymentRepository.
  */
 class OrderRepository
 {
@@ -103,6 +107,25 @@ class OrderRepository
     }
 
     /**
+     * Busca todos os pedidos com detalhes (para listagem)
+     */
+    public function findAllWithDetails(int $restaurantId): array
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare("
+            SELECT o.*, 
+                   COALESCE(SUM(oi.quantity * oi.price), 0) as calculated_total
+            FROM orders o
+            LEFT JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.restaurant_id = :rid
+            GROUP BY o.id
+            ORDER BY o.created_at DESC
+        ");
+        $stmt->execute(['rid' => $restaurantId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Atualiza status do pedido
      */
     public function updateStatus(int $id, string $status): void
@@ -142,93 +165,6 @@ class OrderRepository
              ->execute(['total' => $total, 'id' => $id]);
     }
 
-
-    /**
-     * Busca itens do pedido
-     */
-    public function findItems(int $orderId): array
-    {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT product_id, quantity, price, id, name FROM order_items WHERE order_id = :oid");
-        $stmt->execute(['oid' => $orderId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    /**
-     * Busca item específico
-     */
-    public function findItem(int $itemId, int $orderId): ?array
-    {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT product_id, quantity, price FROM order_items WHERE id = :id AND order_id = :oid");
-        $stmt->execute(['id' => $itemId, 'oid' => $orderId]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    }
-
-    /**
-     * Insere itens do pedido
-     */
-    public function insertItems(int $orderId, array $items): void
-    {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, name, quantity, price) VALUES (:oid, :pid, :name, :qty, :price)");
-        
-        foreach ($items as $item) {
-            $stmt->execute([
-                'oid' => $orderId,
-                'pid' => $item['product_id'] ?? ($item['id'] ?? null), // Aceita id ou product_id
-                'name' => $item['name'] ?? 'Produto',
-                'qty' => $item['quantity'] ?? 1,
-                'price' => $item['price']
-            ]);
-        }
-    }
-
-    /**
-     * Adiciona um item unitário
-     */
-    public function addItem(int $orderId, array $item): void
-    {
-        $this->insertItems($orderId, [$item]);
-    }
-
-    /**
-     * Atualiza quantidade de item
-     */
-    public function updateItemQuantity(int $itemId, int $quantity): void
-    {
-        $conn = Database::connect();
-        $conn->prepare("UPDATE order_items SET quantity = :qty WHERE id = :id")
-             ->execute(['qty' => $quantity, 'id' => $itemId]);
-    }
-
-    /**
-     * Deleta itens do pedido
-     */
-    public function deleteItems(int $orderId): void
-    {
-        $conn = Database::connect();
-        $conn->prepare("DELETE FROM order_items WHERE order_id = :oid")->execute(['oid' => $orderId]);
-    }
-
-    /**
-     * Deleta um item específico
-     */
-    public function deleteItem(int $itemId): void
-    {
-        $conn = Database::connect();
-        $conn->prepare("DELETE FROM order_items WHERE id = :id")->execute(['id' => $itemId]);
-    }
-
-    /**
-     * Deleta pagamentos do pedido
-     */
-    public function deletePayments(int $orderId): void
-    {
-        $conn = Database::connect();
-        $conn->prepare("DELETE FROM order_payments WHERE order_id = :oid")->execute(['oid' => $orderId]);
-    }
-
     /**
      * Deleta pedido
      */
@@ -239,36 +175,11 @@ class OrderRepository
     }
 
     /**
-     * Retorna resumo de vendas por método (para fechamento de caixa)
-     */
-    public function getSalesSummary(int $restaurantId, string $openedAt): array
-    {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("
-            SELECT op.method, SUM(op.amount) as total 
-            FROM order_payments op
-            INNER JOIN orders o ON o.id = op.order_id
-            WHERE o.restaurant_id = :rid 
-            AND o.created_at >= :opened_at 
-            AND o.status = 'concluido'
-            GROUP BY op.method
-        ");
-        $stmt->execute(['rid' => $restaurantId, 'opened_at' => $openedAt]);
-        return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-    }
-
-    /**
      * Busca pedidos de clientes em aberto (não vinculados a mesas)
-     * Ex: Delivery ou Comanda Avulsa
      */
     public function findOpenClientOrders(int $restaurantId): array
     {
         $conn = Database::connect();
-        // Busca pedidos que NÃO estão 'cancelado' ou 'finalizado'
-        // E idealmente que não estejam vinculados a uma mesa ativa (embora a lógica de mesa use current_order_id)
-        // Aqui assumimos que 'open clients' são pedidos sem mesa vinculada na tabela de mesas?
-        // OU simplesmente pedidos do tipo 'delivery'/'balcao' que estão abertos.
-        // Vamos focar em orders.status != concluidos/cancelados
         
         $sql = "
             SELECT o.*, c.name as client_name, c.phone as client_phone 

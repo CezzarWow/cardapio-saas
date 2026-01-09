@@ -21,8 +21,14 @@ class RepositoryProvider implements Provider
         $container->singleton(\App\Repositories\TableRepository::class, fn() => new \App\Repositories\TableRepository());
         $container->singleton(\App\Repositories\ClientRepository::class, fn() => new \App\Repositories\ClientRepository());
         $container->singleton(\App\Repositories\Order\OrderRepository::class, fn() => new \App\Repositories\Order\OrderRepository());
+        $container->singleton(\App\Repositories\Order\OrderItemRepository::class, fn() => new \App\Repositories\Order\OrderItemRepository());
+        $container->singleton(\App\Repositories\Order\OrderPaymentRepository::class, fn() => new \App\Repositories\Order\OrderPaymentRepository());
         $container->singleton(\App\Repositories\CashRegisterRepository::class, fn() => new \App\Repositories\CashRegisterRepository());
-        $container->singleton(\App\Repositories\Delivery\DeliveryOrderRepository::class, fn() => new \App\Repositories\Delivery\DeliveryOrderRepository());
+        $container->singleton(\App\Repositories\Delivery\DeliveryOrderRepository::class, function($c) {
+            return new \App\Repositories\Delivery\DeliveryOrderRepository(
+                $c->get(\App\Repositories\Order\OrderItemRepository::class)
+            );
+        });
         $container->singleton(\App\Repositories\ComboRepository::class, fn() => new \App\Repositories\ComboRepository());
 
         // Additional Repos

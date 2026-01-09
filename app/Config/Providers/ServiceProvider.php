@@ -81,11 +81,22 @@ class ServiceProvider implements Provider
             );
         });
 
+        $container->singleton(\App\Services\SalesService::class, function($c) {
+            return new \App\Services\SalesService(
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
+                $c->get(\App\Repositories\TableRepository::class),
+                $c->get(\App\Repositories\StockRepository::class),
+                $c->get(\App\Services\CashRegisterService::class)
+            );
+        });
+
         // --- SERVICES (Batch 4) ---
         $container->singleton(\App\Services\Pdv\PdvService::class, function($c) {
             return new \App\Services\Pdv\PdvService(
                 $c->get(\App\Repositories\TableRepository::class),
                 $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
                 $c->get(CategoryRepository::class),
                 $c->get(ProductRepository::class),
                 $c->get(\App\Repositories\StockRepository::class),
@@ -96,13 +107,16 @@ class ServiceProvider implements Provider
         $container->singleton(\App\Services\Cashier\CashierDashboardService::class, function($c) {
             return new \App\Services\Cashier\CashierDashboardService(
                 $c->get(\App\Repositories\CashRegisterRepository::class),
-                $c->get(\App\Repositories\Order\OrderRepository::class)
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderPaymentRepository::class)
             );
         });
 
         $container->singleton(\App\Services\Cashier\CashierTransactionService::class, function($c) {
             return new \App\Services\Cashier\CashierTransactionService(
                 $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
+                $c->get(\App\Repositories\Order\OrderPaymentRepository::class),
                 $c->get(\App\Repositories\TableRepository::class),
                 $c->get(\App\Repositories\StockRepository::class),
                 $c->get(\App\Repositories\CashRegisterRepository::class)
@@ -153,7 +167,8 @@ class ServiceProvider implements Provider
         $container->singleton(\App\Services\Order\CreateWebOrderService::class, function($c) {
             return new \App\Services\Order\CreateWebOrderService(
                 $c->get(\App\Repositories\ClientRepository::class),
-                $c->get(\App\Repositories\Order\OrderRepository::class)
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class)
             );
         });
 
@@ -170,6 +185,7 @@ class ServiceProvider implements Provider
                 $c->get(\App\Services\CashRegisterService::class),
                 $c->get(\App\Repositories\StockRepository::class),
                 $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
                 $c->get(\App\Repositories\TableRepository::class)
             );
         });
@@ -202,6 +218,7 @@ class ServiceProvider implements Provider
             return new \App\Services\Order\CancelOrderAction(
                 $c->get(\App\Services\Stock\StockService::class),
                 $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
                 $c->get(\App\Repositories\TableRepository::class)
             );
         });
@@ -211,7 +228,8 @@ class ServiceProvider implements Provider
                 $c->get(\App\Services\PaymentService::class),
                 $c->get(\App\Services\CashRegisterService::class),
                 $c->get(\App\Repositories\StockRepository::class),
-                $c->get(\App\Repositories\Order\OrderRepository::class)
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class)
             );
         });
 
