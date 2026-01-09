@@ -27,6 +27,7 @@ const CheckoutService = {
             const response = await fetch(url, {
                 method: 'POST',
                 headers: this._headers(),
+                credentials: 'same-origin', // Garante envio de cookies
                 body: JSON.stringify(payload)
             });
             return await response.json();

@@ -16,6 +16,11 @@
             <button id="btn-undo-clear" class="btn-icon" onclick="PDVCart.undoClear()" title="Desfazer Limpeza" style="display: none; color: #2563eb; background: #eff6ff; border-color: #bfdbfe;">
                 <i data-lucide="rotate-ccw"></i>
             </button>
+            <?php if (!empty($contaAberta['id'])): ?>
+            <button class="btn-icon" onclick="openFichaModal()" title="Ver Ficha do Cliente" style="color: #2563eb; background: #eff6ff; border-color: #bfdbfe;">
+                <i data-lucide="clipboard-list"></i>
+            </button>
+            <?php endif; ?>
             <button class="btn-icon" onclick="clearCart()" title="Limpar Carrinho"><i data-lucide="trash-2"></i></button>
         </div>
     </div>
@@ -34,7 +39,7 @@
                 <span><?= $mesa_id ? 'Já na Mesa' : 'Já na Comanda' ?></span>
                 <span>Total: R$ <?= number_format($contaAberta['total'], 2, ',', '.') ?></span>
             </h3>
-            <div style="max-height: 250px; overflow-y: auto;">
+            <div style="max-height: 150px; overflow-y: auto;">
                 <?php foreach ($itensJaPedidos as $itemAntigo): ?>
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #9a3412; margin-bottom: 4px;">
                         <span><?= $itemAntigo['quantity'] ?>x <?= $itemAntigo['name'] ?></span>
@@ -118,10 +123,14 @@
         <!-- Botões de Ação -->
         <div style="display: flex; gap: 10px; margin-top: 20px;">
             
-            <!-- 1. Botão SALVAR COMANDA (Sem pagar) -->
+            <!-- 1. Botão SALVAR COMANDA/MESA (Sem pagar) -->
             <?php if (!empty($showSaveCommand)): ?>
+            <?php 
+                // Botão aparece se: mesa selecionada OU comanda existente
+                $showSaveBtn = !empty($mesa_id) || !empty($contaAberta['id']);
+            ?>
             <button id="btn-save-command" onclick="saveClientOrder()" 
-                    style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: <?= empty($contaAberta['id']) ? 'none' : 'flex' ?>; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
+                    style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: <?= $showSaveBtn ? 'flex' : 'none' ?>; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                 Salvar
             </button>
             <?php endif; ?>
@@ -146,7 +155,7 @@
             <?php if (!empty($showCloseTable)): ?>
                 <button onclick="fecharContaMesa(<?= $mesa_id ?>)" 
                         style="flex: 1; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
-                    Finalizar Mesa
+                    Finalizar
                 </button>
             <?php endif; ?>
 
@@ -168,3 +177,97 @@
         </div>
     </div>
 </aside>
+
+<?php if (!empty($contaAberta['id'])): ?>
+<!-- Modal de Ficha do Cliente -->
+<div id="fichaModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div id="fichaContent" style="background: white; border-radius: 16px; width: 95%; max-width: 500px; max-height: 90vh; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 1.5rem; color: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">
+                    <i data-lucide="receipt" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;"></i>
+                    Ficha <?= $mesa_id ? 'Mesa ' . $mesa_numero : 'Cliente' ?>
+                </h2>
+                <button onclick="closeFichaModal()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.5rem; line-height: 1;">&times;</button>
+            </div>
+            <p style="font-size: 0.9rem; opacity: 0.9; margin-top: 5px;">Consumo atual • <?= date('d/m/Y H:i') ?></p>
+        </div>
+        
+        <!-- Itens -->
+        <div style="padding: 1.5rem; max-height: 55vh; overflow-y: auto;">
+            <?php if (!empty($itensJaPedidos)): ?>
+                <?php foreach ($itensJaPedidos as $item): ?>
+                    <div style="padding: 12px 0; border-bottom: 1px solid #f3f4f6;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; color: #111827; font-size: 1rem;">
+                                    <?= $item['quantity'] ?>x <?= $item['name'] ?>
+                                </div>
+                                <?php 
+                                // Mostrar adicionais se existirem
+                                if (!empty($item['extras'])): 
+                                    $extras = is_string($item['extras']) ? json_decode($item['extras'], true) : $item['extras'];
+                                    if (!empty($extras)):
+                                ?>
+                                    <div style="margin-top: 4px; padding-left: 12px; border-left: 2px solid #d1d5db;">
+                                        <?php foreach ($extras as $extra): ?>
+                                            <div style="font-size: 0.85rem; color: #6b7280;">
+                                                + <?= $extra['name'] ?? $extra ?> 
+                                                <?php if (!empty($extra['price'])): ?>
+                                                    <span style="color: #2563eb;">(+R$ <?= number_format($extra['price'], 2, ',', '.') ?>)</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; endif; ?>
+                                
+                                <?php if (!empty($item['observation'])): ?>
+                                    <div style="font-size: 0.8rem; color: #9ca3af; font-style: italic; margin-top: 4px;">
+                                        📝 <?= $item['observation'] ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div style="text-align: right; min-width: 80px;">
+                                <span style="font-weight: 800; color: #2563eb; font-size: 1.1rem;">
+                                    R$ <?= number_format($item['price'] * $item['quantity'], 2, ',', '.') ?>
+                                </span>
+                                <?php if ($item['quantity'] > 1): ?>
+                                    <div style="font-size: 0.75rem; color: #9ca3af;">
+                                        (R$ <?= number_format($item['price'], 2, ',', '.') ?>/un)
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p style="text-align: center; color: #9ca3af; padding: 2rem;">Nenhum item consumido ainda.</p>
+            <?php endif; ?>
+        </div>
+        
+        <!-- Total -->
+        <div style="padding: 1.5rem; background: #eff6ff; border-top: 3px solid #2563eb;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 1.2rem; font-weight: 800; color: #374151; text-transform: uppercase;">TOTAL</span>
+                <span style="font-size: 2rem; font-weight: 900; color: #2563eb;">
+                    R$ <?= number_format($contaAberta['total'] ?? 0, 2, ',', '.') ?>
+                </span>
+            </div>
+        </div>
+        
+        <!-- Botões -->
+        <div style="padding: 1rem 1.5rem; background: #f9fafb; display: flex; gap: 10px;">
+            <button onclick="printFicha()" 
+                    style="flex: 1; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i data-lucide="printer" style="width: 20px; height: 20px;"></i> Imprimir
+            </button>
+            <button onclick="closeFichaModal()" 
+                    style="flex: 1; padding: 14px; background: #6b7280; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 1rem;">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+

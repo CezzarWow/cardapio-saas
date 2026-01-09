@@ -9,6 +9,7 @@ use App\Services\Order\RemoveItemAction;
 use App\Services\Order\CancelOrderAction;
 use App\Services\Order\IncludePaidItemsAction;
 use App\Services\Order\DeliverOrderAction;
+use App\Services\Order\CreateDeliveryLinkedAction;
 
 /**
  * Facade para as Ações de Pedido
@@ -25,6 +26,7 @@ class OrderOrchestratorService
     private $cancelOrderAction;
     private $includePaidItemsAction;
     private $deliverOrderAction;
+    private $createDeliveryLinkedAction;
 
     public function __construct(
         CreateOrderAction $createOrderAction,
@@ -33,7 +35,8 @@ class OrderOrchestratorService
         RemoveItemAction $removeItemAction,
         CancelOrderAction $cancelOrderAction,
         IncludePaidItemsAction $includePaidItemsAction,
-        DeliverOrderAction $deliverOrderAction
+        DeliverOrderAction $deliverOrderAction,
+        CreateDeliveryLinkedAction $createDeliveryLinkedAction
     ) {
         $this->createOrderAction = $createOrderAction;
         $this->closeTableAction = $closeTableAction;
@@ -42,10 +45,14 @@ class OrderOrchestratorService
         $this->cancelOrderAction = $cancelOrderAction;
         $this->includePaidItemsAction = $includePaidItemsAction;
         $this->deliverOrderAction = $deliverOrderAction;
+        $this->createDeliveryLinkedAction = $createDeliveryLinkedAction;
     }
 
     public function createOrder(int $restaurantId, int $userId, array $data): int
     {
+        if (!empty($data['link_to_table']) && !empty($data['table_id'])) {
+            return $this->createDeliveryLinkedAction->execute($restaurantId, $userId, $data);
+        }
         return $this->createOrderAction->execute($restaurantId, $userId, $data);
     }
 

@@ -57,4 +57,36 @@ class TableRepository
         $stmt->execute(['rid' => $restaurantId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Busca mesa pelo número
+     */
+    public function findByNumber(int $restaurantId, string $number): ?array
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare("SELECT * FROM tables WHERE restaurant_id = :rid AND number = :num");
+        $stmt->execute(['rid' => $restaurantId, 'num' => $number]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
+
+    /**
+     * Cria nova mesa
+     */
+    public function create(int $restaurantId, string $number): int
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare("INSERT INTO tables (restaurant_id, number, status) VALUES (:rid, :num, 'livre')");
+        $stmt->execute(['rid' => $restaurantId, 'num' => $number]);
+        return (int) $conn->lastInsertId();
+    }
+
+    /**
+     * Deleta mesa por ID
+     */
+    public function delete(int $tableId): void
+    {
+        $conn = Database::connect();
+        $conn->prepare("DELETE FROM tables WHERE id = :id")->execute(['id' => $tableId]);
+    }
 }

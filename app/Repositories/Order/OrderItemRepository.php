@@ -19,7 +19,7 @@ class OrderItemRepository
     {
         $conn = Database::connect();
         $stmt = $conn->prepare("
-            SELECT product_id, quantity, price, id, name 
+            SELECT product_id, quantity, price, id, name, extras, observation 
             FROM order_items 
             WHERE order_id = :oid
         ");
@@ -43,23 +43,63 @@ class OrderItemRepository
     }
 
     /**
-     * Insere múltiplos itens em um pedido
+     * Insere múltiplos itens em um pedido (agrupa itens duplicados)
      */
     public function insert(int $orderId, array $items): void
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("
-            INSERT INTO order_items (order_id, product_id, name, quantity, price) 
-            VALUES (:oid, :pid, :name, :qty, :price)
+        
+        // Preparar statements
+        $stmtFind = $conn->prepare("
+            SELECT id, quantity FROM order_items 
+            WHERE order_id = :oid AND product_id = :pid
+            LIMIT 1
+        ");
+        
+        $stmtInsert = $conn->prepare("
+            INSERT INTO order_items (order_id, product_id, name, quantity, price, extras, observation) 
+            VALUES (:oid, :pid, :name, :qty, :price, :extras, :obs)
+        ");
+        
+        $stmtUpdate = $conn->prepare("
+            UPDATE order_items SET quantity = :qty WHERE id = :id
         ");
         
         foreach ($items as $item) {
-            $stmt->execute([
+            $productId = $item['product_id'] ?? ($item['id'] ?? null);
+            $quantity = $item['quantity'] ?? 1;
+            
+            // Preparar extras como JSON se for array
+            $extras = $item['extras'] ?? null;
+            if (is_array($extras)) {
+                $extras = json_encode($extras);
+            }
+            
+            // Verificar se item já existe no pedido (sem extras)
+            // Itens com extras são sempre novos (não agrupa)
+            $shouldInsertNew = !empty($extras);
+            
+            if (!$shouldInsertNew) {
+                $stmtFind->execute(['oid' => $orderId, 'pid' => $productId]);
+                $existing = $stmtFind->fetch(PDO::FETCH_ASSOC);
+                
+                if ($existing) {
+                    // Item existe: incrementar quantidade
+                    $newQty = $existing['quantity'] + $quantity;
+                    $stmtUpdate->execute(['qty' => $newQty, 'id' => $existing['id']]);
+                    continue;
+                }
+            }
+            
+            // Item não existe ou tem extras: inserir novo
+            $stmtInsert->execute([
                 'oid' => $orderId,
-                'pid' => $item['product_id'] ?? ($item['id'] ?? null),
+                'pid' => $productId,
                 'name' => $item['name'] ?? 'Produto',
-                'qty' => $item['quantity'] ?? 1,
-                'price' => $item['price']
+                'qty' => $quantity,
+                'price' => $item['price'],
+                'extras' => $extras,
+                'obs' => $item['observation'] ?? null
             ]);
         }
     }

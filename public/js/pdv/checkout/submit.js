@@ -45,6 +45,7 @@ const CheckoutSubmit = {
         // 5. Ajuste de Endpoint baseado no Estado
         const { modo, fechandoConta } = PDVState.getState();
         let isPaidLoop = false;
+        let isMesaClose = false;
 
         if (window.isPaidOrderInclusion && typeof editingPaidOrderId !== 'undefined') {
             payload.order_id = editingPaidOrderId;
@@ -52,6 +53,7 @@ const CheckoutSubmit = {
             isPaidLoop = true;
         } else if (modo === 'mesa' && fechandoConta) {
             endpoint = '/admin/loja/mesa/fechar';
+            isMesaClose = true;
         } else if (modo === 'comanda' && fechandoConta) {
             endpoint = '/admin/loja/venda/fechar-comanda';
             payload.order_id = CheckoutState.closingOrderId;
@@ -60,7 +62,7 @@ const CheckoutSubmit = {
         // 6. Enviar via Service
         try {
             const data = await CheckoutService.sendSaleRequest(endpoint, payload);
-            this._handleSuccess(data, isPaidLoop);
+            this._handleSuccess(data, isPaidLoop, isMesaClose);
         } catch (err) {
             alert(err.message);
         }
@@ -108,7 +110,8 @@ const CheckoutSubmit = {
             client_id: clientId || null,
             table_id: tableId || null,
             order_id: orderId,
-            save_account: true
+            save_account: true,
+            order_type: tableId ? 'mesa' : 'comanda'
         };
 
         try {
@@ -131,10 +134,14 @@ const CheckoutSubmit = {
         const cartItems = this._getCartItems();
         if (!CheckoutValidator.validateCart(cartItems)) return;
 
+        // Verificar se tem mesa selecionada
+        const tableId = document.getElementById('current_table_id')?.value;
+        const hasTable = tableId && tableId !== '' && tableId !== '0';
+
         // Montar Payload
         const payload = {
             cart: cartItems,
-            table_id: null,
+            table_id: hasTable ? parseInt(tableId) : null,
             client_id: document.getElementById('current_client_id')?.value || null,
             payments: [],
             discount: CheckoutState.discountValue || 0,
@@ -145,6 +152,11 @@ const CheckoutSubmit = {
             is_paid: 0,
             payment_method_expected: CheckoutState.selectedMethod || 'dinheiro'
         };
+
+        // Se é Entrega + Mesa, adiciona flag para vincular
+        if (selectedOrderType === 'delivery' && hasTable) {
+            payload.link_to_table = true;
+        }
 
         if (selectedOrderType === 'delivery') {
             const deliveryData = typeof CheckoutEntrega !== 'undefined' ? CheckoutEntrega.getData() : getDeliveryData();
@@ -181,14 +193,15 @@ const CheckoutSubmit = {
         return type;
     },
 
-    _handleSuccess: function (data, isPaidLoop = false) {
+    _handleSuccess: function (data, isPaidLoop = false, isMesaClose = false) {
         if (data.success) {
             CheckoutUI.showSuccessModal();
             PDVCart.clear();
             if (typeof cart !== 'undefined') cart.length = 0;
 
             setTimeout(() => {
-                if (isPaidLoop) {
+                if (isPaidLoop || isMesaClose) {
+                    // Redireciona para página de mesas
                     window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
                 } else {
                     window.location.reload();

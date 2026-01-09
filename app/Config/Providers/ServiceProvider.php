@@ -210,7 +210,8 @@ class ServiceProvider implements Provider
         $container->singleton(\App\Services\Order\RemoveItemAction::class, function($c) {
             return new \App\Services\Order\RemoveItemAction(
                 $c->get(\App\Repositories\StockRepository::class),
-                $c->get(\App\Repositories\Order\OrderRepository::class)
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class)
             );
         });
 
@@ -239,6 +240,14 @@ class ServiceProvider implements Provider
             );
         });
 
+        $container->singleton(\App\Services\Order\CreateDeliveryLinkedAction::class, function($c) {
+            return new \App\Services\Order\CreateDeliveryLinkedAction(
+                $c->get(\App\Services\Order\CreateOrderAction::class),
+                $c->get(\App\Repositories\TableRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class)
+            );
+        });
+
         // --- ORCHESTRATOR SERVICE ---
         $container->singleton(\App\Services\OrderOrchestratorService::class, function($c) {
             return new \App\Services\OrderOrchestratorService(
@@ -248,7 +257,8 @@ class ServiceProvider implements Provider
                 $c->get(\App\Services\Order\RemoveItemAction::class),
                 $c->get(\App\Services\Order\CancelOrderAction::class),
                 $c->get(\App\Services\Order\IncludePaidItemsAction::class),
-                $c->get(\App\Services\Order\DeliverOrderAction::class)
+                $c->get(\App\Services\Order\DeliverOrderAction::class),
+                $c->get(\App\Services\Order\CreateDeliveryLinkedAction::class)
             );
         });
     }

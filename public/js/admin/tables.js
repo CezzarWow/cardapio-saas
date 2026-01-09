@@ -13,41 +13,39 @@
 (function () {
     'use strict';
 
-    const TablesAdmin = {
+    // IMPORTANTE: Estender o objeto existente ao invés de sobrescrever
+    window.TablesAdmin = window.TablesAdmin || {};
+
+    Object.assign(window.TablesAdmin, {
 
         // ==========================================
         // DELEGAÇÃO - CRUD DE MESAS
         // ==========================================
-        openNewTableModal: () => TablesAdmin.Crud.openNewModal(),
-        saveTable: () => TablesAdmin.Crud.save(),
-        openRemoveTableModal: () => TablesAdmin.Crud.openRemoveModal(),
-        removeTable: () => TablesAdmin.Crud.remove(),
-        abrirMesa: (id, numero) => TablesAdmin.Crud.abrir(id, numero),
+        openNewTableModal: () => window.TablesAdmin.Crud.openNewModal(),
+        saveTable: () => window.TablesAdmin.Crud.save(),
+        openRemoveTableModal: () => window.TablesAdmin.Crud.openRemoveModal(),
+        removeTable: () => window.TablesAdmin.Crud.remove(),
+        abrirMesa: (id, numero) => window.TablesAdmin.Crud.abrir(id, numero),
 
         // ==========================================
         // DELEGAÇÃO - CLIENTES (via Wrapper)
         // ==========================================
-        openNewClientModal: (startType) => TablesAdmin.Clients.openModal(startType),
+        openNewClientModal: (startType) => window.TablesAdmin.Clients.openModal(startType),
 
         // ==========================================
         // DELEGAÇÃO - PEDIDOS PAGOS
         // ==========================================
         showPaidOrderOptions: (orderId, clientName, total, clientId) =>
-            TablesAdmin.PaidOrders.showOptions(orderId, clientName, total, clientId),
-        closePaidOrderModal: () => TablesAdmin.PaidOrders.closeModal(),
-        deliverOrder: () => TablesAdmin.PaidOrders.deliver(),
-        editPaidOrder: () => TablesAdmin.PaidOrders.edit(),
+            window.TablesAdmin.PaidOrders.showOptions(orderId, clientName, total, clientId),
+        closePaidOrderModal: () => window.TablesAdmin.PaidOrders.closeModal(),
+        deliverOrder: () => window.TablesAdmin.PaidOrders.deliver(),
+        editPaidOrder: () => window.TablesAdmin.PaidOrders.edit(),
 
         // ==========================================
         // DELEGAÇÃO - DOSSIÊ
         // ==========================================
-        openDossier: (clientId) => TablesAdmin.Dossier.open(clientId)
-    };
-
-    // ==========================================
-    // EXPORTAR GLOBALMENTE
-    // ==========================================
-    window.TablesAdmin = TablesAdmin;
+        openDossier: (clientId) => window.TablesAdmin.Dossier.open(clientId)
+    });
 
     // ==========================================
     // ALIASES DE COMPATIBILIDADE (HTML onclicks)

@@ -55,15 +55,14 @@ class CreateOrderAction
             $orderType = $data['order_type'] ?? 'balcao';
             $tableId = $data['table_id'] ?? null;
             $commandId = $data['command_id'] ?? null;
+            $existingOrderId = $data['order_id'] ?? null;
 
             if ($orderType === 'mesa') {
                 if (!$tableId) throw new Exception('Mesa não identificada');
-                // Lógica de mesa ocupada simplificada (poderia validar no TableRepo)
             }
 
             $totalVenda = 0;
             foreach ($cart as $item) {
-                // TODO: Validar preço unitário no back-end (ProductRepo->find)
                 $totalVenda += $item['price'] * $item['quantity'];
             }
 
@@ -79,7 +78,30 @@ class CreateOrderAction
             $saveAccount = isset($data['save_account']) && $data['save_account'] == true;
             $orderStatus = $saveAccount ? 'aberto' : 'novo';
 
-            // Cria Pedido via Repository
+            // VERIFICAR SE É INCREMENTO DE PEDIDO EXISTENTE
+            if ($existingOrderId && $saveAccount) {
+                // Buscar pedido existente
+                $existingOrder = $this->orderRepo->find($existingOrderId);
+                
+                if ($existingOrder && $existingOrder['status'] === 'aberto') {
+                    // Adicionar itens ao pedido existente
+                    $this->itemRepo->insert($existingOrderId, $cart);
+                    
+                    // Atualizar total do pedido (soma com o existente)
+                    $newTotal = floatval($existingOrder['total']) + $totalVenda;
+                    $this->orderRepo->updateTotal($existingOrderId, $newTotal);
+                    
+                    // Baixa Estoque
+                    foreach ($cart as $item) {
+                        $this->stockRepo->decrement($item['id'], $item['quantity']);
+                    }
+                    
+                    $conn->commit();
+                    return $existingOrderId;
+                }
+            }
+
+            // CRIAR NOVO PEDIDO (comportamento original)
             $orderId = $this->orderRepo->create([
                 'restaurant_id' => $restaurantId,
                 'client_id' => $data['client_id'] ?? null,

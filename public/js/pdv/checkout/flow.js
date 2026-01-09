@@ -71,12 +71,22 @@ const CheckoutFlow = {
         CheckoutState.resetPayments();
 
         const tableTotalStr = document.getElementById('table-initial-total').value;
-        const tableTotal = parseFloat(tableTotalStr);
+        const tableTotal = parseFloat(tableTotalStr) || 0;
+
+        // CORREÇÃO: Atualiza cachedTotal para que getFinalTotal() retorne o valor correto
+        CheckoutState.cachedTotal = tableTotal;
 
         document.getElementById('checkout-total-display').innerText = CheckoutHelpers.formatCurrency(tableTotal);
         document.getElementById('checkoutModal').style.display = 'flex';
         CheckoutPayments.setMethod('dinheiro');
         CheckoutUI.updateCheckoutUI();
+
+        // Preenche o input com o valor a pagar
+        const payInput = document.getElementById('pay-amount');
+        if (payInput) {
+            payInput.value = tableTotal.toFixed(2).replace('.', ',');
+            CheckoutHelpers.formatMoneyInput(payInput);
+        }
     },
 
     /**

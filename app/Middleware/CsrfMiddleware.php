@@ -39,6 +39,24 @@ class CsrfMiddleware
         if (!$token || !hash_equals($_SESSION[self::TOKEN_KEY], $token)) {
             // Invalid CSRF Token
             http_response_code(403);
+            
+            // Detecta se é requisição AJAX/JSON
+            http_response_code(403);
+            
+            // Detecta se é requisição AJAX/JSON
+            $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                      strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+            $wantsJson = strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false;
+            $isJsonRequest = strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false;
+            
+            if ($isAjax || $wantsJson || $isJsonRequest) {
+                header('Content-Type: application/json');
+                die(json_encode([
+                    'success' => false,
+                    'message' => 'Token CSRF inválido ou expirado. Por favor, atualize a página (F5) e tente novamente.'
+                ]));
+            }
+            
             die('Ação não autorizada (Token CSRF Inválido). Atualize a página e tente novamente.');
         }
 
@@ -50,6 +68,10 @@ class CsrfMiddleware
      */
     public static function getToken(): string
     {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         if (empty($_SESSION[self::TOKEN_KEY])) {
             $_SESSION[self::TOKEN_KEY] = bin2hex(random_bytes(32));
         }

@@ -65,7 +65,8 @@ class PdvController extends BaseController {
 
         if ($mesa_id) {
             // Contexto: MESA
-            $showCloseTable = true; 
+            $showCloseTable = true;
+            $showSaveCommand = true; // Permite adicionar mais itens ao pedido existente 
         } elseif (!empty($contaAberta['id'])) {
             // Contexto: COMANDA EXISTENTE
             if ($isEditingPaid) {
