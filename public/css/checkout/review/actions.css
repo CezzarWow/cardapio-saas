@@ -1,0 +1,26 @@
+/**
+ * REVIEW - Ações
+ * Arquivo: public/css/checkout/review/actions.css
+ */
+
+.order-review-remove-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.order-review-remove-btn:hover {
+    background: #fee2e2;
+}
+
+/* Botão Finalizar (azul) */
+.order-finalize-btn {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.4) !important;
+    animation: none !important;
+    /* Bottom position movido para checkout/mobile.css */
+}

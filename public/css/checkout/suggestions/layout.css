@@ -1,0 +1,65 @@
+/**
+ * SUGGESTIONS - Layout e Header
+ * Arquivo: public/css/checkout/suggestions/layout.css
+ */
+
+/* Variáveis Locais */
+.cardapio-suggestions-modal {
+    --send-btn-height: 64px;
+    --send-btn-gap: 12px;
+}
+
+/* Header */
+.cardapio-suggestions-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 20px 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    background: white;
+}
+
+.cardapio-suggestions-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.cardapio-back-btn {
+    width: 36px;
+    height: 36px;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1f2937;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.cardapio-back-btn:hover {
+    background: #e5e7eb;
+}
+
+.cardapio-suggestions-modal .cardapio-modal-body {
+    padding-top: 24px;
+    /* Padding bottom movido para checkout/mobile.css */
+}
+
+/* Seções */
+.suggestion-section {
+    margin-bottom: 24px;
+}
+
+.suggestion-section-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px 0;
+}

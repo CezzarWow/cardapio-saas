@@ -1,0 +1,40 @@
+/**
+ * ============================================
+ * CHECKOUT MOBILE - Hacks e Safe Area
+ * Arquivo: public/css/checkout/mobile.css
+ * Centraliza ajustes específicos para iOS e Mobile de todo o fluxo.
+ * ============================================
+ */
+
+/* 1. REVIEW (Resumo) - Ajustes Safe Area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .order-review-modal .cardapio-modal-body {
+        padding-bottom: calc(140px + env(safe-area-inset-bottom));
+    }
+}
+
+/* Fallback para navegadores antigos */
+.order-review-modal .cardapio-modal-body {
+    padding-bottom: 150px;
+}
+
+/* Botão Finalizar (Review) */
+.order-finalize-btn {
+    bottom: calc(25px + env(safe-area-inset-bottom)) !important;
+}
+
+/* 2. SUGGESTIONS (Upsell) - Ajustes Safe Area */
+.cardapio-suggestions-modal .cardapio-modal-body {
+    padding-bottom: calc(140px + env(safe-area-inset-bottom));
+}
+
+/* Botão Ir para Pagamento (Suggestions) */
+.suggestions-cart-btn {
+    bottom: calc(25px + env(safe-area-inset-bottom)) !important;
+}
+
+/* 3. PAYMENT (Pagamento) - Ajustes Safe Area */
+.payment-modal .cardapio-modal-body {
+    /* ⚠️ IMPORTANTE: Ajuste fino para iOS */
+    padding-bottom: calc(73px + env(safe-area-inset-bottom));
+}

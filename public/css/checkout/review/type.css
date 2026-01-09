@@ -1,0 +1,79 @@
+/**
+ * REVIEW - Tipo de Pedido (Entrega/Retirada)
+ * Arquivo: public/css/checkout/review/type.css
+ */
+
+.order-type-section {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.order-type-option {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.order-type-option:hover {
+    border-color: #d1d5db;
+}
+
+.order-type-option input[type="radio"] {
+    display: none;
+}
+
+.order-type-check {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #d1d5db;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    order: 3;
+}
+
+.order-type-option input[type="radio"]:checked~.order-type-check {
+    border-color: var(--accent-color, #ea580c);
+    background: var(--accent-color, #ea580c);
+}
+
+.order-type-option input[type="radio"]:checked~.order-type-check::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 50%;
+}
+
+.order-type-option:has(input:checked) {
+    border-color: var(--accent-color, #ea580c);
+    background: #fff7ed;
+}
+
+.order-type-icon {
+    font-size: 1.5rem;
+}
+
+.order-type-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-dark, #1f2937);
+}
+
+.order-type-option input[type="radio"]:checked~.order-type-label {
+    font-weight: 700;
+    color: var(--accent-color, #ea580c);
+}

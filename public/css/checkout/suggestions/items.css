@@ -1,0 +1,77 @@
+/**
+ * SUGGESTIONS - Itens (Lista e Cards)
+ * Arquivo: public/css/checkout/suggestions/items.css
+ */
+
+.suggestion-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.suggestion-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.suggestion-item:hover {
+    background: #fafafa;
+}
+
+.suggestion-item-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.suggestion-item-image {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.suggestion-item-image-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+}
+
+.suggestion-item-image-placeholder.sauce {
+    background: #fed7aa;
+    color: var(--accent-color, #ea580c);
+}
+
+.suggestion-item-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.suggestion-item-price {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent-color, #ea580c);
+    margin: 2px 0 0 0;
+}
+
+.suggestion-empty {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.85rem;
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 12px;
+}

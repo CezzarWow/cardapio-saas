@@ -1,0 +1,11 @@
+/**
+ * ============================================
+ * REVIEW CSS - Orquestrador
+ * Arquivo: public/css/checkout/review/index.css
+ * ============================================
+ */
+
+@import 'layout.css';
+@import 'list.css';
+@import 'type.css';
+@import 'actions.css';

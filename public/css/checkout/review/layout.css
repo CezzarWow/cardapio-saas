@@ -1,0 +1,30 @@
+/**
+ * REVIEW - Layout
+ * Arquivo: public/css/checkout/review/layout.css
+ */
+
+.order-review-modal .cardapio-modal-body {
+    padding: 12px;
+    /* Padding bottom com safe-area movido para checkout/mobile.css */
+}
+
+.order-review-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.order-review-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+    text-align: center;
+}
+
+.order-review-empty p {
+    margin: 12px 0 0 0;
+    font-size: 0.9rem;
+}

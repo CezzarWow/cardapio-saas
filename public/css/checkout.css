@@ -5,14 +5,16 @@
  */
 
 /* 1. SUGESTÕES (Upsell, Molhos, Bebidas) */
-@import 'suggestions.css';
+@import 'checkout/suggestions/index.css';
 
 /* 2. RESUMO (Lista de itens, totais) */
-@import 'review.css';
+@import 'checkout/review/index.css';
 
 /* 3. PAGAMENTO (Formulário, troca, finalização) */
 @import 'checkout/payment/index.css';
 
-/* 4. COMPATIBILIDADE (Fixes para Samsung, iOS e telas pequenas) */
-/* Sempre por último para garantir overrides */
+/* 4. COMPATIBILIDADE MOBILE (Safe Area e Fixes centralizados do checkout) */
+@import 'checkout/mobile.css';
+
+/* 5. COMPATIBILIDADE GERAL (Fixes globais) */
 @import 'compatibility.css';

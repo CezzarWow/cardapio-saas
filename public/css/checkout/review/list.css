@@ -1,0 +1,62 @@
+/**
+ * REVIEW - Lista de Itens
+ * Arquivo: public/css/checkout/review/list.css
+ */
+
+.order-review-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.order-review-item-qty {
+    background: var(--accent-color, #ea580c);
+    color: white;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.order-review-item-info {
+    flex: 1;
+}
+
+.order-review-item-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-dark, #1f2937);
+    margin: 0 0 2px 0;
+}
+
+.order-review-item-extras {
+    font-size: 0.75rem;
+    color: var(--accent-color, #ea580c);
+    margin: 0 0 2px 0;
+}
+
+.order-review-item-obs {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-style: italic;
+    margin: 0;
+}
+
+.order-review-item-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.order-review-item-price {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-dark, #1f2937);
+}

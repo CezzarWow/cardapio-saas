@@ -1,0 +1,10 @@
+/**
+ * ============================================
+ * SUGGESTIONS CSS - Orquestrador
+ * Arquivo: public/css/checkout/suggestions/index.css
+ * ============================================
+ */
+
+@import 'layout.css';
+@import 'items.css';
+@import 'actions.css';
