@@ -3,6 +3,7 @@
 namespace App\Repositories\Delivery;
 
 use App\Core\Database;
+use App\Repositories\Order\OrderItemRepository;
 use PDO;
 
 /**
@@ -11,6 +12,13 @@ use PDO;
  */
 class DeliveryOrderRepository
 {
+    private OrderItemRepository $itemRepo;
+
+    public function __construct(OrderItemRepository $itemRepo)
+    {
+        $this->itemRepo = $itemRepo;
+    }
+
     /**
      * Busca pedidos de delivery/pickup/local (para Kanban)
      */
@@ -18,7 +26,6 @@ class DeliveryOrderRepository
     {
         $conn = Database::connect();
         
-        // Query base - busca APENAS delivery e retirada (Local vai para Mesas/Comandas)
         $sql = "
             SELECT o.id, o.total, o.status, o.created_at, o.payment_method, o.order_type, o.is_paid,
                    c.name as client_name, 
@@ -31,11 +38,8 @@ class DeliveryOrderRepository
               AND o.order_type IN ('delivery', 'pickup')
         ";
         
-        $params = [
-            'rid' => $restaurantId
-        ];
+        $params = ['rid' => $restaurantId];
         
-        // Filtro por status (se fornecido)
         $validStatuses = ['novo', 'preparo', 'rota', 'entregue', 'cancelado'];
         if ($statusFilter && in_array($statusFilter, $validStatuses)) {
             $sql .= " AND o.status = :status";
@@ -66,10 +70,8 @@ class DeliveryOrderRepository
     {
         $conn = Database::connect();
         
-        // Calcula o dia da semana (0=Dom, 6=Sáb)
         $dayOfWeek = date('w', strtotime($date));
         
-        // Busca horário de funcionamento do dia
         $stmtHour = $conn->prepare("
             SELECT * FROM business_hours 
             WHERE restaurant_id = :rid AND day_of_week = :day
@@ -77,7 +79,6 @@ class DeliveryOrderRepository
         $stmtHour->execute(['rid' => $restaurantId, 'day' => $dayOfWeek]);
         $businessHour = $stmtHour->fetch(PDO::FETCH_ASSOC);
         
-        // Se não encontrou ou está fechado, retorna vazio
         if (!$businessHour || !$businessHour['is_open']) {
             return [
                 'orders' => [],
@@ -90,10 +91,8 @@ class DeliveryOrderRepository
         $openTime = $businessHour['open_time'];
         $closeTime = $businessHour['close_time'];
         
-        // Monta os timestamps de início e fim
         $periodStart = $date . ' ' . $openTime . ':00';
         
-        // Se fechamento < abertura, fecha no dia seguinte
         if ($closeTime < $openTime) {
             $nextDay = date('Y-m-d', strtotime($date . ' +1 day'));
             $periodEnd = $nextDay . ' ' . $closeTime . ':00';
@@ -101,7 +100,6 @@ class DeliveryOrderRepository
             $periodEnd = $date . ' ' . $closeTime . ':00';
         }
         
-        // Busca pedidos do período
         $sql = "
             SELECT o.id, o.total, o.status, o.created_at, o.payment_method,
                    c.name as client_name, 
@@ -156,7 +154,6 @@ class DeliveryOrderRepository
     {
         $conn = Database::connect();
         
-        // Busca pedido com dados do cliente e restaurante
         $stmt = $conn->prepare("
             SELECT o.*, 
                    c.name as client_name, 
@@ -178,27 +175,10 @@ class DeliveryOrderRepository
             return null;
         }
 
-        // Busca itens do pedido
-        $order['items'] = $this->getItems($id);
+        // Usa OrderItemRepository injetado
+        $order['items'] = $this->itemRepo->findAll($id);
         
         return $order;
-    }
-
-    /**
-     * Busca itens de um pedido
-     */
-    public function getItems(int $orderId): array
-    {
-        $conn = Database::connect();
-        
-        $stmt = $conn->prepare("
-            SELECT name, quantity, price 
-            FROM order_items 
-            WHERE order_id = :oid
-        ");
-        $stmt->execute(['oid' => $orderId]);
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
