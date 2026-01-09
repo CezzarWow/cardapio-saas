@@ -89,9 +89,15 @@
 
 <!-- Scripts Modulares (Refatoração) -->
 <script src="<?= BASE_URL ?>/js/cardapio/utils.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio/modules/cart-state.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio/modules/cart-view.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/cart.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/modals.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/modals-product.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio/modals-product.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio/modules/combo-validator.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio/modules/combo-view.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio/modules/combo-controller.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/modals-combo.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/checkout-order.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/checkout-fields.js?v=<?= time() ?>"></script>

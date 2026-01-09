@@ -1,53 +1,29 @@
 /**
- * PDV CHECKOUT - Submit
- * Envio de pedidos ao servidor
+ * PDV CHECKOUT - Submit (Refatorado)
+ * Controlador de envio de pedidos (Orchestrator)
  * 
- * Dependências: CheckoutState, CheckoutTotals, CheckoutUI, PDVState, PDVCart
+ * Dependências: CheckoutService, CheckoutValidator, CheckoutState, PDVState, PDVCart
  */
 
 const CheckoutSubmit = {
 
-    _getCsrf: function () {
-        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    },
-
     /**
-     * Envia venda finalizada ao servidor
+     * 1. FINALIZAR VENDA (Pagamento Realizado)
      */
-    submitSale: function () {
+    submitSale: async function () {
         const tableId = document.getElementById('current_table_id').value;
         const clientId = document.getElementById('current_client_id').value;
+        const keepOpen = document.getElementById('keep_open_value')?.value === 'true';
 
+        // 1. Obter Carrinho
+        const cartItems = this._getCartItems();
+
+        // 2. Preparar Payload Base
         let endpoint = '/admin/loja/venda/finalizar';
-        const keepOpenStr = document.getElementById('keep_open_value') ? document.getElementById('keep_open_value').value : 'false';
-        const keepOpen = keepOpenStr === 'true';
-
-        // Usa o carrinho global (pdv-core.js) ou PDVCart
-        let cartItems = [];
-        if (typeof cart !== 'undefined' && Array.isArray(cart)) {
-            cartItems = cart;
-        } else if (typeof PDVCart !== 'undefined') {
-            cartItems = PDVCart.items;
-        }
-
-        // Detecta qual tipo de pedido está selecionado
-        const orderTypeCards = document.querySelectorAll('.order-type-card.active');
-        let selectedOrderType = 'balcao'; // Default para venda de balcão (não aparece em Delivery)
-
-        // Só muda o tipo se tiver um card ativo E cliente/mesa selecionado
         const hasClientOrTable = !!(clientId || tableId);
+        const selectedOrderType = this._determineOrderType(hasClientOrTable);
 
-        orderTypeCards.forEach(card => {
-            const label = card.innerText.toLowerCase().trim();
-            if (label.includes('retirada')) selectedOrderType = 'pickup';
-            else if (label.includes('entrega')) selectedOrderType = 'delivery';
-            else if (label.includes('local') && hasClientOrTable) selectedOrderType = 'local';
-            // Se 'local' mas sem cliente/mesa, mantém 'balcao'
-        });
-
-        // Se tem pagamentos registrados, significa que pagou
-        let isPaid = (CheckoutState.currentPayments && CheckoutState.currentPayments.length > 0) ? 1 : 0;
-
+        // 3. Montar dados
         const payload = {
             cart: cartItems,
             table_id: tableId ? parseInt(tableId) : null,
@@ -57,22 +33,19 @@ const CheckoutSubmit = {
             keep_open: keepOpen,
             finalize_now: true,
             order_type: selectedOrderType,
-            is_paid: isPaid,
+            is_paid: (CheckoutState.currentPayments?.length > 0) ? 1 : 0,
             delivery_fee: (selectedOrderType === 'delivery' && typeof PDV_DELIVERY_FEE !== 'undefined') ? PDV_DELIVERY_FEE : 0
         };
 
-        // Se for Entrega, adiciona dados de entrega
+        // 4. Dados de Entrega
         if (selectedOrderType === 'delivery' && typeof getDeliveryData === 'function') {
-            const deliveryData = getDeliveryData();
-            if (deliveryData) {
-                payload.delivery_data = deliveryData;
-            }
+            payload.delivery_data = getDeliveryData();
         }
 
-        // Lógica de Estado (Mesa/Comanda/Inclusão)
+        // 5. Ajuste de Endpoint baseado no Estado
         const { modo, fechandoConta } = PDVState.getState();
-
         let isPaidLoop = false;
+
         if (window.isPaidOrderInclusion && typeof editingPaidOrderId !== 'undefined') {
             payload.order_id = editingPaidOrderId;
             payload.save_account = true;
@@ -84,210 +57,149 @@ const CheckoutSubmit = {
             payload.order_id = CheckoutState.closingOrderId;
         }
 
-        const url = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + endpoint;
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': this._getCsrf()
-            },
-            body: JSON.stringify(payload)
-        })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    CheckoutUI.showSuccessModal();
-                    PDVCart.clear();
-                    // Limpa o carrinho global também
-                    if (typeof cart !== 'undefined') cart.length = 0;
-
-                    setTimeout(() => {
-                        if (isPaidLoop) {
-                            window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
-                        } else {
-                            window.location.reload();
-                        }
-                    }, 1000);
-                } else {
-                    alert('Erro: ' + data.message);
-                }
-            })
-            .catch(err => alert('Erro de conexão: ' + err.message));
+        // 6. Enviar via Service
+        try {
+            const data = await CheckoutService.sendSaleRequest(endpoint, payload);
+            this._handleSuccess(data, isPaidLoop);
+        } catch (err) {
+            alert(err.message);
+        }
     },
 
     /**
-     * Entrega imediata de comanda paga
-     * @param {number} orderId 
+     * 2. FORÇAR ENTREGA (Mesa/Comanda já paga)
      */
-    forceDelivery: function (orderId) {
-        fetch('venda/fechar-comanda', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': this._getCsrf()
-            },
-            body: JSON.stringify({ order_id: orderId, payments: [], keep_open: false })
-        })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Entregue!');
-                    window.location.href = BASE_URL + '/admin/loja/mesas';
-                } else {
-                    alert('Erro: ' + data.message);
-                }
-            });
+    forceDelivery: async function (orderId) {
+        try {
+            const data = await CheckoutService.closePaidTab(orderId);
+            if (data.success) {
+                alert('Entregue!');
+                window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
+            } else {
+                alert('Erro: ' + data.message);
+            }
+        } catch (err) {
+            alert(err.message);
+        }
     },
 
     /**
-     * Salva Comanda Aberta (Botão Laranja)
+     * 3. SALVAR COMANDA (Botão Laranja)
      */
-    saveClientOrder: function () {
+    saveClientOrder: async function () {
         const clientId = document.getElementById('current_client_id').value;
         const tableId = document.getElementById('current_table_id').value;
-        const orderId = document.getElementById('current_order_id') ? document.getElementById('current_order_id').value : null;
+        const orderId = document.getElementById('current_order_id')?.value;
 
-        if (PDVCart.items.length === 0) return alert('Carrinho vazio!');
+        // Validações
+        if (!CheckoutValidator.validateCart(PDVCart.items)) return;
+        if (!CheckoutValidator.validateClientOrTable(clientId, tableId)) return;
 
-        // Aceita cliente OU mesa
-        if (!clientId && !tableId) return alert('Selecione um cliente ou mesa!');
+        // Atualiza Estado
+        PDVState.set({
+            modo: tableId ? 'mesa' : 'comanda',
+            clienteId: clientId ? parseInt(clientId) : null,
+            mesaId: tableId ? parseInt(tableId) : null
+        });
 
-        PDVState.set({ modo: tableId ? 'mesa' : 'comanda', clienteId: clientId ? parseInt(clientId) : null, mesaId: tableId ? parseInt(tableId) : null });
+        // Envia
+        const payload = {
+            cart: PDVCart.items,
+            client_id: clientId || null,
+            table_id: tableId || null,
+            order_id: orderId,
+            save_account: true
+        };
 
-        fetch('venda/finalizar', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': this._getCsrf()
-            },
-            body: JSON.stringify({
-                cart: PDVCart.items,
-                client_id: clientId || null,
-                table_id: tableId || null,
-                order_id: orderId,
-                save_account: true
-            })
-        })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    CheckoutUI.showSuccessModal();
-                    setTimeout(() => window.location.reload(), 1000);
-                } else { alert('Erro: ' + data.message); }
-            });
+        try {
+            const data = await CheckoutService.saveTabOrder(payload);
+            this._handleSuccess(data);
+        } catch (err) {
+            alert(err.message);
+        }
     },
 
     /**
-     * Salva pedido de Retirada/Entrega sem pagamento (pagar depois)
-     * Unificado de pickup.js
+     * 4. SALVAR PEDIDO (Retirada/Delivery) - Pagar Depois
      */
-    savePickupOrder: function () {
-        // Detecta qual tipo de pedido está selecionado
-        const orderTypeCards = document.querySelectorAll('.order-type-card.active');
-        let selectedOrderType = 'pickup';
+    savePickupOrder: async function () {
+        const selectedOrderType = this._determineOrderType(false) === 'delivery' ? 'delivery' : 'pickup';
 
-        orderTypeCards.forEach(card => {
-            const label = card.innerText.toLowerCase().trim();
-            if (label.includes('retirada')) selectedOrderType = 'pickup';
-            else if (label.includes('entrega')) selectedOrderType = 'delivery';
-        });
+        // Validações
+        if (!CheckoutValidator.validateDeliveryData(selectedOrderType)) return;
 
-        // Para Entrega, verifica se dados foram preenchidos
-        if (selectedOrderType === 'delivery') {
-            const isFilled = typeof CheckoutEntrega !== 'undefined'
-                ? CheckoutEntrega.isDataFilled()
-                : (typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled);
-
-            if (!isFilled) {
-                alert('Preencha os dados de entrega primeiro!');
-                if (typeof openDeliveryPanel === 'function') openDeliveryPanel();
-                return;
-            }
-        }
-
-        // Pega o carrinho
         const cartItems = this._getCartItems();
-        if (cartItems.length === 0) {
-            alert('Carrinho vazio!');
-            return;
-        }
+        if (!CheckoutValidator.validateCart(cartItems)) return;
 
-        // Pega a forma de pagamento selecionada (para mostrar no Kanban)
-        const selectedPaymentMethod = CheckoutState.selectedMethod || 'dinheiro';
-
-        // Taxa de entrega (apenas para delivery)
-        const deliveryFee = (selectedOrderType === 'delivery' && typeof PDV_DELIVERY_FEE !== 'undefined') ? PDV_DELIVERY_FEE : 0;
-
+        // Montar Payload
         const payload = {
             cart: cartItems,
             table_id: null,
             client_id: document.getElementById('current_client_id')?.value || null,
             payments: [],
             discount: CheckoutState.discountValue || 0,
-            delivery_fee: deliveryFee,
+            delivery_fee: (selectedOrderType === 'delivery' && typeof PDV_DELIVERY_FEE !== 'undefined') ? PDV_DELIVERY_FEE : 0,
             keep_open: false,
             finalize_now: true,
             order_type: selectedOrderType,
             is_paid: 0,
-            payment_method_expected: selectedPaymentMethod
+            payment_method_expected: CheckoutState.selectedMethod || 'dinheiro'
         };
 
-        // Se for Entrega, adiciona dados de entrega
         if (selectedOrderType === 'delivery') {
-            const deliveryData = typeof CheckoutEntrega !== 'undefined'
-                ? CheckoutEntrega.getData()
-                : (typeof getDeliveryData === 'function' ? getDeliveryData() : null);
-
-            if (deliveryData) {
-                payload.delivery_data = deliveryData;
-            }
+            const deliveryData = typeof CheckoutEntrega !== 'undefined' ? CheckoutEntrega.getData() : getDeliveryData();
+            if (deliveryData) payload.delivery_data = deliveryData;
         }
 
-        const url = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/venda/finalizar';
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': this._getCsrf()
-            },
-            body: JSON.stringify(payload)
-        })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    CheckoutUI.showSuccessModal();
-                    PDVCart.clear();
-                    if (typeof cart !== 'undefined') cart.length = 0;
-
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    alert('Erro: ' + data.message);
-                }
-            })
-            .catch(err => alert('Erro de conexão: ' + err.message));
+        // Enviar
+        try {
+            const data = await CheckoutService.sendSaleRequest('/admin/loja/venda/finalizar', payload);
+            this._handleSuccess(data);
+        } catch (err) {
+            alert(err.message);
+        }
     },
 
-    /**
-     * Helper: Pega itens do carrinho (compatível com cart global e PDVCart)
-     * @private
-     */
-    _getCartItems: function () {
-        if (typeof cart !== 'undefined' && Array.isArray(cart)) {
-            return cart;
-        } else if (typeof PDVCart !== 'undefined') {
-            return PDVCart.items;
-        }
-        return [];
-    }
+    // --- Helpers Privados ---
 
+    _getCartItems: function () {
+        if (typeof cart !== 'undefined' && Array.isArray(cart)) return cart;
+        if (typeof PDVCart !== 'undefined') return PDVCart.items;
+        return [];
+    },
+
+    _determineOrderType: function (hasClientOrTable) {
+        const cards = document.querySelectorAll('.order-type-card.active');
+        let type = 'balcao';
+
+        cards.forEach(card => {
+            const label = card.innerText.toLowerCase().trim();
+            if (label.includes('retirada')) type = 'pickup';
+            else if (label.includes('entrega')) type = 'delivery';
+            else if (label.includes('local') && hasClientOrTable) type = 'local';
+        });
+        return type;
+    },
+
+    _handleSuccess: function (data, isPaidLoop = false) {
+        if (data.success) {
+            CheckoutUI.showSuccessModal();
+            PDVCart.clear();
+            if (typeof cart !== 'undefined') cart.length = 0;
+
+            setTimeout(() => {
+                if (isPaidLoop) {
+                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
+                } else {
+                    window.location.reload();
+                }
+            }, 1000);
+        } else {
+            alert('Erro: ' + data.message);
+        }
+    }
 };
 
-// Expõe globalmente para uso pelos outros módulos
+// Exports
 window.CheckoutSubmit = CheckoutSubmit;
-
-// Alias para compatibilidade com HTML
 window.savePickupOrder = () => CheckoutSubmit.savePickupOrder();
