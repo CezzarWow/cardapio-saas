@@ -1,0 +1,50 @@
+/**
+ * PDV - Componentes Gerais
+ * Arquivo: public/css/pdv/components.css
+ */
+
+/* ========== BOTÃO PRIMÁRIO ========== */
+.btn-primary {
+    width: 100%;
+    background: var(--primary-color, #2563eb);
+    color: white;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.4);
+    transition: background 0.2s;
+}
+
+.btn-primary:disabled {
+    background: #d1d5db;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--primary-hover, #1d4ed8);
+}
+
+/* ========== BOTÃO ÍCONE ========== */
+.btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--danger-color, #ef4444);
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background-color: #fee2e2;
+    transform: scale(1.1);
+}
+
+.btn-icon svg {
+    width: 28px;
+    height: 28px;
+}

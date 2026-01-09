@@ -13,7 +13,7 @@
     <!-- CSS Modular -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/base.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/sidebar.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/pdv.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/pdv/index.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/pdv-cart.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/stock/index.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/checkout.css?v=<?= time() ?>">

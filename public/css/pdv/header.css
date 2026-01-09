@@ -1,0 +1,75 @@
+/**
+ * PDV - Header e Busca
+ * Arquivo: public/css/pdv/header.css
+ */
+
+/* ========== HEADER DO PDV ========== */
+.top-header {
+    background: white;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.page-title h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-dark, #1f2937);
+}
+
+.page-title p {
+    font-size: 0.875rem;
+    color: var(--text-light, #6b7280);
+}
+
+/* ========== BARRA DE BUSCA ========== */
+.search-bar {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 12px;
+    color: var(--text-light, #6b7280);
+    width: 24px;
+    height: 24px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.8rem 1rem 0.8rem 3rem;
+    background: var(--bg-color, #f3f4f6);
+    border: none;
+    border-radius: 8px;
+    outline: none;
+    font-size: 1rem;
+}
+
+.search-input:focus {
+    box-shadow: 0 0 0 2px var(--primary-color, #2563eb);
+}
+
+/* ========== STATUS BADGE ========== */
+.status-badge {
+    background: var(--success-bg, #dcfce7);
+    color: var(--success-text, #15803d);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+}
