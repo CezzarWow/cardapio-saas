@@ -140,7 +140,8 @@ const CheckoutEntrega = {
             number: document.getElementById('delivery_number')?.value || '',
             neighborhood: document.getElementById('delivery_neighborhood')?.value || '',
             phone: document.getElementById('delivery_phone')?.value || '',
-            complement: document.getElementById('delivery_complement')?.value || ''
+            complement: document.getElementById('delivery_complement')?.value || '',
+            observation: document.getElementById('delivery_observation')?.value || ''
         };
     },
 
@@ -151,7 +152,7 @@ const CheckoutEntrega = {
         this.dataFilled = false;
 
         // Limpa campos
-        ['delivery_name', 'delivery_address', 'delivery_number', 'delivery_neighborhood', 'delivery_phone', 'delivery_complement'].forEach(id => {
+        ['delivery_name', 'delivery_address', 'delivery_number', 'delivery_neighborhood', 'delivery_phone', 'delivery_complement', 'delivery_observation'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
         });
@@ -175,7 +176,7 @@ const CheckoutEntrega = {
         this.closePanel();
 
         // Limpa campos
-        ['delivery_name', 'delivery_address', 'delivery_number', 'delivery_neighborhood', 'delivery_phone', 'delivery_complement'].forEach(id => {
+        ['delivery_name', 'delivery_address', 'delivery_number', 'delivery_neighborhood', 'delivery_phone', 'delivery_complement', 'delivery_observation'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
         });

@@ -9,6 +9,7 @@ use App\Repositories\StockRepository;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\TableRepository;
+use App\Repositories\ClientRepository;
 use PDO;
 use Exception;
 
@@ -20,6 +21,7 @@ class CreateOrderAction
     private OrderRepository $orderRepo;
     private OrderItemRepository $itemRepo;
     private TableRepository $tableRepo;
+    private ClientRepository $clientRepo;
 
     public function __construct(
         PaymentService $paymentService,
@@ -27,7 +29,8 @@ class CreateOrderAction
         StockRepository $stockRepo,
         OrderRepository $orderRepo,
         OrderItemRepository $itemRepo,
-        TableRepository $tableRepo
+        TableRepository $tableRepo,
+        ClientRepository $clientRepo
     ) {
         $this->paymentService = $paymentService;
         $this->cashRegisterService = $cashRegisterService;
@@ -35,6 +38,7 @@ class CreateOrderAction
         $this->orderRepo = $orderRepo;
         $this->itemRepo = $itemRepo;
         $this->tableRepo = $tableRepo;
+        $this->clientRepo = $clientRepo;
     }
 
     public function execute(int $restaurantId, int $userId, array $data): int
@@ -101,15 +105,34 @@ class CreateOrderAction
                 }
             }
 
+            // Processar delivery_data para criar/atualizar cliente (se houver)
+            $clientId = $data['client_id'] ?? null;
+            if (!empty($data['delivery_data']) && $orderType === 'delivery') {
+                $dd = $data['delivery_data'];
+                $clientId = $this->clientRepo->findOrCreate($restaurantId, [
+                    'name' => $dd['name'] ?? 'Cliente Delivery',
+                    'phone' => $dd['phone'] ?? '',
+                    'address' => $dd['address'] ?? null,
+                    'number' => $dd['number'] ?? null,
+                    'neighborhood' => $dd['neighborhood'] ?? null
+                ]);
+            }
+
+            // Montar observação final (pode vir de delivery_data ou do payload direto)
+            $orderObservation = $data['observation'] ?? null;
+            if (!empty($data['delivery_data']['observation'])) {
+                $orderObservation = $data['delivery_data']['observation'];
+            }
+
             // CRIAR NOVO PEDIDO (comportamento original)
             $orderId = $this->orderRepo->create([
                 'restaurant_id' => $restaurantId,
-                'client_id' => $data['client_id'] ?? null,
+                'client_id' => $clientId,
                 'total' => $finalTotal,
                 'status' => $orderStatus, 
                 'order_type' => $orderType,
                 'payment_method' => $paymentMethod,
-                'observation' => $data['observation'] ?? null,
+                'observation' => $orderObservation,
                 'change_for' => $data['change_for'] ?? null,
                 'is_paid' => $isPaid 
             ]);

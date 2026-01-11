@@ -47,9 +47,14 @@ window.savePickupOrder = function () {
     // Taxa de entrega (apenas para delivery)
     const deliveryFee = (selectedOrderType === 'delivery' && typeof PDV_DELIVERY_FEE !== 'undefined') ? PDV_DELIVERY_FEE : 0;
 
+    // Pega a mesa selecionada (se houver) - para vincular entrega à ficha da mesa
+    const rawTableId = document.getElementById('current_table_id')?.value;
+    const tableId = rawTableId && rawTableId !== '' ? parseInt(rawTableId) : null;
+
     const payload = {
         cart: cartItems,
-        table_id: null,
+        table_id: tableId,
+        link_to_table: tableId ? true : false,
         client_id: document.getElementById('current_client_id')?.value || null,
         payments: [],
         discount: CheckoutState.discountValue || 0,

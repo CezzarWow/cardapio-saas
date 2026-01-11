@@ -43,7 +43,13 @@ window.clearRetiradaClient = function () {
         document.getElementById('current_client_name').value = '';
     }
 
-    // Limpa a barra lateral também
+    // Limpa a mesa selecionada também (evita inconsistência)
+    const tableIdInput = document.getElementById('current_table_id');
+    if (tableIdInput) {
+        tableIdInput.value = '';
+    }
+
+    // Limpa a barra lateral visualmente (sem abrir menu de opções)
     const selectedArea = document.getElementById('selected-client-area');
     const searchArea = document.getElementById('client-search-area');
     const searchInput = document.getElementById('client-search');
@@ -52,7 +58,7 @@ window.clearRetiradaClient = function () {
     if (searchArea) searchArea.style.display = 'flex';
     if (searchInput) {
         searchInput.value = '';
-        searchInput.focus();
+        // NÃO dar focus aqui - evita abrir automaticamente as opções
     }
 
     // Mostra o aviso de "Vincule um cliente"
@@ -61,6 +67,15 @@ window.clearRetiradaClient = function () {
 
     if (clientSelectedBox) clientSelectedBox.style.display = 'none';
     if (noClientBox) noClientBox.style.display = 'block';
+
+    // Esconde botão "Salvar" na sidebar (volta ao modo balcão)
+    const btnSave = document.getElementById('btn-save-command');
+    if (btnSave) btnSave.style.display = 'none';
+
+    // Reseta estado do PDV para balcão
+    if (typeof PDVState !== 'undefined') {
+        PDVState.set({ modo: 'balcao', mesaId: null, clienteId: null });
+    }
 
     CheckoutUI.updateCheckoutUI();
 };

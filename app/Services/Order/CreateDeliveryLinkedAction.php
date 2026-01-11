@@ -3,6 +3,7 @@
 namespace App\Services\Order;
 
 use App\Repositories\Order\OrderItemRepository;
+use App\Repositories\Order\OrderRepository;
 use App\Repositories\TableRepository;
 use Exception;
 
@@ -11,15 +12,18 @@ class CreateDeliveryLinkedAction
     private $createOrderAction;
     private $tableRepo;
     private $itemRepo;
+    private $orderRepo;
 
     public function __construct(
         CreateOrderAction $createOrderAction,
         TableRepository $tableRepo,
-        OrderItemRepository $itemRepo
+        OrderItemRepository $itemRepo,
+        OrderRepository $orderRepo
     ) {
         $this->createOrderAction = $createOrderAction;
         $this->tableRepo = $tableRepo;
         $this->itemRepo = $itemRepo;
+        $this->orderRepo = $orderRepo;
     }
 
     public function execute(int $restaurantId, int $userId, array $data): int
@@ -34,13 +38,29 @@ class CreateDeliveryLinkedAction
 
         // 2. Buscar o pedido aberto da mesa vinculada (onde será cobrado)
         $tableId = $data['table_id'];
-        $table = $this->tableRepo->findWithCurrentOrder($tableId);
+        $table = $this->tableRepo->findWithCurrentOrder($tableId, $restaurantId);
 
-        if (!$table || empty($table['order_id'])) {
-            throw new Exception("Mesa #{$tableId} não possui conta aberta para vincular a entrega.");
+        // Se mesa não tem conta aberta, criar uma automaticamente
+        if (!$table || empty($table['current_order_id'])) {
+            // Criar pedido de mesa vazio (será preenchido com o item de entrega)
+            $tableOrderId = $this->orderRepo->create([
+                'restaurant_id' => $restaurantId,
+                'client_id' => null,
+                'total' => 0,
+                'order_type' => 'mesa',
+                'payment_method' => 'dinheiro',
+                'observation' => null,
+                'change_for' => null
+            ]);
+            
+            // Atualizar status para 'aberto' (padrão para mesas)
+            $this->orderRepo->updateStatus($tableOrderId, 'aberto');
+            
+            // Ocupar a mesa com o novo pedido
+            $this->tableRepo->occupy($tableId, $tableOrderId);
+        } else {
+            $tableOrderId = $table['current_order_id'];
         }
-
-        $tableOrderId = $table['order_id'];
 
         // 3. Calcular valor total a cobrar na mesa
         // (Soma total dos itens + taxa entrega - desconto) do pedido de entrega
@@ -74,6 +94,11 @@ class CreateDeliveryLinkedAction
             'price' => $totalToCharge,
             'observation' => "Vinculado: {$obs}" . ($deliveryFee > 0 ? " (+Taxa: {$deliveryFee})" : "")
         ]);
+
+        // 5. Atualizar total do pedido da mesa (soma com o valor existente)
+        $currentTableTotal = floatval($table['order_total'] ?? 0);
+        $newTableTotal = $currentTableTotal + $totalToCharge;
+        $this->orderRepo->updateTotal($tableOrderId, $newTableTotal);
 
         return $deliveryOrderId;
     }

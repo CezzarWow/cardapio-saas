@@ -156,6 +156,7 @@ const CheckoutSubmit = {
         // Se é Entrega + Mesa, adiciona flag para vincular
         if (selectedOrderType === 'delivery' && hasTable) {
             payload.link_to_table = true;
+            payload.table_id = parseInt(tableId); // [FIX] Envia o ID numérico da mesa
         }
 
         if (selectedOrderType === 'delivery') {

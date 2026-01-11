@@ -9,8 +9,9 @@
 <div id="checkout-main" style="background: white; width: 1000px; max-width: 95%; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 90vh;">
     
     <!-- Header -->
-    <div style="padding: 15px 25px 0 25px;">
+    <div style="padding: 15px 25px 0 25px; display: flex; justify-content: space-between; align-items: center;">
         <h2 style="margin: 0; color: #1e293b; font-size: 1.25rem; font-weight: 800;">Pagamento</h2>
+        <button type="button" onclick="closeCheckout()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1; padding: 0;" title="Fechar">&times;</button>
     </div>
     
     <?php if ($isEditingPaid ?? false): ?>

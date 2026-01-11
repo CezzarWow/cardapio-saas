@@ -54,6 +54,12 @@
             <input type="text" id="delivery_complement" name="pdv_delivery_complement_<?= time() ?>" autocomplete="off" data-lpignore="true" placeholder="Apto, Bloco..." 
                    style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box;">
         </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 5px; font-weight: 600;">Observações</label>
+            <textarea id="delivery_observation" name="pdv_delivery_observation_<?= time() ?>" autocomplete="off" data-lpignore="true" placeholder="Instruções especiais, ponto de referência..." 
+                      style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box; resize: vertical; min-height: 60px;"></textarea>
+        </div>
     </form>
     
     <!-- Footer com botões -->

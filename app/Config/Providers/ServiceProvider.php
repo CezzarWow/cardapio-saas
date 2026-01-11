@@ -186,7 +186,8 @@ class ServiceProvider implements Provider
                 $c->get(\App\Repositories\StockRepository::class),
                 $c->get(\App\Repositories\Order\OrderRepository::class),
                 $c->get(\App\Repositories\Order\OrderItemRepository::class),
-                $c->get(\App\Repositories\TableRepository::class)
+                $c->get(\App\Repositories\TableRepository::class),
+                $c->get(\App\Repositories\ClientRepository::class)
             );
         });
 
@@ -244,7 +245,8 @@ class ServiceProvider implements Provider
             return new \App\Services\Order\CreateDeliveryLinkedAction(
                 $c->get(\App\Services\Order\CreateOrderAction::class),
                 $c->get(\App\Repositories\TableRepository::class),
-                $c->get(\App\Repositories\Order\OrderItemRepository::class)
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
+                $c->get(\App\Repositories\Order\OrderRepository::class)
             );
         });
 

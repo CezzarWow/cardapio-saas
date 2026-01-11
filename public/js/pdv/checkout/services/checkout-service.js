@@ -23,6 +23,11 @@ const CheckoutService = {
     sendSaleRequest: async function (endpoint, payload) {
         const url = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + endpoint;
 
+        // Fallback: Envia token no corpo para evitar bloqueio de headers
+        if (payload && typeof payload === 'object') {
+            payload.csrf_token = this._getCsrf();
+        }
+
         try {
             const response = await fetch(url, {
                 method: 'POST',
