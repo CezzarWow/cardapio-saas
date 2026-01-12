@@ -40,6 +40,9 @@ require __DIR__ . '/layout/sidebar.php';
 
     <input type="hidden" id="current_table_id" value="<?= $mesa_id ?? '' ?>">
     <input type="hidden" id="current_table_number" value="<?= $mesa_numero ?? '' ?>">
+    <input type="hidden" id="current_order_id" value="<?= $contaAberta['id'] ?? '' ?>">
+    <input type="hidden" id="current_client_id" value="<?= $contaAberta['client_id'] ?? '' ?>">
+    <input type="hidden" id="table-initial-total" value="<?= $contaAberta['total'] ?? 0 ?>">
 
     <?php // SIDEBAR DO CARRINHO ?>
     <?php require __DIR__ . '/partials/pdv-cart-sidebar.php'; ?>

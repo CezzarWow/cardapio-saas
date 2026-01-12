@@ -52,18 +52,19 @@ class CreateOrderAction
             $conn->beginTransaction();
 
             $cart = $data['cart'] ?? [];
-            if (empty($cart)) {
+            $existingOrderId = $data['order_id'] ?? null;
+            $finalizeNow = isset($data['finalize_now']) && $data['finalize_now'] == true;
+
+            // Se for novo pedido, exige carrinho. Se for existente (finalização), pode vir vazio (apenas pagando).
+            if (empty($cart) && !$existingOrderId) {
                 throw new Exception('O carrinho está vazio');
             }
 
             $orderType = $data['order_type'] ?? 'balcao';
             $tableId = $data['table_id'] ?? null;
             $commandId = $data['command_id'] ?? null;
-            $existingOrderId = $data['order_id'] ?? null;
 
-            // DEBUG: Rastrear order_type no CreateOrderAction
-            error_log("[DEBUG CreateOrderAction] data order_type: " . var_export($data['order_type'] ?? null, true));
-            error_log("[DEBUG CreateOrderAction] resolved orderType: " . var_export($orderType, true));
+
 
             if ($orderType === 'mesa') {
                 if (!$tableId) throw new Exception('Mesa não identificada');
@@ -82,16 +83,41 @@ class CreateOrderAction
             $paymentMethod = $data['payment_method'] ?? 'dinheiro';
             $payments = $data['payments'] ?? [];
             
+            // VERIFICAR SE É INCREMENTO OU FINALIZAÇÃO DE PEDIDO EXISTENTE
+            // DEBUG LOGGING
+            file_put_contents(__DIR__ . '/../../../public/debug_order.log', date('Y-m-d H:i:s') . " - Data: " . json_encode($data) . "\n", FILE_APPEND);
+            
             // SAVE_ACCOUNT: Cria como comanda aberta
             $saveAccount = isset($data['save_account']) && $data['save_account'] == true;
-            $orderStatus = $saveAccount ? 'aberto' : 'novo';
+            $finalizeNow = isset($data['finalize_now']) && $data['finalize_now'] == true;
+            
+            $orderStatus = 'novo';
+            if ($saveAccount) {
+                $orderStatus = 'aberto';
+            } elseif ($finalizeNow && $isPaid && $orderType !== 'delivery') {
+                // Se finalizou e pagou (e não é delivery que precisa de aceite), conclui direto
+                $orderStatus = 'concluido';
+            } elseif ($finalizeNow && $isPaid && $orderType === 'delivery') {
+                // Delivery pago fica como 'novo' para entrar no Kanban
+                $orderStatus = 'novo'; 
+            } elseif ($finalizeNow && !$isPaid) {
+                // Finalizou mas não pagou (ex: Marcar na conta) -> Aberto (Comanda)
+                $orderStatus = 'aberto';
+            }
 
-            // VERIFICAR SE É INCREMENTO DE PEDIDO EXISTENTE
-            if ($existingOrderId && $saveAccount) {
+            file_put_contents(__DIR__ . '/../../../public/debug_order.log', date('Y-m-d H:i:s') . " - Calculated Status: $orderStatus | Finalize: " . ($finalizeNow?1:0) . " | Paid: $isPaid | ExistID: $existingOrderId \n", FILE_APPEND);
+
+            // VERIFICAR SE É INCREMENTO OU FINALIZAÇÃO DE PEDIDO EXISTENTE
+            if ($existingOrderId && ($saveAccount || $finalizeNow)) {
                 // Buscar pedido existente
                 $existingOrder = $this->orderRepo->find($existingOrderId);
                 
-                if ($existingOrder && $existingOrder['status'] === 'aberto') {
+                if ($existingOrder && ($existingOrder['status'] === 'aberto' || $existingOrder['status'] === 'novo')) {
+                    
+                    // Se for finalização, atualiza status
+                    if ($finalizeNow) {
+                        $this->orderRepo->updateStatus($existingOrderId, $orderStatus);
+                    }
                     // Adicionar itens ao pedido existente
                     $this->itemRepo->insert($existingOrderId, $cart);
                     
@@ -105,6 +131,27 @@ class CreateOrderAction
                     }
                     
                     $conn->commit();
+
+                    // Se pagou, registrar pagamentos e movimento de caixa
+                    if ($finalizeNow && !empty($payments)) {
+                        $this->paymentService->registerPayments($conn, $existingOrderId, $payments);
+                        
+                        if ($isPaid) {
+                            $this->orderRepo->updatePayment($existingOrderId, true, $paymentMethod);
+                            
+                            $desc = "Venda " . ucfirst($orderType) . " #" . $existingOrderId;
+                            $finalAmount = max(0, $totalVenda - $discount);
+                            
+                            $this->cashRegisterService->registerMovement(
+                                $conn,
+                                $caixa['id'],
+                                $finalAmount,
+                                $desc,
+                                $existingOrderId
+                            );
+                        }
+                    }
+
                     return $existingOrderId;
                 }
             }
@@ -181,13 +228,6 @@ class CreateOrderAction
             }
 
             $conn->commit();
-            
-            // CORREÇÃO FINAL: Forçar order_type após commit (usando mesma conexão!)
-            $updateSql = "UPDATE orders SET order_type = '{$orderType}' WHERE id = {$orderId}";
-            $rowsAffected = $conn->exec($updateSql);
-            error_log("[DEBUG CreateOrderAction] UPDATE SQL: {$updateSql}");
-            error_log("[DEBUG CreateOrderAction] Rows affected: {$rowsAffected}");
-            error_log("[DEBUG CreateOrderAction] In transaction after commit: " . ($conn->inTransaction() ? 'YES' : 'NO'));
             
             return $orderId;
 

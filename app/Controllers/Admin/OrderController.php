@@ -33,11 +33,7 @@ class OrderController extends BaseController
     {
         $rid = $this->getRestaurantId();
         $data = $this->getJsonBody();
-
-        // DEBUG: Rastrear order_type recebido do frontend
-        error_log("[DEBUG OrderController::store] payload keys: " . implode(',', array_keys($data)));
-        error_log("[DEBUG OrderController::store] order_type: " . var_export($data['order_type'] ?? null, true));
-        error_log("[DEBUG OrderController::store] save_account: " . var_export($data['save_account'] ?? null, true));
+        file_put_contents(__DIR__ . '/../../../../public/debug_controller_store.log', date('Y-m-d H:i:s') . " - Store Called: " . json_encode($data) . "\n", FILE_APPEND);
 
         $errors = $this->validator->validateStore($data);
         if ($this->validator->hasErrors($errors)) {

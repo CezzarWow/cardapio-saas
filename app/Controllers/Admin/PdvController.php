@@ -82,6 +82,11 @@ class PdvController extends BaseController {
             $showSaveCommand = true; // Habilita botão salvar (oculto por padrão até selecionar cliente)
         }
 
+        // 4. Carrinho de Recuperação
+        // Só carrega itens para o carrinho EDITÁVEL se estivermos 'editando' um pedido pago.
+        // Nos demais casos (mesa/comanda aberta), o carrinho começa vazio para novos itens.
+        $cartRecovery = ($isEditingPaid && $editingOrderId) ? $itensJaPedidos : [];
+
         // Carrega Cardápio
         $categories = $this->service->getMenu($rid);
 

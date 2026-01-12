@@ -87,39 +87,47 @@
         }
         this.items = [];
 
-        // Limpa Mesa/Cliente selecionado (sem focar para não abrir dropdown)
-        const clientId = document.getElementById('current_client_id');
-        const tableId = document.getElementById('current_table_id');
-        const clientName = document.getElementById('current_client_name');
+        // VERIFICA SE ESTAMOS EM CONTEXTO TRAVADO (Mesa ou Comanda Aberta)
+        const currentOrderIdInput = document.getElementById('current_order_id');
+        const isContextLocked = currentOrderIdInput && currentOrderIdInput.value && currentOrderIdInput.value !== '';
 
-        if (clientId) clientId.value = '';
-        if (tableId) tableId.value = '';
-        if (clientName) clientName.value = '';
+        if (!isContextLocked) {
+            // SÓ LIMPA CLIENTE/MESA SE NÃO ESTIVER EM UMA COMANDA JÁ ABERTA
 
-        const selectedArea = document.getElementById('selected-client-area');
-        const searchArea = document.getElementById('client-search-area');
-        const searchInput = document.getElementById('client-search');
-        const results = document.getElementById('client-results');
+            // Limpa Mesa/Cliente selecionado (sem focar para não abrir dropdown)
+            const clientId = document.getElementById('current_client_id');
+            const tableId = document.getElementById('current_table_id');
+            const clientName = document.getElementById('current_client_name');
 
-        if (selectedArea) selectedArea.style.display = 'none';
-        if (searchArea) searchArea.style.display = 'flex';
-        if (searchInput) searchInput.value = '';
-        if (results) results.style.display = 'none';
+            if (clientId) clientId.value = '';
+            if (tableId) tableId.value = '';
+            if (clientName) clientName.value = '';
 
-        // Reseta o botão Finalizar para estado padrão
+            const selectedArea = document.getElementById('selected-client-area');
+            const searchArea = document.getElementById('client-search-area');
+            const searchInput = document.getElementById('client-search');
+            const results = document.getElementById('client-results');
+
+            if (selectedArea) selectedArea.style.display = 'none';
+            if (searchArea) searchArea.style.display = 'flex';
+            if (searchInput) searchInput.value = '';
+            if (results) results.style.display = 'none';
+
+            // Esconde botão Salvar Comanda se existir
+            const btnSave = document.getElementById('btn-save-command');
+            if (btnSave) btnSave.style.display = 'none';
+
+            // Reseta estado do PDV
+            if (typeof PDVState !== 'undefined') {
+                PDVState.set({ modo: 'balcao', mesaId: null, clienteId: null });
+            }
+        }
+
+        // Reseta o botão Finalizar para estado padrão (sempre, pois carrinho ficou vazio)
         const btn = document.getElementById('btn-finalizar');
         if (btn) {
             btn.innerText = 'Finalizar';
             btn.style.backgroundColor = '';
-        }
-
-        // Esconde botão Salvar Comanda se existir
-        const btnSave = document.getElementById('btn-save-command');
-        if (btnSave) btnSave.style.display = 'none';
-
-        // Reseta estado do PDV
-        if (typeof PDVState !== 'undefined') {
-            PDVState.set({ modo: 'balcao', mesaId: null, clienteId: null });
         }
 
         this.updateUI();

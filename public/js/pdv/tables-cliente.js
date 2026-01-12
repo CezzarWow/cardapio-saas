@@ -16,7 +16,7 @@
         results.innerHTML = '';
 
         if (!clients.length) {
-            results.innerHTML = '<div style="padding:15px; color:#64748b; text-align:center;">Nenhum cliente encontrado</div>';
+            results.innerHTML = '<div class="client-results-empty">Nenhum cliente encontrado</div>';
             results.style.display = 'block';
             return;
         }
@@ -24,26 +24,33 @@
         results.style.display = 'block';
 
         const header = document.createElement('div');
-        header.innerHTML = '<small style="color:#64748b; font-weight:700; padding:10px 15px; display:block; font-size:0.75rem; border-bottom:1px solid #f1f5f9;">CLIENTES ENCONTRADOS</small>';
+        header.innerHTML = '<small class="client-results-header">CLIENTES ENCONTRADOS</small>';
         results.appendChild(header);
 
         clients.forEach(client => {
             const div = document.createElement('div');
-            div.style.cssText = "padding: 10px 15px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; align-items: center; gap: 10px;";
+            const hasOpenOrder = client.has_open_order;
+
+            // Usar classes CSS
+            div.className = hasOpenOrder ? 'client-item client-item--open' : 'client-item';
+
+            let badge = '';
+            if (hasOpenOrder) {
+                badge = `<span class="client-badge">OCUPADO</span>`;
+            }
 
             div.innerHTML = `
-                <div style="background:#f1f5f9; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                    <span style="font-weight:bold; color:#64748b;">${client.name.charAt(0).toUpperCase()}</span>
+                <div class="client-avatar">
+                    <span>${client.name.charAt(0).toUpperCase()}</span>
                 </div>
-                <div>
-                    <div style="font-weight:600; font-size:0.9rem; color:#1e293b;">${client.name}</div>
-                    ${client.phone ? `<div style="font-size:0.8rem; color:#64748b;">${client.phone}</div>` : ''}
+                <div class="client-info">
+                    <div class="client-name">${client.name}</div>
+                    ${client.phone ? `<div class="client-phone">${client.phone}</div>` : ''}
                 </div>
+                ${badge}
             `;
 
-            div.onclick = () => this.selectClient(client.id, client.name);
-            div.onmouseover = () => div.style.background = '#f8fafc';
-            div.onmouseout = () => div.style.background = 'white';
+            div.onclick = () => this.selectClient(client.id, client.name, client.open_order_id);
             results.appendChild(div);
         });
     };
@@ -51,14 +58,21 @@
     // ==========================================
     // SELECIONAR CLIENTE
     // ==========================================
-    PDVTables.selectClient = function (id, name) {
+    PDVTables.selectClient = function (id, name, openOrderId = null) {
+        // Se cliente tem comanda aberta, redirecionar para ela
+        if (openOrderId) {
+            window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
+            return;
+        }
+
         // Atualiza Estado
         PDVState.set({ modo: 'balcao', clienteId: id, mesaId: null });
 
+        // Atualiza inputs hidden
         document.getElementById('current_client_id').value = id;
         document.getElementById('current_table_id').value = '';
 
-        // Armazena o nome do cliente também
+        // Armazena o nome do cliente
         let clientNameInput = document.getElementById('current_client_name');
         if (!clientNameInput) {
             clientNameInput = document.createElement('input');
@@ -68,40 +82,47 @@
         }
         clientNameInput.value = name;
 
-        document.getElementById('selected-client-name').innerText = name;
+        document.getElementById('selected-client-name').innerHTML = `
+            ${name} 
+            ${openOrderId ? '<span style="color:#ef4444; font-size:0.8rem; margin-left:5px;">(COMANDA ABERTA)</span>' : ''}
+        `;
 
-        // Visual
-        document.getElementById('selected-client-area').style.display = 'flex';
-        document.getElementById('client-search-area').style.display = 'none';
-        document.getElementById('client-results').style.display = 'none';
+        // Se tiver comanda aberta, mostra botão extra ou link
+        const selectedArea = document.getElementById('selected-client-area');
+        if (openOrderId) {
+            // Adiciona ou atualiza aviso
+            let openWarning = document.getElementById('client-open-warning');
+            if (!openWarning) {
+                openWarning = document.createElement('div');
+                openWarning.id = 'client-open-warning';
+                openWarning.style.cssText = 'width:100%; text-align:center; margin-top:5px; font-size:0.8rem; color:#b91c1c; background:#fecaca; padding:4px; border-radius:4px; cursor:pointer;';
+                openWarning.innerText = 'Clique aqui para ver a comanda';
+                openWarning.onclick = () => window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
+
+                // Insere APÓS o selectedArea
+                selectedArea.insertAdjacentElement('afterend', openWarning);
+            } else {
+                openWarning.style.display = 'block';
+                openWarning.onclick = () => window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
+            }
+        } else {
+            // Esconde aviso se existir
+            const openWarning = document.getElementById('client-open-warning');
+            if (openWarning) openWarning.style.display = 'none';
+        }
+
+        const searchArea = document.getElementById('client-search-area');
+        const resultsArea = document.getElementById('client-results');
+
+        if (selectedArea) selectedArea.style.display = 'flex';
+        if (searchArea) searchArea.style.display = 'none';
+        if (resultsArea) resultsArea.style.display = 'none';
 
         // Atualiza a view de Retirada se estiver visível
-        const retiradaAlert = document.getElementById('retirada-client-alert');
-        if (retiradaAlert && retiradaAlert.style.display !== 'none') {
-            const clientSelectedBox = document.getElementById('retirada-client-selected');
-            const noClientBox = document.getElementById('retirada-no-client');
-            const clientNameDisplay = document.getElementById('retirada-client-name');
-
-            if (clientSelectedBox) {
-                clientSelectedBox.style.display = 'block';
-                if (clientNameDisplay) clientNameDisplay.innerText = name;
-            }
-            if (noClientBox) noClientBox.style.display = 'none';
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-            if (typeof PDVCheckout !== 'undefined') PDVCheckout.updateCheckoutUI();
-        }
+        this._updateRetiradaView(name);
 
         // Botões
-        const btn = document.getElementById('btn-finalizar');
-        if (btn) {
-            btn.innerText = "Finalizar";
-            btn.style.backgroundColor = "";
-        }
-
-        // Mostrar botão Salvar Comanda
-        const btnSave = document.getElementById('btn-save-command');
-        if (btnSave) btnSave.style.display = 'flex';
+        this._updateButtons(true);
     };
 
     // ==========================================
@@ -111,63 +132,73 @@
         // Atualiza Estado
         PDVState.set({ clienteId: null, mesaId: null });
 
+        // Limpa inputs hidden
         document.getElementById('current_client_id').value = '';
         document.getElementById('current_table_id').value = '';
 
-        // Visual
-        document.getElementById('selected-client-area').style.display = 'none';
-        document.getElementById('client-search-area').style.display = 'flex';
-        document.getElementById('client-search').value = '';
-        document.getElementById('client-search').focus();
+        // Visual - usando style.display para compatibilidade
+        const selectedArea = document.getElementById('selected-client-area');
+        const searchArea = document.getElementById('client-search-area');
+        const searchInput = document.getElementById('client-search');
+
+        if (selectedArea) selectedArea.style.display = 'none';
+        if (searchArea) searchArea.style.display = 'flex';
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
+        }
 
         // Botões
-        const btn = document.getElementById('btn-finalizar');
-        btn.innerText = "Finalizar";
-        btn.style.backgroundColor = "";
+        this._updateButtons(false);
 
-        const btnSave = document.getElementById('btn-save-command');
-        if (btnSave) btnSave.style.display = 'none';
-
-        // Lógica Específica de Retirada (se o modal estiver aberto)
-        this.handleRetiradaValidation();
+        // Lógica Específica de Retirada (função global em retirada.js)
+        if (typeof handleRetiradaValidation === 'function') {
+            handleRetiradaValidation();
+        }
     };
 
     // ==========================================
-    // VALIDAÇÃO DE RETIRADA
+    // HELPERS PRIVADOS
     // ==========================================
-    PDVTables.handleRetiradaValidation = function () {
-        const keepOpen = document.getElementById('keep_open_value')?.value === 'true';
-        const checkoutModal = document.getElementById('checkoutModal');
 
-        if (keepOpen && checkoutModal && checkoutModal.style.display !== 'none') {
-            // Reverte alerta de retirada
-            const alertBox = document.getElementById('retirada-client-alert');
-            if (alertBox) {
-                alertBox.style.background = '#fef3c7';
-                alertBox.style.borderColor = '#f59e0b';
-                alertBox.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <i data-lucide="alert-triangle" size="18" style="color: #d97706;"></i>
-                        <span style="font-weight: 700; color: #92400e; font-size: 0.9rem;">Cliente obrigatório para Retirada</span>
-                    </div>
-                    <div style="position: relative; margin-bottom: 10px;">
-                        <input type="text" id="retirada-client-search" placeholder="Buscar cliente por nome ou telefone..."
-                               style="width: 100%; padding: 10px 12px; border: 1px solid #d97706; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box;"
-                               oninput="searchClientForRetirada(this.value)">
-                        <div id="retirada-client-results" style="display: none; position: absolute; left: 0; right: 0; top: 100%; background: white; border: 1px solid #e5e7eb; border-radius: 6px; max-height: 150px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button type="button" onclick="document.getElementById('clientModal').style.display='flex'" 
-                                style="flex: 1; padding: 10px; background: white; color: #d97706; border: 1px solid #d97706; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                            <i data-lucide="user-plus" size="16"></i> Cadastrar Novo
-                        </button>
-                    </div>
-                `;
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-            }
-            // Bloqueia botão de finalizar
-            if (window.updateCheckoutUI) window.updateCheckoutUI();
+    /**
+     * Atualiza a view de Retirada quando cliente é selecionado
+     */
+    PDVTables._updateRetiradaView = function (name) {
+        const retiradaAlert = document.getElementById('retirada-client-alert');
+        if (!retiradaAlert || retiradaAlert.classList.contains('u-hidden')) return;
+
+        const clientSelectedBox = document.getElementById('retirada-client-selected');
+        const noClientBox = document.getElementById('retirada-no-client');
+        const clientNameDisplay = document.getElementById('retirada-client-name');
+
+        if (clientSelectedBox) {
+            clientSelectedBox.classList.remove('u-hidden');
+            if (clientNameDisplay) clientNameDisplay.innerText = name;
+        }
+        if (noClientBox) noClientBox.classList.add('u-hidden');
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        if (typeof PDVCheckout !== 'undefined') PDVCheckout.updateCheckoutUI();
+    };
+
+    /**
+     * Atualiza estado dos botões Finalizar e Salvar
+     */
+    PDVTables._updateButtons = function (clientSelected) {
+        const btnFinalizar = document.getElementById('btn-finalizar');
+        const btnSave = document.getElementById('btn-save-command');
+
+        if (btnFinalizar) {
+            btnFinalizar.innerText = 'Finalizar';
+            btnFinalizar.style.backgroundColor = '';
+        }
+
+        if (btnSave) {
+            // Usa display flex para garantir visibilidade sobrepondo estilo inline do PHP
+            btnSave.style.display = clientSelected ? 'flex' : 'none';
         }
     };
 
 })();
+

@@ -28,8 +28,7 @@
                 }
             ?>
             <?php if ($isPaid): ?>
-                <div onclick="showPaidOrderOptions(<?= $order['id'] ?>, '<?= addslashes($order['client_name'] ?? '') ?>', <?= $order['total'] ?>, <?= $order['client_id'] ?? 0 ?>)" 
-                     style="background: <?= $bg ?>; border: 2px solid <?= $border ?>; border-radius: 10px; cursor: pointer; transition: transform 0.1s; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 10px;">
+                <div style="background: <?= $bg ?>; border: 2px solid <?= $border ?>; border-radius: 10px; cursor: default; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 10px;">
             <?php else: ?>
                 <div onclick="window.location.href='<?= BASE_URL ?>/admin/loja/pdv?order_id=<?= $order['id'] ?>'" 
                      style="background: <?= $bg ?>; border: 2px solid <?= $border ?>; border-radius: 10px; cursor: pointer; transition: transform 0.1s; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 10px;">

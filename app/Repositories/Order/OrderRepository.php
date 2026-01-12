@@ -35,10 +35,13 @@ class OrderRepository
     }
 
     /**
-     * Cria um novo pedido
+     * Cria um novo pedido.
+     * 
+     * @param array $data Dados do pedido
+     * @param string $status Status inicial (padrão: 'novo', use 'aberto' para mesa/comanda)
      * @return int ID do pedido criado
      */
-    public function create(array $data): int
+    public function create(array $data, string $status = 'novo'): int
     {
         $conn = Database::connect();
         
@@ -58,44 +61,29 @@ class OrderRepository
                 :rid, 
                 :cid, 
                 :total, 
-                'novo', 
+                :status, 
                 :otype, 
                 :payment,
                 :obs,
                 :change,
-                'web',
+                'pdv',
                 NOW()
             )
         ");
         
-        // DEBUG: Rastrear parâmetros antes do INSERT
-        error_log("[DEBUG OrderRepository::create] params: " . json_encode([
-            'rid' => $data['restaurant_id'],
-            'cid' => $data['client_id'],
-            'total' => $data['total'],
-            'otype' => $data['order_type'] ?? 'VAZIO',
-            'payment' => $data['payment_method']
-        ]));
-        
+
         $stmt->execute([
             'rid' => $data['restaurant_id'],
             'cid' => $data['client_id'],
             'total' => $data['total'],
+            'status' => $status,
             'otype' => $data['order_type'],
             'payment' => $data['payment_method'],
             'obs' => $data['observation'] ?? null,
             'change' => $data['change_for'] ?? null
         ]);
         
-        $orderId = (int) $conn->lastInsertId();
-        
-        // DEBUG: Força update do order_type COM VALOR DIRETO (teste)
-        $orderTypeValue = $data['order_type'] ?? 'balcao';
-        $updateSql = "UPDATE orders SET order_type = '{$orderTypeValue}' WHERE id = {$orderId}";
-        error_log("[DEBUG OrderRepository] Executando UPDATE direto: " . $updateSql);
-        $conn->exec($updateSql);
-        
-        return $orderId;
+        return (int) $conn->lastInsertId();
     }
 
     /**
@@ -137,13 +125,74 @@ class OrderRepository
     }
 
     /**
-     * Atualiza status do pedido
+     * Transições de status válidas por tipo de pedido/conta.
+     * 
+     * - PEDIDOS (operacionais): novo → aguardando → em_preparo → pronto → entregue
+     * - CONTAS (financeiras): aberto → concluido
+     * - Estados finais: concluido, cancelado
+     * 
+     * @see implementation_plan.md Seção 2.4 e 2.5
      */
-    public function updateStatus(int $id, string $status): void
+    private const VALID_TRANSITIONS = [
+        // PEDIDOS (operacionais) - novo NUNCA vira aberto
+        'novo' => ['aguardando', 'concluido', 'cancelado'],
+        'aguardando' => ['em_preparo', 'cancelado'],
+        'em_preparo' => ['pronto', 'cancelado'],
+        'pronto' => ['em_entrega', 'entregue', 'concluido'],
+        'em_entrega' => ['entregue', 'cancelado'],
+        'entregue' => ['concluido'],
+        
+        // CONTAS (financeiras)
+        'aberto' => ['concluido', 'cancelado'],
+        
+        // Estados finais
+        'concluido' => [],
+        'cancelado' => [],
+    ];
+
+    /**
+     * Atualiza status do pedido com validação de transição.
+     * 
+     * @param int $id ID do pedido
+     * @param string $newStatus Novo status desejado
+     * @return int Número de linhas afetadas (deve ser 1)
+     * @throws \RuntimeException Se pedido não encontrado
+     * @throws \InvalidArgumentException Se transição inválida
+     */
+    public function updateStatus(int $id, string $newStatus): int
     {
         $conn = Database::connect();
-        $conn->prepare("UPDATE orders SET status = :status WHERE id = :id")
-             ->execute(['status' => $status, 'id' => $id]);
+        
+        // Buscar status atual
+        $stmt = $conn->prepare("SELECT status FROM orders WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $order = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$order) {
+            throw new \RuntimeException("Pedido #{$id} não encontrado");
+        }
+        
+        $currentStatus = $order['status'];
+        $allowed = self::VALID_TRANSITIONS[$currentStatus] ?? [];
+        
+        if (!in_array($newStatus, $allowed)) {
+            // Log para auditoria antes de lançar exceção
+            error_log("[ORDER_STATUS] Transição inválida bloqueada: #{$id} {$currentStatus} → {$newStatus}");
+            throw new \InvalidArgumentException(
+                "Transição de status inválida: {$currentStatus} → {$newStatus} (Pedido #{$id})"
+            );
+        }
+        
+        // Executar UPDATE
+        $updateStmt = $conn->prepare("UPDATE orders SET status = :status WHERE id = :id");
+        $updateStmt->execute(['status' => $newStatus, 'id' => $id]);
+        
+        $rowCount = $updateStmt->rowCount();
+        
+        // Log de sucesso
+        error_log("[ORDER_STATUS] Transição OK: #{$id} {$currentStatus} → {$newStatus} (rows: {$rowCount})");
+        
+        return $rowCount;
     }
 
     /**
@@ -208,12 +257,37 @@ class OrderRepository
             LEFT JOIN clients c ON o.client_id = c.id
             WHERE o.restaurant_id = :rid 
             AND o.status NOT IN ('concluido', 'cancelado')
-            AND o.order_type IN ('delivery', 'balcao', 'comanda')
+            AND o.order_type IN ('balcao', 'comanda')
+            AND (o.is_paid = 0 OR o.is_paid IS NULL)
             ORDER BY o.created_at DESC
         ";
         
         $stmt = $conn->prepare($sql);
         $stmt->execute(['rid' => $restaurantId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Busca comanda aberta de um cliente específico (exceto delivery)
+     */
+    public function findOpenByClient(int $clientId, int $restaurantId): ?array
+    {
+        $conn = Database::connect();
+        
+        $stmt = $conn->prepare("
+            SELECT id, total, status, order_type 
+            FROM orders 
+            WHERE client_id = :cid 
+            AND restaurant_id = :rid 
+            AND status = 'aberto'
+            AND order_type = 'comanda'
+            ORDER BY created_at DESC 
+            LIMIT 1
+        ");
+        
+        $stmt->execute(['cid' => $clientId, 'rid' => $restaurantId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $result ?: null;
     }
 }

@@ -111,7 +111,12 @@ const CheckoutFlow = {
         CheckoutState.resetPayments();
 
         const totalStr = document.getElementById('table-initial-total').value;
-        document.getElementById('checkout-total-display').innerText = CheckoutHelpers.formatCurrency(parseFloat(totalStr));
+        const initialTotal = parseFloat(totalStr) || 0;
+        const cartTotal = (typeof PDVCart !== 'undefined') ? PDVCart.calculateTotal() : 0;
+
+        CheckoutState.cachedTotal = initialTotal + cartTotal;
+
+        document.getElementById('checkout-total-display').innerText = CheckoutHelpers.formatCurrency(CheckoutState.cachedTotal);
 
         const cards = document.querySelectorAll('.order-type-card');
         if (cards.length > 0) CheckoutOrderType.selectOrderType('local', cards[0]);

@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/pdv/index.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/stock/index.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/checkout.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/checkout/retirada.css?v=<?= time() ?>">
     <!-- CSS Cardápio (usado em /admin/loja/cardapio) -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cards.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/modals/index.css?v=<?= time() ?>">

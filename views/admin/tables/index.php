@@ -34,7 +34,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 <!-- Orquestrador (carregar POR ÚLTIMO) -->
 <script src="<?= BASE_URL ?>/js/admin/tables.js?v=<?= time() ?>"></script>
 
-<?php require __DIR__ . '/partials/modals/pedido_pago.php'; ?>
+
 <?php require __DIR__ . '/partials/modals/dossie.php'; ?>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>

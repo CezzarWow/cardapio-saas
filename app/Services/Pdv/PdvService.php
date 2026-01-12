@@ -80,7 +80,9 @@ class PdvService {
             // Ou uso o `find` e busco Client.
             
             $order = $this->orderRepo->find($orderId, $restaurantId);
-            if ($order && $order['status'] == 'aberto') {
+            // Aceitar comandas com status aberto ou novo (não concluído/cancelado)
+            $validStatus = ['aberto', 'novo'];
+            if ($order && in_array($order['status'], $validStatus)) {
                 $contaAberta = $order;
                 // Busca cliente se tiver
                 if (!empty($order['client_id'])) {

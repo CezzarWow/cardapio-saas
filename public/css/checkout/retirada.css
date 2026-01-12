@@ -1,0 +1,107 @@
+/**
+ * Checkout Retirada - Estilos
+ * Arquivo: public/css/checkout/retirada.css
+ */
+
+/* ==========================================
+ * Alerta de Retirada
+ * ==========================================
+ */
+.retirada-alert {
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid;
+}
+
+.retirada-alert--warning {
+    background: #fef3c7;
+    border-color: #f59e0b;
+}
+
+.retirada-alert--success {
+    background: #d1fae5;
+    border-color: #10b981;
+}
+
+/* Header do alerta */
+.retirada-alert__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.retirada-alert--warning .retirada-alert__header i {
+    color: #d97706;
+}
+
+.retirada-alert--warning .retirada-alert__header span {
+    font-weight: 700;
+    color: #92400e;
+    font-size: 0.9rem;
+}
+
+.retirada-alert--success .retirada-alert__header i {
+    color: #059669;
+}
+
+.retirada-alert--success .retirada-alert__header span {
+    font-weight: 700;
+    color: #065f46;
+    font-size: 0.9rem;
+}
+
+/* Área de busca */
+.retirada-alert__search {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.retirada-alert__input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d97706;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+.retirada-alert__results {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Ações */
+.retirada-alert__actions {
+    display: flex;
+    gap: 8px;
+}
+
+.retirada-alert__btn {
+    flex: 1;
+    padding: 10px;
+    background: white;
+    color: #d97706;
+    border: 1px solid #d97706;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.15s ease;
+}
+
+.retirada-alert__btn:hover {
+    background: #fef3c7;
+}

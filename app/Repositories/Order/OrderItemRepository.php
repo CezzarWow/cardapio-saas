@@ -53,7 +53,6 @@ class OrderItemRepository
         $stmtFind = $conn->prepare("
             SELECT id, quantity FROM order_items 
             WHERE order_id = :oid AND product_id = :pid
-            LIMIT 1
         ");
         
         $stmtInsert = $conn->prepare("
@@ -64,43 +63,76 @@ class OrderItemRepository
         $stmtUpdate = $conn->prepare("
             UPDATE order_items SET quantity = :qty WHERE id = :id
         ");
-        
         foreach ($items as $item) {
             $productId = $item['product_id'] ?? ($item['id'] ?? null);
             $quantity = $item['quantity'] ?? 1;
+            $obs = $item['observation'] ?? null;
             
-            // Preparar extras como JSON se for array
-            $extras = $item['extras'] ?? null;
-            if (is_array($extras)) {
-                $extras = json_encode($extras);
+            // Tratamento de Extras
+            $rawExtras = $item['extras'] ?? [];
+            if (empty($rawExtras)) {
+                $rawExtras = null; // Normaliza vazio para null
             }
+            $extrasJson = $rawExtras ? json_encode($rawExtras) : null;
             
-            // Verificar se item já existe no pedido (sem extras)
-            // Itens com extras são sempre novos (não agrupa)
-            $shouldInsertNew = !empty($extras);
+            // Busca item IDENTICO no banco (mesmo produto, mesmos extras, mesma obs)
+            // SQL não compara JSON facilmente, então buscamos todos candidatos do produto
+            $stmtFind->execute(['oid' => $orderId, 'pid' => $productId]);
+            $candidates = $stmtFind->fetchAll(PDO::FETCH_ASSOC);
             
-            if (!$shouldInsertNew) {
-                $stmtFind->execute(['oid' => $orderId, 'pid' => $productId]);
-                $existing = $stmtFind->fetch(PDO::FETCH_ASSOC);
+            $matchId = null;
+            
+            // Procura match exato nos candidatos
+            foreach ($candidates as $cand) {
+                // Busca dados completos do item para comparar observação e extras
+                // A query do stmtFind trazia só ID e Qty. Preciso de mais dados?
+                // Sim. Vou ajustar a query stmtFind ali em cima ou fazer query limpa aqui.
+                // Ajuste rápido: fazer query específica de check.
                 
-                if ($existing) {
-                    // Item existe: incrementar quantidade
-                    $newQty = $existing['quantity'] + $quantity;
-                    $stmtUpdate->execute(['qty' => $newQty, 'id' => $existing['id']]);
-                    continue;
+                // Melhor: Alterar a query stmtFind (linha 53) para trazer extras e observation
+                // Mas como estou editando bloco, vou fazer query ad-hoc aqui para garantir.
+                $checkStmt = $conn->prepare("SELECT id, quantity, extras, observation FROM order_items WHERE id = :id");
+                $checkStmt->execute(['id' => $cand['id']]);
+                $fullCand = $checkStmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$fullCand) continue;
+                
+                // Comparação
+                $candExtras = $fullCand['extras']; // Vem como string JSON ou null
+                $candObs = $fullCand['observation'];
+                
+                // Normaliza extras do banco (null ou "[]" ou string)
+                $candExtrasNorm = ($candExtras === '[]' || empty($candExtras)) ? null : $candExtras;
+                
+                // Compara Extras (String JSON exata ou ambos null)
+                $extrasMatch = ($extrasJson === $candExtrasNorm);
+                
+                // Compara Observação
+                $obsMatch = ((string)$obs === (string)$candObs);
+                
+                if ($extrasMatch && $obsMatch) {
+                    $matchId = $fullCand['id'];
+                    $currentQty = $fullCand['quantity'];
+                    break;
                 }
             }
             
-            // Item não existe ou tem extras: inserir novo
-            $stmtInsert->execute([
-                'oid' => $orderId,
-                'pid' => $productId,
-                'name' => $item['name'] ?? 'Produto',
-                'qty' => $quantity,
-                'price' => $item['price'],
-                'extras' => $extras,
-                'obs' => $item['observation'] ?? null
-            ]);
+            if ($matchId) {
+                // Item identico existe: Incrementar
+                $newQty = $currentQty + $quantity;
+                $stmtUpdate->execute(['qty' => $newQty, 'id' => $matchId]);
+            } else {
+                // Novo Item
+                $stmtInsert->execute([
+                    'oid' => $orderId,
+                    'pid' => $productId,
+                    'name' => $item['name'] ?? 'Produto',
+                    'qty' => $quantity,
+                    'price' => $item['price'],
+                    'extras' => $extrasJson,
+                    'obs' => $obs
+                ]);
+            }
         }
     }
 

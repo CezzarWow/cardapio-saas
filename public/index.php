@@ -17,6 +17,7 @@ if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
     ini_set('session.cookie_secure', 1); // Only send over HTTPS
 }
 
+
 session_start();
 date_default_timezone_set('America/Sao_Paulo');
 

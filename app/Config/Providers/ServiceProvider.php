@@ -260,7 +260,8 @@ class ServiceProvider implements Provider
                 $c->get(\App\Services\Order\CancelOrderAction::class),
                 $c->get(\App\Services\Order\IncludePaidItemsAction::class),
                 $c->get(\App\Services\Order\DeliverOrderAction::class),
-                $c->get(\App\Services\Order\CreateDeliveryLinkedAction::class)
+                $c->get(\App\Services\Order\CreateDeliveryLinkedAction::class),
+                $c->get(\App\Repositories\Order\OrderRepository::class)
             );
         });
     }

@@ -90,7 +90,7 @@
                     <i data-lucide="user" style="width: 16px; color: #059669;"></i>
                     <span id="selected-client-name" style="font-size: 0.9rem; font-weight: 600; color: #065f46;">Nome</span>
                 </div>
-                <button onclick="clearClient()" style="border: none; background: none; color: #059669; cursor: pointer; font-weight: bold;">&times;</button>
+                <button onclick="clearClient()" style="border: none; background: #d1fae5; color: #059669; cursor: pointer; font-weight: bold; font-size: 1.2rem; padding: 4px 10px; border-radius: 4px;">&times;</button>
             </div>
             
             <input type="hidden" id="current_client_id" name="client_id">
@@ -161,19 +161,12 @@
 
             <!-- 5. Botão ENTREGAR/BAIXAR (Comanda) -->
             <?php if (!empty($showCloseCommand)): ?>
-                <?php 
-                    $isPaid = !empty($contaAberta['is_paid']) && $contaAberta['is_paid'] == 1;
-                    $btnText = $isPaid ? 'Entregar (Concluir)' : 'Finalizar';
-                    $btnColor = $isPaid ? '#059669' : '#2563eb';
-                ?>
                 <button onclick="fecharComanda(<?= $contaAberta['id'] ?>)" 
-                        style="flex: 1; background: <?= $btnColor ?>; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
-                    <?= $btnText ?>
+                        style="flex: 1; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
+                    Finalizar
                 </button>
             <?php endif; ?>
                 
-            <!-- Hidden input para o JS ler o valor inicial -->
-            <input type="hidden" id="table-initial-total" value="<?= $contaAberta['total'] ?? 0 ?>">
         </div>
     </div>
 </aside>

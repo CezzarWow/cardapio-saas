@@ -25,3 +25,6 @@
 
 /* 7. Sidebar do Carrinho (Desktop) */
 @import 'cart-sidebar.css';
+
+/* 8. Busca de Clientes */
+@import 'client.css';
