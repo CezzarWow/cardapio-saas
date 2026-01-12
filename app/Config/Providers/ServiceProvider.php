@@ -331,5 +331,45 @@ class ServiceProvider implements Provider
                 $c->get(\App\Services\Order\Flows\Mesa\CloseMesaAccountAction::class)
             );
         });
+
+        // --- COMANDA FLOW ---
+        $container->singleton(\App\Services\Order\Flows\Comanda\ComandaValidator::class, function($c) {
+            return new \App\Services\Order\Flows\Comanda\ComandaValidator();
+        });
+
+        $container->singleton(\App\Services\Order\Flows\Comanda\OpenComandaAction::class, function($c) {
+            return new \App\Services\Order\Flows\Comanda\OpenComandaAction(
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
+                $c->get(\App\Repositories\ClientRepository::class),
+                $c->get(\App\Repositories\StockRepository::class)
+            );
+        });
+
+        $container->singleton(\App\Services\Order\Flows\Comanda\AddItemsToComandaAction::class, function($c) {
+            return new \App\Services\Order\Flows\Comanda\AddItemsToComandaAction(
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
+                $c->get(\App\Repositories\StockRepository::class)
+            );
+        });
+
+        $container->singleton(\App\Services\Order\Flows\Comanda\CloseComandaAction::class, function($c) {
+            return new \App\Services\Order\Flows\Comanda\CloseComandaAction(
+                $c->get(\App\Services\PaymentService::class),
+                $c->get(\App\Services\CashRegisterService::class),
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Services\Order\Flows\Comanda\ComandaValidator::class)
+            );
+        });
+
+        $container->singleton(\App\Controllers\Api\ComandaController::class, function($c) {
+            return new \App\Controllers\Api\ComandaController(
+                $c->get(\App\Services\Order\Flows\Comanda\ComandaValidator::class),
+                $c->get(\App\Services\Order\Flows\Comanda\OpenComandaAction::class),
+                $c->get(\App\Services\Order\Flows\Comanda\AddItemsToComandaAction::class),
+                $c->get(\App\Services\Order\Flows\Comanda\CloseComandaAction::class)
+            );
+        });
     }
 }

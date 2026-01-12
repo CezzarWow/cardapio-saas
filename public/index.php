@@ -63,8 +63,9 @@ Router::add('/api/v1/balcao/venda', \App\Controllers\Api\BalcaoController::class
 Router::add('/api/v1/mesa/abrir', \App\Controllers\Api\MesaController::class, 'open');
 Router::add('/api/v1/mesa/itens', \App\Controllers\Api\MesaController::class, 'addItems');
 Router::add('/api/v1/mesa/fechar', \App\Controllers\Api\MesaController::class, 'close');
-
-
+Router::add('/api/v1/comanda/abrir', \App\Controllers\Api\ComandaController::class, 'open');
+Router::add('/api/v1/comanda/itens', \App\Controllers\Api\ComandaController::class, 'addItems');
+Router::add('/api/v1/comanda/fechar', \App\Controllers\Api\ComandaController::class, 'close');
 
 // ============================================================
 // GRUPO 2: Rotas Admin Geral (migradas para Router)
