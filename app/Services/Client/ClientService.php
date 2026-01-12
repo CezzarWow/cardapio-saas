@@ -20,9 +20,20 @@ class ClientService {
 
     /**
      * Busca clientes por nome ou telefone
+     * Inclui informação se o cliente tem comanda aberta
      */
     public function search(int $restaurantId, string $term): array {
-        return $this->clientRepo->search($restaurantId, $term);
+        $clients = $this->clientRepo->search($restaurantId, $term);
+        
+        // Verificar quais clientes têm comanda aberta
+        foreach ($clients as &$client) {
+            $openOrder = $this->orderRepo->findOpenByClient($client['id'], $restaurantId);
+            $client['has_open_order'] = $openOrder !== null;
+            $client['open_order_id'] = $openOrder['id'] ?? null;
+            $client['open_order_total'] = $openOrder['total'] ?? null;
+        }
+        
+        return $clients;
     }
 
     /**
