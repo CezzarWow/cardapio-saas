@@ -66,6 +66,8 @@ Router::add('/api/v1/mesa/fechar', \App\Controllers\Api\MesaController::class, '
 Router::add('/api/v1/comanda/abrir', \App\Controllers\Api\ComandaController::class, 'open');
 Router::add('/api/v1/comanda/itens', \App\Controllers\Api\ComandaController::class, 'addItems');
 Router::add('/api/v1/comanda/fechar', \App\Controllers\Api\ComandaController::class, 'close');
+Router::add('/api/v1/delivery/criar', \App\Controllers\Api\DeliveryController::class, 'create');
+Router::add('/api/v1/delivery/status', \App\Controllers\Api\DeliveryController::class, 'updateStatus');
 
 // ============================================================
 // GRUPO 2: Rotas Admin Geral (migradas para Router)

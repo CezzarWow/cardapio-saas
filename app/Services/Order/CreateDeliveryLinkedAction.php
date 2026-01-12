@@ -14,9 +14,11 @@ use Exception;
  * aparece como item na conta da mesa/comanda para pagamento posterior.
  * 
  * ⚠️ REGRA CRÍTICA (implementation_plan.md Seção 0):
- * Esta action NUNCA altera o status de uma comanda existente.
  * Apenas adiciona item financeiro (order_items) e atualiza total.
  * O status da comanda só muda via CloseCommandAction.
+ * 
+ * @deprecated Este fluxo está sendo substituído pelo fluxo isolado de Delivery.
+ * Não utilizar em novos códigos.
  */
 class CreateDeliveryLinkedAction
 {

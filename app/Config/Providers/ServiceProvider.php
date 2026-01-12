@@ -371,5 +371,34 @@ class ServiceProvider implements Provider
                 $c->get(\App\Services\Order\Flows\Comanda\CloseComandaAction::class)
             );
         });
+
+        // --- DELIVERY FLOW ---
+        $container->singleton(\App\Services\Order\Flows\Delivery\DeliveryValidator::class, function($c) {
+            return new \App\Services\Order\Flows\Delivery\DeliveryValidator();
+        });
+
+        $container->singleton(\App\Services\Order\Flows\Delivery\CreateDeliveryStandaloneAction::class, function($c) {
+            return new \App\Services\Order\Flows\Delivery\CreateDeliveryStandaloneAction(
+                $c->get(\App\Services\PaymentService::class),
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
+                $c->get(\App\Repositories\ClientRepository::class),
+                $c->get(\App\Repositories\StockRepository::class)
+            );
+        });
+
+        $container->singleton(\App\Services\Order\Flows\Delivery\UpdateDeliveryStatusAction::class, function($c) {
+            return new \App\Services\Order\Flows\Delivery\UpdateDeliveryStatusAction(
+                $c->get(\App\Repositories\Order\OrderRepository::class)
+            );
+        });
+
+        $container->singleton(\App\Controllers\Api\DeliveryController::class, function($c) {
+            return new \App\Controllers\Api\DeliveryController(
+                $c->get(\App\Services\Order\Flows\Delivery\DeliveryValidator::class),
+                $c->get(\App\Services\Order\Flows\Delivery\CreateDeliveryStandaloneAction::class),
+                $c->get(\App\Services\Order\Flows\Delivery\UpdateDeliveryStatusAction::class)
+            );
+        });
     }
 }
