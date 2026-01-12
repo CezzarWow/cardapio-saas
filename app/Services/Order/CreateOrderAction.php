@@ -61,6 +61,10 @@ class CreateOrderAction
             $commandId = $data['command_id'] ?? null;
             $existingOrderId = $data['order_id'] ?? null;
 
+            // DEBUG: Rastrear order_type no CreateOrderAction
+            error_log("[DEBUG CreateOrderAction] data order_type: " . var_export($data['order_type'] ?? null, true));
+            error_log("[DEBUG CreateOrderAction] resolved orderType: " . var_export($orderType, true));
+
             if ($orderType === 'mesa') {
                 if (!$tableId) throw new Exception('Mesa não identificada');
             }
@@ -144,6 +148,9 @@ class CreateOrderAction
             if ($isPaid) {
                 $this->orderRepo->updatePayment($orderId, true, $paymentMethod);
             }
+            
+            // FORÇA atualização do order_type (workaround para INSERT não salvar corretamente)
+            $this->orderRepo->updateOrderType($orderId, $orderType);
 
             // Mesa
             if ($orderType === 'mesa' && $tableId) {
@@ -174,6 +181,14 @@ class CreateOrderAction
             }
 
             $conn->commit();
+            
+            // CORREÇÃO FINAL: Forçar order_type após commit (usando mesma conexão!)
+            $updateSql = "UPDATE orders SET order_type = '{$orderType}' WHERE id = {$orderId}";
+            $rowsAffected = $conn->exec($updateSql);
+            error_log("[DEBUG CreateOrderAction] UPDATE SQL: {$updateSql}");
+            error_log("[DEBUG CreateOrderAction] Rows affected: {$rowsAffected}");
+            error_log("[DEBUG CreateOrderAction] In transaction after commit: " . ($conn->inTransaction() ? 'YES' : 'NO'));
+            
             return $orderId;
 
         } catch (Exception $e) {

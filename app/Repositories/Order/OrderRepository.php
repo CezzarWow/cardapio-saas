@@ -68,6 +68,15 @@ class OrderRepository
             )
         ");
         
+        // DEBUG: Rastrear parâmetros antes do INSERT
+        error_log("[DEBUG OrderRepository::create] params: " . json_encode([
+            'rid' => $data['restaurant_id'],
+            'cid' => $data['client_id'],
+            'total' => $data['total'],
+            'otype' => $data['order_type'] ?? 'VAZIO',
+            'payment' => $data['payment_method']
+        ]));
+        
         $stmt->execute([
             'rid' => $data['restaurant_id'],
             'cid' => $data['client_id'],
@@ -80,9 +89,11 @@ class OrderRepository
         
         $orderId = (int) $conn->lastInsertId();
         
-        // Força update do order_type caso tenha falhado
-        $conn->prepare("UPDATE orders SET order_type = :ot WHERE id = :oid AND (order_type IS NULL OR order_type = '')")
-             ->execute(['ot' => $data['order_type'], 'oid' => $orderId]);
+        // DEBUG: Força update do order_type COM VALOR DIRETO (teste)
+        $orderTypeValue = $data['order_type'] ?? 'balcao';
+        $updateSql = "UPDATE orders SET order_type = '{$orderTypeValue}' WHERE id = {$orderId}";
+        error_log("[DEBUG OrderRepository] Executando UPDATE direto: " . $updateSql);
+        $conn->exec($updateSql);
         
         return $orderId;
     }
@@ -166,6 +177,16 @@ class OrderRepository
     }
 
     /**
+     * Atualiza o tipo do pedido
+     */
+    public function updateOrderType(int $id, string $orderType): void
+    {
+        $conn = Database::connect();
+        $conn->prepare("UPDATE orders SET order_type = :ot WHERE id = :id")
+             ->execute(['ot' => $orderType, 'id' => $id]);
+    }
+
+    /**
      * Deleta pedido
      */
     public function delete(int $id): void
@@ -187,7 +208,7 @@ class OrderRepository
             LEFT JOIN clients c ON o.client_id = c.id
             WHERE o.restaurant_id = :rid 
             AND o.status NOT IN ('concluido', 'cancelado')
-            AND (o.order_type = 'delivery' OR o.order_type = 'balcao')
+            AND o.order_type IN ('delivery', 'balcao', 'comanda')
             ORDER BY o.created_at DESC
         ";
         
