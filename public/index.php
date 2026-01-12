@@ -60,6 +60,10 @@ Router::add('/api/order/create', \App\Controllers\Api\OrderApiController::class,
 
 // --- FLOWS ISOLADOS (Nova Arquitetura) ---
 Router::add('/api/v1/balcao/venda', \App\Controllers\Api\BalcaoController::class, 'store');
+Router::add('/api/v1/mesa/abrir', \App\Controllers\Api\MesaController::class, 'open');
+Router::add('/api/v1/mesa/itens', \App\Controllers\Api\MesaController::class, 'addItems');
+Router::add('/api/v1/mesa/fechar', \App\Controllers\Api\MesaController::class, 'close');
+
 
 
 // ============================================================

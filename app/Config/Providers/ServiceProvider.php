@@ -290,5 +290,46 @@ class ServiceProvider implements Provider
                 $c->get(\App\Services\Order\Flows\Balcao\CreateBalcaoSaleAction::class)
             );
         });
+
+        // --- MESA FLOW ---
+        $container->singleton(\App\Services\Order\Flows\Mesa\MesaValidator::class, function($c) {
+            return new \App\Services\Order\Flows\Mesa\MesaValidator();
+        });
+
+        $container->singleton(\App\Services\Order\Flows\Mesa\OpenMesaAccountAction::class, function($c) {
+            return new \App\Services\Order\Flows\Mesa\OpenMesaAccountAction(
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
+                $c->get(\App\Repositories\TableRepository::class),
+                $c->get(\App\Repositories\StockRepository::class)
+            );
+        });
+
+        $container->singleton(\App\Services\Order\Flows\Mesa\AddItemsToMesaAction::class, function($c) {
+            return new \App\Services\Order\Flows\Mesa\AddItemsToMesaAction(
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
+                $c->get(\App\Repositories\StockRepository::class)
+            );
+        });
+
+        $container->singleton(\App\Services\Order\Flows\Mesa\CloseMesaAccountAction::class, function($c) {
+            return new \App\Services\Order\Flows\Mesa\CloseMesaAccountAction(
+                $c->get(\App\Services\PaymentService::class),
+                $c->get(\App\Services\CashRegisterService::class),
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\TableRepository::class),
+                $c->get(\App\Services\Order\Flows\Mesa\MesaValidator::class)
+            );
+        });
+
+        $container->singleton(\App\Controllers\Api\MesaController::class, function($c) {
+            return new \App\Controllers\Api\MesaController(
+                $c->get(\App\Services\Order\Flows\Mesa\MesaValidator::class),
+                $c->get(\App\Services\Order\Flows\Mesa\OpenMesaAccountAction::class),
+                $c->get(\App\Services\Order\Flows\Mesa\AddItemsToMesaAction::class),
+                $c->get(\App\Services\Order\Flows\Mesa\CloseMesaAccountAction::class)
+            );
+        });
     }
 }
