@@ -58,6 +58,10 @@ $path = str_replace('/cardapio-saas/public', '', $url_clean);
 // ============================================================
 Router::add('/api/order/create', \App\Controllers\Api\OrderApiController::class, 'create');
 
+// --- FLOWS ISOLADOS (Nova Arquitetura) ---
+Router::add('/api/v1/balcao/venda', \App\Controllers\Api\BalcaoController::class, 'store');
+
+
 // ============================================================
 // GRUPO 2: Rotas Admin Geral (migradas para Router)
 // ============================================================

@@ -264,5 +264,31 @@ class ServiceProvider implements Provider
                 $c->get(\App\Repositories\Order\OrderRepository::class)
             );
         });
+
+        // ============================================================
+        // FLOWS ISOLADOS (Arquitetura Nova)
+        // ============================================================
+
+        // --- BALCÃO FLOW ---
+        $container->singleton(\App\Services\Order\Flows\Balcao\BalcaoValidator::class, function($c) {
+            return new \App\Services\Order\Flows\Balcao\BalcaoValidator();
+        });
+
+        $container->singleton(\App\Services\Order\Flows\Balcao\CreateBalcaoSaleAction::class, function($c) {
+            return new \App\Services\Order\Flows\Balcao\CreateBalcaoSaleAction(
+                $c->get(\App\Services\PaymentService::class),
+                $c->get(\App\Services\CashRegisterService::class),
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
+                $c->get(\App\Repositories\StockRepository::class)
+            );
+        });
+
+        $container->singleton(\App\Controllers\Api\BalcaoController::class, function($c) {
+            return new \App\Controllers\Api\BalcaoController(
+                $c->get(\App\Services\Order\Flows\Balcao\BalcaoValidator::class),
+                $c->get(\App\Services\Order\Flows\Balcao\CreateBalcaoSaleAction::class)
+            );
+        });
     }
 }

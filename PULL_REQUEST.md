@@ -4,6 +4,10 @@
 
 Este PR corrige o bug crítico onde comandas não eram finalizadas corretamente - o status permanecia `'aberto'` ao invés de mudar para `'concluido'` após fechamento.
 
+**Commits:**
+1. `fix(order): CloseCommandAction now updates status to 'concluido'`
+2. `fix(callers): adapt all updateStatus callers for new return type`
+
 ## Mudanças Principais
 
 ### 1. `CloseCommandAction.php`
