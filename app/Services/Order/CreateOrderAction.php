@@ -83,14 +83,12 @@ class CreateOrderAction
             $paymentMethod = $data['payment_method'] ?? 'dinheiro';
             $payments = $data['payments'] ?? [];
             
-            // VERIFICAR SE É INCREMENTO OU FINALIZAÇÃO DE PEDIDO EXISTENTE
-            // DEBUG LOGGING
-            file_put_contents(__DIR__ . '/../../../public/debug_order.log', date('Y-m-d H:i:s') . " - Data: " . json_encode($data) . "\n", FILE_APPEND);
             
             // SAVE_ACCOUNT: Cria como comanda aberta
             $saveAccount = isset($data['save_account']) && $data['save_account'] == true;
             $finalizeNow = isset($data['finalize_now']) && $data['finalize_now'] == true;
             
+            // Determinar status inicial do pedido
             $orderStatus = 'novo';
             if ($saveAccount) {
                 $orderStatus = 'aberto';
@@ -104,8 +102,6 @@ class CreateOrderAction
                 // Finalizou mas não pagou (ex: Marcar na conta) -> Aberto (Comanda)
                 $orderStatus = 'aberto';
             }
-
-            file_put_contents(__DIR__ . '/../../../public/debug_order.log', date('Y-m-d H:i:s') . " - Calculated Status: $orderStatus | Finalize: " . ($finalizeNow?1:0) . " | Paid: $isPaid | ExistID: $existingOrderId \n", FILE_APPEND);
 
             // VERIFICAR SE É INCREMENTO OU FINALIZAÇÃO DE PEDIDO EXISTENTE
             if ($existingOrderId && ($saveAccount || $finalizeNow)) {
@@ -175,23 +171,18 @@ class CreateOrderAction
                 $orderObservation = $data['delivery_data']['observation'];
             }
 
-            // CRIAR NOVO PEDIDO (comportamento original)
+            // CRIAR NOVO PEDIDO com status inicial correto
             $orderId = $this->orderRepo->create([
                 'restaurant_id' => $restaurantId,
                 'client_id' => $clientId,
                 'total' => $finalTotal,
-                'status' => $orderStatus, 
                 'order_type' => $orderType,
                 'payment_method' => $paymentMethod,
                 'observation' => $orderObservation,
-                'change_for' => $data['change_for'] ?? null,
-                'is_paid' => $isPaid 
-            ]);
+                'change_for' => $data['change_for'] ?? null
+            ], $orderStatus); // Status passado como segundo parâmetro
             
-            // Correção Pós-Criação
-            if ($orderStatus !== 'novo') {
-                $this->orderRepo->updateStatus($orderId, $orderStatus);
-            }
+            // Atualiza payment se pago
             if ($isPaid) {
                 $this->orderRepo->updatePayment($orderId, true, $paymentMethod);
             }

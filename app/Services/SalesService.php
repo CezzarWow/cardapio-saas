@@ -97,7 +97,10 @@ class SalesService
     }
 
     /**
-     * Reativa mesa: volta status para aberto, ocupa mesa novamente
+     * Reativa mesa: recria pedido com status aberto, ocupa mesa novamente.
+     * 
+     * NOTA: Transição concluido→aberto é inválida no modelo de estados.
+     * Esta função recria o pedido com status 'aberto' ao invés de transitar.
      */
     public function reactivateTable(int $orderId, int $restaurantId): array
     {
@@ -113,6 +116,13 @@ class SalesService
                 throw new Exception("Pagamento não encontrado no caixa.");
             }
 
+            // 2. Buscar pedido original para restaurar dados
+            $originalOrder = $this->orderRepo->find($orderId);
+            
+            if (!$originalOrder || $originalOrder['status'] !== 'concluido') {
+                throw new Exception("Pedido não está concluído ou não existe.");
+            }
+
             // Extrai número da mesa da descrição "Pagamento Mesa #5"
             preg_match('/#(\d+)/', $mov['description'], $matches);
             $tableNum = $matches[1] ?? null;
@@ -121,7 +131,7 @@ class SalesService
                 throw new Exception("Não foi possível identificar a mesa.");
             }
 
-            // 2. Verifica se mesa está livre
+            // 3. Verifica se mesa está livre
             $table = $this->tableRepo->findByNumber($restaurantId, $tableNum);
 
             if (!$table) {
@@ -132,13 +142,43 @@ class SalesService
                 throw new Exception("A Mesa $tableNum já está ocupada por outro cliente!");
             }
 
-            // 3. Reverte tudo
-            $this->orderRepo->updateStatus($orderId, 'aberto');
-            $this->tableRepo->occupy($table['id'], $orderId);
+            // 4. Buscar itens do pedido original para restaurar
+            $items = $this->itemRepo->findAll($orderId);
+
+            // 5. Estornar caixa do pedido antigo
             $this->cashService->deleteByOrderId($conn, $orderId);
 
+            // 6. Criar novo pedido com status 'aberto' (não transitamos concluido→aberto)
+            $newOrderId = $this->orderRepo->create([
+                'restaurant_id' => $restaurantId,
+                'client_id' => $originalOrder['client_id'],
+                'total' => $originalOrder['total'],
+                'order_type' => 'mesa',
+                'payment_method' => 'dinheiro',
+                'observation' => $originalOrder['observation'],
+                'change_for' => null
+            ], 'aberto'); // Status inicial = 'aberto'
+
+            // 7. Copiar itens para o novo pedido
+            foreach ($items as $item) {
+                $this->itemRepo->add($newOrderId, [
+                    'product_id' => $item['product_id'],
+                    'name' => $item['name'] ?? 'Produto',
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'observation' => $item['observation'] ?? null
+                ]);
+            }
+
+            // 8. Ocupar mesa com novo pedido
+            $this->tableRepo->occupy($table['id'], $newOrderId);
+
+            // 9. Marcar pedido antigo como cancelado (se desejar manter histórico)
+            // Ou deletar (mais limpo)
+            $this->orderRepo->delete($orderId);
+
             $conn->commit();
-            return ['success' => true];
+            return ['success' => true, 'new_order_id' => $newOrderId];
 
         } catch (Exception $e) {
             $conn->rollBack();

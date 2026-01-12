@@ -8,7 +8,9 @@ use App\Services\PaymentService;
 use App\Services\CashRegisterService;
 use App\Repositories\StockRepository;
 use App\Repositories\Order\OrderRepository;
+use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\TableRepository;
+use App\Repositories\ClientRepository;
 
 class CreateOrderActionTest extends TestCase
 {
@@ -16,7 +18,9 @@ class CreateOrderActionTest extends TestCase
     private $cashRegisterService;
     private $stockRepository;
     private $orderRepository;
+    private $itemRepository;
     private $tableRepository;
+    private $clientRepository;
     private $action;
 
     protected function setUp(): void
@@ -25,14 +29,18 @@ class CreateOrderActionTest extends TestCase
         $this->cashRegisterService = $this->createMock(CashRegisterService::class);
         $this->stockRepository = $this->createMock(StockRepository::class);
         $this->orderRepository = $this->createMock(OrderRepository::class);
+        $this->itemRepository = $this->createMock(OrderItemRepository::class);
         $this->tableRepository = $this->createMock(TableRepository::class);
+        $this->clientRepository = $this->createMock(ClientRepository::class);
 
         $this->action = new CreateOrderAction(
             $this->paymentService,
             $this->cashRegisterService,
             $this->stockRepository,
             $this->orderRepository,
-            $this->tableRepository
+            $this->itemRepository,
+            $this->tableRepository,
+            $this->clientRepository
         );
     }
 
@@ -44,46 +52,59 @@ class CreateOrderActionTest extends TestCase
             'table_id' => 10,
             'user_id' => 5,
             'cart' => [
-                ['id' => 1, 'product_id' => 1, 'quantity' => 2, 'unit_price' => 10, 'total' => 20]
+                ['id' => 1, 'product_id' => 1, 'quantity' => 2, 'price' => 10]
             ],
             'payment_method' => 'dinheiro'
         ];
 
+        // Mock caixa aberto
+        $this->cashRegisterService
+            ->expects($this->once())
+            ->method('assertOpen')
+            ->willReturn(['id' => 1]);
+
         // Mocks expectations
-        $this->orderRepository->expects($this->once())
+        $this->orderRepository
+            ->expects($this->once())
             ->method('create')
-            ->willReturn(123); // Order ID
+            ->willReturn(123);
 
-        $this->orderRepository->expects($this->once())
-            ->method('insertItems');
+        $this->orderRepository
+            ->expects($this->once())
+            ->method('updateOrderType');
 
-        $this->stockRepository->expects($this->atLeastOnce()) // Called for each item
-             ->method('decrement');
+        $this->itemRepository
+            ->expects($this->once())
+            ->method('insert');
 
-        // Act
+        $this->stockRepository
+            ->expects($this->atLeastOnce())
+            ->method('decrement');
+
         // Act
         $result = $this->action->execute(1, 5, $data);
 
         // Assert
-        // The service returns the Order ID (int), not an array with success key
         $this->assertEquals(123, $result);
-        //$this->assertTrue($result['success']); 
-        //$this->assertEquals(123, $result['order_id']);
     }
 
     public function testExecuteFailsValidation()
     {
         // Arrange
-        $data = []; // Empty data
+        $data = []; // Empty cart
+
+        // Mock caixa aberto
+        $this->cashRegisterService
+            ->expects($this->once())
+            ->method('assertOpen')
+            ->willReturn(['id' => 1]);
+
+        // Assert - should throw exception for empty cart
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('O carrinho está vazio');
 
         // Act
-        // Assuming validation happens inside or before. 
-        // If strict typing catches it, this might throw TypeError. 
-        // Based on previous code, let's see.
-        // The Service usually does minimal validation or assumes Validator ran before.
-        // Let's assume the controller passed valid data structure but maybe logic fails.
-        
-        // For now, just simplistic test.
-        $this->markTestIncomplete('Validation test pending implementation detail check');
+        $this->action->execute(1, 5, $data);
     }
 }
+

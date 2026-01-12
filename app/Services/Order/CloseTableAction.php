@@ -9,7 +9,19 @@ use App\Repositories\Order\OrderRepository;
 use App\Repositories\TableRepository;
 use PDO;
 use Exception;
+use RuntimeException;
 
+/**
+ * Fecha uma mesa (conta de mesa).
+ * 
+ * Responsabilidades:
+ * - Registrar pagamentos
+ * - Atualizar status para 'concluido'
+ * - Registrar movimento de caixa
+ * - Liberar mesa
+ * 
+ * @see implementation_plan.md Seção 0 (Separação Pedido vs Conta)
+ */
 class CloseTableAction
 {
     private PaymentService $paymentService;
@@ -29,6 +41,15 @@ class CloseTableAction
         $this->tableRepo = $tableRepo;
     }
 
+    /**
+     * Executa o fechamento da mesa.
+     * 
+     * @param int $restaurantId ID do restaurante
+     * @param int $tableId ID da mesa
+     * @param array $payments Lista de pagamentos
+     * @throws Exception Se mesa não encontrada ou sem pedido
+     * @throws RuntimeException Se updateStatus não afetar linhas
+     */
     public function execute(int $restaurantId, int $tableId, array $payments): void
     {
         $conn = Database::connect();
@@ -45,21 +66,35 @@ class CloseTableAction
 
             $orderId = $mesa['current_order_id'];
             
+            // Validar status atual
+            $order = $this->orderRepo->find($orderId, $restaurantId);
+            if ($order && $order['status'] !== 'aberto') {
+                throw new Exception(
+                    "Mesa #{$mesa['number']} não tem pedido aberto. Status atual: {$order['status']}"
+                );
+            }
+            
             $mainMethod = $payments[0]['method'] ?? 'dinheiro';
             $paymentMethodDesc = (count($payments) > 1) ? 'multiplo' : $mainMethod;
 
-            // Updates usando Repository (sem SQL direto)
-            $this->orderRepo->updateStatus($orderId, 'concluido');
+            // Atualizar status para concluido COM rowCount check
+            $affected = $this->orderRepo->updateStatus($orderId, 'concluido');
+            
+            if ($affected === 0) {
+                throw new RuntimeException(
+                    "updateStatus affected 0 rows for orderId: {$orderId}"
+                );
+            }
+            
             $this->orderRepo->updatePayment($orderId, true, $paymentMethodDesc);
 
             $this->paymentService->registerPayments($conn, $orderId, $payments);
 
             $desc = "Mesa #" . $mesa['number'];
-            // TODO: registerMovement deveria ser via repo em breve, por enquanto usa Service que tem SQL encapsulado
             $this->cashRegisterService->registerMovement(
                 $conn,
                 $caixa['id'],
-                $mesa['order_total'], // Veio do join no TableRepo
+                $mesa['order_total'],
                 $desc,
                 $orderId
             );
@@ -67,10 +102,14 @@ class CloseTableAction
             $this->tableRepo->free($tableId);
 
             $conn->commit();
+            
+            error_log("[CLOSE_TABLE] Mesa #{$mesa['number']} fechada. Pedido #{$orderId} status: concluido");
 
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $conn->rollBack();
+            error_log("[CLOSE_TABLE] ERRO mesa #{$tableId}: " . $e->getMessage());
             throw $e;
         }
     }
 }
+
