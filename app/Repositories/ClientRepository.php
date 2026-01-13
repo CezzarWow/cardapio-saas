@@ -46,13 +46,27 @@ class ClientRepository
     }
 
     /**
-     * Busca por telefone
+     * Busca por telefone (normaliza para comparar apenas dígitos)
      */
     public function findByPhone(int $restaurantId, string $phone): ?array
     {
+        // Normaliza telefone (remove tudo que não é dígito)
+        $normalizedPhone = preg_replace('/\D/', '', $phone);
+        
+        if (empty($normalizedPhone)) {
+            return null;
+        }
+        
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM clients WHERE restaurant_id = :rid AND phone = :phone LIMIT 1");
-        $stmt->execute(['rid' => $restaurantId, 'phone' => $phone]);
+        
+        // Busca comparando apenas dígitos (REGEXP remove não-dígitos no MySQL)
+        $stmt = $conn->prepare("
+            SELECT * FROM clients 
+            WHERE restaurant_id = :rid 
+            AND REGEXP_REPLACE(phone, '[^0-9]', '') = :phone 
+            LIMIT 1
+        ");
+        $stmt->execute(['rid' => $restaurantId, 'phone' => $normalizedPhone]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
@@ -62,6 +76,9 @@ class ClientRepository
     public function create(int $restaurantId, array $data): int
     {
         $conn = Database::connect();
+        
+        // Normaliza telefone (remove formatação)
+        $phone = isset($data['phone']) ? preg_replace('/\D/', '', $data['phone']) : null;
         
         $stmt = $conn->prepare("
             INSERT INTO clients (restaurant_id, name, type, document, phone, zip_code, address, address_number, neighborhood, city, credit_limit, due_day) 
@@ -73,7 +90,7 @@ class ClientRepository
             'name' => $data['name'],
             'type' => $data['type'] ?? 'fisica',
             'doc' => $data['document'] ?? null,
-            'phone' => $data['phone'] ?? null,
+            'phone' => $phone,
             'zip' => $data['zip_code'] ?? null,
             'addr' => $data['address'] ?? null,
             'num' => $data['address_number'] ?? null,

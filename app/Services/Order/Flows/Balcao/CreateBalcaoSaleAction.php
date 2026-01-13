@@ -72,23 +72,25 @@ class CreateBalcaoSaleAction
         
         try {
             $conn->beginTransaction();
+
+            $mainMethod = count($data['payments']) > 1 
+                ? 'multiplo' 
+                : ($data['payments'][0]['method'] ?? 'dinheiro');
             
             // 3. Criar pedido com status CONCLUIDO
-            // NOTA: Não setamos payment_method no pedido - fonte da verdade é tabela de pagamentos
+            // NOTA: Agora passamos payment_method para evitar Warning no Repository
             $orderId = $this->orderRepo->create([
                 'restaurant_id' => $restaurantId,
                 'client_id' => null,          // Balcão não tem cliente
                 'total' => $total,
                 'order_type' => 'balcao',     // Apenas para persistência, não para lógica
+                'payment_method' => $mainMethod,
                 'observation' => $data['observation'] ?? null,
                 'change_for' => $data['change_for'] ?? null
             ], OrderStatus::CONCLUIDO);       // Status inicial = concluido
             
             // 4. Marcar como pago
             // NOTA: Passamos o primeiro método como referência, mas fonte da verdade é order_payments
-            $mainMethod = count($data['payments']) > 1 
-                ? 'multiplo' 
-                : ($data['payments'][0]['method'] ?? 'dinheiro');
             $this->orderRepo->updatePayment($orderId, true, $mainMethod);
             
             // 5. Inserir itens

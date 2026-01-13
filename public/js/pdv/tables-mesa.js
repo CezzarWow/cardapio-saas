@@ -85,8 +85,10 @@
     // SELECIONAR MESA
     // ==========================================
     PDVTables.selectTable = function (table) {
-        if (table.status === 'ocupada') {
-            alert(`🚧 ATENÇÃO: A Mesa ${table.number} já está ocupada!\nVocê está adicionando itens ao pedido existente.`);
+        // Se mesa está ocupada e tem order_id, redireciona direto para comanda
+        if (table.status === 'ocupada' && table.current_order_id) {
+            window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + table.current_order_id;
+            return;
         }
 
         // Atualiza Estado

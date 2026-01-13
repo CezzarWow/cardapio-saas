@@ -39,7 +39,7 @@ class ClientService {
     /**
      * Cadastra novo cliente
      * 
-     * @throws Exception Se documento já existir
+     * @throws Exception Se documento ou telefone já existir
      */
     public function create(int $restaurantId, array $data): array {
         // Verifica duplicidade de documento
@@ -47,6 +47,14 @@ class ClientService {
             $exists = $this->clientRepo->findByDocument($restaurantId, $data['document']);
             if ($exists) {
                 throw new Exception('CPF/CNPJ já cadastrado neste restaurante');
+            }
+        }
+
+        // Verifica duplicidade de telefone
+        if (!empty($data['phone'])) {
+            $exists = $this->clientRepo->findByPhone($restaurantId, $data['phone']);
+            if ($exists) {
+                throw new Exception('Telefone já cadastrado para: ' . $exists['name']);
             }
         }
 

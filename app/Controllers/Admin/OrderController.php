@@ -33,7 +33,6 @@ class OrderController extends BaseController
     {
         $rid = $this->getRestaurantId();
         $data = $this->getJsonBody();
-        file_put_contents(__DIR__ . '/../../../../public/debug_controller_store.log', date('Y-m-d H:i:s') . " - Store Called: " . json_encode($data) . "\n", FILE_APPEND);
 
         $errors = $this->validator->validateStore($data);
         if ($this->validator->hasErrors($errors)) {

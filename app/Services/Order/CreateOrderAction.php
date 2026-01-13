@@ -95,11 +95,13 @@ class CreateOrderAction
             } elseif ($finalizeNow && $isPaid && $orderType !== 'delivery') {
                 // Se finalizou e pagou (e não é delivery que precisa de aceite), conclui direto
                 $orderStatus = 'concluido';
-            } elseif ($finalizeNow && $isPaid && $orderType === 'delivery') {
-                // Delivery pago fica como 'novo' para entrar no Kanban
+            } elseif ($finalizeNow && $orderType === 'delivery') {
+                // Delivery SEMPRE começa como 'novo' para aparecer no Kanban
+                // (independente de pago ou não)
                 $orderStatus = 'novo'; 
-            } elseif ($finalizeNow && !$isPaid) {
+            } elseif ($finalizeNow && !$isPaid && $orderType !== 'delivery') {
                 // Finalizou mas não pagou (ex: Marcar na conta) -> Aberto (Comanda)
+                // Exceto delivery que deve ir pro Kanban
                 $orderStatus = 'aberto';
             }
 

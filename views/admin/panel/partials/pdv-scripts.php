@@ -20,6 +20,16 @@
     // [NOVO] Taxa de entrega configurada
     const PDV_DELIVERY_FEE = <?= $deliveryFee ?>;
 
+    // Limpa URL após carregar (F5 volta ao balcão limpo)
+    // Só limpa se tiver order_id ou mesa_id na URL
+    (function() {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('order_id') || url.searchParams.has('mesa_id')) {
+            const cleanUrl = url.origin + url.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+    })();
+
     /**
      * Deleta item já salvo da mesa/comanda
      * @param {number} itemId - ID do order_item

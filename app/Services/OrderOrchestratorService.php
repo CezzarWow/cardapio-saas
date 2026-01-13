@@ -59,20 +59,21 @@ class OrderOrchestratorService
         error_log("[DEBUG Orchestrator] link_to_comanda=" . ($data['link_to_comanda'] ?? 'NULL') . ", client_id=" . ($data['client_id'] ?? 'NULL'));
         error_log("[DEBUG Orchestrator] link_to_table=" . ($data['link_to_table'] ?? 'NULL') . ", table_id=" . ($data['table_id'] ?? 'NULL'));
 
-        // FASE 1: Backend Defensivo para Delivery
-        // Se for delivery e tiver cliente, verifica se tem comanda aberta.
-        // Se tiver, força o vínculo, independente de flag do frontend.
-        if (($data['order_type'] ?? '') === 'delivery' && !empty($data['client_id'])) {
-            // Hotfix Agressivo: Se tem cliente, assume intenção de vincular/criar comanda.
-            // Isso resolve o problema de visualização "itens soltos" imediatamente.
-            // Risco: Delivery "Pagar na Entrega" vai abrir uma comanda que precisará ser fechada.
-            // Aceitável para resolver o bloqueio atual.
-            error_log("[DEBUG Orchestrator] DELIVERY DEFENSIVE: Client {$data['client_id']} present. Forcing Linked Action.");
+        // LÓGICA DE DELIVERY COM CLIENTE:
+        // - Delivery NÃO PAGO + cliente: Cria comanda (para cobrar depois) e vai pro Kanban
+        // - Delivery PAGO + cliente: Vai direto pro Kanban (não precisa comanda)
+        $isDelivery = ($data['order_type'] ?? '') === 'delivery';
+        $hasClient = !empty($data['client_id']);
+        $isPaid = !empty($data['payments']) || (isset($data['is_paid']) && $data['is_paid'] == 1);
+        
+        if ($isDelivery && $hasClient && !$isPaid) {
+            // Delivery NÃO PAGO com cliente -> Cria comanda + vai pro Kanban
+            error_log("[DEBUG Orchestrator] DELIVERY NOT PAID: Client {$data['client_id']} present. Creating linked order.");
             $data['link_to_comanda'] = true; 
             return $this->createDeliveryLinkedAction->execute($restaurantId, $userId, $data);
         }
 
-        // Delivery vinculado a Mesa ou Comanda (Lógica Original / Fallback)
+        // Delivery vinculado a Mesa ou Comanda (apenas se EXPLICITAMENTE solicitado)
         $linkToTable = !empty($data['link_to_table']) && !empty($data['table_id']);
         $linkToComanda = !empty($data['link_to_comanda']) && !empty($data['client_id']);
         
