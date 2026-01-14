@@ -72,6 +72,8 @@
                         <span style="position: absolute; left: 12px; top: 14px; color: #64748b; font-weight: bold; font-size: 1.1rem;">R$</span>
                         <input type="text" id="pay-amount" placeholder="0,00" 
                                onkeypress="handleEnter(event)"
+                               onfocus="this.setSelectionRange(this.value.length, this.value.length)"
+                               onclick="this.setSelectionRange(this.value.length, this.value.length)"
                                onkeyup="PDVCheckout.formatMoneyInput(this)"
                                style="width: 100%; padding: 12px 12px 12px 40px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; font-size: 1.2rem; color: #1e293b; outline: none;">
                     </div>
@@ -95,6 +97,8 @@
                         <input type="text" id="display-total-edit" readonly
                                onkeypress="if(event.key === 'Enter') CheckoutAdjust.saveEdit()"
                                oninput="PDVCheckout.formatMoneyInput(this)"
+                               onfocus="this.setSelectionRange(this.value.length, this.value.length)"
+                               onclick="this.setSelectionRange(this.value.length, this.value.length)"
                                style="width: 100%; padding: 6px 6px 6px 30px; border: 1px solid #e2e8f0; border-radius: 6px; font-weight: 700; font-size: 1.05rem; color: #475569; outline: none; background: #f1f5f9; height: 36px;">
                     </div>
                     

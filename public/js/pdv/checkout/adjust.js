@@ -28,6 +28,10 @@ const CheckoutAdjust = {
             input.style.background = 'white';
             input.style.borderColor = '#2563eb';
             input.focus();
+            // Garante cursor no final
+            if (input.setSelectionRange) {
+                input.setSelectionRange(input.value.length, input.value.length);
+            }
 
             if (btnToggle) btnToggle.style.display = 'none';
             if (btnSave) {
@@ -138,11 +142,17 @@ const CheckoutAdjust = {
         // Atualiza UI Geral
         CheckoutUI.updateCheckoutUI();
 
-        // Garante que o input mostre o valor final atingido
         if (document.getElementById('display-total-edit')) {
             const finalVal = CheckoutTotals.getFinalTotal();
             document.getElementById('display-total-edit').value = finalVal.toFixed(2).replace('.', ',');
         }
+    },
+
+    /**
+     * Remove explicitamente o ajuste (chamado ao fechar modal)
+     */
+    removeAdjustment: function () {
+        this._removeExistingAdjustment(-88888);
     },
 
     /**

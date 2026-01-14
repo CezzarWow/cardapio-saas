@@ -173,6 +173,12 @@ const CheckoutFlow = {
         document.getElementById('checkoutModal').style.display = 'none';
         CheckoutState.resetPayments();
 
+        // Feature: Remove ajuste ao cancelar/fechar
+        if (typeof CheckoutAdjust !== 'undefined') {
+            CheckoutAdjust.removeAdjustment();
+            if (typeof CheckoutAdjust._resetUI === 'function') CheckoutAdjust._resetUI();
+        }
+
         // Limpa visual
         const alertBox = document.getElementById('retirada-client-alert');
         if (alertBox) alertBox.style.display = 'none';
