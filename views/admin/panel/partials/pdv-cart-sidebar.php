@@ -68,11 +68,11 @@
         <div style="margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px dashed #e5e7eb;">
             <label style="font-size: 1.1rem; font-weight: 800; color: #1f2937; margin-bottom: 10px; display: block;">Identificar Mesa / Cliente</label>
             
-                <div id="client-search-area" style="display: flex; gap: 12px; align-items: flex-start;">
+                <div id="client-search-area" style="display: flex; gap: 8px; align-items: center; height: 44px;">
                 <!-- Wrapper relativo apenas para o Input e Resultados -->
-                <form id="form-client-search" action="#" onsubmit="return false;" style="position: relative; flex: 1;">
+                <form id="form-client-search" action="#" onsubmit="return false;" style="position: relative; flex: 1; height: 100%;">
                     <input type="text" id="client-search" name="pdv_main_search_<?= time() ?>" autocomplete="off" data-lpignore="true" placeholder="Clique para ver mesas ou digite..."
-                           style="width: 100%; padding: 10px 12px; border: 1px solid #94a3b8; border-radius: 10px; font-size: 1.1rem; outline: none; transition: all 0.2s; background: #f8fafc;">
+                           style="width: 100%; height: 100%; padding: 0 12px; border: 1px solid #94a3b8; border-radius: 10px; font-size: 1rem; outline: none; transition: all 0.2s; background: #f8fafc;">
                     
                     <!-- Dropdown Redesenhado -->
                     <div id="client-results" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); max-height: 200px; overflow-y: auto; z-index: 9999; margin-top: 6px;">
@@ -80,17 +80,17 @@
                 </form>
                 
                 <button type="button" onclick="const m=document.getElementById('clientModal'); if(m) { document.body.appendChild(m); m.style.display='flex'; m.style.zIndex='9999'; document.getElementById('new_client_name').focus(); }" title="Novo Cliente"
-                        style="flex-shrink: 0; background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; height: 38px; width: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                        style="flex-shrink: 0; background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; height: 100%; width: 44px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
                     <i data-lucide="user-plus" style="width: 20px;"></i>
                 </button>
             </div>
 
-            <div id="selected-client-area" style="display: none; background: #ecfdf5; padding: 8px; border-radius: 6px; border: 1px solid #a7f3d0; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <i data-lucide="user" style="width: 16px; color: #059669;"></i>
-                    <span id="selected-client-name" style="font-size: 0.9rem; font-weight: 600; color: #065f46;">Nome</span>
+            <div id="selected-client-area" style="display: none; height: 44px; background: #ecfdf5; padding: 0 12px; border-radius: 10px; border: 1px solid #a7f3d0; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="user" style="width: 18px; color: #059669;"></i>
+                    <span id="selected-client-name" style="font-size: 0.95rem; font-weight: 600; color: #065f46;">Nome</span>
                 </div>
-                <button onclick="clearClient()" style="border: none; background: #d1fae5; color: #059669; cursor: pointer; font-weight: bold; font-size: 1.2rem; padding: 4px 10px; border-radius: 4px;">&times;</button>
+                <button onclick="clearClient()" style="border: none; background: #d1fae5; color: #059669; cursor: pointer; font-weight: bold; font-size: 1.2rem; padding: 4px 10px; border-radius: 6px; display: flex; align-items: center; justify-content: center; height: 32px; width: 32px;">&times;</button>
             </div>
             
             <input type="hidden" id="current_client_id" name="client_id">

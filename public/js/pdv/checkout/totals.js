@@ -66,6 +66,22 @@ const CheckoutTotals = {
         }
 
         return total > 0 ? total : 0;
+    },
+
+    /**
+     * Recalcula o total base (necessário após adicionar item de ajuste)
+     */
+    refreshBaseTotal: function () {
+        let cartTotal = 0;
+        if (typeof PDVCart !== 'undefined') {
+            cartTotal = PDVCart.calculateTotal();
+        }
+        let tableInitialTotal = parseFloat(document.getElementById('table-initial-total')?.value || 0);
+        CheckoutState.cachedTotal = cartTotal + tableInitialTotal;
+
+        // Se estivermos fechando comanda, cachedTotal pode ter lógica diferente no flow.js, 
+        // mas geralmente é item + mesa. 
+        // Em 'comanda', initialTotal já vem populado se estiver fechando conta.
     }
 
 };

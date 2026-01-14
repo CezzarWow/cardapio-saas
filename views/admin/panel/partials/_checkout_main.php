@@ -36,7 +36,7 @@
             
             <!-- 1. Métodos de Pagamento -->
             <div>
-                <label style="display: block; font-size: 0.8rem; color: #64748b; font-weight: 700; margin-bottom: 8px;">FORMA DE PAGAMENTO</label>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <button onclick="setMethod('dinheiro')" id="btn-method-dinheiro" class="payment-method-btn active" style="padding: 14px 10px; border: 2px solid #cbd5e1; border-radius: 10px; background: white; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
                         <i data-lucide="banknote" size="22"></i>
@@ -67,20 +67,48 @@
             <!-- Input Valor a Pagar -->
             <div style="background: #f1f5f9; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
                 <label style="display: block; font-size: 0.85rem; color: #64748b; font-weight: 700; margin-bottom: 8px;">VALOR A LANÇAR</label>
-                <div style="position: relative;">
-                    <span style="position: absolute; left: 12px; top: 14px; color: #64748b; font-weight: bold; font-size: 1.1rem;">R$</span>
-                    <input type="text" id="pay-amount" placeholder="0,00" 
-                           onkeypress="handleEnter(event)"
-                           onkeyup="PDVCheckout.formatMoneyInput(this)"
-                           style="width: 100%; padding: 12px 12px 12px 40px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; font-size: 1.2rem; color: #1e293b; outline: none;">
+                <div style="position: relative; display: flex; gap: 8px;">
+                    <div style="position: relative; flex: 1;">
+                        <span style="position: absolute; left: 12px; top: 14px; color: #64748b; font-weight: bold; font-size: 1.1rem;">R$</span>
+                        <input type="text" id="pay-amount" placeholder="0,00" 
+                               onkeypress="handleEnter(event)"
+                               onkeyup="PDVCheckout.formatMoneyInput(this)"
+                               style="width: 100%; padding: 12px 12px 12px 40px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; font-size: 1.2rem; color: #1e293b; outline: none;">
+                    </div>
+                    <button onclick="CheckoutPayments.addPayment()" title="Adicionar Pagamento" style="width: 50px; background: #22c55e; color: white; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;" onmouseover="this.style.background='#16a34a'" onmouseout="this.style.background='#22c55e'">
+                        <i data-lucide="plus" size="24"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- Botão Adicionar Pagamento -->
-            <button onclick="addPayment()" style="width: 100%; padding: 12px; background: #e2e8f0; color: #475569; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: auto; transition: all 0.2s;" onmouseover="this.style.background='#cbd5e1'" onmouseout="this.style.background='#e2e8f0'">
-                <i data-lucide="plus" size="18"></i>
-                ADICIONAR PAGAMENTO
-            </button>
+
+
+            <!-- Área de Ajuste de Total (Layout Compacto - Alinhado à Esquerda) -->
+            <div style="margin-top: 15px; background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px dashed #cbd5e1; display: flex; align-items: center; gap: 10px;">
+                <label style="font-size: 0.85rem; color: #64748b; font-weight: 700; white-space: nowrap; margin: 0;">
+                    TOTAL FINAL:
+                </label>
+                
+                <div style="display: flex; gap: 6px; align-items: center; flex: 1;">
+                     <div style="position: relative; width: 130px;">
+                        <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #64748b; font-weight: bold; font-size: 0.95rem;">R$</span>
+                        <input type="text" id="display-total-edit" readonly
+                               onkeypress="if(event.key === 'Enter') CheckoutAdjust.saveEdit()"
+                               oninput="PDVCheckout.formatMoneyInput(this)"
+                               style="width: 100%; padding: 6px 6px 6px 30px; border: 1px solid #e2e8f0; border-radius: 6px; font-weight: 700; font-size: 1.05rem; color: #475569; outline: none; background: #f1f5f9; height: 36px;">
+                    </div>
+                    
+                    <button id="btn-toggle-edit" onclick="CheckoutAdjust.toggleEdit()" title="Editar Valor Final"
+                            style="width: 36px; height: 36px; background: white; color: #64748b; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                        <i data-lucide="edit-2" size="16"></i>
+                    </button>
+                    
+                    <button id="btn-save-total" onclick="CheckoutAdjust.saveEdit()" title="Confirmar Ajuste"
+                            style="display: none; width: 36px; height: 36px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; align-items: center; justify-content: center; transition: all 0.2s;">
+                        <i data-lucide="check" size="18"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- COLUNA DIREITA: Lista de Pagamentos + Totais -->

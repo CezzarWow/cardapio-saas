@@ -49,8 +49,22 @@ const CheckoutUI = {
         document.getElementById('display-paid').innerText = CheckoutHelpers.formatCurrency(CheckoutState.totalPaid);
         document.getElementById('checkout-total-display').innerText = CheckoutHelpers.formatCurrency(finalTotal);
 
+        // Atualiza input de Edição de Total (apenas se não estiver editando)
+        const totalInput = document.getElementById('display-total-edit');
+        if (totalInput && totalInput.readOnly) {
+            totalInput.value = finalTotal.toFixed(2).replace('.', ',');
+            if (CheckoutHelpers.formatMoneyInput) CheckoutHelpers.formatMoneyInput(totalInput);
+        }
+
         const remaining = finalTotal - CheckoutState.totalPaid;
         const btnFinish = document.getElementById('btn-finish-sale');
+
+        // Feature: Atualiza valor a lançar com o restante atualizado
+        const payInput = document.getElementById('pay-amount');
+        if (payInput) {
+            payInput.value = Math.max(0, remaining).toFixed(2).replace('.', ',');
+            if (CheckoutHelpers.formatMoneyInput) CheckoutHelpers.formatMoneyInput(payInput);
+        }
 
         document.getElementById('display-remaining').innerText = CheckoutHelpers.formatCurrency(Math.max(0, remaining));
 

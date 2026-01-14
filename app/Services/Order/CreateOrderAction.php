@@ -71,11 +71,26 @@ class CreateOrderAction
             }
 
             $totalVenda = 0;
-            foreach ($cart as $item) {
-                $totalVenda += $item['price'] * $item['quantity'];
-            }
+            
+            // Feature: Separa itens reais de ajustes negativos (que viram desconto)
+            $finalCart = [];
+            $adjustmentDiscount = 0;
 
-            $discount = floatval($data['discount'] ?? 0);
+            foreach ($cart as $item) {
+                // Se for item de ajuste negativo, converte em desconto
+                if (floatval($item['price']) < 0) {
+                    $adjustmentDiscount += abs(floatval($item['price']) * ($item['quantity'] ?? 1));
+                } else {
+                    $finalCart[] = $item;
+                    $totalVenda += $item['price'] * ($item['quantity'] ?? 1);
+                }
+            }
+            
+            // Atualiza a variávei $cart para usar apenas os itens válidos nas inserções subsequentes
+            // Mantemos $originalCart se precisarmos de ref, mas para DB usamos $finalCart
+            $cart = $finalCart;                                
+
+            $discount = floatval($data['discount'] ?? 0) + $adjustmentDiscount;
             $deliveryFee = floatval($data['delivery_fee'] ?? 0);
             $finalTotal = max(0, $totalVenda + $deliveryFee - $discount);
             
@@ -119,9 +134,9 @@ class CreateOrderAction
                     // Adicionar itens ao pedido existente
                     $this->itemRepo->insert($existingOrderId, $cart);
                     
-                    // Atualizar total do pedido (soma com o existente)
-                    $newTotal = floatval($existingOrder['total']) + $totalVenda;
-                    $this->orderRepo->updateTotal($existingOrderId, $newTotal);
+                    // Atualizar total do pedido (soma novos itens - descontos de ajuste)
+                    $newTotal = floatval($existingOrder['total']) + $totalVenda - $adjustmentDiscount;
+                    $this->orderRepo->updateTotal($existingOrderId, max(0, $newTotal));
                     
                     // Baixa Estoque
                     foreach ($cart as $item) {
