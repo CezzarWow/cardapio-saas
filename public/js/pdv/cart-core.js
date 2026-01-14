@@ -15,6 +15,36 @@
     PDVCart.backupItems = [];
 
     // ==========================================
+    // PERSISTÊNCIA / MIGRAÇÃO
+    // ==========================================
+    PDVCart.saveForMigration = function () {
+        if (this.items.length > 0) {
+            sessionStorage.setItem('pdv_migration_cart', JSON.stringify(this.items));
+        }
+    };
+
+    PDVCart.recoverFromMigration = function () {
+        const data = sessionStorage.getItem('pdv_migration_cart');
+        if (data) {
+            try {
+                const items = JSON.parse(data);
+                if (Array.isArray(items)) {
+                    // Adiciona itens ao carrinho atual (merge)
+                    items.forEach(item => {
+                        // Remove IDs temporários antigos para gerar novos e evitar conflitos
+                        const { cartItemId, ...cleanItem } = item;
+                        this.add(cleanItem.id, cleanItem.name, cleanItem.price, cleanItem.quantity, cleanItem.extras);
+                    });
+                }
+            } catch (e) {
+                console.error('Erro ao recuperar carrinho:', e);
+            }
+            sessionStorage.removeItem('pdv_migration_cart');
+        }
+    };
+
+
+    // ==========================================
     // SET ITEMS (Carregar do PHP)
     // ==========================================
     PDVCart.setItems = function (newItems) {

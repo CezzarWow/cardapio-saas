@@ -3,6 +3,16 @@
  * Orquestra os módulos: State, Cart, Tables, Checkout.
  */
 
+// Limpa URL após carregar (F5 volta ao balcão limpo)
+// Só limpa se tiver order_id ou mesa_id na URL
+(function () {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('order_id') || url.searchParams.has('mesa_id')) {
+        const cleanUrl = url.origin + url.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+    }
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. INICIALIZA ESTADO (PDVState)
     const tableIdInput = document.getElementById('current_table_id');
@@ -48,6 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
         PDVCart.setItems(items);
         // alert('Pedido carregado para edição! ✏️'); // Opcional
     }
+
+    // [MIGRATION] Recupera itens do balcão se houver migração pendente
+    if (typeof PDVCart.recoverFromMigration === 'function') {
+        PDVCart.recoverFromMigration();
+    }
+
 
     // 3. INICIALIZA MÓDULOS DE UI
     if (window.PDVTables) PDVTables.init();

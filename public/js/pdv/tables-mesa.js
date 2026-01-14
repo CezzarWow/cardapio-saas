@@ -87,6 +87,8 @@
     PDVTables.selectTable = function (table) {
         // Se mesa está ocupada e tem order_id, redireciona direto para comanda
         if (table.status === 'ocupada' && table.current_order_id) {
+            // [MIGRATION] Salva carrinho atual antes de redirecionar
+            if (typeof PDVCart !== 'undefined') PDVCart.saveForMigration();
             window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + table.current_order_id;
             return;
         }

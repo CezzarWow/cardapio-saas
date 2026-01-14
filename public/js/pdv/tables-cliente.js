@@ -61,6 +61,8 @@
     PDVTables.selectClient = function (id, name, openOrderId = null) {
         // Se cliente tem comanda aberta, redirecionar para ela
         if (openOrderId) {
+            // [MIGRATION] Salva carrinho atual antes de redirecionar
+            if (typeof PDVCart !== 'undefined') PDVCart.saveForMigration();
             window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
             return;
         }
