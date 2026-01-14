@@ -108,11 +108,30 @@
             openModal: function (type) {
                 const modal = document.getElementById('superClientModal');
                 if (modal) {
+                    this.resetForm(); // Limpa ao abrir para garantir
                     modal.style.display = 'flex';
                     // Configura visual
                     this.setTypeVisual(type);
                     document.getElementById('cli_name').focus();
                 }
+            },
+
+            closeModal: function () {
+                const modal = document.getElementById('superClientModal');
+                if (modal) modal.style.display = 'none';
+                this.resetForm();
+            },
+
+            resetForm: function () {
+                const ids = [
+                    'cli_name', 'cli_doc', 'cli_phone', 'cli_zip',
+                    'cli_addr', 'cli_num', 'cli_bairro', 'cli_city',
+                    'cli_limit', 'cli_due'
+                ];
+                ids.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
             },
 
             setTypeVisual: function (type) {
@@ -141,14 +160,12 @@
                 }
 
                 if (headerDados) {
-                    headerDados.innerText = type === 'PF'
-                        ? 'DADOS PESSOAIS'
-                        : 'DADOS DA EMPRESA';
-                }
+                    headerDados.innerHTML = type === 'PF'
+                        ? '<i data-lucide="user" size="16"></i> DADOS PESSOAIS'
+                        : '<i data-lucide="building-2" size="16"></i> DADOS DA EMPRESA';
 
-                // Limpa campos dependentes
-                const docInput = document.getElementById('cli_doc');
-                if (docInput) docInput.value = '';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
             }
         },
 
@@ -220,6 +237,7 @@
 
     // Aliases para compatibilidade com onclick PHP
     window.openNewClientModal = (type) => ClientManager.ui.openModal(type);
+    window.closeSuperClientModal = () => ClientManager.ui.closeModal();
     window.saveSuperClient = () => ClientManager.api.save();
 
     // Inicialização
