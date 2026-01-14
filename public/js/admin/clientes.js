@@ -1,176 +1,110 @@
 /**
- * CLIENTES.JS - Gestão de Clientes (Admin)
- * Refatorado para Módulo: ClientManager
+ * CLIENTES.JS - Gestão de Clientes (Orquestrador)
+ * 
+ * Módulo principal de gerenciamento de clientes.
+ * Coordena máscaras de input, validação e comunicação com API.
+ * 
+ * Dependências: 
+ *   - InputMasks (shared/masks.js)
+ *   - ClientValidator (admin/client-validator.js)
+ * 
+ * Exporta: 
+ *   - window.ClientManager
+ *   - window.openNewClientModal(type)
+ *   - window.closeSuperClientModal()
+ *   - window.saveSuperClient()
  */
 
 (function () {
     'use strict';
 
-    const ClientManager = {
+    var ClientManager = {
         // ==========================================
         // ESTADO
         // ==========================================
         state: {
-            currentType: 'PF', // PF ou PJ
-            isDuplicate: false // Controle de duplicidade
-        },
-
-        // ==========================================
-        // MÁSCARAS
-        // ==========================================
-        masks: {
-            phone: (v) => {
-                v = v.replace(/\D/g, "");
-                v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
-                v = v.replace(/(\d)(\d{4})$/, "$1-$2");
-                return v.substring(0, 15);
-            },
-            cpf: (v) => {
-                v = v.replace(/\D/g, "");
-                v = v.replace(/(\d{3})(\d)/, "$1.$2");
-                v = v.replace(/(\d{3})(\d)/, "$1.$2");
-                v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-                return v.substring(0, 14);
-            },
-            cnpj: (v) => {
-                v = v.replace(/\D/g, "");
-                v = v.replace(/^(\d{2})(\d)/, "$1.$2");
-                v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
-                v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
-                v = v.replace(/(\d{4})(\d)/, "$1-$2");
-                return v.substring(0, 18);
-            },
-            zip: (v) => {
-                v = v.replace(/\D/g, "");
-                v = v.replace(/^(\d{5})(\d)/, "$1-$2");
-                return v.substring(0, 9);
-            },
-            currency: (v) => {
-                v = v.replace(/\D/g, "");
-                if (v === "") return "";
-                v = (parseInt(v) / 100).toFixed(2) + "";
-                v = v.replace(".", ",");
-                v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-                return "R$ " + v;
-            },
-            titleCase: (v) => {
-                if (!v) return "";
-                return v.toLowerCase().replace(/(?:^|\s|["'([{])+\S/g, match => match.toUpperCase());
-            }
+            currentType: 'PF' // PF ou PJ
         },
 
         // ==========================================
         // INICIALIZAÇÃO
         // ==========================================
         init: function () {
-            this.bindEvents();
-
+            this._bindMasks();
+            this._bindNameValidation();
+            this._bindLimitInput();
         },
 
-        bindEvents: function () {
-            // Helper para aplicar máscara
-            const addMask = (id, fn) => {
-                const el = document.getElementById(id);
-                if (el) el.addEventListener('input', e => e.target.value = fn(e.target.value));
-            };
+        // ==========================================
+        // BINDINGS PRIVADOS
+        // ==========================================
 
-            addMask('cli_phone', this.masks.phone);
-            addMask('cli_zip', this.masks.zip);
+        /**
+         * Aplica máscaras aos inputs
+         */
+        _bindMasks: function () {
+            var self = this;
 
-            // Nome: Capitalização e Duplicidade
-            const nameInput = document.getElementById('cli_name');
-            if (nameInput) {
-                // Máscara Title Case (Ao digitar)
-                nameInput.addEventListener('input', e => {
-                    const start = e.target.selectionStart;
-                    const oldVal = e.target.value;
-                    const newVal = this.masks.titleCase(oldVal);
+            // Telefone e CEP
+            InputMasks.applyTo('cli_phone', InputMasks.phone);
+            InputMasks.applyTo('cli_zip', InputMasks.zip);
 
-                    if (oldVal !== newVal) {
-                        e.target.value = newVal;
-                        e.target.setSelectionRange(start, start);
-                    }
-
-                    // Reseta erro visual
-                    if (ClientManager.state.isDuplicate) {
-                        ClientManager.state.isDuplicate = false;
-                        nameInput.style.borderColor = '#cbd5e1';
-                        const errSpan = document.getElementById('cli-name-error');
-                        if (errSpan) errSpan.style.display = 'none';
-                    }
-                });
-
-                // Checar Duplicidade (Ao sair)
-                nameInput.addEventListener('blur', async e => {
-                    const val = e.target.value.trim();
-                    if (val.length > 2) {
-                        try {
-                            // Tenta inferir endpoint correto
-                            const baseUrl = typeof window.BASE_URL !== 'undefined' ? window.BASE_URL : '';
-                            // Ajuste para rota comum de busca: /admin/clientes/buscar
-                            let url = `${baseUrl}/admin/clientes/buscar?q=${encodeURIComponent(val)}`;
-
-                            // Correção de barra duplicada se houver
-                            url = url.replace('//admin', '/admin');
-
-                            const r = await fetch(url);
-                            const data = await r.json();
-
-                            // Verifica correspondência exata
-                            const exists = Array.isArray(data) && data.some(c => c.name.toLowerCase() === val.toLowerCase());
-
-                            if (exists) {
-                                ClientManager.state.isDuplicate = true;
-                                nameInput.style.borderColor = '#ef4444'; // Vermelho
-
-                                let errSpan = document.getElementById('cli-name-error');
-                                if (!errSpan) {
-                                    errSpan = document.createElement('span');
-                                    errSpan.id = 'cli-name-error';
-                                    errSpan.style.color = '#ef4444';
-                                    errSpan.style.fontSize = '0.75rem';
-                                    errSpan.style.fontWeight = '700';
-                                    errSpan.style.display = 'block';
-                                    errSpan.style.marginTop = '4px';
-                                    nameInput.parentNode.appendChild(errSpan);
-                                }
-                                errSpan.innerText = 'Este cliente já está cadastrado.';
-                                errSpan.style.display = 'block';
-                            } else {
-                                // Se não existir, garante sucesso visual (ou remove erro)
-                                ClientManager.state.isDuplicate = false;
-                                nameInput.style.borderColor = '#cbd5e1';
-                                const errSpan = document.getElementById('cli-name-error');
-                                if (errSpan) errSpan.style.display = 'none';
-                            }
-                        } catch (err) { console.error('Erro ao verificar duplicidade:', err); }
-                    }
-                });
-            }
-
-            // CPF/CNPJ Dinâmico
-            const docInput = document.getElementById('cli_doc');
+            // CPF/CNPJ dinâmico baseado no tipo
+            var docInput = document.getElementById('cli_doc');
             if (docInput) {
-                docInput.addEventListener('input', e => {
-                    e.target.value = this.state.currentType === 'PF'
-                        ? this.masks.cpf(e.target.value)
-                        : this.masks.cnpj(e.target.value);
+                docInput.addEventListener('input', function (e) {
+                    var maskFn = self.state.currentType === 'PF' ? InputMasks.cpf : InputMasks.cnpj;
+                    e.target.value = maskFn(e.target.value);
                 });
             }
+        },
 
-            // Moeda (Crediário)
-            const limitInput = document.getElementById('cli_limit');
-            if (limitInput) {
-                limitInput.addEventListener('input', e => {
-                    e.target.value = this.masks.currency(e.target.value);
-                });
-            }
+        /**
+         * Configura validação do nome (Title Case + Duplicidade)
+         */
+        _bindNameValidation: function () {
+            var nameInput = document.getElementById('cli_name');
+            if (!nameInput) return;
 
-            // Dia Vencimento (1-31)
-            const dueInput = document.getElementById('cli_due');
+            // Input: Aplica Title Case e limpa erros
+            nameInput.addEventListener('input', function (e) {
+                // Preserva posição do cursor
+                var start = e.target.selectionStart;
+                var oldVal = e.target.value;
+                var newVal = InputMasks.titleCase(oldVal);
+
+                if (oldVal !== newVal) {
+                    e.target.value = newVal;
+                    e.target.setSelectionRange(start, start);
+                }
+
+                // Limpa erro visual ao digitar
+                ClientValidator.clearError(nameInput);
+            });
+
+            // Blur: Verifica duplicidade
+            nameInput.addEventListener('blur', async function (e) {
+                var name = e.target.value.trim();
+                var isDuplicate = await ClientValidator.checkDuplicate(name);
+
+                if (isDuplicate) {
+                    ClientValidator.showError(nameInput, 'Este cliente já está cadastrado.');
+                }
+            });
+        },
+
+        /**
+         * Configura input de limite de crédito e dia de vencimento
+         */
+        _bindLimitInput: function () {
+            // Limite de crédito
+            InputMasks.applyTo('cli_limit', InputMasks.currency);
+
+            // Dia de vencimento (1-31)
+            var dueInput = document.getElementById('cli_due');
             if (dueInput) {
-                dueInput.addEventListener('input', e => {
-                    let val = parseInt(e.target.value);
+                dueInput.addEventListener('input', function (e) {
+                    var val = parseInt(e.target.value);
                     if (val > 31) e.target.value = 31;
                     if (val < 1) e.target.value = '';
                 });
@@ -178,138 +112,161 @@
         },
 
         // ==========================================
-        // UI - INTERFACE
+        // UI - MODAL
         // ==========================================
-        ui: {
-            openModal: function (type) {
-                const modal = document.getElementById('superClientModal');
-                if (modal) {
-                    this.resetForm(); // Limpa ao abrir para garantir
-                    modal.style.display = 'flex';
-                    // Configura visual
-                    this.setTypeVisual(type);
-                    document.getElementById('cli_name').focus();
-                }
-            },
 
-            closeModal: function () {
-                const modal = document.getElementById('superClientModal');
-                if (modal) modal.style.display = 'none';
-                this.resetForm();
-            },
+        /**
+         * Abre o modal de cadastro
+         * @param {string} type - 'PF' ou 'PJ'
+         */
+        openModal: function (type) {
+            var modal = document.getElementById('superClientModal');
+            if (!modal) return;
 
-            resetForm: function () {
-                const ids = [
-                    'cli_name', 'cli_doc', 'cli_phone', 'cli_zip',
-                    'cli_addr', 'cli_num', 'cli_bairro', 'cli_city',
-                    'cli_limit', 'cli_due'
-                ];
-                ids.forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = '';
-                });
-            },
+            this.resetForm();
+            modal.style.display = 'flex';
+            this.setType(type);
+            document.getElementById('cli_name').focus();
+        },
 
-            setTypeVisual: function (type) {
-                ClientManager.state.currentType = type;
+        /**
+         * Fecha o modal de cadastro
+         */
+        closeModal: function () {
+            var modal = document.getElementById('superClientModal');
+            if (modal) modal.style.display = 'none';
+            this.resetForm();
+        },
 
-                const lblName = document.getElementById('lbl-name');
-                const lblDoc = document.getElementById('lbl-doc');
-                const subtitle = document.getElementById('modal-subtitle');
-                const headerDados = document.getElementById('header-dados');
+        /**
+         * Limpa todos os campos do formulário
+         */
+        resetForm: function () {
+            var ids = [
+                'cli_name', 'cli_doc', 'cli_phone', 'cli_zip',
+                'cli_addr', 'cli_num', 'cli_bairro', 'cli_city',
+                'cli_limit', 'cli_due'
+            ];
 
-                // Garante que elementos existem antes de alterar
-                if (lblName) {
-                    lblName.innerHTML = type === 'PF'
-                        ? 'Nome Completo <span style="color: #ef4444">*</span>'
-                        : 'Razão Social <span style="color: #ef4444">*</span>';
-                }
+            ids.forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.value = '';
+            });
 
-                if (lblDoc) {
-                    lblDoc.innerHTML = type === 'PF' ? 'CPF (Opcional)' : 'CNPJ (Opcional)';
-                }
+            // Limpa erros visuais
+            var nameInput = document.getElementById('cli_name');
+            if (nameInput) ClientValidator.clearError(nameInput);
+        },
 
-                if (subtitle) {
-                    subtitle.innerText = type === 'PF'
-                        ? 'Preencha os dados do cliente'
-                        : 'Preencha os dados da empresa';
-                }
+        /**
+         * Configura o tipo (PF ou PJ) e atualiza labels
+         * @param {string} type - 'PF' ou 'PJ'
+         */
+        setType: function (type) {
+            this.state.currentType = type;
+            var isPF = type === 'PF';
 
-                if (headerDados) {
-                    headerDados.innerHTML = type === 'PF'
-                        ? '<i data-lucide="user" size="16"></i> DADOS PESSOAIS'
-                        : '<i data-lucide="building-2" size="16"></i> DADOS DA EMPRESA';
+            // Labels
+            var lblName = document.getElementById('lbl-name');
+            var lblDoc = document.getElementById('lbl-doc');
+            var subtitle = document.getElementById('modal-subtitle');
+            var headerDados = document.getElementById('header-dados');
 
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
-                }
+            if (lblName) {
+                lblName.innerHTML = isPF
+                    ? 'Nome Completo <span style="color:#ef4444">*</span>'
+                    : 'Razão Social <span style="color:#ef4444">*</span>';
+            }
+
+            if (lblDoc) {
+                lblDoc.innerHTML = isPF ? 'CPF (Opcional)' : 'CNPJ (Opcional)';
+            }
+
+            if (subtitle) {
+                subtitle.innerText = isPF
+                    ? 'Preencha os dados do cliente'
+                    : 'Preencha os dados da empresa';
+            }
+
+            if (headerDados) {
+                headerDados.innerHTML = isPF
+                    ? '<i data-lucide="user" size="16"></i> DADOS PESSOAIS'
+                    : '<i data-lucide="building-2" size="16"></i> DADOS DA EMPRESA';
+
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             }
         },
 
         // ==========================================
-        // API - SERVER
+        // API - SERVIDOR
         // ==========================================
-        api: {
-            save: function () {
-                // Limpeza de campos
-                let limitVal = document.getElementById('cli_limit').value;
-                limitVal = limitVal.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
 
-                // Construção do Payload
-                const payload = {
-                    type: ClientManager.state.currentType,
-                    name: document.getElementById('cli_name').value,
-                    document: document.getElementById('cli_doc').value,
-                    phone: document.getElementById('cli_phone').value,
-                    zip_code: document.getElementById('cli_zip').value,
-                    neighborhood: document.getElementById('cli_bairro').value,
-                    address: document.getElementById('cli_addr').value,
-                    address_number: document.getElementById('cli_num').value,
-                    city: document.getElementById('cli_city').value,
-                    credit_limit: parseFloat(limitVal) || 0,
-                    due_day: document.getElementById('cli_due').value
-                };
+        /**
+         * Salva o cliente no servidor
+         */
+        save: function () {
+            var self = this;
 
-                // Validação Básica
-                if (!payload.name) {
-                    alert('Por favor, preencha o Nome/Razão Social.');
-                    return;
-                }
+            // Coleta dados
+            var name = document.getElementById('cli_name').value.trim();
+            var limitEl = document.getElementById('cli_limit');
+            var limitVal = limitEl ? limitEl.value.replace('R$ ', '').replace(/\./g, '').replace(',', '.') : '0';
 
-                // Check Duplicidade (Bloqueio Final)
-                if (ClientManager.state.isDuplicate) {
-                    alert('Este nome já existe cadastrado no sistema. Utilize outro nome ou busque o cliente existente.');
-                    document.getElementById('cli_name').focus();
-                    return;
-                }
-
-                // Determinar BASE_URL
-                const baseUrl = typeof window.BASE_URL !== 'undefined' ? window.BASE_URL : '/cardapio-saas/public';
-
-                const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-                fetch(`${baseUrl}/admin/loja/clientes/salvar`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrf
-                    },
-                    body: JSON.stringify(payload)
-                })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert((ClientManager.state.currentType === 'PF' ? 'Cliente' : 'Empresa') + ' cadastrado com sucesso!');
-                            document.getElementById('superClientModal').style.display = 'none';
-                            window.location.reload();
-                        } else {
-                            alert('Erro ao salvar: ' + (data.message || 'Erro desconhecido'));
-                        }
-                    })
-                    .catch(err => {
-                        console.error('[ClientManager] API Error:', err);
-                        alert('Erro de Conexão. Detalhes no console.');
-                    });
+            // Validação básica
+            if (!name) {
+                alert('Por favor, preencha o Nome/Razão Social.');
+                return;
             }
+
+            // Validação de duplicidade
+            if (ClientValidator.isDuplicate()) {
+                alert('Este nome já existe cadastrado no sistema. Utilize outro nome ou busque o cliente existente.');
+                document.getElementById('cli_name').focus();
+                return;
+            }
+
+            // Monta payload
+            var payload = {
+                type: this.state.currentType,
+                name: name,
+                document: document.getElementById('cli_doc')?.value || '',
+                phone: document.getElementById('cli_phone')?.value || '',
+                zip_code: document.getElementById('cli_zip')?.value || '',
+                neighborhood: document.getElementById('cli_bairro')?.value || '',
+                address: document.getElementById('cli_addr')?.value || '',
+                address_number: document.getElementById('cli_num')?.value || '',
+                city: document.getElementById('cli_city')?.value || '',
+                credit_limit: parseFloat(limitVal) || 0,
+                due_day: document.getElementById('cli_due')?.value || ''
+            };
+
+            // Envia
+            var baseUrl = typeof window.BASE_URL !== 'undefined' ? window.BASE_URL : '';
+            var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            fetch(baseUrl + '/admin/loja/clientes/salvar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf || ''
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        var tipo = self.state.currentType === 'PF' ? 'Cliente' : 'Empresa';
+                        alert(tipo + ' cadastrado com sucesso!');
+                        document.getElementById('superClientModal').style.display = 'none';
+                        window.location.reload();
+                    } else {
+                        alert('Erro ao salvar: ' + (data.message || 'Erro desconhecido'));
+                    }
+                })
+                .catch(function (err) {
+                    console.error('[ClientManager] Erro de conexão:', err);
+                    alert('Erro de Conexão. Verifique o console para detalhes.');
+                });
         }
     };
 
@@ -319,11 +276,13 @@
     window.ClientManager = ClientManager;
 
     // Aliases para compatibilidade com onclick PHP
-    window.openNewClientModal = (type) => ClientManager.ui.openModal(type);
-    window.closeSuperClientModal = () => ClientManager.ui.closeModal();
-    window.saveSuperClient = () => ClientManager.api.save();
+    window.openNewClientModal = function (type) { ClientManager.openModal(type); };
+    window.closeSuperClientModal = function () { ClientManager.closeModal(); };
+    window.saveSuperClient = function () { ClientManager.save(); };
 
     // Inicialização
-    document.addEventListener('DOMContentLoaded', () => ClientManager.init());
+    document.addEventListener('DOMContentLoaded', function () {
+        ClientManager.init();
+    });
 
 })();
