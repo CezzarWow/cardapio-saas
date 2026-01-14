@@ -103,6 +103,61 @@ const CheckoutUI = {
             btnFinish.style.background = '#cbd5e1';
             btnFinish.style.cursor = 'not-allowed';
         }
+
+        // Verificação Crediário
+        const credContainer = document.getElementById('container-crediario-slot');
+        const credInput = document.getElementById('crediario-amount');
+        const credBtn = document.getElementById('btn-add-crediario');
+        const credLimitInput = document.getElementById('current_client_credit_limit');
+        let creditLimit = 0;
+
+        if (credLimitInput && credLimitInput.value) {
+            creditLimit = parseFloat(credLimitInput.value);
+        }
+
+        // Ler Dívida (Fetch Async preenche isso)
+        const credDebtInput = document.getElementById('current_client_debt');
+        let creditDebt = 0;
+        if (credDebtInput && credDebtInput.value) {
+            creditDebt = parseFloat(credDebtInput.value);
+        }
+
+        const lblTotal = document.getElementById('cred-limit-total');
+        const lblAvail = document.getElementById('cred-limit-available');
+
+        if (credInput && credBtn) {
+            if (creditLimit > 0) {
+                credInput.disabled = false;
+                credBtn.disabled = false;
+                if (credContainer) credContainer.style.opacity = '1';
+                credBtn.style.opacity = '1';
+                credBtn.style.cursor = 'pointer';
+                if (credInput.placeholder === "Sem Limite") credInput.placeholder = "0,00";
+
+                // Atualiza Textos
+                if (lblTotal) lblTotal.innerText = CheckoutHelpers.formatCurrency(creditLimit);
+                if (lblAvail) {
+                    const available = creditLimit - creditDebt;
+                    lblAvail.innerText = CheckoutHelpers.formatCurrency(available);
+                    // Destaque visual
+                    lblAvail.style.color = available >= 0 ? '#15803d' : '#dc2626';
+                }
+            } else {
+                credInput.disabled = true;
+                credBtn.disabled = true;
+                if (credContainer) credContainer.style.opacity = '0.5';
+                credBtn.style.opacity = '0.5';
+                credBtn.style.cursor = 'not-allowed';
+                credInput.value = '';
+                credInput.placeholder = "Sem Limite";
+
+                if (lblTotal) lblTotal.innerText = 'R$ 0,00';
+                if (lblAvail) {
+                    lblAvail.innerText = 'R$ 0,00';
+                    lblAvail.style.color = '#9a3412';
+                }
+            }
+        }
     },
 
     /**

@@ -49,9 +49,10 @@ class TableRepository
     public function findAll(int $restaurantId): array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT t.*, o.total as order_total 
+        $stmt = $conn->prepare("SELECT t.*, o.total as order_total, c.credit_limit, c.name as client_name 
                                 FROM tables t 
                                 LEFT JOIN orders o ON t.current_order_id = o.id 
+                                LEFT JOIN clients c ON o.client_id = c.id
                                 WHERE t.restaurant_id = :rid 
                                 ORDER BY CAST(t.number AS UNSIGNED)");
         $stmt->execute(['rid' => $restaurantId]);

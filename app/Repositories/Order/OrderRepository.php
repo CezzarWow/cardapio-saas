@@ -293,4 +293,65 @@ class OrderRepository
         
         return $result ?: null;
     }
+
+    /**
+     * Calcula a dívida total de um cliente (soma de pagamentos via crediário)
+     * 
+     * @param int $clientId ID do cliente
+     * @return float Total da dívida em crediário
+     */
+    public function getDebtByClient(int $clientId): float
+    {
+        $conn = Database::connect();
+        
+        $stmt = $conn->prepare("
+            SELECT COALESCE(SUM(op.amount), 0) as debt
+            FROM order_payments op
+            INNER JOIN orders o ON o.id = op.order_id
+            WHERE o.client_id = :cid
+            AND o.status != 'cancelado'
+            AND op.method = 'crediario'
+        ");
+        
+        $stmt->execute(['cid' => $clientId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return (float) ($result['debt'] ?? 0);
+    }
+
+    /**
+     * Busca histórico de pedidos de um cliente
+     * 
+     * @param int $clientId ID do cliente
+     * @param int $restaurantId ID do restaurante
+     * @param int $limit Limite de registros
+     * @return array Lista de pedidos
+     */
+    public function findByClient(int $clientId, int $restaurantId, int $limit = 20): array
+    {
+        $conn = Database::connect();
+        
+        $stmt = $conn->prepare("
+            SELECT 
+                o.id,
+                o.total,
+                o.status,
+                o.order_type as type,
+                o.is_paid,
+                o.created_at,
+                CONCAT('Pedido #', o.id) as description
+            FROM orders o
+            WHERE o.client_id = :cid
+            AND o.restaurant_id = :rid
+            ORDER BY o.created_at DESC
+            LIMIT :lim
+        ");
+        
+        $stmt->bindValue(':cid', $clientId, PDO::PARAM_INT);
+        $stmt->bindValue(':rid', $restaurantId, PDO::PARAM_INT);
+        $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

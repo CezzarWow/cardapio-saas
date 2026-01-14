@@ -97,7 +97,8 @@ const PDVCheckout = {
     // ==========================================
 
     setMethod: (method) => CheckoutPayments.setMethod(method),
-    addPayment: () => CheckoutPayments.addPayment(),
+    addPayment: (m, a) => CheckoutPayments.addPayment(m, a),
+    addCrediarioPayment: () => CheckoutPayments.addCrediarioPayment(),
     removePayment: (index) => CheckoutPayments.removePayment(index),
 
     // ==========================================
@@ -145,7 +146,8 @@ window.includePaidOrderItems = () => PDVCheckout.finalizeSale();
 window.saveClientOrder = () => PDVCheckout.saveClientOrder();
 window.submitSale = () => PDVCheckout.submitSale();
 window.setMethod = (m) => PDVCheckout.setMethod(m);
-window.addPayment = () => PDVCheckout.addPayment();
+window.addPayment = (m, a) => PDVCheckout.addPayment(m, a);
+window.addCrediarioPayment = () => PDVCheckout.addCrediarioPayment();
 window.removePayment = (i) => PDVCheckout.removePayment(i);
 window.closeCheckout = () => PDVCheckout.closeCheckout();
 window.selectOrderType = (t, e) => PDVCheckout.selectOrderType(t, e);

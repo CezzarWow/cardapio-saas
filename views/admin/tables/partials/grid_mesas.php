@@ -32,6 +32,12 @@
         <div onclick="abrirMesa(<?= $mesa['id'] ?>, <?= $mesa['number'] ?>)" 
              style="background: <?= $bg ?>; border: 2px solid <?= $border ?>; border-radius: 10px; cursor: pointer; transition: transform 0.1s; position: relative; overflow: hidden; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
             
+            <?php if ($isOccupied && !empty($mesa['credit_limit']) && $mesa['credit_limit'] > 0): ?>
+                <div style="position: absolute; top: 0; right: 0; background: #ea580c; color: white; font-size: 0.6rem; padding: 2px 6px; border-bottom-left-radius: 6px; font-weight: 800; letter-spacing: 0.5px;">
+                    CREDIÁRIO
+                </div>
+            <?php endif; ?>
+
             <span style="font-size: 2.2rem; font-weight: 800; color: <?= $textColor ?>; line-height: 1;">
                 <?= $mesa['number'] ?>
             </span>

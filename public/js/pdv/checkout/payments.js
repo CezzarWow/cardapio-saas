@@ -47,11 +47,21 @@ const CheckoutPayments = {
     /**
      * Adiciona um pagamento à lista
      */
-    addPayment: function () {
-        const amountInput = document.getElementById('pay-amount');
-        let valStr = amountInput.value.trim();
-        if (valStr.includes(',')) valStr = valStr.replace(/\./g, '').replace(',', '.');
-        let amount = parseFloat(valStr);
+    addPayment: function (forceMethod, forceAmount) {
+        let amount = 0;
+        let isManual = false;
+
+        if (typeof forceAmount !== 'undefined') {
+            amount = parseFloat(forceAmount);
+        } else {
+            const amountInput = document.getElementById('pay-amount');
+            let valStr = amountInput.value.trim();
+            if (valStr.includes(',')) valStr = valStr.replace(/\./g, '').replace(',', '.');
+            amount = parseFloat(valStr);
+            isManual = true;
+        }
+
+        const method = forceMethod || CheckoutState.selectedMethod;
 
         if (!amount || amount <= 0 || isNaN(amount)) {
             alert('Digite um valor válido.');
@@ -62,19 +72,22 @@ const CheckoutPayments = {
         const remaining = finalTotal - CheckoutState.totalPaid;
 
         // Regra de troco: se não for dinheiro, trava no restante
-        if (CheckoutState.selectedMethod !== 'dinheiro' && amount > remaining + 0.01) {
+        // Permite 1 centavo de tolerância
+        if (method !== 'dinheiro' && amount > remaining + 0.01) {
             amount = remaining;
             if (amount <= 0.01) { alert('Valor restante já pago!'); return; }
         }
 
         CheckoutState.currentPayments.push({
-            method: CheckoutState.selectedMethod,
+            method: method,
             amount: amount,
-            label: CheckoutHelpers.formatMethodLabel(CheckoutState.selectedMethod)
+            label: (method === 'crediario' ? 'Crediário' : CheckoutHelpers.formatMethodLabel(method))
         });
         CheckoutState.totalPaid += amount;
 
-        amountInput.value = '';
+        if (isManual) {
+            document.getElementById('pay-amount').value = '';
+        }
 
         CheckoutUI.updatePaymentList();
         CheckoutUI.updateCheckoutUI();
@@ -85,9 +98,26 @@ const CheckoutPayments = {
             document.getElementById('btn-finish-sale').focus();
         } else {
             let rest = newRemaining.toFixed(2).replace('.', ',');
-            document.getElementById('pay-amount').value = rest;
-            amountInput.focus();
+            if (isManual) document.getElementById('pay-amount').value = rest;
+            if (isManual) document.getElementById('pay-amount').focus();
         }
+    },
+
+    addCrediarioPayment: function () {
+        const input = document.getElementById('crediario-amount');
+        if (!input) return;
+
+        let valStr = input.value.trim();
+        if (valStr.includes(',')) valStr = valStr.replace(/\./g, '').replace(',', '.');
+        let amount = parseFloat(valStr);
+
+        if (!amount || amount <= 0) {
+            alert('Digite um valor para o Crediário.');
+            return;
+        }
+
+        this.addPayment('crediario', amount);
+        input.value = '';
     },
 
     /**

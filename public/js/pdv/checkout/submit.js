@@ -35,7 +35,7 @@ const CheckoutSubmit = {
             keep_open: keepOpen,
             finalize_now: true,
             order_type: selectedOrderType,
-            is_paid: (CheckoutState.currentPayments?.length > 0) ? 1 : 0,
+            is_paid: this._calculateIsPaidStatus(CheckoutState.currentPayments),
             delivery_fee: (selectedOrderType === 'delivery' && typeof PDV_DELIVERY_FEE !== 'undefined') ? PDV_DELIVERY_FEE : 0
         };
 
@@ -247,6 +247,23 @@ const CheckoutSubmit = {
         if (typeof cart !== 'undefined' && Array.isArray(cart)) return cart;
         if (typeof PDVCart !== 'undefined') return PDVCart.items;
         return [];
+    },
+
+    /**
+     * Calcula is_paid baseado nos métodos de pagamento.
+     * - Se tem qualquer pagamento "real" (dinheiro, pix, cartão) = is_paid 1
+     * - Se é APENAS crediário = is_paid 0
+     * - A dívida do crediário é calculada separadamente pelo backend (order_payments)
+     */
+    _calculateIsPaidStatus: function (payments) {
+        if (!payments || payments.length === 0) return 0;
+
+        // Verifica se tem algum pagamento "real" (não crediário)
+        const hasRealPayment = payments.some(p => p.method !== 'crediario');
+
+        // Se tem pagamento real, marca como pago
+        // A parte do crediário será contabilizada como dívida pelo backend
+        return hasRealPayment ? 1 : 0;
     },
 
     _determineOrderType: function (hasClientOrTable) {

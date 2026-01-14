@@ -11,7 +11,8 @@
         // ESTADO
         // ==========================================
         state: {
-            currentType: 'PF' // PF ou PJ
+            currentType: 'PF', // PF ou PJ
+            isDuplicate: false // Controle de duplicidade
         },
 
         // ==========================================
@@ -51,6 +52,10 @@
                 v = v.replace(".", ",");
                 v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
                 return "R$ " + v;
+            },
+            titleCase: (v) => {
+                if (!v) return "";
+                return v.toLowerCase().replace(/(?:^|\s|["'([{])+\S/g, match => match.toUpperCase());
             }
         },
 
@@ -71,6 +76,77 @@
 
             addMask('cli_phone', this.masks.phone);
             addMask('cli_zip', this.masks.zip);
+
+            // Nome: Capitalização e Duplicidade
+            const nameInput = document.getElementById('cli_name');
+            if (nameInput) {
+                // Máscara Title Case (Ao digitar)
+                nameInput.addEventListener('input', e => {
+                    const start = e.target.selectionStart;
+                    const oldVal = e.target.value;
+                    const newVal = this.masks.titleCase(oldVal);
+
+                    if (oldVal !== newVal) {
+                        e.target.value = newVal;
+                        e.target.setSelectionRange(start, start);
+                    }
+
+                    // Reseta erro visual
+                    if (ClientManager.state.isDuplicate) {
+                        ClientManager.state.isDuplicate = false;
+                        nameInput.style.borderColor = '#cbd5e1';
+                        const errSpan = document.getElementById('cli-name-error');
+                        if (errSpan) errSpan.style.display = 'none';
+                    }
+                });
+
+                // Checar Duplicidade (Ao sair)
+                nameInput.addEventListener('blur', async e => {
+                    const val = e.target.value.trim();
+                    if (val.length > 2) {
+                        try {
+                            // Tenta inferir endpoint correto
+                            const baseUrl = typeof window.BASE_URL !== 'undefined' ? window.BASE_URL : '';
+                            // Ajuste para rota comum de busca: /admin/clientes/buscar
+                            let url = `${baseUrl}/admin/clientes/buscar?q=${encodeURIComponent(val)}`;
+
+                            // Correção de barra duplicada se houver
+                            url = url.replace('//admin', '/admin');
+
+                            const r = await fetch(url);
+                            const data = await r.json();
+
+                            // Verifica correspondência exata
+                            const exists = Array.isArray(data) && data.some(c => c.name.toLowerCase() === val.toLowerCase());
+
+                            if (exists) {
+                                ClientManager.state.isDuplicate = true;
+                                nameInput.style.borderColor = '#ef4444'; // Vermelho
+
+                                let errSpan = document.getElementById('cli-name-error');
+                                if (!errSpan) {
+                                    errSpan = document.createElement('span');
+                                    errSpan.id = 'cli-name-error';
+                                    errSpan.style.color = '#ef4444';
+                                    errSpan.style.fontSize = '0.75rem';
+                                    errSpan.style.fontWeight = '700';
+                                    errSpan.style.display = 'block';
+                                    errSpan.style.marginTop = '4px';
+                                    nameInput.parentNode.appendChild(errSpan);
+                                }
+                                errSpan.innerText = 'Este cliente já está cadastrado.';
+                                errSpan.style.display = 'block';
+                            } else {
+                                // Se não existir, garante sucesso visual (ou remove erro)
+                                ClientManager.state.isDuplicate = false;
+                                nameInput.style.borderColor = '#cbd5e1';
+                                const errSpan = document.getElementById('cli-name-error');
+                                if (errSpan) errSpan.style.display = 'none';
+                            }
+                        } catch (err) { console.error('Erro ao verificar duplicidade:', err); }
+                    }
+                });
+            }
 
             // CPF/CNPJ Dinâmico
             const docInput = document.getElementById('cli_doc');
@@ -196,6 +272,13 @@
                 // Validação Básica
                 if (!payload.name) {
                     alert('Por favor, preencha o Nome/Razão Social.');
+                    return;
+                }
+
+                // Check Duplicidade (Bloqueio Final)
+                if (ClientManager.state.isDuplicate) {
+                    alert('Este nome já existe cadastrado no sistema. Utilize outro nome ou busque o cliente existente.');
+                    document.getElementById('cli_name').focus();
                     return;
                 }
 

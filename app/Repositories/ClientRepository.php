@@ -25,7 +25,7 @@ class ClientRepository
     {
         $conn = Database::connect();
         $stmt = $conn->prepare("
-            SELECT id, name, phone FROM clients 
+            SELECT id, name, phone, credit_limit FROM clients 
             WHERE restaurant_id = :rid 
             AND (name LIKE :term OR phone LIKE :term) 
             LIMIT 10

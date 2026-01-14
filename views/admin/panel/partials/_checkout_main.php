@@ -32,7 +32,7 @@
     <div style="padding: 15px 25px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 15px; align-items: stretch; overflow-y: auto; flex: 1;">
         
         <!-- COLUNA ESQUERDA: Métodos + Inputs + Ações -->
-        <div style="display: flex; flex-direction: column; gap: 15px; justify-content: flex-start;">
+        <div style="display: flex; flex-direction: column; gap: 10px; justify-content: flex-start;">
             
             <!-- 1. Métodos de Pagamento -->
             <div>
@@ -57,15 +57,43 @@
                 </div>
             </div>
 
-            <!-- Input Desconto -->
-            <div style="background: #fff1f2; padding: 10px 15px; border-radius: 10px; border: 1px solid #fda4af;">
-                <label style="display: block; font-size: 0.8rem; color: #be123c; font-weight: 700; margin-bottom: 5px;">DESCONTO (R$)</label>
-                <input type="text" id="discount-amount" placeholder="0,00" 
-                       style="width: 100%; padding: 8px; border: 1px solid #f43f5e; border-radius: 6px; font-weight: 700; font-size: 1rem; color: #be123c; outline: none; background: white;">
+            <!-- Grid Desconto e Crediário -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                
+                <!-- Desconto -->
+                <div style="background: #fff1f2; padding: 10px 15px; border-radius: 10px; border: 1px solid #fda4af;">
+                    <label style="display: block; font-size: 0.8rem; color: #be123c; font-weight: 700; margin-bottom: 5px;">DESCONTO (R$)</label>
+                    <input type="text" id="discount-amount" placeholder="0,00" 
+                           style="width: 100%; padding: 8px; border: 1px solid #f43f5e; border-radius: 6px; font-weight: 700; font-size: 1rem; color: #be123c; outline: none; background: white;">
+                </div>
+
+                <!-- Crediário (Atalho de Pagamento) -->
+                <!-- Crediário (Atalho de Pagamento) -->
+                <!-- Crediário (Atalho de Pagamento) -->
+                <div id="container-crediario-slot" style="background: #fff7ed; padding: 10px 15px; border-radius: 10px; border: 1px solid #fdba74; transition: opacity 0.3s;">
+                    <label style="display: block; font-size: 0.8rem; color: #c2410c; font-weight: 700; margin-bottom: 5px;">CREDIÁRIO</label>
+                    <div style="position: relative;">
+                         <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #c2410c; font-weight: bold; font-size: 1rem;">R$</span>
+                         <input type="text" id="crediario-amount" placeholder="0,00" 
+                                onkeypress="if(event.key === 'Enter') addCrediarioPayment()"
+                                oninput="PDVCheckout.formatMoneyInput(this)"
+                                style="width: 100%; padding: 8px 36px 8px 35px; border: 1px solid #fb923c; border-radius: 6px; font-weight: 700; font-size: 1rem; color: #c2410c; outline: none; background: white;">
+                         <button id="btn-add-crediario" onclick="addCrediarioPayment()" style="position: absolute; right: 2px; top: 2px; bottom: 2px; border: none; background: #fb923c; color: white; border-radius: 4px; width: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Lançar Crediário">
+                            <i data-lucide="plus" size="16"></i>
+                         </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- INFO ROW (NOVA LINHA SEPARADA) -->
+            <div id="crediario-info-row" style="display: flex; justify-content: space-between; margin-top: 10px; padding: 5px 8px; background: #fff7ed; border: 1px solid #fdba74; border-radius: 6px; font-size: 0.70rem; color: #9a3412; font-weight: 700;">
+                <span>LIMITE: <span id="cred-limit-total">R$ 0,00</span></span>
+                <span>DISPONÍVEL: <span id="cred-limit-available">R$ 0,00</span></span>
             </div>
 
             <!-- Input Valor a Pagar -->
-            <div style="background: #f1f5f9; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <div style="background: #f1f5f9; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 10px;">
                 <label style="display: block; font-size: 0.85rem; color: #64748b; font-weight: 700; margin-bottom: 8px;">VALOR A LANÇAR</label>
                 <div style="position: relative; display: flex; gap: 8px;">
                     <div style="position: relative; flex: 1;">
@@ -85,9 +113,9 @@
 
 
 
-            <!-- Área de Ajuste de Total (Layout Compacto - Alinhado à Esquerda) -->
-            <div style="margin-top: 15px; background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px dashed #cbd5e1; display: flex; align-items: center; gap: 10px;">
-                <label style="font-size: 0.85rem; color: #64748b; font-weight: 700; white-space: nowrap; margin: 0;">
+            <!-- Área de Ajuste de Total (Estilo Clean Card Cinza) -->
+            <div style="margin-top: 10px; background: #f8fafc; padding: 12px 15px; border-radius: 10px; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                <label style="font-size: 0.95rem; color: #334155; font-weight: 800; margin: 0;">
                     TOTAL FINAL:
                 </label>
                 

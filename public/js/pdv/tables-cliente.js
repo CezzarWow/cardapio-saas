@@ -34,23 +34,26 @@
             // Usar classes CSS
             div.className = hasOpenOrder ? 'client-item client-item--open' : 'client-item';
 
-            let badge = '';
+            let tag = '';
             if (hasOpenOrder) {
-                badge = `<span class="client-badge">OCUPADO</span>`;
+                tag = `<span class="client-badge">OCUPADO</span>`;
             }
+
+            const hasCrediario = client.credit_limit && parseFloat(client.credit_limit) > 0;
+            const badge = hasCrediario ? '<span style="background: #ea580c; color: white; font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; font-weight: 800; margin-left: 6px;">CREDIÁRIO</span>' : '';
 
             div.innerHTML = `
                 <div class="client-avatar">
                     <span>${client.name.charAt(0).toUpperCase()}</span>
                 </div>
                 <div class="client-info">
-                    <div class="client-name">${client.name}</div>
+                    <div class="client-name" style="display:flex; align-items:center;">${client.name} ${badge}</div>
                     ${client.phone ? `<div class="client-phone">${client.phone}</div>` : ''}
                 </div>
-                ${badge}
+                ${tag}
             `;
 
-            div.onclick = () => this.selectClient(client.id, client.name, client.open_order_id);
+            div.onclick = () => this.selectClient(client.id, client.name, client.open_order_id, client.credit_limit);
             results.appendChild(div);
         });
     };
@@ -58,7 +61,7 @@
     // ==========================================
     // SELECIONAR CLIENTE
     // ==========================================
-    PDVTables.selectClient = function (id, name, openOrderId = null) {
+    PDVTables.selectClient = function (id, name, openOrderId = null, creditLimit = 0) {
         // Se cliente tem comanda aberta, redirecionar para ela
         if (openOrderId) {
             // [MIGRATION] Salva carrinho atual antes de redirecionar
@@ -74,7 +77,7 @@
         document.getElementById('current_client_id').value = id;
         document.getElementById('current_table_id').value = '';
 
-        // Armazena o nome do cliente
+        // Armazena o nome e crédito do cliente
         let clientNameInput = document.getElementById('current_client_name');
         if (!clientNameInput) {
             clientNameInput = document.createElement('input');
@@ -84,8 +87,20 @@
         }
         clientNameInput.value = name;
 
+        let clientCreditInput = document.getElementById('current_client_credit_limit');
+        if (!clientCreditInput) {
+            clientCreditInput = document.createElement('input');
+            clientCreditInput.type = 'hidden';
+            clientCreditInput.id = 'current_client_credit_limit';
+            document.body.appendChild(clientCreditInput);
+        }
+        clientCreditInput.value = creditLimit || 0;
+
+        const hasCrediario = creditLimit && parseFloat(creditLimit) > 0;
+        const badge = hasCrediario ? '<span style="background: #ea580c; color: white; font-size: 0.65rem; padding: 2px 4px; border-radius: 4px; font-weight: 800; margin-left: 6px;">CREDIÁRIO</span>' : '';
+
         document.getElementById('selected-client-name').innerHTML = `
-            ${name} 
+            ${name} ${badge}
             ${openOrderId ? '<span style="color:#ef4444; font-size:0.8rem; margin-left:5px;">(COMANDA ABERTA)</span>' : ''}
         `;
 
@@ -125,6 +140,35 @@
 
         // Botões
         this._updateButtons(true);
+
+        // Fetch Async para Dados Atualizados (Dívida/Limite) Do Cliente
+        const baseUrl = (typeof BASE_URL !== 'undefined' ? BASE_URL : '');
+        fetch(`${baseUrl}/admin/loja/clientes/detalhes?id=${id}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.client) {
+
+                    // Atualiza Credit Limit Hidden (garante dado fresco)
+                    let credInp = document.getElementById('current_client_credit_limit');
+                    if (credInp) credInp.value = data.client.credit_limit || 0;
+
+                    // Cria/Atualiza Debt Hidden
+                    let debtInp = document.getElementById('current_client_debt');
+                    if (!debtInp) {
+                        debtInp = document.createElement('input');
+                        debtInp.type = 'hidden';
+                        debtInp.id = 'current_client_debt';
+                        document.body.appendChild(debtInp);
+                    }
+                    debtInp.value = data.client.current_debt || 0;
+
+                    // Atualiza UI Checkout se necessário (para mostrar Labels)
+                    if (typeof CheckoutUI !== 'undefined' && typeof CheckoutUI.updateCheckoutUI === 'function') {
+                        CheckoutUI.updateCheckoutUI();
+                    }
+                }
+            })
+            .catch(e => console.error('Erro buscando detalhes do cliente:', e));
     };
 
     // ==========================================
@@ -137,6 +181,10 @@
         // Limpa inputs hidden
         document.getElementById('current_client_id').value = '';
         document.getElementById('current_table_id').value = '';
+        const credInp = document.getElementById('current_client_credit_limit');
+        if (credInp) credInp.value = '';
+        const debtInp = document.getElementById('current_client_debt');
+        if (debtInp) debtInp.value = '';
 
         // Visual - usando style.display para compatibilidade
         const selectedArea = document.getElementById('selected-client-area');

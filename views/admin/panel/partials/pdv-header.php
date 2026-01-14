@@ -38,8 +38,8 @@
             <h1 style="color: #b91c1c;">Mesa <?= $mesa_numero ?></h1>
             <p>Gerenciando Pedido</p>
         <?php elseif (!empty($contaAberta) && !$mesa_id): ?>
-            <h1 style="color: #ea580c;">Comanda #<?= $contaAberta['id'] ?></h1>
-            <p style="color: #9a3412; font-weight: 600;">Cliente: <?= htmlspecialchars($contaAberta['client_name'] ?? 'Cliente') ?></p>
+            <h1 style="color: #ea580c;"><?= htmlspecialchars($contaAberta['client_name'] ?? 'Cliente') ?> #<?= $contaAberta['id'] ?></h1>
+            <p style="color: #9a3412; font-weight: 600;">Comanda em Aberto</p>
         <?php else: ?>
             <h1>Balcão de Vendas</h1>
             <p>Venda Rápida</p>

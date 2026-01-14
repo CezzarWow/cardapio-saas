@@ -44,18 +44,21 @@
                                 exactMatch = true;
                             }
 
+                            const hasCrediario = client.credit_limit && parseFloat(client.credit_limit) > 0;
+                            const badge = hasCrediario ? '<span style="background: #ea580c; color: white; font-size: 0.65rem; padding: 2px 4px; border-radius: 4px; font-weight: 800; margin-left: 6px;">CREDIÁRIO</span>' : '';
+
                             const div = document.createElement('div');
                             div.style.cssText = "padding: 8px 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; justify-content: space-between; align-items: center;";
                             div.innerHTML = `
                                 <div>
-                                    <div style="font-weight:600; font-size:0.85rem;">${client.name}</div>
+                                    <div style="font-weight:600; font-size:0.85rem; display: flex; align-items: center;">${client.name} ${badge}</div>
                                     ${client.phone ? `<div style="font-size:0.75rem; color:#64748b;">${client.phone}</div>` : ''}
                                 </div>
                                 <span style="font-size: 0.75rem; color: #2563eb; background: #eff6ff; padding: 2px 6px; border-radius: 4px;">Selecionar</span>
                             `;
 
                             div.onclick = () => {
-                                this.selectClient(client.id, client.name);
+                                this.selectClient(client.id, client.name, null, client.credit_limit);
                                 document.getElementById('clientModal').style.display = 'none';
                                 document.getElementById('new_client_name').value = '';
                                 results.style.display = 'none';
