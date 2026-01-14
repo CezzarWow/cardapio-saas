@@ -92,16 +92,16 @@ class CreateOrderAction
             $orderStatus = 'novo';
             if ($saveAccount) {
                 $orderStatus = 'aberto';
-            } elseif ($finalizeNow && $isPaid && $orderType !== 'delivery') {
-                // Se finalizou e pagou (e não é delivery que precisa de aceite), conclui direto
+            } elseif ($finalizeNow && $isPaid && !in_array($orderType, ['delivery', 'pickup'])) {
+                // Se finalizou e pagou (e não é delivery/pickup que precisam do Kanban), conclui direto
                 $orderStatus = 'concluido';
-            } elseif ($finalizeNow && $orderType === 'delivery') {
-                // Delivery SEMPRE começa como 'novo' para aparecer no Kanban
+            } elseif ($finalizeNow && in_array($orderType, ['delivery', 'pickup'])) {
+                // Delivery e Retirada SEMPRE começam como 'novo' para aparecer no Kanban
                 // (independente de pago ou não)
                 $orderStatus = 'novo'; 
-            } elseif ($finalizeNow && !$isPaid && $orderType !== 'delivery') {
+            } elseif ($finalizeNow && !$isPaid && !in_array($orderType, ['delivery', 'pickup'])) {
                 // Finalizou mas não pagou (ex: Marcar na conta) -> Aberto (Comanda)
-                // Exceto delivery que deve ir pro Kanban
+                // Exceto delivery/pickup que devem ir pro Kanban
                 $orderStatus = 'aberto';
             }
 
@@ -177,6 +177,7 @@ class CreateOrderAction
             $orderId = $this->orderRepo->create([
                 'restaurant_id' => $restaurantId,
                 'client_id' => $clientId,
+                'table_id' => $tableId ?: null,
                 'total' => $finalTotal,
                 'order_type' => $orderType,
                 'payment_method' => $paymentMethod,
@@ -192,8 +193,9 @@ class CreateOrderAction
             // FORÇA atualização do order_type (workaround para INSERT não salvar corretamente)
             $this->orderRepo->updateOrderType($orderId, $orderType);
 
-            // Mesa
-            if ($orderType === 'mesa' && $tableId) {
+            // Mesa - ocupar apenas se for pedido para PAGAR DEPOIS (status 'aberto')
+            // Se já foi pago (status 'concluido'), não ocupa mesa
+            if ($tableId && $orderStatus === 'aberto') {
                 $this->tableRepo->occupy($tableId, $orderId);
             }
 

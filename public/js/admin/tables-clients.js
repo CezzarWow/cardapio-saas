@@ -22,5 +22,4 @@
         }
     };
 
-    console.log('[TablesAdmin.Clients] Módulo carregado (Wrapper)');
 })();

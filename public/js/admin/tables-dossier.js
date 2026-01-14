@@ -111,5 +111,5 @@
         }
     };
 
-    console.log('[TablesAdmin.Dossier] Módulo carregado');
+
 })();

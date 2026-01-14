@@ -48,7 +48,8 @@ class OrderRepository
         $stmt = $conn->prepare("
             INSERT INTO orders (
                 restaurant_id, 
-                client_id, 
+                client_id,
+                table_id,
                 total, 
                 status, 
                 order_type, 
@@ -59,7 +60,8 @@ class OrderRepository
                 created_at
             ) VALUES (
                 :rid, 
-                :cid, 
+                :cid,
+                :tid,
                 :total, 
                 :status, 
                 :otype, 
@@ -75,6 +77,7 @@ class OrderRepository
         $stmt->execute([
             'rid' => $data['restaurant_id'],
             'cid' => $data['client_id'],
+            'tid' => $data['table_id'] ?? null,
             'total' => $data['total'],
             'status' => $status,
             'otype' => $data['order_type'],

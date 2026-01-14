@@ -23,6 +23,25 @@ class PdvController extends BaseController {
         $mesaNumero = $_GET['mesa_numero'] ?? null;
         $orderId = $this->getInt('order_id');
 
+        // Se acessa via order_id, buscar a mesa vinculada (se houver)
+        if ($orderId > 0 && $mesaId <= 0) {
+            $tableRepo = new \App\Repositories\TableRepository();
+            $linkedTable = $tableRepo->findByOrderId($orderId);
+            if ($linkedTable) {
+                $mesaId = (int) $linkedTable['id'];
+                $mesaNumero = $linkedTable['number'];
+            }
+        }
+
+        // Se tem mesa_id mas não tem mesa_numero, buscar o número
+        if ($mesaId > 0 && !$mesaNumero) {
+            $tableRepo = $tableRepo ?? new \App\Repositories\TableRepository();
+            $tableData = $tableRepo->findById($mesaId);
+            if ($tableData) {
+                $mesaNumero = $tableData['number'];
+            }
+        }
+
         // Busca dados do contexto
         $context = $this->service->getContextData($rid, $mesaId > 0 ? $mesaId : null, $orderId > 0 ? $orderId : null);
         

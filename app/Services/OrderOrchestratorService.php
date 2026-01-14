@@ -59,21 +59,27 @@ class OrderOrchestratorService
         error_log("[DEBUG Orchestrator] link_to_comanda=" . ($data['link_to_comanda'] ?? 'NULL') . ", client_id=" . ($data['client_id'] ?? 'NULL'));
         error_log("[DEBUG Orchestrator] link_to_table=" . ($data['link_to_table'] ?? 'NULL') . ", table_id=" . ($data['table_id'] ?? 'NULL'));
 
-        // LÓGICA DE DELIVERY COM CLIENTE:
-        // - Delivery NÃO PAGO + cliente: Cria comanda (para cobrar depois) e vai pro Kanban
-        // - Delivery PAGO + cliente: Vai direto pro Kanban (não precisa comanda)
-        $isDelivery = ($data['order_type'] ?? '') === 'delivery';
+        // LÓGICA DE DELIVERY/PICKUP COM CLIENTE/MESA:
+        // - NÃO PAGO + cliente/mesa: Cria comanda (para cobrar depois) e vai pro Kanban
+        // - PAGO: Vai direto pro Kanban (não precisa comanda)
+        $orderType = $data['order_type'] ?? '';
+        $isDeliveryOrPickup = in_array($orderType, ['delivery', 'pickup']);
         $hasClient = !empty($data['client_id']);
+        $hasTable = !empty($data['table_id']);
         $isPaid = !empty($data['payments']) || (isset($data['is_paid']) && $data['is_paid'] == 1);
         
-        if ($isDelivery && $hasClient && !$isPaid) {
-            // Delivery NÃO PAGO com cliente -> Cria comanda + vai pro Kanban
-            error_log("[DEBUG Orchestrator] DELIVERY NOT PAID: Client {$data['client_id']} present. Creating linked order.");
-            $data['link_to_comanda'] = true; 
+        if ($isDeliveryOrPickup && ($hasClient || $hasTable) && !$isPaid) {
+            // Delivery/Pickup NÃO PAGO com cliente/mesa -> Cria comanda + vai pro Kanban
+            error_log("[DEBUG Orchestrator] {$orderType} NOT PAID: Creating linked order.");
+            if ($hasTable) {
+                $data['link_to_table'] = true;
+            } else {
+                $data['link_to_comanda'] = true;
+            }
             return $this->createDeliveryLinkedAction->execute($restaurantId, $userId, $data);
         }
 
-        // Delivery vinculado a Mesa ou Comanda (apenas se EXPLICITAMENTE solicitado)
+        // Delivery/Pickup vinculado a Mesa ou Comanda (apenas se EXPLICITAMENTE solicitado)
         $linkToTable = !empty($data['link_to_table']) && !empty($data['table_id']);
         $linkToComanda = !empty($data['link_to_comanda']) && !empty($data['client_id']);
         

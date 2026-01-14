@@ -49,10 +49,11 @@ class CreateDeliveryLinkedAction
      */
     public function execute(int $restaurantId, int $userId, array $data): int
     {
-        // 1. Criar o pedido de entrega normalmente (como pedido NOVO, não incremento)
+        // 1. Criar o pedido de entrega/retirada normalmente (como pedido NOVO, não incremento)
         $deliveryData = $data;
         $deliveryData['table_id'] = null;
-        $deliveryData['order_type'] = 'delivery';
+        // Mantém o order_type original (delivery ou pickup)
+        // $deliveryData['order_type'] já vem definido corretamente do frontend
         $deliveryData['order_id'] = null;         // Forçar criação de novo pedido
         $deliveryData['save_account'] = false;    // Não salvar como comanda
         $deliveryData['link_to_comanda'] = false; // Evitar loop
@@ -184,7 +185,10 @@ class CreateDeliveryLinkedAction
      */
     private function addDeliveryItem(int $orderId, int $deliveryOrderId, array $data, float $totalToCharge): void
     {
-        $description = "Entrega #{$deliveryOrderId}";
+        // Determina se é Entrega ou Retirada baseado no order_type
+        $orderType = $data['order_type'] ?? 'delivery';
+        $tipoLabel = ($orderType === 'pickup') ? 'Retirada' : 'Entrega';
+        $description = "{$tipoLabel} #{$deliveryOrderId}";
 
         // Resumo dos itens
         $resumoItens = [];
@@ -197,7 +201,7 @@ class CreateDeliveryLinkedAction
         $obsComplete = "Vinculado: {$obs}" . ($deliveryFee > 0 ? " (+Taxa: {$deliveryFee})" : "");
 
         $this->itemRepo->add($orderId, [
-            'product_id' => 999999, // ID fictício para entrega vinculada
+            'product_id' => 999999, // ID fictício para entrega/retirada vinculada
             'name' => $description,
             'quantity' => 1,
             'price' => $totalToCharge,

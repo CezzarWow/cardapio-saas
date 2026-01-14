@@ -84,31 +84,37 @@
         </div>
 
         <!-- COLUNA DIREITA: Lista de Pagamentos + Totais -->
-        <div style="background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; padding: 12px; display: flex; flex-direction: column; overflow: hidden; height: 100%; min-height: 380px;">
+        <div style="background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 12px; display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden;">
             
-            <h3 style="margin: 0 0 15px 0; font-size: 0.95rem; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 8px;">
+            <h3 style="margin: 0 0 10px 0; font-size: 0.95rem; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 8px;">
                 <i data-lucide="list" size="16"></i> Resumo
             </h3>
 
-            <!-- Lista Rolável -->
-            <div id="payment-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; padding-right: 5px; max-height: 210px;">
+            <!-- Lista Rolável (ocupa espaço disponível e scrolla se exceder) -->
+            <div id="payment-list" style="flex: 1 1 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; margin-bottom: 10px; padding-bottom: 20px;">
                 <div style="text-align: center; color: #94a3b8; font-size: 0.9rem; margin-top: 20px;">
                     Nenhum pagamento lançado
                 </div>
             </div>
 
             <!-- Resumo Final -->
-            <div style="border-top: 1px solid #cbd5e1; padding-top: 15px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; color: #be123c;">
+            <div style="border-top: 1px solid #cbd5e1; padding-top: 10px; margin-top: auto;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; color: #be123c; font-weight: 600;">
                     <span>Desconto:</span>
                     <strong id="display-discount">- R$ 0,00</strong>
+                </div>
+                
+                <!-- TROCO (sempre visível) -->
+                <div id="change-display-box" style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; color: #166534; font-weight: 600;">
+                    <span>Troco:</span>
+                    <strong id="display-change">R$ 0,00</strong>
                 </div>
                 
                 <div style="background: #d1fae5; color: #065f46; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 8px;">
                     <span>PAGO:</span>
                     <span id="display-paid">R$ 0,00</span>
                 </div>
-                <div style="background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 12px;">
+                <div style="background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 8px;">
                     <span>RESTANTE:</span>
                     <span id="display-remaining">R$ 0,00</span>
                 </div>

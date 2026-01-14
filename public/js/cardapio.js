@@ -15,7 +15,7 @@
             this.bindEvents();
             this.recoverCart();
             this.initIcons();
-            console.log('[CardapioManager] Initialized');
+
         },
 
         initModules: function () {

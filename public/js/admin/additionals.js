@@ -16,7 +16,7 @@
  * 5. additionals-ui.js
  */
 
-console.log('Additionals JS Loaded');
+
 
 // ==========================================
 // MULTI-SELECTS (usando componente genérico)

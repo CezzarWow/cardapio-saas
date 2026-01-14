@@ -1,4 +1,10 @@
 <?php use App\Core\ViewHelper; ?>
+<?php 
+// Detecta contexto de mesa ou cliente (variáveis disponíveis do PdvController)
+$isInMesaContext = !empty($mesa_id);
+$isInClienteContext = !empty($contaAberta['client_id'] ?? null);
+$isInMesasSection = $isInMesaContext || $isInClienteContext;
+?>
 
 <aside class="sidebar">
     <div class="brand-area">
@@ -14,12 +20,12 @@
     </div>
     
     <nav class="sidebar-nav">
-        <a href="<?= BASE_URL ?>/admin/loja/pdv" class="nav-item <?= ViewHelper::isRouteActive('pdv') ? 'active' : '' ?>">
+        <a href="<?= BASE_URL ?>/admin/loja/pdv" class="nav-item <?= (!$isInMesasSection && ViewHelper::isRouteActive('pdv')) ? 'active' : '' ?>">
             <i data-lucide="layout-dashboard" size="36"></i>
             <span class="nav-label">Balcão</span>
         </a>
 
-        <a href="<?= BASE_URL ?>/admin/loja/mesas" class="nav-item <?= ViewHelper::isRouteActive('mesas') ? 'active' : '' ?>">
+        <a href="<?= BASE_URL ?>/admin/loja/mesas" class="nav-item <?= ($isInMesasSection || ViewHelper::isRouteActive('mesas')) ? 'active' : '' ?>">
             <i data-lucide="utensils-crossed" size="36"></i>
             <span class="nav-label">Mesas</span>
         </a>

@@ -31,9 +31,11 @@ class DeliveryOrderRepository
                    c.name as client_name, 
                    c.phone as client_phone,
                    c.address as client_address,
+                   t.number as table_number,
                    (SELECT COUNT(*) FROM order_items WHERE order_id = o.id) as items_count
             FROM orders o
             LEFT JOIN clients c ON o.client_id = c.id
+            LEFT JOIN tables t ON o.table_id = t.id
             WHERE o.restaurant_id = :rid 
               AND o.order_type IN ('delivery', 'pickup')
         ";

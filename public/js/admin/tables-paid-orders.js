@@ -67,5 +67,5 @@
         getCurrentClientId: () => currentPaidClientId
     };
 
-    console.log('[TablesAdmin.PaidOrders] Módulo carregado');
+
 })();

@@ -63,10 +63,6 @@ $statusFilter = $_GET['status'] ?? null;
 <!-- Orquestrador (carregar POR ÚLTIMO) -->
 <script src="<?= BASE_URL ?>/js/delivery/print.js?v=<?= time() ?>"></script>
 <script>
-    console.log('[Delivery] Kanban carregado');
-    console.log('[Delivery] Pedidos:', <?= count($orders ?? []) ?>);
-    
-    
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
     // Auto-filtro se vier da URL (ex: do histórico)

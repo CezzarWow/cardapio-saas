@@ -23,7 +23,7 @@ const CheckoutUI = {
         listEl.style.display = 'block';
         CheckoutState.currentPayments.forEach((pay, index) => {
             const row = document.createElement('div');
-            row.style.cssText = "display: flex; justify-content: space-between; padding: 10px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; align-items: center; margin-bottom: 5px; border-radius: 6px;";
+            row.style.cssText = "display: flex; justify-content: space-between; padding: 8px 10px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; align-items: center; margin-bottom: 4px; border-radius: 6px;";
             row.innerHTML = `
                 <span style="font-weight:600; color:#334155;">${pay.label}</span>
                 <div style="display:flex; align-items:center; gap:10px;">
@@ -33,11 +33,6 @@ const CheckoutUI = {
             `;
             listEl.appendChild(row);
         });
-
-        // Auto-scroll para o final
-        setTimeout(() => {
-            listEl.scrollTop = listEl.scrollHeight;
-        }, 50);
 
         if (typeof lucide !== 'undefined') lucide.createIcons();
     },
@@ -59,25 +54,26 @@ const CheckoutUI = {
 
         document.getElementById('display-remaining').innerText = CheckoutHelpers.formatCurrency(Math.max(0, remaining));
 
-        const changeBox = document.getElementById('change-box');
+        const changeBox = document.getElementById('change-display-box');
+        const changeBoxOld = document.getElementById('change-box'); // Footer antigo
 
         if (!btnFinish) return;
 
+        // Sempre atualiza o troco (fixo)
+        const changeValue = remaining < 0 ? Math.abs(remaining) : 0;
+        if (changeBox) {
+            document.getElementById('display-change').innerText = CheckoutHelpers.formatCurrency(changeValue);
+        }
+        // Esconde o antigo
+        if (changeBoxOld) changeBoxOld.style.display = 'none';
+
         // Lógica: Se falta <= 1 centavo, libera
         if (remaining <= 0.01) {
-            if (remaining < -0.01) {
-                // Tem troco
-                changeBox.style.display = 'block';
-                document.getElementById('checkout-change').innerText = CheckoutHelpers.formatCurrency(Math.abs(remaining));
-            } else {
-                changeBox.style.display = 'none';
-            }
             btnFinish.disabled = false;
             btnFinish.style.background = '#22c55e';
             btnFinish.style.cursor = 'pointer';
         } else {
             // Falta pagar
-            changeBox.style.display = 'none';
             btnFinish.disabled = true;
             btnFinish.style.background = '#cbd5e1';
             btnFinish.style.cursor = 'not-allowed';

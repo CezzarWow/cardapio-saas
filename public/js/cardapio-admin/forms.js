@@ -51,6 +51,6 @@
         });
     };
 
-    console.log('CardapioAdmin Forms JS Loaded');
+
 
 })(window.CardapioAdmin = window.CardapioAdmin || {});

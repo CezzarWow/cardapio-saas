@@ -17,7 +17,7 @@ const CheckoutOrderType = {
         document.querySelectorAll('.order-type-card').forEach(el => {
             if (!el.classList.contains('disabled')) {
                 el.classList.remove('active');
-                el.style.border = '1px solid #cbd5e1';
+                el.style.border = '2px solid #cbd5e1';
                 el.style.background = 'white';
             }
         });
@@ -54,19 +54,37 @@ const CheckoutOrderType = {
         if (alertBoxRetirada) alertBoxRetirada.style.display = 'none';
         if (alertBoxEntrega) alertBoxEntrega.style.display = 'none';
 
+        // Fecha painel de entrega se mudar para outro tipo
+        // E reseta o flag para não tratar como entrega
+        if (type !== 'entrega') {
+            if (typeof CheckoutEntrega !== 'undefined') {
+                CheckoutEntrega.closePanel();
+                CheckoutEntrega.dataFilled = false; // Reseta flag sem limpar campos
+            }
+        }
+
         if (type === 'retirada') {
             if (keepOpenInput) keepOpenInput.value = 'true';
 
             const clientId = document.getElementById('current_client_id')?.value;
             const tableId = document.getElementById('current_table_id')?.value;
+            const tableNumber = document.getElementById('current_table_number')?.value;
 
             // Tenta pegar o nome de várias fontes (cliente OU mesa)
             let displayName = document.getElementById('current_client_name')?.value;
             if (!displayName) {
                 displayName = document.getElementById('current_table_name')?.value;
             }
+            // Se tem mesa com número, usa "Mesa X"
+            if (!displayName && tableId && tableNumber) {
+                displayName = 'Mesa ' + tableNumber;
+            }
             if (!displayName) {
-                displayName = document.getElementById('selected-client-name')?.innerText;
+                const selectedName = document.getElementById('selected-client-name')?.innerText;
+                // Ignora placeholder "Nome" - só usa se for um nome real
+                if (selectedName && selectedName !== 'Nome' && selectedName.trim() !== '') {
+                    displayName = selectedName;
+                }
             }
 
             if (alertBoxRetirada) alertBoxRetirada.style.display = 'block';

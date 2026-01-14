@@ -16,7 +16,7 @@
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
-            console.log('[CashierAdmin] Initialized');
+
         },
 
         // ==========================================

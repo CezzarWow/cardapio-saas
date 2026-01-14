@@ -17,13 +17,12 @@ const CheckoutEntrega = {
         const panel = document.getElementById('delivery-panel');
         if (!panel) return;
 
-        // Só auto-preenche nome se realmente tiver cliente/mesa selecionado
+        // Só auto-preenche nome se tiver CLIENTE selecionado (não mesa)
+        // Mesa não deve preencher o nome no formulário de entrega
         const clientId = document.getElementById('current_client_id')?.value;
-        const tableId = document.getElementById('current_table_id')?.value;
 
-        if (clientId || tableId) {
-            const clientName = document.getElementById('current_client_name')?.value ||
-                document.getElementById('current_table_name')?.value || '';
+        if (clientId && clientId !== '' && clientId !== '0') {
+            const clientName = document.getElementById('current_client_name')?.value || '';
 
             if (clientName && clientName.trim()) {
                 document.getElementById('delivery_name').value = clientName.replace('🔹 ', '').split(' (')[0].trim();

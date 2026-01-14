@@ -10,9 +10,9 @@
     
     <!-- LINHA DE TOTAIS -->
     <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 15px; padding: 0 5px;">
-        <div id="change-box" style="display: none; text-align: right; background: #dcfce7; padding: 10px 20px; border-radius: 8px; border: 1px solid #86efac; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-            <span style="font-size: 0.85rem; font-weight: 800; color: #166534; display: block; letter-spacing: 0.5px;">TROCO</span>
-            <span id="checkout-change" style="font-size: 1.6rem; font-weight: 900; color: #166534;">R$ 0,00</span>
+        <div id="change-box" style="display: none; text-align: right; background: #dcfce7; padding: 8px 16px; border-radius: 8px; border: 1px solid #86efac;">
+            <span style="font-size: 0.8rem; font-weight: 700; color: #166534; margin-right: 8px;">TROCO:</span>
+            <span id="checkout-change" style="font-size: 1.1rem; font-weight: 900; color: #166534;">R$ 0,00</span>
         </div>
     </div>
 

@@ -19,6 +19,6 @@
         draggedItem: null
     };
 
-    console.log('CardapioAdmin Featured JS Loaded');
+
 
 })(window.CardapioAdmin = window.CardapioAdmin || {});

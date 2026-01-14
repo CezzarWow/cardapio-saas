@@ -113,5 +113,5 @@
         }
     };
 
-    console.log('[DeliveryPrint.Modal] Módulo carregado');
+
 })();

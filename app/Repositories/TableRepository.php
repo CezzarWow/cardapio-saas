@@ -89,4 +89,28 @@ class TableRepository
         $conn = Database::connect();
         $conn->prepare("DELETE FROM tables WHERE id = :id")->execute(['id' => $tableId]);
     }
+
+    /**
+     * Busca mesa pelo order_id vinculado
+     */
+    public function findByOrderId(int $orderId): ?array
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare("SELECT * FROM tables WHERE current_order_id = :oid LIMIT 1");
+        $stmt->execute(['oid' => $orderId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
+
+    /**
+     * Busca mesa pelo ID
+     */
+    public function findById(int $tableId): ?array
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare("SELECT * FROM tables WHERE id = :id");
+        $stmt->execute(['id' => $tableId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
 }

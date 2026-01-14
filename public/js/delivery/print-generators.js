@@ -100,5 +100,5 @@
         }
     };
 
-    console.log('[DeliveryPrint.Generators] Módulo carregado');
+
 })();

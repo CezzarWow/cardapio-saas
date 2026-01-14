@@ -100,5 +100,5 @@
         }
     };
 
-    console.log('[TablesAdmin.Crud] Módulo carregado');
+
 })();

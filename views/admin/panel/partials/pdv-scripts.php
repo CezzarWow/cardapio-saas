@@ -19,6 +19,9 @@
     
     // [NOVO] Taxa de entrega configurada
     const PDV_DELIVERY_FEE = <?= $deliveryFee ?>;
+    
+    // [CONTEXTO] ID da Mesa (direto do servidor)
+    const PDV_TABLE_ID = <?= $mesa_id ?: 0 ?>;
 
     // Limpa URL após carregar (F5 volta ao balcão limpo)
     // Só limpa se tiver order_id ou mesa_id na URL
@@ -191,7 +194,6 @@
 <script src="<?= BASE_URL ?>/js/pdv/checkout/orderType.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/pdv/checkout/retirada.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/pdv/checkout/entrega.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/pickup.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/pdv/checkout/flow.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/pdv/checkout/index.js?v=<?= time() ?>"></script>
 

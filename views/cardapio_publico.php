@@ -77,12 +77,10 @@
     // Configurações completas (usado pelo checkout-order.js)
     window.cardapioConfig = <?= $jsConfigRaw ?>;
 
-    // Diagnóstico
+    // Diagnóstico silencioso
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof openProductModal === 'undefined') {
             console.error('CRITICAL: openProductModal not defined!');
-        } else {
-            console.log('✅ Sistema inicializado. Produtos:', products.length);
         }
     });
 </script>
@@ -93,7 +91,6 @@
 <script src="<?= BASE_URL ?>/js/cardapio/modules/cart-view.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/cart.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/modals.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/modals-product.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/modals-product.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/modules/combo-validator.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio/modules/combo-view.js?v=<?= time() ?>"></script>

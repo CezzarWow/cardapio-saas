@@ -72,5 +72,5 @@
         }
     };
 
-    console.log('[DeliveryPrint.Helpers] Módulo carregado');
+
 })();

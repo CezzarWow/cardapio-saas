@@ -59,7 +59,7 @@
         // ==========================================
         init: function () {
             this.bindEvents();
-            console.log('[ClientManager] Initialized');
+
         },
 
         bindEvents: function () {

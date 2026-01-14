@@ -41,4 +41,4 @@ DeliveryPrint.generateItemsHTML = (items, showPrice) => DeliveryPrint.Helpers.ge
 
 window.DeliveryPrint = DeliveryPrint;
 
-console.log('[DeliveryPrint] Orquestrador carregado');
+

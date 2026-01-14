@@ -84,13 +84,13 @@ class PdvService {
             $validStatus = ['aberto', 'novo'];
             if ($order && in_array($order['status'], $validStatus)) {
                 $contaAberta = $order;
-                // Busca cliente se tiver
+                // Busca nome do cliente se tiver
                 if (!empty($order['client_id'])) {
-                    // $client = (new \App\Repositories\ClientRepository())->find($order['client_id'], $restaurantId);
-                    // $contaAberta['client_name'] = $client['name'];
-                    // Simplificação: o front usa client_name? Se sim, preciso prover.
-                    // Vou assumir que o front precisa.
-                    // Adicionar metodo no OrderRepository seems best.
+                    $clientRepo = new \App\Repositories\ClientRepository();
+                    $client = $clientRepo->find($order['client_id'], $restaurantId);
+                    if ($client) {
+                        $contaAberta['client_name'] = $client['name'];
+                    }
                 }
 
                 $itensJaPedidos = $this->itemRepo->findAll($orderId);

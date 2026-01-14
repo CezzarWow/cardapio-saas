@@ -49,5 +49,5 @@
         }
     };
 
-    console.log('[DeliveryPrint.Actions] Módulo carregado');
+
 })();

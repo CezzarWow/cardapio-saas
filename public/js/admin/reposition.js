@@ -23,7 +23,7 @@
         // ==========================================
         init: function () {
             this.bindEvents();
-            console.log('[RepositionManager] Initialized');
+
         },
 
         bindEvents: function () {

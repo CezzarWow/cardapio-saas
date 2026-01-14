@@ -96,9 +96,7 @@
             <input type="hidden" id="current_client_id" name="client_id">
         </div>
     <?php else: ?>
-        <!-- SE ESTIVER EM MESA OU COMANDA, NÃO MOSTRA BUSCA -->
-         <input type="hidden" id="current_client_id" name="client_id" value="<?= $contaAberta['client_id'] ?? '' ?>">
-         <input type="hidden" id="current_order_id" value="<?= $contaAberta['id'] ?? '' ?>">
+        <!-- SE ESTIVER EM MESA OU COMANDA, inputs principais já estão em dashboard.php -->
          <input type="hidden" id="current_order_is_paid" value="<?= ($contaAberta['is_paid'] ?? 0) ?>">
          <input type="hidden" id="client-search"> 
     <?php endif; ?>

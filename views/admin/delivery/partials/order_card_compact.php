@@ -56,7 +56,16 @@ $orderJson = htmlspecialchars(json_encode([
     
     <div class="delivery-card-compact-header">
         <span class="delivery-card-compact-id">
-            <?= htmlspecialchars($order['client_name'] ?? 'Cliente') ?>
+            <?php
+                // Prioridade: cliente > mesa > fallback
+                if (!empty($order['client_name'])) {
+                    echo htmlspecialchars($order['client_name']);
+                } elseif (!empty($order['table_number'])) {
+                    echo 'Mesa ' . htmlspecialchars($order['table_number']);
+                } else {
+                    echo 'Cliente';
+                }
+            ?>
         </span>
         <span class="delivery-card-compact-time">
             <i data-lucide="clock" style="width: 12px; height: 12px;"></i>

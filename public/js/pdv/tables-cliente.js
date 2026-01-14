@@ -145,7 +145,7 @@
         if (searchArea) searchArea.style.display = 'flex';
         if (searchInput) {
             searchInput.value = '';
-            searchInput.focus();
+            // Não faz focus automático para evitar abrir o dropdown de mesas
         }
 
         // Botões

@@ -83,41 +83,14 @@ window.clearRetiradaClient = function () {
 /**
  * Reseta o alerta de retirada quando cliente é removido
  * (Chamado por PDVTables.clearClient)
+ * 
+ * NOTA: Esta função foi desativada pois a UI de retirada agora é gerenciada
+ * pelo orderType.js através do selectOrderType('retirada')
  */
 window.handleRetiradaValidation = function () {
-    const keepOpen = document.getElementById('keep_open_value')?.value === 'true';
-    const checkoutModal = document.getElementById('checkoutModal');
-
-    if (keepOpen && checkoutModal && !checkoutModal.classList.contains('u-hidden')) {
-        const alertBox = document.getElementById('retirada-client-alert');
-        if (alertBox) {
-            alertBox.classList.remove('retirada-alert--success');
-            alertBox.classList.add('retirada-alert--warning');
-
-            alertBox.innerHTML = `
-                <div class="retirada-alert__header">
-                    <i data-lucide="alert-triangle" size="18"></i>
-                    <span>Cliente obrigatório para Retirada</span>
-                </div>
-                <div class="retirada-alert__search">
-                    <input type="text" id="retirada-client-search" 
-                           class="retirada-alert__input"
-                           placeholder="Buscar cliente por nome ou telefone..."
-                           oninput="searchClientForRetirada(this.value)">
-                    <div id="retirada-client-results" class="retirada-alert__results u-hidden"></div>
-                </div>
-                <div class="retirada-alert__actions">
-                    <button type="button" 
-                            class="retirada-alert__btn"
-                            onclick="document.getElementById('clientModal').classList.remove('u-hidden')">
-                        <i data-lucide="user-plus" size="16"></i> Cadastrar Novo
-                    </button>
-                </div>
-            `;
-
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        if (window.updateCheckoutUI) window.updateCheckoutUI();
+    // Função desativada - a UI é gerenciada pelo orderType.js
+    // Apenas chama o select novamente para atualizar o estado
+    if (typeof CheckoutOrderType !== 'undefined') {
+        CheckoutOrderType.selectOrderType('retirada');
     }
 };

@@ -13,6 +13,6 @@
 (function (CardapioAdmin) {
     'use strict';
 
-    console.log('CardapioAdmin Combos JS Loaded');
+
 
 })(window.CardapioAdmin = window.CardapioAdmin || {});

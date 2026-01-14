@@ -99,4 +99,4 @@ function previewComboImage(input) {
     }
 }
 
-console.log('Combos UI JS Loaded');
+

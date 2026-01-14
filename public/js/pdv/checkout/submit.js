@@ -88,22 +88,6 @@ const CheckoutSubmit = {
         }
     },
 
-    /**
-     * 2. FORÇAR ENTREGA (Mesa/Comanda já paga)
-     */
-    forceDelivery: async function (orderId) {
-        try {
-            const data = await CheckoutService.closePaidTab(orderId);
-            if (data.success) {
-                alert('Entregue!');
-                window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
-            } else {
-                alert('Erro: ' + data.message);
-            }
-        } catch (err) {
-            alert(err.message);
-        }
-    },
 
     /**
      * 2. FORÇAR ENTREGA (Pedido já pago)
@@ -165,7 +149,8 @@ const CheckoutSubmit = {
 
         try {
             const data = await CheckoutService.saveTabOrder(payload);
-            this._handleSuccess(data);
+            // Após salvar, volta para a mesma mesa (não perde contexto)
+            this._handleSaveSuccess(data, hasTable ? parseInt(tableId) : null, orderId);
         } catch (err) {
             alert(err.message);
         }
@@ -175,7 +160,11 @@ const CheckoutSubmit = {
      * 4. SALVAR PEDIDO (Retirada/Delivery) - Pagar Depois
      */
     savePickupOrder: async function () {
-        const selectedOrderType = this._determineOrderType(false) === 'delivery' ? 'delivery' : 'pickup';
+        // Determina tipo baseado no card ATIVO (não no deliveryDataFilled)
+        const rawType = this._determineOrderType(false);
+        const selectedOrderType = rawType === 'delivery' ? 'delivery' : 'pickup';
+
+
 
         // Validações
         if (!CheckoutValidator.validateDeliveryData(selectedOrderType)) return;
@@ -189,6 +178,8 @@ const CheckoutSubmit = {
         const orderId = document.getElementById('current_order_id')?.value; // Captura ID da comanda
         const hasTable = tableId && tableId !== '' && tableId !== '0';
         const hasClient = clientId && clientId !== '' && clientId !== '0';
+
+
 
         // Montar Payload
         const payload = {
@@ -216,7 +207,7 @@ const CheckoutSubmit = {
             const hasTable = !isNaN(tId) && tId > 0;
             const hasClient = !isNaN(cId) && cId > 0;
 
-            console.log("[DEBUG savePickupOrder] tId:", tId, "cId:", cId, "hasTable:", hasTable, "hasClient:", hasClient);
+
 
             if (hasTable) {
                 payload.link_to_table = true;
@@ -236,8 +227,15 @@ const CheckoutSubmit = {
         // Enviar
         try {
             const data = await CheckoutService.saveTabOrder(payload);
-            const isFinalize = payload.finalize_now === true;
-            this._handleSuccess(data, false, isFinalize);
+
+            // Se tem mesa ou cliente, manter no contexto (igual saveClientOrder)
+            if (hasTable || hasClient) {
+                this._handleSaveSuccess(data, hasTable ? parseInt(tableId) : null, orderId);
+            } else {
+                // Sem mesa/cliente, comportamento padrão
+                const isFinalize = payload.finalize_now === true;
+                this._handleSuccess(data, false, isFinalize);
+            }
         } catch (err) {
             alert(err.message);
         }
@@ -274,6 +272,35 @@ const CheckoutSubmit = {
                 if (isPaidLoop || isMesaClose) {
                     // Redireciona para página de mesas
                     window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
+                } else {
+                    window.location.reload();
+                }
+            }, 1000);
+        } else {
+            alert('Erro: ' + data.message);
+        }
+    },
+
+    /**
+     * Handler de sucesso para SALVAR comanda (mantém na mesa)
+     */
+    _handleSaveSuccess: function (data, tableId, orderId) {
+        if (data.success) {
+            CheckoutUI.showSuccessModal();
+            PDVCart.clear();
+            if (typeof cart !== 'undefined') cart.length = 0;
+
+            setTimeout(() => {
+                // Se foi salvo com mesa, redireciona de volta para a mesa
+                // Se foi novo pedido, usa o order_id retornado
+                const newOrderId = data.order_id || orderId;
+
+                if (tableId) {
+                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') +
+                        '/admin/loja/pdv?mesa_id=' + tableId;
+                } else if (newOrderId) {
+                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') +
+                        '/admin/loja/pdv?order_id=' + newOrderId;
                 } else {
                     window.location.reload();
                 }

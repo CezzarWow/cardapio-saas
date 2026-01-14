@@ -70,6 +70,6 @@
     window.editPaidOrder = () => TablesAdmin.editPaidOrder();
     window.openDossier = (id) => TablesAdmin.openDossier(id);
 
-    console.log('[TablesAdmin] Orquestrador carregado e vinculado.');
+
 
 })();
