@@ -10,7 +10,8 @@ class DeliveryValidator {
             $errors['order_id'] = 'ID do pedido inválido';
         }
         
-        $allowedStatus = ['pendente', 'preparando', 'caminho', 'entregue', 'cancelado'];
+        // Status válidos (coincidir com TRANSITIONS do DeliveryService)
+        $allowedStatus = ['novo', 'preparo', 'rota', 'entregue', 'cancelado'];
         if (empty($data['new_status']) || !in_array($data['new_status'], $allowedStatus)) {
             $errors['new_status'] = 'Status inválido';
         }

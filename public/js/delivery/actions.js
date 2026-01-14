@@ -10,24 +10,24 @@ const DeliveryActions = {
     // Labels para exibição
     statusLabels: {
         'novo': 'Novo',
-        'aceito': 'Aceito',
         'preparo': 'Em Preparo',
         'rota': 'Em Rota',
         'entregue': 'Entregue',
         'cancelado': 'Cancelado'
     },
 
-    // Próximo status na cadeia (sem aceito) - para delivery
+    // Próximo status na cadeia - para delivery
+    // Backend TRANSITIONS: novo → preparo → rota → entregue
     nextStatusDelivery: {
         'novo': 'preparo',
         'preparo': 'rota',
         'rota': 'entregue'
     },
 
-    // Próximo status para pickup (passa por rota como "Pronto")
+    // Próximo status para pickup (mesmo fluxo)
     nextStatusPickup: {
         'novo': 'preparo',
-        'preparo': 'rota', // Pickup vai para "Pronto" (mesma coluna de rota)
+        'preparo': 'rota', // Pickup vai para "Pronto" (mesma coluna)
         'rota': 'entregue'
     },
 
@@ -64,7 +64,10 @@ const DeliveryActions = {
         try {
             const response = await fetch(BASE_URL + '/admin/loja/delivery/send-to-table', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
                 body: JSON.stringify({ order_id: orderId })
             });
 
@@ -117,7 +120,10 @@ const DeliveryActions = {
         try {
             const response = await fetch(BASE_URL + '/admin/loja/delivery/status', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
                 body: JSON.stringify({ order_id: orderId, new_status: newStatus })
             });
 
