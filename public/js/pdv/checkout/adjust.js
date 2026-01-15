@@ -114,11 +114,6 @@ const CheckoutAdjust = {
         const cleanTotal = CheckoutTotals.getFinalTotal();
         const finalDifference = newTotal - cleanTotal;
 
-        console.log('--- Debug Ajuste Total ---');
-        console.log('Novo Total (Alvo):', newTotal);
-        console.log('Total Limpo (Sem ajustes):', cleanTotal);
-        console.log('Diferença a aplicar:', finalDifference);
-
         if (Math.abs(finalDifference) > 0.005) {
             // Adiciona o novo item de ajuste
             const ADJUST_ITEM_NAME = 'Ajuste';
@@ -130,8 +125,6 @@ const CheckoutAdjust = {
                 1,
                 [] // sem extras
             );
-        } else {
-            console.log('Diferença insignificante. Nenhum ajuste criado.');
         }
 
         // IMPORTANTE: Recalcula cache de totais para refletir adição do item
