@@ -1,130 +1,198 @@
 <?php
 
 /**
- * Helper de Conversão de Imagens para WebP
- * Converte PNG, JPG, JPEG para WebP com qualidade otimizada
+ * Helper de Conversão e Otimização de Imagens
+ * 
+ * - Converte para WebP (melhor compressão)
+ * - Redimensiona mantendo proporção
+ * - Gera thumbnails quadrados com crop central
+ * 
+ * @package App\Helpers
  */
 
 namespace App\Helpers;
 
 class ImageConverter
 {
-    /**
-     * Converte uma imagem para WebP
-     * @param string $sourcePath Caminho completo do arquivo original
-     * @param int $quality Qualidade (1-100), padrão 85
-     * @return string|false Nome do arquivo WebP gerado ou false em caso de erro
-     */
-    public static function toWebp(string $sourcePath, int $quality = 85)
-    {
-        // Verifica se o arquivo existe
-        if (!file_exists($sourcePath)) {
-            return false;
-        }
-
-        // Detecta o tipo de imagem
-        $imageInfo = getimagesize($sourcePath);
-        if (!$imageInfo) {
-            return false;
-        }
-
-        $mimeType = $imageInfo['mime'];
-
-        // Cria o recurso de imagem baseado no tipo
-        switch ($mimeType) {
-            case 'image/jpeg':
-            case 'image/jpg':
-                $image = imagecreatefromjpeg($sourcePath);
-                break;
-            case 'image/png':
-                $image = imagecreatefrompng($sourcePath);
-                // Preserva transparência
-                imagepalettetotruecolor($image);
-                imagealphablending($image, true);
-                imagesavealpha($image, true);
-                break;
-            case 'image/gif':
-                $image = imagecreatefromgif($sourcePath);
-                break;
-            case 'image/webp':
-                // Já é WebP, retorna o nome atual
-                return basename($sourcePath);
-            default:
-                return false; // Formato não suportado
-        }
-
-        if (!$image) {
-            return false;
-        }
-
-        // Gera o novo nome do arquivo (troca extensão por .webp)
-        $pathInfo = pathinfo($sourcePath);
-        $webpName = $pathInfo['filename'] . '.webp';
-        $webpPath = $pathInfo['dirname'] . '/' . $webpName;
-
-        // Converte para WebP
-        $success = imagewebp($image, $webpPath, $quality);
-
-        // Libera memória
-        imagedestroy($image);
-
-        if ($success) {
-            return $webpName;
-        }
-
-        return false;
-    }
+    private const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
     /**
-     * Processa upload e converte para WebP
-     * @param array $file Array $_FILES['campo']
-     * @param string $uploadDir Diretório de destino
-     * @return string|false Nome do arquivo WebP ou false em caso de erro
+     * Upload com otimização completa: redimensiona + cria thumbnail
+     * 
+     * @param array $file $_FILES['campo']
+     * @param string $uploadDir Diretório principal
+     * @param int $maxDimension Dimensão máxima da imagem principal (ex: 1200)
+     * @param int $thumbSize Tamanho do thumbnail quadrado (ex: 300)
+     * @return string|false Nome do arquivo ou false
      */
-    public static function uploadAndConvert(array $file, string $uploadDir, int $quality = 85)
-    {
+    public static function uploadWithThumbnail(
+        array $file, 
+        string $uploadDir, 
+        int $maxDimension = 1200, 
+        int $thumbSize = 300,
+        int $quality = 85,
+        int $thumbQuality = 80
+    ) {
         if (empty($file['name']) || $file['error'] !== UPLOAD_ERR_OK) {
             return false;
         }
 
-        // Gera nome único
-        $uniqueName = md5(time() . rand(0, 9999));
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-        // Extensões permitidas
-        $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        if (!in_array($ext, $allowedExts)) {
+        if (!in_array($ext, self::ALLOWED_EXTENSIONS)) {
             return false;
         }
 
-        // Se já for WebP, apenas move
-        if ($ext === 'webp') {
-            $finalName = $uniqueName . '.webp';
-            $destination = rtrim($uploadDir, '/') . '/' . $finalName;
-            if (move_uploaded_file($file['tmp_name'], $destination)) {
-                return $finalName;
-            }
+        // Carrega imagem para GD
+        $image = self::loadImage($file['tmp_name'], $ext);
+        if (!$image) {
             return false;
         }
 
-        // Move temporariamente para converter
-        $tempName = $uniqueName . '.' . $ext;
-        $tempPath = rtrim($uploadDir, '/') . '/' . $tempName;
+        // Gera nome único
+        $uniqueName = md5(time() . rand(0, 9999)) . '.webp';
+        $uploadDir = rtrim($uploadDir, '/');
 
-        if (!move_uploaded_file($file['tmp_name'], $tempPath)) {
+        // 1. Redimensiona e salva imagem principal
+        $resized = self::resize($image, $maxDimension);
+        $mainPath = $uploadDir . '/' . $uniqueName;
+        imagewebp($resized, $mainPath, $quality);
+
+        // 2. Cria e salva thumbnail
+        $thumb = self::createSquareThumbnail($image, $thumbSize);
+        $thumbDir = $uploadDir . '/thumb';
+        if (!is_dir($thumbDir)) {
+            mkdir($thumbDir, 0755, true);
+        }
+        imagewebp($thumb, $thumbDir . '/' . $uniqueName, $thumbQuality);
+
+        // Limpa memória
+        imagedestroy($image);
+        if ($resized !== $image) {
+            imagedestroy($resized);
+        }
+        imagedestroy($thumb);
+
+        return $uniqueName;
+    }
+
+    /**
+     * Gera thumbnail para imagem já existente
+     */
+    public static function generateThumbnailForExisting(string $imagePath, int $size = 300, int $quality = 80): bool
+    {
+        if (!file_exists($imagePath)) {
             return false;
         }
 
-        // Converte para WebP
-        $webpName = self::toWebp($tempPath, $quality);
-
-        if ($webpName) {
-            // Remove o arquivo original
-            @unlink($tempPath);
-            return $webpName;
+        $ext = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
+        $image = self::loadImage($imagePath, $ext);
+        if (!$image) {
+            return false;
         }
 
-        // Se falhou a conversão, mantém o original
-        return $tempName;
+        $thumb = self::createSquareThumbnail($image, $size);
+
+        // Determina caminho do thumb
+        $dir = dirname($imagePath);
+        $filename = pathinfo($imagePath, PATHINFO_FILENAME) . '.webp';
+        $thumbDir = $dir . '/thumb';
+        
+        if (!is_dir($thumbDir)) {
+            mkdir($thumbDir, 0755, true);
+        }
+
+        $success = imagewebp($thumb, $thumbDir . '/' . $filename, $quality);
+
+        imagedestroy($image);
+        imagedestroy($thumb);
+
+        return $success;
+    }
+
+    // =========================================================================
+    // MÉTODOS PRIVADOS (Helpers Internos)
+    // =========================================================================
+
+    /**
+     * Carrega imagem de qualquer formato suportado
+     */
+    private static function loadImage(string $path, string $ext)
+    {
+        switch ($ext) {
+            case 'jpg':
+            case 'jpeg':
+                return @imagecreatefromjpeg($path);
+            case 'png':
+                $img = @imagecreatefrompng($path);
+                if ($img) {
+                    imagepalettetotruecolor($img);
+                    imagealphablending($img, true);
+                    imagesavealpha($img, true);
+                }
+                return $img;
+            case 'gif':
+                return @imagecreatefromgif($path);
+            case 'webp':
+                return @imagecreatefromwebp($path);
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Redimensiona uma imagem mantendo proporção
+     */
+    private static function resize($image, int $maxDimension)
+    {
+        $width = imagesx($image);
+        $height = imagesy($image);
+
+        // Se já é menor que o máximo, retorna como está
+        if ($width <= $maxDimension && $height <= $maxDimension) {
+            return $image;
+        }
+
+        // Calcula nova dimensão mantendo proporção
+        if ($width > $height) {
+            $newWidth = $maxDimension;
+            $newHeight = (int) floor($height * ($maxDimension / $width));
+        } else {
+            $newHeight = $maxDimension;
+            $newWidth = (int) floor($width * ($maxDimension / $height));
+        }
+
+        $resized = imagecreatetruecolor($newWidth, $newHeight);
+        imagealphablending($resized, false);
+        imagesavealpha($resized, true);
+        imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+        return $resized;
+    }
+
+    /**
+     * Cria thumbnail quadrado com crop central
+     */
+    private static function createSquareThumbnail($image, int $size)
+    {
+        $width = imagesx($image);
+        $height = imagesy($image);
+
+        // Determina área de crop (central)
+        if ($width > $height) {
+            $cropSize = $height;
+            $srcX = (int) floor(($width - $height) / 2);
+            $srcY = 0;
+        } else {
+            $cropSize = $width;
+            $srcX = 0;
+            $srcY = (int) floor(($height - $width) / 2);
+        }
+
+        $thumb = imagecreatetruecolor($size, $size);
+        imagealphablending($thumb, false);
+        imagesavealpha($thumb, true);
+        imagecopyresampled($thumb, $image, 0, 0, $srcX, $srcY, $size, $size, $cropSize, $cropSize);
+
+        return $thumb;
     }
 }

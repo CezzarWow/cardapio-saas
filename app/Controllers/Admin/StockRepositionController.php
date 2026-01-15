@@ -24,15 +24,10 @@ class StockRepositionController extends BaseController
         $this->validator = $validator;
     }
 
-    // 1. LISTAR PRODUTOS PARA REPOSIÇÃO
+    // 1. LISTAR PRODUTOS - Redireciona para SPA Dashboard
     public function index(): void
     {
-        $rid = $this->getRestaurantId();
-
-        $products = $this->service->getProducts($rid);
-        $categories = $this->service->getCategories($rid);
-
-        View::renderFromScope('admin/reposition/index', get_defined_vars());
+        $this->redirect('/admin/loja/catalogo#reposicao');
     }
 
     // 2. AJUSTAR ESTOQUE (INCREMENTAL)

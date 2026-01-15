@@ -1,4 +1,10 @@
-/* STOCK INDEX STYLES */
+/* STOCK INDEX STYLES - Orchestrator */
+@import 'base.css';
+@import 'cards.css';
+@import 'chips.css';
+@import 'search.css';
+@import 'table.css';
+@import 'animations.css';
 
 .stock-search-container {
     display: flex;

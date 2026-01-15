@@ -3,10 +3,46 @@
  * Arquivo: public/css/stock/animations.css
  */
 
+/* ========== PAGE TRANSITIONS ========== */
+/* Container principal começa visível e anima entrada */
+.main-content {
+    animation: pageSlideIn 0.3s ease-out;
+}
+
+/* Classe para quando estiver navegando (fade out) */
+.main-content.navigating {
+    animation: pageSlideOut 0.15s ease-in forwards;
+}
+
+@keyframes pageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pageSlideOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+}
+
+/* ========== FADE IN (Conteúdo interno) ========== */
 @keyframes stockFadeIn {
     from {
         opacity: 0;
-        transform: translateY(-5px);
+        transform: translateY(-10px);
     }
 
     to {
@@ -16,5 +52,188 @@
 }
 
 .stock-fade-in {
-    animation: stockFadeIn 0.2s ease;
+    animation: stockFadeIn 0.25s ease-out;
+}
+
+/* ========== SKELETON LOADER (Professional UX) ========== */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton-container {
+    padding: 20px;
+}
+
+.skeleton-row {
+    height: 80px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+}
+
+.skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.skeleton-card {
+    height: 240px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+}
+
+.skeleton-header {
+    height: 40px;
+    width: 60%;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+}
+
+.skeleton-chips {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.skeleton-chip {
+    height: 32px;
+    width: 80px;
+    border-radius: 20px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+}
+
+/* Delay staggered animation for more natural feel */
+.skeleton-card:nth-child(2),
+.skeleton-row:nth-child(2),
+.skeleton-chip:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.skeleton-card:nth-child(3),
+.skeleton-row:nth-child(3),
+.skeleton-chip:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.skeleton-card:nth-child(4),
+.skeleton-row:nth-child(4),
+.skeleton-chip:nth-child(4) {
+    animation-delay: 0.3s;
+}
+
+.skeleton-card:nth-child(5),
+.skeleton-row:nth-child(5),
+.skeleton-chip:nth-child(5) {
+    animation-delay: 0.4s;
+}
+
+.skeleton-card:nth-child(6),
+.skeleton-row:nth-child(6) {
+    animation-delay: 0.5s;
+}
+
+/* ========== SLIDE IN (Cards) ========== */
+@keyframes stockSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Aplica animação escalonada aos cards */
+.stock-products-grid>.stock-product-card {
+    animation: stockSlideIn 0.3s ease-out both;
+}
+
+.stock-products-grid>.stock-product-card:nth-child(1) {
+    animation-delay: 0.02s;
+}
+
+.stock-products-grid>.stock-product-card:nth-child(2) {
+    animation-delay: 0.04s;
+}
+
+.stock-products-grid>.stock-product-card:nth-child(3) {
+    animation-delay: 0.06s;
+}
+
+.stock-products-grid>.stock-product-card:nth-child(4) {
+    animation-delay: 0.08s;
+}
+
+.stock-products-grid>.stock-product-card:nth-child(5) {
+    animation-delay: 0.10s;
+}
+
+.stock-products-grid>.stock-product-card:nth-child(6) {
+    animation-delay: 0.12s;
+}
+
+.stock-products-grid>.stock-product-card:nth-child(7) {
+    animation-delay: 0.14s;
+}
+
+.stock-products-grid>.stock-product-card:nth-child(8) {
+    animation-delay: 0.16s;
+}
+
+.stock-products-grid>.stock-product-card:nth-child(n+9) {
+    animation-delay: 0.18s;
+}
+
+/* ========== PAGE TRANSITION (Container Principal) ========== */
+.main-content>div {
+    animation: stockFadeIn 0.2s ease-out;
+}
+
+/* ========== TAB TRANSITIONS ========== */
+.stock-tab {
+    transition: all 0.2s ease;
+}
+
+.stock-tab:hover {
+    transform: translateY(-1px);
+}
+
+.stock-tab.active {
+    transform: translateY(-1px);
+}
+
+/* ========== CARD HOVER ========== */
+.stock-product-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* ========== CATEGORY CHIP TRANSITIONS ========== */
+.category-chip {
+    transition: all 0.2s ease;
+}
+
+.category-chip:hover {
+    transform: translateY(-1px);
+}
+
+.category-chip.active {
+    transform: translateY(-1px);
 }

@@ -28,23 +28,10 @@ class AdditionalController extends BaseController
         $this->catRepo = $catRepo;
     }
 
-    // === VIEW ===
+    // === VIEW - Redireciona para SPA Dashboard ===
     public function index()
     {
-        $rid = $this->getRestaurantId();
-
-        $groups = $this->service->getAllGroupsWithItems($rid);
-        $allItems = $this->service->getAllItems($rid);
-
-        // Totais para a View
-        $totalGroups = count($groups);
-        $totalItems = count($allItems);
-
-        // Mantendo o repository direto para categorias por enquanto,
-        // já que o AdditionalService foca em grupos/itens/vínculos.
-        $categories = $this->catRepo->findAllCategories($rid);
-
-        View::renderFromScope('admin/additionals/index', get_defined_vars());
+        $this->redirect('/admin/loja/catalogo#adicionais');
     }
 
     // === GRUPO CRUD ===

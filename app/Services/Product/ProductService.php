@@ -117,8 +117,8 @@ class ProductService
     }
 
     /**
-     * Processa upload de imagem
-     * (Mantido como helper wrapper por enquanto)
+     * Processa upload de imagem com otimização e thumbnail
+     * Gera imagem otimizada (max 1200px) + thumbnail 300x300 para listagens
      */
     public function handleImageUpload(?array $file): ?string
     {
@@ -127,7 +127,16 @@ class ProductService
         }
 
         $uploadDir = __DIR__ . '/../../../public/uploads/';
-        return \App\Helpers\ImageConverter::uploadAndConvert($file, $uploadDir, 85);
+        
+        // Usa o novo método com thumbnail automático
+        return \App\Helpers\ImageConverter::uploadWithThumbnail(
+            $file, 
+            $uploadDir,
+            1200,  // max dimension para imagem principal
+            300,   // tamanho do thumbnail quadrado
+            85,    // qualidade imagem principal
+            80     // qualidade thumbnail
+        );
     }
 
     /**

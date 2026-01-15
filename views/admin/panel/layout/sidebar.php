@@ -42,7 +42,7 @@ $isInMesasSection = $isInMesaContext || $isInClienteContext;
             <span class="nav-label">Cardápio</span>
         </a>
 
-        <a href="<?= BASE_URL ?>/admin/loja/produtos" class="nav-item <?= ViewHelper::isRouteActive('produtos') ? 'active' : '' ?>">
+        <a href="<?= BASE_URL ?>/admin/loja/catalogo" class="nav-item <?= ViewHelper::isRouteActive('catalogo') || ViewHelper::isRouteActive('produtos') ? 'active' : '' ?>">
             <i data-lucide="package" size="36"></i>
             <span class="nav-label">Estoque</span>
         </a>
@@ -51,12 +51,6 @@ $isInMesasSection = $isInMesaContext || $isInClienteContext;
             <i data-lucide="wallet" size="36"></i>
             <span class="nav-label">Caixa</span>
         </a>
-
-
-
-
-
-
 
         <a href="<?= BASE_URL ?>/admin" class="nav-item center-exit" title="Sair">
             <i data-lucide="log-out" size="22"></i>

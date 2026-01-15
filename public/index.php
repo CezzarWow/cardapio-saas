@@ -124,6 +124,10 @@ Router::add('/admin/loja/reposicao', \App\Controllers\Admin\StockRepositionContr
 Router::add('/admin/loja/reposicao/ajustar', \App\Controllers\Admin\StockRepositionController::class, 'adjust');
 Router::add('/admin/loja/movimentacoes', \App\Controllers\Admin\StockMovementController::class, 'index');
 
+// --- SPA Stock Dashboard (Catálogo Unificado) ---
+Router::add('/admin/loja/catalogo', \App\Controllers\Admin\StockDashboardController::class, 'index');
+Router::pattern('/^\/admin\/loja\/catalogo\/partial\/([a-z]+)$/', \App\Controllers\Admin\StockDashboardController::class, 'partial');
+
 // ============================================================
 // GRUPO 7: Categorias (migradas para Router)
 // ============================================================

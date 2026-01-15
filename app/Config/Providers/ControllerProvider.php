@@ -74,6 +74,17 @@ class ControllerProvider implements Provider
             );
         });
 
+        // Stock Dashboard Controller (SPA Catálogo)
+        $container->bind(\App\Controllers\Admin\StockDashboardController::class, function ($c) {
+            return new \App\Controllers\Admin\StockDashboardController(
+                $c->get(\App\Services\Product\ProductService::class),
+                $c->get(\App\Services\CategoryService::class),
+                $c->get(\App\Services\Additional\AdditionalService::class),
+                $c->get(\App\Services\Stock\StockService::class),
+                $c->get(\App\Repositories\AdditionalCategoryRepository::class)
+            );
+        });
+
         $container->bind(\App\Controllers\Admin\TableController::class, function ($c) {
             return new \App\Controllers\Admin\TableController(
                 $c->get(\App\Services\TableService::class),

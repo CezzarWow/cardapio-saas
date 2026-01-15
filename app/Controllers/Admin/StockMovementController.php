@@ -19,25 +19,10 @@ class StockMovementController extends BaseController
     }
 
     /**
-     * Listar Movimentações (Relatório)
+     * Listar Movimentações - Redireciona para SPA Dashboard
      */
     public function index(): void
     {
-        $restaurantId = $this->getRestaurantId();
-
-        // Coleta filtros
-        $filters = [
-            'product'    => $_GET['product'] ?? '',
-            'category'   => $_GET['category'] ?? '',
-            'start_date' => $_GET['start_date'] ?? '',
-            'end_date'   => $_GET['end_date'] ?? ''
-        ];
-
-        // Busca dados via Service
-        $movements = $this->service->getMovements($restaurantId, $filters);
-        $products = $this->service->getProducts($restaurantId);
-        $categories = $this->service->getCategories($restaurantId);
-
-        View::renderFromScope('admin/movements/index', get_defined_vars());
+        $this->redirect('/admin/loja/catalogo#movimentacoes');
     }
 }
