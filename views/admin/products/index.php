@@ -5,6 +5,10 @@
 // [VIEW CLEANUP] Dados pré-calculados pelo Controller ($totalProducts, $criticalStockCount)
 ?>
 
+<!-- Styles -->
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/stock/index.css?v=<?= time() ?>">
+<script src="<?= BASE_URL ?>/js/admin/stock.js?v=<?= time() ?>" defer></script>
+
 <main class="main-content">
     <?php \App\Core\View::renderFromScope('admin/panel/layout/messages.php', get_defined_vars()); ?>
     <div style="padding: 2rem; width: 100%; overflow-y: auto;">
@@ -29,28 +33,30 @@
         </div>
 
         <!-- Busca + Indicadores -->
-        <div class="stock-search-container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div class="stock-search-container">
             <input type="text" id="searchProduct" placeholder="🔍 Buscar produto por nome..." 
-                   class="stock-search-input" style="width: 100%; max-width: 350px;">
+                   class="stock-search-input">
             
-            <div style="display: flex; gap: 20px; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="background: #dbeafe; padding: 6px; border-radius: 6px;">
-                        <i data-lucide="package" style="width: 18px; height: 18px; color: #2563eb;"></i>
+            <div class="stock-indicators">
+                <!-- Total Products -->
+                <div class="stock-indicator-item">
+                    <div class="stock-indicator-icon total-products-icon">
+                        <i data-lucide="package" class="total-products-svg"></i>
                     </div>
                     <div>
-                        <span style="font-weight: 700; color: #1f2937;"><?= $totalProducts ?></span>
-                        <span style="font-size: 0.8rem; color: #6b7280;"> produtos</span>
+                        <span class="stock-indicator-text"><?= $totalProducts ?></span>
+                        <span class="stock-indicator-label"> produtos</span>
                     </div>
                 </div>
                 
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="background: <?= $criticalStockCount > 0 ? '#fecaca' : '#fef3c7' ?>; padding: 6px; border-radius: 6px;">
-                        <i data-lucide="alert-triangle" style="width: 18px; height: 18px; color: <?= $criticalStockCount > 0 ? '#dc2626' : '#d97706' ?>;"></i>
+                <!-- Critical Stock -->
+                <div class="stock-indicator-item">
+                    <div class="stock-indicator-icon <?= $criticalStockCount > 0 ? 'critical-stock-icon-bg-danger' : 'critical-stock-icon-bg-warning' ?>">
+                        <i data-lucide="alert-triangle" style="width: 18px; height: 18px;" class="<?= $criticalStockCount > 0 ? 'critical-stock-svg-danger' : 'critical-stock-svg-warning' ?>"></i>
                     </div>
                     <div>
-                        <span style="font-weight: 700; color: <?= $criticalStockCount > 0 ? '#dc2626' : '#d97706' ?>;"><?= $criticalStockCount ?></span>
-                        <span style="font-size: 0.8rem; color: #6b7280;"> críticos</span>
+                        <span class="stock-indicator-text" style="color: <?= $criticalStockCount > 0 ? '#dc2626' : '#d97706' ?>;"><?= $criticalStockCount ?></span>
+                        <span class="stock-indicator-label"> críticos</span>
                     </div>
                 </div>
             </div>
@@ -73,7 +79,7 @@
         <!-- Grid de Cards -->
         <div id="stock-cards-view" class="stock-products-grid stock-fade-in">
             <?php if (empty($products)): ?>
-                <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: #999;">
+                <div class="stock-empty-state">
                     Nenhum produto cadastrado.
                 </div>
             <?php else: ?>
@@ -85,10 +91,10 @@
                     <!-- Imagem -->
                     <?php if ($prod['image']): ?>
                         <img src="<?= BASE_URL ?>/uploads/<?= $prod['image'] ?>" loading="lazy" 
-                             style="width: 100%; height: 140px; object-fit: cover; border-radius: 12px 12px 0 0;"
+                             class="stock-product-image"
                              alt="<?= htmlspecialchars($prod['name']) ?>">
                     <?php elseif (($prod['icon_as_photo'] ?? 0) == 1): ?>
-                        <div style="width: 100%; height: 140px; background: #eff6ff; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        <div class="stock-product-icon-container">
                             <?php if ($prod['is_lucide_icon']): ?>
                                 <i data-lucide="<?= $prod['display_icon'] ?>" style="width: 64px; height: 64px; color: #3b82f6;"></i>
                             <?php else: ?>
@@ -96,7 +102,7 @@
                             <?php endif; ?>
                         </div>
                     <?php else: ?>
-                        <div style="width: 100%; height: 140px; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+                        <div class="stock-product-placeholder">
                             <i data-lucide="image" style="width: 40px; height: 40px;"></i>
                         </div>
                     <?php endif; ?>
@@ -133,28 +139,26 @@
 </main>
 
 <!-- Modal de Confirmação de Exclusão -->
-<div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 2rem; border-radius: 16px; width: 100%; max-width: 400px; margin: 20px; text-align: center;">
-        <div style="width: 60px; height: 60px; background: #fef2f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+<div id="deleteModal">
+    <div class="delete-modal-content">
+        <div class="delete-modal-icon-container">
             <i data-lucide="trash-2" style="width: 28px; height: 28px; color: #dc2626;"></i>
         </div>
         <h3 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Excluir Produto</h3>
         <p style="color: #6b7280; margin-bottom: 1.5rem;">Tem certeza que deseja excluir <strong id="deleteProductName"></strong>?</p>
         <p style="color: #dc2626; font-size: 0.85rem; margin-bottom: 1.5rem;">⚠️ Esta ação não pode ser desfeita.</p>
         
-        <div style="display: flex; gap: 10px;">
-            <button onclick="closeDeleteModal()" style="flex: 1; padding: 12px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+        <div class="delete-modal-actions">
+            <button onclick="closeDeleteModal()" class="btn-cancel-delete">
                 Cancelar
             </button>
-            <a id="deleteConfirmBtn" href="#" style="flex: 1; padding: 12px; background: #dc2626; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <a id="deleteConfirmBtn" href="#" class="btn-confirm-delete">
                 🗑️ Excluir
             </a>
         </div>
     </div>
 </div>
 
-<!-- JavaScript externo (reutiliza stock.js) -->
 <script>const BASE_URL = '<?= BASE_URL ?>';</script>
-<script src="<?= BASE_URL ?>/js/admin/stock.js"></script>
 
 <?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>
