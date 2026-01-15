@@ -1,0 +1,60 @@
+/* ==========================================
+ * FOOTER
+ * ========================================== */
+.checkout-footer {
+    padding: 20px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.footer-totals {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 0 5px;
+}
+
+.footer-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-cancel {
+    flex: 1;
+    padding: 15px;
+    background: white;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-pay-later {
+    flex: 1;
+    padding: 15px;
+    background: #f59e0b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.btn-finish {
+    flex: 2;
+    padding: 15px;
+    background: #cbd5e1;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 800;
+    cursor: not-allowed;
+    font-size: 1.1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}

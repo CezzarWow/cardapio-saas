@@ -2,7 +2,7 @@
  * PDV CHECKOUT - Order Type
  * Seleção de tipo de pedido (Local/Retirada/Entrega)
  * 
- * Dependências: CheckoutUI
+ * Dependências: CheckoutUI, CheckoutHelpers
  */
 
 const CheckoutOrderType = {
@@ -13,6 +13,45 @@ const CheckoutOrderType = {
      * @param {HTMLElement} element - Card clicado (pode ser null)
      */
     selectOrderType: function (type, element) {
+        // 1. Ativa o card visual
+        element = this._activateCard(type, element);
+
+        // 2. Esconde alertas e fecha painel de entrega se necessário
+        this._hideAllAlerts();
+        if (type !== 'entrega') {
+            this._closeDeliveryIfOpen();
+        }
+
+        // 3. Processa tipo específico
+        const keepOpenInput = document.getElementById('keep_open_value');
+
+        if (type === 'retirada') {
+            if (keepOpenInput) keepOpenInput.value = 'true';
+            this._handleRetirada();
+        } else if (type === 'entrega') {
+            if (keepOpenInput) keepOpenInput.value = 'false';
+            this._handleEntrega();
+        } else {
+            // Local
+            if (keepOpenInput) keepOpenInput.value = 'false';
+        }
+
+        // 4. Atualiza botão "Pagar Depois"
+        this._updateSavePickupButton(type);
+
+        // 5. Finaliza
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        CheckoutUI.updateCheckoutUI();
+    },
+
+    // ==========================================
+    // SUB-FUNÇÕES PRIVADAS
+    // ==========================================
+
+    /**
+     * Ativa visualmente o card do tipo selecionado
+     */
+    _activateCard: function (type, element) {
         // Reset todos os cards
         document.querySelectorAll('.order-type-card').forEach(el => {
             if (!el.classList.contains('disabled')) {
@@ -39,122 +78,133 @@ const CheckoutOrderType = {
             element.style.background = '#eff6ff';
         }
 
-        // Logica de keep open / Retirada
-        const keepOpenInput = document.getElementById('keep_open_value');
+        return element;
+    },
+
+    /**
+     * Esconde todos os alertas de tipo de pedido
+     */
+    _hideAllAlerts: function () {
         const alertBoxRetirada = document.getElementById('retirada-client-alert');
+        const alertBoxEntrega = document.getElementById('entrega-alert');
+        if (alertBoxRetirada) alertBoxRetirada.style.display = 'none';
+        if (alertBoxEntrega) alertBoxEntrega.style.display = 'none';
+    },
+
+    /**
+     * Fecha painel de entrega e reseta flag
+     */
+    _closeDeliveryIfOpen: function () {
+        if (typeof CheckoutEntrega !== 'undefined') {
+            CheckoutEntrega.closePanel();
+            CheckoutEntrega.dataFilled = false;
+        }
+    },
+
+    /**
+     * Processa lógica específica de Retirada
+     */
+    _handleRetirada: function () {
+        const ctx = CheckoutHelpers.getContextIds();
+        const displayName = this._getDisplayName(ctx);
+
+        const alertBox = document.getElementById('retirada-client-alert');
         const clientSelectedBox = document.getElementById('retirada-client-selected');
         const noClientBox = document.getElementById('retirada-no-client');
 
-        // Elementos de Entrega
-        const alertBoxEntrega = document.getElementById('entrega-alert');
-        const entregaDadosOk = document.getElementById('entrega-dados-ok');
-        const entregaDadosPendente = document.getElementById('entrega-dados-pendente');
+        if (alertBox) alertBox.style.display = 'block';
 
-        // Esconde todos os alertas primeiro
-        if (alertBoxRetirada) alertBoxRetirada.style.display = 'none';
-        if (alertBoxEntrega) alertBoxEntrega.style.display = 'none';
-
-        // Fecha painel de entrega se mudar para outro tipo
-        // E reseta o flag para não tratar como entrega
-        if (type !== 'entrega') {
-            if (typeof CheckoutEntrega !== 'undefined') {
-                CheckoutEntrega.closePanel();
-                CheckoutEntrega.dataFilled = false; // Reseta flag sem limpar campos
+        // Aceita cliente OU mesa para liberar Retirada
+        if ((ctx.hasClient || ctx.hasTable) && displayName) {
+            if (clientSelectedBox) {
+                clientSelectedBox.style.display = 'block';
+                document.getElementById('retirada-client-name').innerText = displayName;
             }
-        }
-
-        if (type === 'retirada') {
-            if (keepOpenInput) keepOpenInput.value = 'true';
-
-            const clientId = document.getElementById('current_client_id')?.value;
-            const tableId = document.getElementById('current_table_id')?.value;
-            const tableNumber = document.getElementById('current_table_number')?.value;
-
-            // Tenta pegar o nome de várias fontes (cliente OU mesa)
-            let displayName = document.getElementById('current_client_name')?.value;
-            if (!displayName) {
-                displayName = document.getElementById('current_table_name')?.value;
-            }
-            // Se tem mesa com número, usa "Mesa X"
-            if (!displayName && tableId && tableNumber) {
-                displayName = 'Mesa ' + tableNumber;
-            }
-            if (!displayName) {
-                const selectedName = document.getElementById('selected-client-name')?.innerText;
-                // Ignora placeholder "Nome" - só usa se for um nome real
-                if (selectedName && selectedName !== 'Nome' && selectedName.trim() !== '') {
-                    displayName = selectedName;
-                }
-            }
-
-            if (alertBoxRetirada) alertBoxRetirada.style.display = 'block';
-
-            // Aceita cliente OU mesa para liberar Retirada
-            if ((clientId || tableId) && displayName) {
-                if (clientSelectedBox) {
-                    clientSelectedBox.style.display = 'block';
-                    document.getElementById('retirada-client-name').innerText = displayName;
-                }
-                if (noClientBox) noClientBox.style.display = 'none';
-            } else {
-                if (clientSelectedBox) clientSelectedBox.style.display = 'none';
-                if (noClientBox) noClientBox.style.display = 'block';
-            }
-        } else if (type === 'entrega') {
-            if (keepOpenInput) keepOpenInput.value = 'false';
-
-            // Mostra alerta de entrega
-            if (alertBoxEntrega) alertBoxEntrega.style.display = 'block';
-
-            // Verifica se dados já foram preenchidos
-            if (typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled) {
-                if (entregaDadosOk) entregaDadosOk.style.display = 'block';
-                if (entregaDadosPendente) entregaDadosPendente.style.display = 'none';
-            } else {
-                if (entregaDadosOk) entregaDadosOk.style.display = 'none';
-                if (entregaDadosPendente) entregaDadosPendente.style.display = 'block';
-            }
+            if (noClientBox) noClientBox.style.display = 'none';
         } else {
-            // Local
-            if (keepOpenInput) keepOpenInput.value = 'false';
+            if (clientSelectedBox) clientSelectedBox.style.display = 'none';
+            if (noClientBox) noClientBox.style.display = 'block';
+        }
+    },
+
+    /**
+     * Processa lógica específica de Entrega
+     */
+    _handleEntrega: function () {
+        const alertBox = document.getElementById('entrega-alert');
+        const dadosOk = document.getElementById('entrega-dados-ok');
+        const dadosPendente = document.getElementById('entrega-dados-pendente');
+
+        if (alertBox) alertBox.style.display = 'block';
+
+        // Verifica se dados já foram preenchidos
+        const isFilled = typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled;
+        if (isFilled) {
+            if (dadosOk) dadosOk.style.display = 'block';
+            if (dadosPendente) dadosPendente.style.display = 'none';
+        } else {
+            if (dadosOk) dadosOk.style.display = 'none';
+            if (dadosPendente) dadosPendente.style.display = 'block';
+        }
+    },
+
+    /**
+     * Atualiza estado do botão "Pagar Depois"
+     */
+    _updateSavePickupButton: function (type) {
+        const btnSavePickup = document.getElementById('btn-save-pickup');
+        if (!btnSavePickup) return;
+
+        if (type === 'retirada' || type === 'entrega') {
+            btnSavePickup.style.display = 'flex';
+
+            const ctx = CheckoutHelpers.getContextIds();
+            let canEnable = false;
+
+            if (type === 'retirada') {
+                canEnable = ctx.hasClient || ctx.hasTable;
+            } else if (type === 'entrega') {
+                const isFilled = typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled;
+                canEnable = ctx.hasClient || ctx.hasTable || isFilled;
+            }
+
+            btnSavePickup.disabled = !canEnable;
+            btnSavePickup.style.opacity = canEnable ? '1' : '0.5';
+            btnSavePickup.style.cursor = canEnable ? 'pointer' : 'not-allowed';
+        } else {
+            btnSavePickup.style.display = 'none';
+        }
+    },
+
+    /**
+     * Obtém o nome para exibição (cliente ou mesa)
+     */
+    _getDisplayName: function (ctx) {
+        // Tenta pegar o nome de várias fontes
+        let displayName = document.getElementById('current_client_name')?.value;
+
+        if (!displayName) {
+            displayName = document.getElementById('current_table_name')?.value;
         }
 
-        // Mostra/esconde botão "Pagar Depois" para Retirada/Entrega
-        const btnSavePickup = document.getElementById('btn-save-pickup');
-        if (btnSavePickup) {
-            if (type === 'retirada' || type === 'entrega') {
-                btnSavePickup.style.display = 'flex';
+        // Se tem mesa com número, usa "Mesa X"
+        if (!displayName && ctx.hasTable) {
+            const tableNumber = document.getElementById('current_table_number')?.value;
+            if (tableNumber) displayName = 'Mesa ' + tableNumber;
+        }
 
-                const clientId = document.getElementById('current_client_id')?.value;
-                const tableId = document.getElementById('current_table_id')?.value;
-
-                let canEnable = false;
-
-                if (type === 'retirada') {
-                    canEnable = !!(clientId || tableId);
-                } else if (type === 'entrega') {
-                    canEnable = !!(clientId || tableId || (typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled));
-                }
-
-                if (canEnable) {
-                    btnSavePickup.disabled = false;
-                    btnSavePickup.style.opacity = '1';
-                    btnSavePickup.style.cursor = 'pointer';
-                } else {
-                    btnSavePickup.disabled = true;
-                    btnSavePickup.style.opacity = '0.5';
-                    btnSavePickup.style.cursor = 'not-allowed';
-                }
-            } else {
-                btnSavePickup.style.display = 'none';
+        if (!displayName) {
+            const selectedName = document.getElementById('selected-client-name')?.innerText;
+            if (selectedName && selectedName !== 'Nome' && selectedName.trim() !== '') {
+                displayName = selectedName;
             }
         }
 
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-        CheckoutUI.updateCheckoutUI();
+        return displayName || '';
     }
 
 };
 
 // Expõe globalmente para uso pelos outros módulos
 window.CheckoutOrderType = CheckoutOrderType;
+

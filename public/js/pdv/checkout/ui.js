@@ -95,10 +95,9 @@ const CheckoutUI = {
 
         // Validação Extra: Retirada sem Cliente
         const keepOpenInput = document.getElementById('keep_open_value');
-        const clientId = document.getElementById('current_client_id')?.value;
-        const tableId = document.getElementById('current_table_id')?.value;
+        const ctx = CheckoutHelpers.getContextIds();
 
-        if (keepOpenInput && keepOpenInput.value === 'true' && !clientId && !tableId) {
+        if (keepOpenInput && keepOpenInput.value === 'true' && !ctx.hasClient && !ctx.hasTable) {
             btnFinish.disabled = true;
             btnFinish.style.background = '#cbd5e1';
             btnFinish.style.cursor = 'not-allowed';

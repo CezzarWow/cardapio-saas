@@ -36,6 +36,37 @@ const CheckoutHelpers = {
     formatMethodLabel: function (method) {
         const map = { 'dinheiro': 'Dinheiro', 'pix': 'Pix', 'credito': 'Cartão Crédito', 'debito': 'Cartão Débito' };
         return map[method] || method;
+    },
+
+    /**
+     * Obtém IDs de contexto do DOM (mesa, cliente, pedido)
+     * Centraliza a lógica repetitiva de obter e validar IDs
+     * @returns {Object} { tableId, clientId, orderId, hasTable, hasClient }
+     */
+    getContextIds: function () {
+        const tableIdRaw = document.getElementById('current_table_id')?.value;
+        const clientIdRaw = document.getElementById('current_client_id')?.value;
+        const orderIdRaw = document.getElementById('current_order_id')?.value;
+
+        const hasTable = !!(tableIdRaw && tableIdRaw !== '' && tableIdRaw !== '0');
+        const hasClient = !!(clientIdRaw && clientIdRaw !== '' && clientIdRaw !== '0');
+
+        return {
+            tableId: hasTable ? parseInt(tableIdRaw) : null,
+            clientId: hasClient ? parseInt(clientIdRaw) : null,
+            orderId: orderIdRaw ? parseInt(orderIdRaw) : null,
+            hasTable: hasTable,
+            hasClient: hasClient
+        };
+    },
+
+    /**
+     * Verifica se é um ID válido (não vazio, não zero)
+     * @param {string|number} id 
+     * @returns {boolean}
+     */
+    isValidId: function (id) {
+        return !!(id && id !== '' && id !== '0' && id !== 0);
     }
 
 };

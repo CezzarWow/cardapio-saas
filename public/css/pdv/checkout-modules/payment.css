@@ -1,0 +1,280 @@
+/* ==========================================
+ * PAYMENT METHODS
+ * ========================================== */
+.payment-methods-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.payment-method-btn {
+    padding: 14px 10px;
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.payment-method-btn.large {
+    padding: 18px 12px;
+}
+
+.payment-method-btn:hover {
+    border-color: #94a3b8;
+    background: #f8fafc;
+}
+
+.payment-method-btn.active {
+    border-color: #2563eb !important;
+    background: #eff6ff !important;
+}
+
+/* ==========================================
+ * DISCOUNT & CREDIARIO
+ * ========================================== */
+.discount-box {
+    background: #fff1f2;
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid #fda4af;
+}
+
+.discount-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #be123c;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.discount-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #f43f5e;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #be123c;
+    outline: none;
+    background: white;
+}
+
+.crediario-box {
+    background: #fff7ed;
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid #fdba74;
+    transition: opacity 0.3s;
+}
+
+.crediario-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #c2410c;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.crediario-wrapper {
+    position: relative;
+}
+
+.crediario-currency {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #c2410c;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.crediario-input {
+    width: 100%;
+    padding: 8px 36px 8px 35px;
+    border: 1px solid #fb923c;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #c2410c;
+    outline: none;
+    background: white;
+}
+
+.btn-add-crediario {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    bottom: 2px;
+    border: none;
+    background: #fb923c;
+    color: white;
+    border-radius: 4px;
+    width: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.crediario-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding: 5px 8px;
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+    border-radius: 6px;
+    font-size: 0.70rem;
+    color: #9a3412;
+    font-weight: 700;
+}
+
+/* ==========================================
+ * PAYMENT INPUT AREA
+ * ========================================== */
+.pay-input-box {
+    background: #f1f5f9;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-top: 10px;
+}
+
+.pay-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.pay-controls {
+    position: relative;
+    display: flex;
+    gap: 8px;
+}
+
+.pay-currency {
+    position: absolute;
+    left: 12px;
+    top: 14px;
+    color: #64748b;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.pay-input {
+    width: 100%;
+    padding: 12px 12px 12px 40px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #1e293b;
+    outline: none;
+}
+
+.btn-add-payment {
+    width: 50px;
+    background: #22c55e;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.btn-add-payment:hover {
+    background: #16a34a;
+}
+
+/* ==========================================
+ * ADJUST TOTAL BOX
+ * ========================================== */
+.adjust-total-box {
+    margin-top: 10px;
+    background: #f8fafc;
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.adjust-label {
+    font-size: 0.95rem;
+    color: #334155;
+    font-weight: 800;
+    margin: 0;
+}
+
+.adjust-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex: 1;
+}
+
+.adjust-input-wrapper {
+    position: relative;
+    width: 130px;
+}
+
+.adjust-currency {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-weight: bold;
+    font-size: 0.95rem;
+}
+
+.adjust-input {
+    width: 100%;
+    padding: 6px 6px 6px 30px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #475569;
+    outline: none;
+    background: #f1f5f9;
+    height: 36px;
+}
+
+.btn-adjust-action {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-adjust-edit {
+    background: white;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+}
+
+.btn-adjust-confirm {
+    background: #2563eb;
+    color: white;
+    border: none;
+}

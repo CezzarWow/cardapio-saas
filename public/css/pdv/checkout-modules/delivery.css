@@ -1,0 +1,86 @@
+/* ==========================================
+ * DELIVERY PANEL
+ * ========================================== */
+.delivery-panel {
+    background: white;
+    width: 320px;
+    border-radius: 0 16px 16px 0;
+    margin-left: -16px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    display: none;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow: hidden;
+}
+
+.delivery-header {
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.delivery-title {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.delivery-form {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.delivery-group {
+    margin-bottom: 15px;
+}
+
+.delivery-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.delivery-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+}
+
+.delivery-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    display: flex;
+    gap: 10px;
+}
+
+.btn-delivery-cancel {
+    flex: 1;
+    padding: 12px;
+    background: white;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-delivery-confirm {
+    flex: 1;
+    padding: 12px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+}

@@ -12,7 +12,7 @@ const CheckoutFlow = {
      * Detecta contexto (Mesa, Comanda, Balcão, Edição de Pago) e direciona
      */
     finalizeSale: function () {
-        const tableId = document.getElementById('current_table_id').value;
+        const ctx = CheckoutHelpers.getContextIds();
 
         // VERIFICAÇÃO ESPECIAL: Edição de Pedido Pago
         if (typeof isEditingPaidOrder !== 'undefined' && isEditingPaidOrder) {
@@ -21,7 +21,7 @@ const CheckoutFlow = {
         }
 
         // MESA
-        if (tableId) {
+        if (ctx.hasTable) {
             if (PDVCart.items.length === 0) { alert('Carrinho vazio!'); return; }
             this.openCheckoutModal();
             return;
@@ -29,7 +29,7 @@ const CheckoutFlow = {
 
         // BALCÃO
         const stateBalcao = PDVState.getState();
-        if (!tableId && stateBalcao.modo !== 'retirada') {
+        if (!ctx.hasTable && stateBalcao.modo !== 'retirada') {
             PDVState.set({ modo: 'balcao' });
         }
 

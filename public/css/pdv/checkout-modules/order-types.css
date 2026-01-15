@@ -1,0 +1,96 @@
+/* ==========================================
+ * ORDER TYPES
+ * ========================================== */
+.order-types-container {
+    background: white;
+    margin-bottom: 5px;
+    padding: 0 25px;
+}
+
+.order-types-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+
+.order-type-card {
+    border: 2px solid #cbd5e1;
+    background: white;
+    border-radius: 6px;
+    padding: 8px 5px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.order-type-label {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #1e293b;
+}
+
+.order-type-alerts {
+    height: 50px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.alert-box {
+    height: 46px;
+    padding: 0 14px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.alert-box.success {
+    background: #d1fae5;
+    border: 2px solid #10b981;
+}
+
+.alert-box.warning {
+    background: #fef3c7;
+    border: 2px solid #f59e0b;
+}
+
+.alert-box.info {
+    background: #dbeafe;
+    border: 2px solid #3b82f6;
+}
+
+.alert-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-text {
+    font-weight: 700;
+    color: #065f46;
+    font-size: 0.9rem;
+}
+
+.alert-box.warning .alert-text {
+    color: #92400e;
+}
+
+.alert-box.info .alert-text {
+    color: #1e40af;
+}
+
+.alert-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    text-decoration: underline;
+}
+
+.alert-btn.action {
+    background: #2563eb;
+    color: white;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+}

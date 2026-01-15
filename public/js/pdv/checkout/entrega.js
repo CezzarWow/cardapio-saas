@@ -7,6 +7,13 @@
 
 const CheckoutEntrega = {
 
+    // Constante: IDs dos campos de entrega
+    FIELD_IDS: [
+        'delivery_name', 'delivery_address', 'delivery_number',
+        'delivery_neighborhood', 'delivery_phone',
+        'delivery_complement', 'delivery_observation'
+    ],
+
     // Estado interno (não mais global)
     dataFilled: false,
 
@@ -149,12 +156,7 @@ const CheckoutEntrega = {
      */
     clearData: function () {
         this.dataFilled = false;
-
-        // Limpa campos
-        ['delivery_name', 'delivery_address', 'delivery_number', 'delivery_neighborhood', 'delivery_phone', 'delivery_complement', 'delivery_observation'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
+        this._clearFields();
 
         // Atualiza alertas
         const dadosOk = document.getElementById('entrega-dados-ok');
@@ -173,12 +175,7 @@ const CheckoutEntrega = {
     resetOnClose: function () {
         this.dataFilled = false;
         this.closePanel();
-
-        // Limpa campos
-        ['delivery_name', 'delivery_address', 'delivery_number', 'delivery_neighborhood', 'delivery_phone', 'delivery_complement', 'delivery_observation'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
+        this._clearFields();
     },
 
     /**
@@ -186,6 +183,16 @@ const CheckoutEntrega = {
      */
     isDataFilled: function () {
         return this.dataFilled;
+    },
+
+    /**
+     * Helper: Limpa todos os campos de entrega
+     */
+    _clearFields: function () {
+        this.FIELD_IDS.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
     }
 
 };

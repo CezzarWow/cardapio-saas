@@ -1,0 +1,22 @@
+/**
+ * PDV - Checkout Modal Styles (Orquestrador)
+ * Arquivo: public/css/pdv/checkout-modal.css
+ */
+
+/* 1. Layout Base */
+@import 'checkout-modules/layout.css';
+
+/* 2. Área Central (Pagamentos e Inputs) */
+@import 'checkout-modules/payment.css';
+
+/* 3. Resumo Lateral */
+@import 'checkout-modules/summary.css';
+
+/* 4. Tipos de Pedido (Cards) */
+@import 'checkout-modules/order-types.css';
+
+/* 5. Painel de Entrega */
+@import 'checkout-modules/delivery.css';
+
+/* 6. Rodapé e Ações */
+@import 'checkout-modules/footer.css';

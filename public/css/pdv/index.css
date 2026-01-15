@@ -28,3 +28,6 @@
 
 /* 8. Busca de Clientes */
 @import 'client.css';
+
+/* 9. Modal de Checkout */
+@import 'checkout-modal.css';

@@ -11,25 +11,24 @@ const CheckoutSubmit = {
      * 1. FINALIZAR VENDA (Pagamento Realizado)
      */
     submitSale: async function () {
-        const tableId = document.getElementById('current_table_id').value;
-        const clientId = document.getElementById('current_client_id').value;
-        const orderId = document.getElementById('current_order_id')?.value; // Captura ID da comanda
+        // 1. Obter contexto via helper centralizado
+        const ctx = CheckoutHelpers.getContextIds();
         const keepOpen = document.getElementById('keep_open_value')?.value === 'true';
 
-        // 1. Obter Carrinho
+        // 2. Obter Carrinho
         const cartItems = this._getCartItems();
 
-        // 2. Preparar Payload Base
+        // 3. Preparar Payload Base
         let endpoint = '/admin/loja/venda/finalizar';
-        const hasClientOrTable = !!(clientId || tableId);
+        const hasClientOrTable = ctx.hasClient || ctx.hasTable;
         const selectedOrderType = this._determineOrderType(hasClientOrTable);
 
         // 3. Montar dados
         const payload = {
             cart: cartItems,
-            table_id: tableId ? parseInt(tableId) : null,
-            client_id: clientId ? parseInt(clientId) : null,
-            order_id: orderId ? parseInt(orderId) : null, // Envia para o backend
+            table_id: ctx.tableId,
+            client_id: ctx.clientId,
+            order_id: ctx.orderId,
             payments: CheckoutState.currentPayments,
             discount: CheckoutState.discountValue,
             keep_open: keepOpen,
@@ -46,18 +45,12 @@ const CheckoutSubmit = {
 
         // 5. Vincular entrega à mesa ou comanda (independente de pagar agora ou depois)
         if (selectedOrderType === 'delivery') {
-            const tId = parseInt(tableId);
-            const cId = parseInt(clientId);
-
-            const hasTable = !isNaN(tId) && tId > 0;
-            const hasClient = !isNaN(cId) && cId > 0;
-
-            if (hasTable) {
+            if (ctx.hasTable) {
                 payload.link_to_table = true;
-                payload.table_id = tId;
-            } else if (hasClient) {
+                payload.table_id = ctx.tableId;
+            } else if (ctx.hasClient) {
                 payload.link_to_comanda = true;
-                payload.table_id = null; // Garante que não vá lixo
+                payload.table_id = null;
                 payload.link_to_table = false;
             }
         }
@@ -119,38 +112,34 @@ const CheckoutSubmit = {
      * 3. SALVAR COMANDA (Botão Laranja)
      */
     saveClientOrder: async function () {
-        const clientId = document.getElementById('current_client_id').value;
-        const tableId = document.getElementById('current_table_id').value;
-        const orderId = document.getElementById('current_order_id')?.value;
+        // Obter contexto via helper centralizado
+        const ctx = CheckoutHelpers.getContextIds();
 
         // Validações
         if (!CheckoutValidator.validateCart(PDVCart.items)) return;
-        if (!CheckoutValidator.validateClientOrTable(clientId, tableId)) return;
-
-        // Validação correta de IDs (ignora "0" ou string vazia)
-        const hasTable = tableId && tableId !== '' && tableId !== '0';
+        if (!CheckoutValidator.validateClientOrTable(ctx.clientId, ctx.tableId)) return;
 
         // Atualiza Estado
         PDVState.set({
-            modo: hasTable ? 'mesa' : 'comanda',
-            clienteId: clientId ? parseInt(clientId) : null,
-            mesaId: hasTable ? parseInt(tableId) : null
+            modo: ctx.hasTable ? 'mesa' : 'comanda',
+            clienteId: ctx.clientId,
+            mesaId: ctx.tableId
         });
 
         // Envia
         const payload = {
             cart: PDVCart.items,
-            client_id: clientId ? parseInt(clientId) : null,
-            table_id: hasTable ? parseInt(tableId) : null,
-            order_id: orderId ? parseInt(orderId) : null,
+            client_id: ctx.clientId,
+            table_id: ctx.tableId,
+            order_id: ctx.orderId,
             save_account: true,
-            order_type: hasTable ? 'mesa' : 'comanda'
+            order_type: ctx.hasTable ? 'mesa' : 'comanda'
         };
 
         try {
             const data = await CheckoutService.saveTabOrder(payload);
             // Após salvar, volta para a mesma mesa (não perde contexto)
-            this._handleSaveSuccess(data, hasTable ? parseInt(tableId) : null, orderId);
+            this._handleSaveSuccess(data, ctx.tableId, ctx.orderId);
         } catch (err) {
             alert(err.message);
         }
@@ -164,29 +153,21 @@ const CheckoutSubmit = {
         const rawType = this._determineOrderType(false);
         const selectedOrderType = rawType === 'delivery' ? 'delivery' : 'pickup';
 
-
-
         // Validações
         if (!CheckoutValidator.validateDeliveryData(selectedOrderType)) return;
 
         const cartItems = this._getCartItems();
         if (!CheckoutValidator.validateCart(cartItems)) return;
 
-        // Verificar se tem mesa ou cliente selecionado
-        const tableId = document.getElementById('current_table_id')?.value;
-        const clientId = document.getElementById('current_client_id')?.value;
-        const orderId = document.getElementById('current_order_id')?.value; // Captura ID da comanda
-        const hasTable = tableId && tableId !== '' && tableId !== '0';
-        const hasClient = clientId && clientId !== '' && clientId !== '0';
-
-
+        // Obter contexto via helper centralizado
+        const ctx = CheckoutHelpers.getContextIds();
 
         // Montar Payload
         const payload = {
             cart: cartItems,
-            table_id: hasTable ? parseInt(tableId) : null,
-            client_id: hasClient ? parseInt(clientId) : null,
-            order_id: orderId ? parseInt(orderId) : null, // Envia para o backend
+            table_id: ctx.tableId,
+            client_id: ctx.clientId,
+            order_id: ctx.orderId,
             payments: [],
             discount: CheckoutState.discountValue || 0,
             delivery_fee: (selectedOrderType === 'delivery' && typeof PDV_DELIVERY_FEE !== 'undefined') ? PDV_DELIVERY_FEE : 0,
@@ -197,29 +178,18 @@ const CheckoutSubmit = {
             payment_method_expected: CheckoutState.selectedMethod || 'dinheiro'
         };
 
-
-
-        // 5. Vincular entrega à mesa ou comanda (lógica robusta)
+        // Vincular entrega à mesa ou comanda
         if (selectedOrderType === 'delivery') {
-            const tId = parseInt(tableId);
-            const cId = parseInt(clientId);
-
-            const hasTable = !isNaN(tId) && tId > 0;
-            const hasClient = !isNaN(cId) && cId > 0;
-
-
-
-            if (hasTable) {
+            if (ctx.hasTable) {
                 payload.link_to_table = true;
-                payload.table_id = tId;
-            } else if (hasClient) {
+                payload.table_id = ctx.tableId;
+            } else if (ctx.hasClient) {
                 payload.link_to_comanda = true;
                 payload.table_id = null;
                 payload.link_to_table = false;
             }
-        }
 
-        if (selectedOrderType === 'delivery') {
+            // Adiciona dados de entrega
             const deliveryData = typeof CheckoutEntrega !== 'undefined' ? CheckoutEntrega.getData() : getDeliveryData();
             if (deliveryData) payload.delivery_data = deliveryData;
         }
@@ -228,13 +198,12 @@ const CheckoutSubmit = {
         try {
             const data = await CheckoutService.saveTabOrder(payload);
 
-            // Se tem mesa ou cliente, manter no contexto (igual saveClientOrder)
-            if (hasTable || hasClient) {
-                this._handleSaveSuccess(data, hasTable ? parseInt(tableId) : null, orderId);
+            // Se tem mesa ou cliente, manter no contexto
+            if (ctx.hasTable || ctx.hasClient) {
+                this._handleSaveSuccess(data, ctx.tableId, ctx.orderId);
             } else {
                 // Sem mesa/cliente, comportamento padrão
-                const isFinalize = payload.finalize_now === true;
-                this._handleSuccess(data, false, isFinalize);
+                this._handleSuccess(data, false, true);
             }
         } catch (err) {
             alert(err.message);
