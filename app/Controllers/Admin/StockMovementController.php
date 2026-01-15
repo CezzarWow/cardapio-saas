@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Services\Stock\StockService;
+use App\Core\View;
 
 /**
  * StockMovementController - Super Thin

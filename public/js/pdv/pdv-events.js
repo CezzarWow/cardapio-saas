@@ -56,8 +56,12 @@ const PDVEvents = {
 
         if (window.PDVCart) {
             if (hasExtras) {
-                PDVCart.Extras.pendingProduct = { id, name, price };
-                PDVCart.Extras.open(id);
+                if (window.PDVExtras) {
+                    PDVExtras.open(id, name, price);
+                } else {
+                    console.error('PDVExtras module not loaded');
+                    alert('Erro: Módulo de adicionais não carregado');
+                }
             } else {
                 PDVCart.add(id, name, price);
             }
@@ -84,16 +88,16 @@ const PDVEvents = {
 
             // EXTRAS MODAL
             case 'extras-close':
-                PDVCart.Extras.close();
+                PDVExtras.close();
                 break;
             case 'extras-confirm':
-                PDVCart.Extras.confirm();
+                PDVExtras.confirm();
                 break;
             case 'extras-increase':
-                PDVCart.Extras.increaseQty();
+                PDVExtras.increaseQty();
                 break;
             case 'extras-decrease':
-                PDVCart.Extras.decreaseQty();
+                PDVExtras.decreaseQty();
                 break;
 
             // TABLE/CLIENT ACTIONS

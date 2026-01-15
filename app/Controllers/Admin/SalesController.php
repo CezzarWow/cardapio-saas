@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Services\SalesService;
 use App\Validators\SalesValidator;
+use App\Core\View;
 
 /**
  * SalesController - Super Thin

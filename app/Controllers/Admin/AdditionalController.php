@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Services\Additional\AdditionalService;
 use App\Validators\AdditionalValidator;
+use App\Core\View;
 
 /**
  * Controller de Adicionais - Super Thin (v4)

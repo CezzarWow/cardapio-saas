@@ -90,7 +90,10 @@ class ControllerProvider implements Provider
 
         $container->bind(\App\Controllers\Admin\PdvController::class, function ($c) {
             return new \App\Controllers\Admin\PdvController(
-                $c->get(\App\Services\Pdv\PdvService::class)
+                $c->get(\App\Services\Pdv\PdvService::class),
+                $c->get(\App\Repositories\TableRepository::class),
+                $c->get(\App\Services\RestaurantService::class),
+                $c->get(\App\Repositories\Order\OrderRepository::class)
             );
         });
 

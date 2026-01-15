@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Services\TableService;
 use App\Validators\TableValidator;
+use App\Core\View;
 use Exception;
 
 class TableController extends BaseController

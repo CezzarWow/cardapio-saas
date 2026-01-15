@@ -11,7 +11,11 @@ class View
      */
     public static function render(string $view, array $data = []): void
     {
-        $file = __DIR__ . '/../../views/' . ltrim($view, '/') . '.php';
+        $viewPath = ltrim($view, '/');
+        if (!str_ends_with($viewPath, '.php')) {
+            $viewPath .= '.php';
+        }
+        $file = __DIR__ . '/../../views/' . $viewPath;
 
         if (!file_exists($file)) {
             throw new \Exception("View not found: {$view}");
@@ -29,7 +33,11 @@ class View
      */
     public static function renderFromScope(string $view, array $scope): void
     {
-        $file = __DIR__ . '/../../views/' . ltrim($view, '/') . '.php';
+        $viewPath = ltrim($view, '/');
+        if (!str_ends_with($viewPath, '.php')) {
+            $viewPath .= '.php';
+        }
+        $file = __DIR__ . '/../../views/' . $viewPath;
 
         if (!file_exists($file)) {
             throw new \Exception("View not found: {$view}");

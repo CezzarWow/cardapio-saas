@@ -5,6 +5,7 @@ namespace App\Controllers\Admin;
 use App\Services\Cashier\CashierDashboardService;
 use App\Services\Cashier\CashierTransactionService;
 use App\Validators\CashierValidator;
+use App\Core\View;
 
 /**
  * CashierController - Super Thin (v3)

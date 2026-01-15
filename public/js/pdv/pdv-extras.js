@@ -28,7 +28,18 @@ const PDVExtras = {
         if (qtyDisplay) qtyDisplay.innerText = '1';
 
         modal.style.display = 'flex';
-        content.innerHTML = '<div style="text-align: center; margin-top: 20px;">Carregando...</div>';
+        // Reset position just in case
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.zIndex = '9999';
+
+        // Small delay to allow display flex to apply before opacity transition
+        requestAnimationFrame(() => {
+            modal.classList.add('active');
+        });
+
+        content.innerHTML = '<div style="text-align: center; margin-top: 100px; color: #64748b;">Carregando opções...</div>';
 
         const baseUrl = (typeof BASE_URL !== 'undefined') ? BASE_URL : '';
         try {
@@ -43,7 +54,12 @@ const PDVExtras = {
 
     close: function () {
         const modal = document.getElementById('extrasModal');
-        if (modal) modal.style.display = 'none';
+        if (modal) {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 200); // Matches CSS transition
+        }
         this.pendingProduct = null;
     },
 
@@ -62,23 +78,25 @@ const PDVExtras = {
 
         groups.forEach(group => {
             const groupDiv = document.createElement('div');
-            groupDiv.style.marginBottom = '20px';
-            groupDiv.innerHTML = `<h4>${group.name} ${group.required == 1 ? '<span style="color:red">(Obrigatório)</span>' : ''}</h4>`;
+            groupDiv.className = 'extras-group';
+            groupDiv.innerHTML = `<h4>${group.name} ${group.required == 1 ? '<span style="color:red; font-size: 0.8em">*</span>' : ''}</h4>`;
 
             group.items.forEach(item => {
                 const label = document.createElement('label');
-                label.style.display = 'flex';
-                label.style.justifyContent = 'space-between';
-                label.style.padding = '10px';
-                label.style.border = '1px solid #e2e8f0';
-                label.style.marginBottom = '5px';
+                label.className = 'extras-option-label';
+                // Add click listener to toggle 'checked' class
+                label.addEventListener('change', (e) => {
+                    if (e.target.checked) label.classList.add('checked');
+                    else label.classList.remove('checked');
+                });
+
                 label.innerHTML = `
-                    <div>
+                    <div style="display:flex; align-items:center;">
                         <input type="checkbox" name="extra_group_${group.id}" value="${item.id}" 
-                               data-name="${item.name}" data-price="${item.price}" class="extra-input">
+                               data-name="${item.name}" data-price="${item.price}" class="extra-input extras-option-checkbox">
                         <span>${item.name}</span>
                     </div>
-                    <span style="color:green">+ R$ ${parseFloat(item.price).toFixed(2).replace('.', ',')}</span>`;
+                    <span class="extras-price-tag">+ R$ ${parseFloat(item.price).toFixed(2).replace('.', ',')}</span>`;
                 groupDiv.appendChild(label);
             });
             container.appendChild(groupDiv);

@@ -21,6 +21,7 @@
     <!-- CSS Cardápio (usado em /admin/loja/cardapio) -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cards.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/modals/index.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/modals/extras-modal.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/publico/index.css?v=<?= time() ?>">
     <!-- Cardápio Admin - CSS Modular -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/base.css?v=<?= time() ?>">

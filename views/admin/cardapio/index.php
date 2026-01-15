@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/delivery-tab.css?v=<?= time() ?>">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/responsive.css?v=<?= time() ?>">
 
-<main class="main-content">
+<main class="main-content" style="flex-direction: column;">
     <?php \App\Core\View::renderFromScope('admin/panel/layout/messages.php', get_defined_vars()); ?>
     
     <div class="cardapio-admin-container">
@@ -80,6 +80,7 @@
                     Salvar
                 </button>
             </div>
+        </div><!-- END cardapio-admin-tabs -->
 
 
 

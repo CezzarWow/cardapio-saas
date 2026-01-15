@@ -2,6 +2,8 @@
 
 namespace App\Controllers\Admin;
 
+use App\Core\View;
+
 class ConfigGeraisController extends BaseController
 {
     public function index()

@@ -7,6 +7,7 @@ use App\Services\Admin\ComboService;
 use App\Services\Cardapio\CardapioQueryService;
 use App\Services\Cardapio\UpdateCardapioConfigService;
 use App\Validators\CardapioValidator;
+use App\Core\View;
 use Exception;
 
 /**

@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Services\Stock\StockService;
 use App\Validators\StockValidator;
+use App\Core\View;
 use Exception;
 
 /**
