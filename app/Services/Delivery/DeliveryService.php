@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services\Delivery;
 
 use App\Repositories\Delivery\DeliveryOrderRepository;
@@ -52,7 +53,7 @@ class DeliveryService
     public function getOrderDetails(int $orderId, int $restaurantId): ?array
     {
         $order = $this->repository->findWithDetails($orderId, $restaurantId);
-        
+
         if (!$order) {
             return null;
         }
@@ -60,7 +61,7 @@ class DeliveryService
         // Separa items para manter compatibilidade com front
         $items = $order['items'] ?? [];
         unset($order['items']);
-        
+
         return [
             'order' => $order,
             'items' => $items
@@ -87,7 +88,7 @@ class DeliveryService
         }
 
         $currentStatus = $order['status'];
-        
+
         // Permite "forçar" update se for admin? Por enquanto regra estrita.
         // Se status igual, retorna ok
         if ($currentStatus === $newStatus) {
@@ -95,13 +96,13 @@ class DeliveryService
         }
 
         $allowed = self::TRANSITIONS[$currentStatus] ?? [];
-        
+
         // Permite atualizações livres se o status atual não estiver mapeado (ex: entregue)
         // Mas se estiver, exige seguir o fluxo.
         // E 'cancelado' é terminal?
         if (isset(self::TRANSITIONS[$currentStatus]) && !in_array($newStatus, $allowed)) {
             return [
-                'success' => false, 
+                'success' => false,
                 'message' => "Transição inválida: {$currentStatus} → {$newStatus}"
             ];
         }
@@ -109,7 +110,7 @@ class DeliveryService
         $this->repository->updateStatus($orderId, $newStatus);
 
         return [
-            'success' => true, 
+            'success' => true,
             'message' => 'Status atualizado com sucesso',
             'new_status' => $newStatus
         ];
@@ -138,7 +139,7 @@ class DeliveryService
         $this->repository->updateStatus($orderId, 'aberto');
 
         return [
-            'success' => true, 
+            'success' => true,
             'message' => 'Pedido enviado para Mesas com sucesso'
         ];
     }

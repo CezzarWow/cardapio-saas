@@ -2,18 +2,18 @@
 
 namespace App\Controllers\Api;
 
-use App\Services\Order\Flows\Comanda\ComandaValidator;
-use App\Services\Order\Flows\Comanda\OpenComandaAction;
+use App\Middleware\RequestSanitizerMiddleware;
 use App\Services\Order\Flows\Comanda\AddItemsToComandaAction;
 use App\Services\Order\Flows\Comanda\CloseComandaAction;
-use App\Middleware\RequestSanitizerMiddleware;
+use App\Services\Order\Flows\Comanda\ComandaValidator;
+use App\Services\Order\Flows\Comanda\OpenComandaAction;
 
 /**
  * Controller API: Fluxo Comanda
- * 
+ *
  * Endpoints ISOLADOS para operações de comanda.
  * Não compartilha com Balcão, Mesa ou Delivery.
- * 
+ *
  * Dependências injetadas explicitamente via construtor.
  */
 class ComandaController
@@ -34,7 +34,7 @@ class ComandaController
         $this->openAction = $openAction;
         $this->addItemsAction = $addItemsAction;
         $this->closeAction = $closeAction;
-        
+
         $this->restaurantId = $_SESSION['user']['restaurant_id'] ?? 0;
     }
 
@@ -44,21 +44,23 @@ class ComandaController
     public function open(): void
     {
         header('Content-Type: application/json');
-        
+
         $data = $this->getPayload();
-        
-        if (!$this->validateRestaurant()) return;
-        
+
+        if (!$this->validateRestaurant()) {
+            return;
+        }
+
         $errors = $this->validator->validateOpen($data);
-        
+
         if (!empty($errors)) {
             $this->json(['success' => false, 'message' => 'Dados inválidos', 'errors' => $errors], 400);
             return;
         }
-        
+
         try {
             $result = $this->openAction->execute($this->restaurantId, $data);
-            
+
             $this->json([
                 'success' => true,
                 'order_id' => $result['order_id'],
@@ -68,7 +70,7 @@ class ComandaController
                 'status' => 'aberto',
                 'message' => 'Comanda aberta com sucesso'
             ], 201);
-            
+
         } catch (\Throwable $e) {
             $this->handleError($e);
         }
@@ -80,21 +82,23 @@ class ComandaController
     public function addItems(): void
     {
         header('Content-Type: application/json');
-        
+
         $data = $this->getPayload();
-        
-        if (!$this->validateRestaurant()) return;
-        
+
+        if (!$this->validateRestaurant()) {
+            return;
+        }
+
         $errors = $this->validator->validateAddItems($data);
-        
+
         if (!empty($errors)) {
             $this->json(['success' => false, 'message' => 'Dados inválidos', 'errors' => $errors], 400);
             return;
         }
-        
+
         try {
             $result = $this->addItemsAction->execute($this->restaurantId, $data);
-            
+
             $this->json([
                 'success' => true,
                 'order_id' => $result['order_id'],
@@ -103,7 +107,7 @@ class ComandaController
                 'new_total' => $result['new_total'],
                 'message' => 'Itens adicionados com sucesso'
             ], 200);
-            
+
         } catch (\Throwable $e) {
             $this->handleError($e);
         }
@@ -115,21 +119,23 @@ class ComandaController
     public function close(): void
     {
         header('Content-Type: application/json');
-        
+
         $data = $this->getPayload();
-        
-        if (!$this->validateRestaurant()) return;
-        
+
+        if (!$this->validateRestaurant()) {
+            return;
+        }
+
         $errors = $this->validator->validateClose($data);
-        
+
         if (!empty($errors)) {
             $this->json(['success' => false, 'message' => 'Dados inválidos', 'errors' => $errors], 400);
             return;
         }
-        
+
         try {
             $result = $this->closeAction->execute($this->restaurantId, $data);
-            
+
             $this->json([
                 'success' => true,
                 'order_id' => $result['order_id'],
@@ -138,7 +144,7 @@ class ComandaController
                 'status' => $result['status'],
                 'message' => 'Comanda fechada com sucesso'
             ], 200);
-            
+
         } catch (\Throwable $e) {
             $this->handleError($e);
         }
@@ -161,7 +167,7 @@ class ComandaController
 
     private function handleError(\Throwable $e): void
     {
-        error_log("[COMANDA_CONTROLLER] Erro: " . $e->getMessage());
+        error_log('[COMANDA_CONTROLLER] Erro: ' . $e->getMessage());
         $code = str_contains($e->getMessage(), 'não encontrad') ? 404 : 500;
         $this->json(['success' => false, 'message' => $e->getMessage()], $code);
     }

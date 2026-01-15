@@ -1,10 +1,10 @@
 <?php
 /**
  * CROPPER-MODAL.PHP - Modal de Recorte de Imagem
- * 
+ *
  * Partial reutilizável para modal de recorte de imagem.
  * Usa Cropper.js (carregado via CDN).
- * 
+ *
  * Dependências JS: cropper-modal.js
  */
 ?>

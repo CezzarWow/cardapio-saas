@@ -3,14 +3,13 @@
 namespace App\Services\Order;
 
 use App\Core\Database;
-use App\Services\PaymentService;
-use App\Services\CashRegisterService;
-use App\Repositories\StockRepository;
-use App\Repositories\Order\OrderRepository;
-use App\Repositories\Order\OrderItemRepository;
-use App\Repositories\TableRepository;
 use App\Repositories\ClientRepository;
-use PDO;
+use App\Repositories\Order\OrderItemRepository;
+use App\Repositories\Order\OrderRepository;
+use App\Repositories\StockRepository;
+use App\Repositories\TableRepository;
+use App\Services\CashRegisterService;
+use App\Services\PaymentService;
 use Exception;
 
 class CreateOrderAction
@@ -44,7 +43,7 @@ class CreateOrderAction
     public function execute(int $restaurantId, int $userId, array $data): int
     {
         $conn = Database::connect();
-        
+
         // 1. Validação de Caixa
         $caixa = $this->cashRegisterService->assertOpen($conn, $restaurantId);
 
@@ -67,11 +66,13 @@ class CreateOrderAction
 
 
             if ($orderType === 'mesa') {
-                if (!$tableId) throw new Exception('Mesa não identificada');
+                if (!$tableId) {
+                    throw new Exception('Mesa não identificada');
+                }
             }
 
             $totalVenda = 0;
-            
+
             // Feature: Separa itens reais de ajustes negativos (que viram desconto)
             $finalCart = [];
             $adjustmentDiscount = 0;
@@ -85,24 +86,24 @@ class CreateOrderAction
                     $totalVenda += $item['price'] * ($item['quantity'] ?? 1);
                 }
             }
-            
+
             // Atualiza a variávei $cart para usar apenas os itens válidos nas inserções subsequentes
             // Mantemos $originalCart se precisarmos de ref, mas para DB usamos $finalCart
-            $cart = $finalCart;                                
+            $cart = $finalCart;
 
             $discount = floatval($data['discount'] ?? 0) + $adjustmentDiscount;
             $deliveryFee = floatval($data['delivery_fee'] ?? 0);
             $finalTotal = max(0, $totalVenda + $deliveryFee - $discount);
-            
+
             $isPaid = isset($data['is_paid']) && $data['is_paid'] == 1 ? 1 : 0;
             $paymentMethod = $data['payment_method'] ?? 'dinheiro';
             $payments = $data['payments'] ?? [];
-            
-            
+
+
             // SAVE_ACCOUNT: Cria como comanda aberta
             $saveAccount = isset($data['save_account']) && $data['save_account'] == true;
             $finalizeNow = isset($data['finalize_now']) && $data['finalize_now'] == true;
-            
+
             // Determinar status inicial do pedido
             $orderStatus = 'novo';
             if ($saveAccount) {
@@ -113,7 +114,7 @@ class CreateOrderAction
             } elseif ($finalizeNow && in_array($orderType, ['delivery', 'pickup'])) {
                 // Delivery e Retirada SEMPRE começam como 'novo' para aparecer no Kanban
                 // (independente de pago ou não)
-                $orderStatus = 'novo'; 
+                $orderStatus = 'novo';
             } elseif ($finalizeNow && !$isPaid && !in_array($orderType, ['delivery', 'pickup'])) {
                 // Finalizou mas não pagou (ex: Marcar na conta) -> Aberto (Comanda)
                 // Exceto delivery/pickup que devem ir pro Kanban
@@ -124,37 +125,37 @@ class CreateOrderAction
             if ($existingOrderId && ($saveAccount || $finalizeNow)) {
                 // Buscar pedido existente
                 $existingOrder = $this->orderRepo->find($existingOrderId);
-                
+
                 if ($existingOrder && ($existingOrder['status'] === 'aberto' || $existingOrder['status'] === 'novo')) {
-                    
+
                     // Se for finalização, atualiza status
                     if ($finalizeNow) {
                         $this->orderRepo->updateStatus($existingOrderId, $orderStatus);
                     }
                     // Adicionar itens ao pedido existente
                     $this->itemRepo->insert($existingOrderId, $cart);
-                    
+
                     // Atualizar total do pedido (soma novos itens - descontos de ajuste)
                     $newTotal = floatval($existingOrder['total']) + $totalVenda - $adjustmentDiscount;
                     $this->orderRepo->updateTotal($existingOrderId, max(0, $newTotal));
-                    
+
                     // Baixa Estoque
                     foreach ($cart as $item) {
                         $this->stockRepo->decrement($item['id'], $item['quantity']);
                     }
-                    
+
                     $conn->commit();
 
                     // Se pagou, registrar pagamentos e movimento de caixa
                     if ($finalizeNow && !empty($payments)) {
                         $this->paymentService->registerPayments($conn, $existingOrderId, $payments);
-                        
+
                         if ($isPaid) {
                             $this->orderRepo->updatePayment($existingOrderId, true, $paymentMethod);
-                            
-                            $desc = "Venda " . ucfirst($orderType) . " #" . $existingOrderId;
+
+                            $desc = 'Venda ' . ucfirst($orderType) . ' #' . $existingOrderId;
                             $finalAmount = max(0, $totalVenda - $discount);
-                            
+
                             $this->cashRegisterService->registerMovement(
                                 $conn,
                                 $caixa['id'],
@@ -199,12 +200,12 @@ class CreateOrderAction
                 'observation' => $orderObservation,
                 'change_for' => $data['change_for'] ?? null
             ], $orderStatus); // Status passado como segundo parâmetro
-            
+
             // Atualiza payment se pago
             if ($isPaid) {
                 $this->orderRepo->updatePayment($orderId, true, $paymentMethod);
             }
-            
+
             // FORÇA atualização do order_type (workaround para INSERT não salvar corretamente)
             $this->orderRepo->updateOrderType($orderId, $orderType);
 
@@ -225,9 +226,9 @@ class CreateOrderAction
             $this->paymentService->registerPayments($conn, $orderId, $payments);
 
             if ($isPaid == 1 && !empty($payments)) {
-                $desc = "Venda " . ucfirst($orderType) . " #" . $orderId;
+                $desc = 'Venda ' . ucfirst($orderType) . ' #' . $orderId;
                 $finalAmount = max(0, $totalVenda - $discount);
-                
+
                 $this->cashRegisterService->registerMovement(
                     $conn,
                     $caixa['id'],
@@ -238,7 +239,7 @@ class CreateOrderAction
             }
 
             $conn->commit();
-            
+
             return $orderId;
 
         } catch (Exception $e) {

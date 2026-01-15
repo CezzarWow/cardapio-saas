@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ============================================
  * COMBO SERVICE
@@ -10,18 +11,20 @@ namespace App\Services\Admin;
 
 use App\Repositories\ComboRepository;
 
-class ComboService {
-
+class ComboService
+{
     private ComboRepository $repo;
 
-    public function __construct(ComboRepository $repo) {
+    public function __construct(ComboRepository $repo)
+    {
         $this->repo = $repo;
     }
 
     /**
      * Salva novo combo
      */
-    public function store(array $data, int $restaurantId): int {
+    public function store(array $data, int $restaurantId): int
+    {
         $price = str_replace(',', '.', $data['price'] ?? '0');
         $price = preg_replace('/[^\d.]/', '', $price);
 
@@ -42,7 +45,8 @@ class ComboService {
     /**
      * Busca combo para edição
      */
-    public function getForEdit(int $comboId, int $restaurantId): ?array {
+    public function getForEdit(int $comboId, int $restaurantId): ?array
+    {
         $combo = $this->repo->find($comboId, $restaurantId);
 
         if (!$combo) {
@@ -50,18 +54,18 @@ class ComboService {
         }
 
         $rawItems = $this->repo->findItemsWithDetails($comboId);
-        
+
         $comboProducts = [];
         $comboItemsSettings = [];
         $comboItemsDetails = [];
-        
+
         foreach ($rawItems as $item) {
             $pid = $item['product_id'];
             $comboProducts[] = $pid;
             $comboItemsSettings[$pid] = [
                 'allow_additionals' => $item['allow_additionals']
             ];
-            
+
             if (!isset($comboItemsDetails[$pid])) {
                 $comboItemsDetails[$pid] = [
                     'id' => $pid,
@@ -85,7 +89,8 @@ class ComboService {
     /**
      * Atualiza combo
      */
-    public function update(int $comboId, array $data, int $restaurantId): void {
+    public function update(int $comboId, array $data, int $restaurantId): void
+    {
         $price = str_replace(',', '.', $data['price'] ?? '0');
         $price = preg_replace('/[^\d.]/', '', $price);
 
@@ -104,14 +109,16 @@ class ComboService {
     /**
      * Deleta combo
      */
-    public function delete(int $comboId, int $restaurantId): void {
+    public function delete(int $comboId, int $restaurantId): void
+    {
         $this->repo->delete($comboId, $restaurantId);
     }
 
     /**
      * Alterna status do combo
      */
-    public function toggleStatus(int $comboId, bool $active, int $restaurantId): bool {
+    public function toggleStatus(int $comboId, bool $active, int $restaurantId): bool
+    {
         $this->repo->toggleStatus($comboId, $active ? 1 : 0, $restaurantId);
         return true;
     }

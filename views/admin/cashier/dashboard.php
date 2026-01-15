@@ -1,7 +1,7 @@
-<?php 
-require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php'; 
-require __DIR__ . '/partials/_summary_card.php';
+<?php
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/panel/layout/sidebar.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/cashier/partials/_summary_card.php', get_defined_vars());
 ?>
 
 <main class="main-content">
@@ -18,13 +18,13 @@ require __DIR__ . '/partials/_summary_card.php';
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px;">
-            <?php 
+            <?php
             renderSummaryCard('TOTAL BRUTO', $resumo['total_bruto'], '#2563eb', '#1f2937');
-            renderSummaryCard('DINHEIRO (GAVETA)', $dinheiroEmCaixa, '#16a34a', null, 'Início: R$ ' . number_format($caixa['opening_balance'], 2, ',', '.'));
-            renderSummaryCard('CRÉDITO', $resumo['credito'], '#4f46e5');
-            renderSummaryCard('DÉBITO', $resumo['debito'], '#f97316');
-            renderSummaryCard('PIX', $resumo['pix'], '#9333ea');
-            ?>
+renderSummaryCard('DINHEIRO (GAVETA)', $dinheiroEmCaixa, '#16a34a', null, 'Início: R$ ' . number_format($caixa['opening_balance'], 2, ',', '.'));
+renderSummaryCard('CRÉDITO', $resumo['credito'], '#4f46e5');
+renderSummaryCard('DÉBITO', $resumo['debito'], '#f97316');
+renderSummaryCard('PIX', $resumo['pix'], '#9333ea');
+?>
         </div>
 
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
@@ -38,7 +38,7 @@ require __DIR__ . '/partials/_summary_card.php';
                     <?php if (empty($movimentosView)): ?>
                         <p style="color: #9ca3af; text-align: center; padding: 20px;">Nenhuma movimentação ainda.</p>
                     <?php else: ?>
-                        <?php foreach($movimentosView as $mov): ?>
+                        <?php foreach ($movimentosView as $mov): ?>
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f3f4f6;">
                             
                             <div style="display: flex; gap: 10px; align-items: center;">
@@ -131,10 +131,10 @@ require __DIR__ . '/partials/_summary_card.php';
     </div>
 </main>
 
-<?php require __DIR__ . '/partials/_modal_movimento.php'; ?>
-<?php require __DIR__ . '/partials/_modal_comanda.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/cashier/partials/_modal_movimento.php', get_defined_vars()); ?>
+<?php \App\Core\View::renderFromScope('admin/cashier/partials/_modal_comanda.php', get_defined_vars()); ?>
 
 <script>const BASE_URL = '<?= BASE_URL ?>';</script>
 <script src="<?= BASE_URL ?>/js/admin/cashier.js?v=<?= time() ?>"></script>
 
-<?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

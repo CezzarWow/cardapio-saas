@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services\Client;
 
 use App\Repositories\ClientRepository;
@@ -8,12 +9,13 @@ use Exception;
 /**
  * ClientService - Lógica de Negócio de Clientes
  */
-class ClientService {
-
+class ClientService
+{
     private ClientRepository $clientRepo;
     private OrderRepository $orderRepo;
 
-    public function __construct(ClientRepository $clientRepo, OrderRepository $orderRepo) {
+    public function __construct(ClientRepository $clientRepo, OrderRepository $orderRepo)
+    {
         $this->clientRepo = $clientRepo;
         $this->orderRepo = $orderRepo;
     }
@@ -22,9 +24,10 @@ class ClientService {
      * Busca clientes por nome ou telefone
      * Inclui informação se o cliente tem comanda aberta
      */
-    public function search(int $restaurantId, string $term): array {
+    public function search(int $restaurantId, string $term): array
+    {
         $clients = $this->clientRepo->search($restaurantId, $term);
-        
+
         // Verificar quais clientes têm comanda aberta
         foreach ($clients as &$client) {
             $openOrder = $this->orderRepo->findOpenByClient($client['id'], $restaurantId);
@@ -32,16 +35,17 @@ class ClientService {
             $client['open_order_id'] = $openOrder['id'] ?? null;
             $client['open_order_total'] = $openOrder['total'] ?? null;
         }
-        
+
         return $clients;
     }
 
     /**
      * Cadastra novo cliente
-     * 
+     *
      * @throws Exception Se documento ou telefone já existir
      */
-    public function create(int $restaurantId, array $data): array {
+    public function create(int $restaurantId, array $data): array
+    {
         // Verifica duplicidade de documento
         if (!empty($data['document'])) {
             $exists = $this->clientRepo->findByDocument($restaurantId, $data['document']);
@@ -59,7 +63,7 @@ class ClientService {
         }
 
         $id = $this->clientRepo->create($restaurantId, $data);
-        
+
         return [
             'id' => $id,
             'name' => $data['name'],
@@ -70,20 +74,21 @@ class ClientService {
     /**
      * Retorna detalhes do cliente com dívida e histórico
      */
-    public function getDetails(int $restaurantId, int $clientId): ?array {
+    public function getDetails(int $restaurantId, int $clientId): ?array
+    {
         $client = $this->clientRepo->find($clientId, $restaurantId);
-        
+
         if (!$client) {
             return null;
         }
-        
+
         // Calcula dívida atual
         $client['current_debt'] = $this->orderRepo->getDebtByClient($clientId);
-        
+
         // Busca histórico
         $historyRaw = $this->orderRepo->findByClient($clientId, $restaurantId, 20);
-        
-        $history = array_map(function($item) {
+
+        $history = array_map(function ($item) {
             return [
                 'type' => $item['type'],
                 'description' => $item['description'] . ($item['is_paid'] ? ' (Pago)' : ' (Aberto)'),
@@ -91,7 +96,7 @@ class ClientService {
                 'created_at' => $item['created_at']
             ];
         }, $historyRaw);
-        
+
         return [
             'client' => $client,
             'history' => $history

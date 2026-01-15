@@ -16,16 +16,16 @@ class ProductRepository
     public function findAllWithCategory(int $restaurantId): array
     {
         $conn = Database::connect();
-        
-        $stmt = $conn->prepare("
+
+        $stmt = $conn->prepare('
             SELECT p.*, c.name as category_name 
             FROM products p 
             LEFT JOIN categories c ON p.category_id = c.id 
             WHERE p.restaurant_id = :rid 
             ORDER BY c.sort_order ASC, c.name ASC, p.display_order ASC, p.name ASC
-        ");
+        ');
         $stmt->execute(['rid' => $restaurantId]);
-        
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -35,10 +35,10 @@ class ProductRepository
     public function findAllSimple(int $restaurantId): array
     {
         $conn = Database::connect();
-        
-        $stmt = $conn->prepare("SELECT * FROM products WHERE restaurant_id = :rid ORDER BY name");
+
+        $stmt = $conn->prepare('SELECT * FROM products WHERE restaurant_id = :rid ORDER BY name');
         $stmt->execute(['rid' => $restaurantId]);
-        
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -48,14 +48,14 @@ class ProductRepository
     public function syncFeatured(int $restaurantId, array $featuredIds): void
     {
         $conn = Database::connect();
-        
+
         // Primeiro, remove todos os destaques do restaurante
-        $conn->prepare("UPDATE products SET is_featured = 0 WHERE restaurant_id = :rid")
+        $conn->prepare('UPDATE products SET is_featured = 0 WHERE restaurant_id = :rid')
              ->execute(['rid' => $restaurantId]);
-        
+
         // Depois, marca os selecionados
         if (!empty($featuredIds)) {
-            $stmt = $conn->prepare("UPDATE products SET is_featured = 1 WHERE id = :pid AND restaurant_id = :rid");
+            $stmt = $conn->prepare('UPDATE products SET is_featured = 1 WHERE id = :pid AND restaurant_id = :rid');
             foreach (array_keys($featuredIds) as $productId) {
                 $stmt->execute(['pid' => $productId, 'rid' => $restaurantId]);
             }
@@ -67,11 +67,13 @@ class ProductRepository
      */
     public function syncDisplayOrder(int $restaurantId, array $orderData): void
     {
-        if (empty($orderData)) return;
-        
+        if (empty($orderData)) {
+            return;
+        }
+
         $conn = Database::connect();
-        
-        $stmt = $conn->prepare("UPDATE products SET display_order = :order WHERE id = :pid AND restaurant_id = :rid");
+
+        $stmt = $conn->prepare('UPDATE products SET display_order = :order WHERE id = :pid AND restaurant_id = :rid');
         foreach ($orderData as $prodId => $order) {
             $stmt->execute([
                 'order' => intval($order),

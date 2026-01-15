@@ -10,7 +10,7 @@ class ThrottleMiddleware
 {
     private const MAX_ATTEMPTS = 60; // Máximo de requisições
     private const DECAY_MINUTES = 1; // Intervalo em minutos
-    
+
     /**
      * Handle the incoming request
      */
@@ -20,7 +20,7 @@ class ThrottleMiddleware
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
         $isApi = strpos($uri, '/api') !== false;
         $isLogin = strpos($uri, 'login') !== false || strpos($uri, 'autologin') !== false;
-        
+
         // Se não for API nem Login, permite passar
         if (!$isApi && !$isLogin) {
             return true;

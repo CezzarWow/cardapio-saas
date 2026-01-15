@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Admin;
 
+use App\Core\View;
 use App\Services\RestaurantService;
 
 /**
@@ -12,20 +13,22 @@ class DashboardController extends BaseController
 {
     private RestaurantService $restaurantService;
 
-    public function __construct(RestaurantService $restaurantService) {
+    public function __construct(RestaurantService $restaurantService)
+    {
         $this->restaurantService = $restaurantService;
     }
-    
-    public function index() {
+
+    public function index()
+    {
         $userId = $this->getUserId(); // Método do BaseController (valida sessão)
 
         // Busca apenas restaurantes do usuário logado
         $rawRestaurants = $this->restaurantService->getByUser($userId);
 
         // --- PREPARAÇÃO DO VIEWMODEL ---
-        $restaurants = array_map(function($loja) {
+        $restaurants = array_map(function ($loja) {
             $isActive = (bool) $loja['is_active'];
-            
+
             return array_merge($loja, [
                 'is_active_bool' => $isActive,
                 'status_label' => $isActive ? 'Ativo' : 'Suspenso',
@@ -35,6 +38,6 @@ class DashboardController extends BaseController
         }, $rawRestaurants);
 
         // View espera $restaurants
-        require __DIR__ . '/../../../views/admin/dashboard.php';
+        View::renderFromScope('admin/dashboard', get_defined_vars());
     }
 }

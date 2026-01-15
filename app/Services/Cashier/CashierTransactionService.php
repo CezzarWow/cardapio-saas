@@ -1,22 +1,22 @@
 <?php
+
 namespace App\Services\Cashier;
 
 use App\Core\Database;
-use App\Repositories\Order\OrderRepository;
+use App\Repositories\CashRegisterRepository;
 use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\Order\OrderPaymentRepository;
-use App\Repositories\TableRepository;
+use App\Repositories\Order\OrderRepository;
 use App\Repositories\StockRepository;
-use App\Repositories\CashRegisterRepository;
+use App\Repositories\TableRepository;
 use Exception;
-use PDO;
 
 /**
  * Service para operações transacionais complexas do Caixa
  * (Cancelamento, Estorno, etc)
  */
-class CashierTransactionService {
-
+class CashierTransactionService
+{
     private OrderRepository $orderRepo;
     private OrderItemRepository $itemRepo;
     private OrderPaymentRepository $paymentRepo;
@@ -44,7 +44,8 @@ class CashierTransactionService {
      * Cancela uma venda/movimentação no caixa
      * Reverte: Movimento Caixa -> Pedido (Status) -> Mesa (Status) -> Estoque
      */
-    public function cancelSale(int $movementId, int $restaurantId): array {
+    public function cancelSale(int $movementId, int $restaurantId): array
+    {
         $conn = Database::connect(); // Transaction management
 
         try {
@@ -54,7 +55,7 @@ class CashierTransactionService {
             $mov = $this->cashRepo->findMovement($movementId);
 
             if (!$mov) {
-                throw new Exception("Movimentação não encontrada.");
+                throw new Exception('Movimentação não encontrada.');
             }
 
             if ($mov['type'] !== 'venda') {
@@ -74,8 +75,8 @@ class CashierTransactionService {
                 $items = $this->itemRepo->findAll($orderId);
 
                 foreach ($items as $item) {
-                     // Incrementa estoque (Estorno)
-                     $this->stockRepo->increment($item['product_id'], $item['quantity']);
+                    // Incrementa estoque (Estorno)
+                    $this->stockRepo->increment($item['product_id'], $item['quantity']);
                 }
 
                 // 4. Libera Mesa (se houver)
@@ -95,13 +96,13 @@ class CashierTransactionService {
                     }
                 }
 
-                 // 5. Marca pedido como cancelado
-                 $this->orderRepo->updateStatus($orderId, 'cancelado');
+                // 5. Marca pedido como cancelado
+                $this->orderRepo->updateStatus($orderId, 'cancelado');
             }
 
             // 6. Apaga movimento
             $this->cashRepo->deleteMovement($movementId);
-            
+
             $conn->commit();
             return ['success' => true, 'message' => 'Venda cancelada e estornada com sucesso!'];
 
@@ -115,7 +116,8 @@ class CashierTransactionService {
      * Remove pedido completamente (Admin) - CUIDADO
      * Usado para limpar dados de teste ou erros graves
      */
-    public function deleteRef(int $orderId): void {
+    public function deleteRef(int $orderId): void
+    {
         $conn = Database::connect();
         try {
             $conn->beginTransaction();
@@ -123,9 +125,9 @@ class CashierTransactionService {
             $items = $this->itemRepo->findAll($orderId);
 
             foreach ($items as $item) {
-                 $this->stockRepo->increment($item['product_id'], $item['quantity']);
+                $this->stockRepo->increment($item['product_id'], $item['quantity']);
             }
-            
+
             // Mesa logic similar to above
             // We need restaurantId to find tables safely? Or assuming order has restaurant_id?
             // Use orderRepo find first to get restaurantId?
@@ -134,23 +136,23 @@ class CashierTransactionService {
             // For now, let's leave table clearing if we can't easily find it without raw SQL.
             // But `deleteRef` is critical cleanup.
             // I'll skip table freeing here for now or use `findAll` if I can get restaurantId.
-            // This method `deleteRef` signature only has `orderId`. 
+            // This method `deleteRef` signature only has `orderId`.
             // I'll fetch order to get restaurantId.
             $order = $this->orderRepo->find($orderId);
             if ($order) {
-                 $tables = $this->tableRepo->findAll($order['restaurant_id']);
-                 foreach ($tables as $t) {
-                     if ($t['current_order_id'] == $orderId) {
-                         $this->tableRepo->free($t['id']);
-                         break;
-                     }
-                 }
+                $tables = $this->tableRepo->findAll($order['restaurant_id']);
+                foreach ($tables as $t) {
+                    if ($t['current_order_id'] == $orderId) {
+                        $this->tableRepo->free($t['id']);
+                        break;
+                    }
+                }
             }
 
             $this->cashRepo->deleteMovementByOrder($orderId);
             $this->itemRepo->deleteAll($orderId);
-            $this->paymentRepo->deleteAll($orderId); 
-            $this->orderRepo->delete($orderId); 
+            $this->paymentRepo->deleteAll($orderId);
+            $this->orderRepo->delete($orderId);
 
             $conn->commit();
         } catch (Exception $e) {

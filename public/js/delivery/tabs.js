@@ -27,21 +27,27 @@ const DeliveryTabs = {
         });
 
         // Mostra/esconde colunas
-        if (status === 'todos') {
-            columns.forEach(col => col.style.display = 'flex');
-        } else {
-            columns.forEach(col => {
+        columns.forEach(col => {
+            if (status === 'todos') {
+                // Se 'todos', mostra tudo MENOS cancelado
+                if (col.classList.contains('delivery-column--cancelado')) {
+                    col.style.display = 'none';
+                } else {
+                    col.style.display = 'flex';
+                }
+            } else {
+                // Se status específico (incluindo 'cancelado'), mostra só ele
                 if (col.classList.contains('delivery-column--' + status)) {
                     col.style.display = 'flex';
                 } else {
                     col.style.display = 'none';
                 }
-            });
-        }
+            }
+        });
 
         // Atualiza contador
         this.updateCounter();
-},
+    },
 
     /**
      * Atualiza contador de pedidos visíveis

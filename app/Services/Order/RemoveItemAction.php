@@ -3,9 +3,9 @@
 namespace App\Services\Order;
 
 use App\Core\Database;
-use App\Repositories\StockRepository;
-use App\Repositories\Order\OrderRepository;
 use App\Repositories\Order\OrderItemRepository;
+use App\Repositories\Order\OrderRepository;
+use App\Repositories\StockRepository;
 use Exception;
 
 class RemoveItemAction
@@ -15,7 +15,7 @@ class RemoveItemAction
     private OrderItemRepository $itemRepo;
 
     public function __construct(
-        StockRepository $stockRepo, 
+        StockRepository $stockRepo,
         OrderRepository $orderRepo,
         OrderItemRepository $itemRepo
     ) {
@@ -61,4 +61,3 @@ class RemoveItemAction
         }
     }
 }
-

@@ -12,13 +12,13 @@
         </div>
     <?php else: ?>
         <?php foreach ($clientOrders as $order): ?>
-            <?php 
-                $isPaid = !empty($order['is_paid']) && $order['is_paid'] == 1; 
-                $clientName = htmlspecialchars($order['client_name'] ?? 'Cliente');
-                $total = floatval($order['total'] ?? 0);
-                $clientId = intval($order['client_id'] ?? 0);
-                $cardClass = $isPaid ? 'table-card--pago' : 'table-card--aberto';
-                $statusText = $isPaid ? 'PAGO' : 'ABERTO';
+            <?php
+                $isPaid = !empty($order['is_paid']) && $order['is_paid'] == 1;
+            $clientName = htmlspecialchars($order['client_name'] ?? 'Cliente');
+            $total = floatval($order['total'] ?? 0);
+            $clientId = intval($order['client_id'] ?? 0);
+            $cardClass = $isPaid ? 'table-card--pago' : 'table-card--aberto';
+            $statusText = $isPaid ? 'PAGO' : 'ABERTO';
             ?>
             
             <?php if ($isPaid): ?>

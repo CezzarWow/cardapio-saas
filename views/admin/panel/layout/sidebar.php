@@ -1,5 +1,7 @@
-<?php use App\Core\ViewHelper; ?>
-<?php 
+<?php use App\Core\ViewHelper;
+
+?>
+<?php
 // Detecta contexto de mesa ou cliente (variáveis disponíveis do PdvController)
 $isInMesaContext = !empty($mesa_id);
 $isInClienteContext = !empty($contaAberta['client_id'] ?? null);

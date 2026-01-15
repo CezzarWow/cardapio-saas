@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Admin;
 
+use App\Core\View;
 use App\Services\CategoryService;
 use App\Validators\CategoryValidator;
 use Exception;
@@ -30,14 +31,14 @@ class CategoryController extends BaseController
         $categories = $this->service->list($restaurantId);
 
         // Separar categorias de sistema das normais para exibir no topo (Lógica movida da View)
-        $systemCategories = array_filter($categories, fn($c) => in_array($c['category_type'] ?? 'default', ['featured', 'combos']));
-        $normalCategories = array_filter($categories, fn($c) => !in_array($c['category_type'] ?? 'default', ['featured', 'combos']));
+        $systemCategories = array_filter($categories, fn ($c) => in_array($c['category_type'] ?? 'default', ['featured', 'combos']));
+        $normalCategories = array_filter($categories, fn ($c) => !in_array($c['category_type'] ?? 'default', ['featured', 'combos']));
         $sortedCategories = array_merge($systemCategories, $normalCategories);
-        
+
         // Totais
         $totalCategories = count($categories);
 
-        require __DIR__ . '/../../../views/admin/categories/index.php';
+        View::renderFromScope('admin/categories/index', get_defined_vars());
     }
 
     /**
@@ -46,7 +47,7 @@ class CategoryController extends BaseController
     public function store(): void
     {
         $restaurantId = $this->getRestaurantId();
-        
+
         $errors = $this->validator->validateStore($_POST);
         if ($this->validator->hasErrors($errors)) {
             $this->redirect('/admin/loja/categorias?error=' . urlencode($this->validator->getFirstError($errors)));
@@ -80,7 +81,7 @@ class CategoryController extends BaseController
             $this->redirect('/admin/loja/categorias?error=nao_encontrado');
         }
 
-        require __DIR__ . '/../../../views/admin/categories/edit.php';
+        View::renderFromScope('admin/categories/edit', get_defined_vars());
     }
 
     /**
@@ -109,7 +110,7 @@ class CategoryController extends BaseController
             $this->redirect('/admin/loja/categorias?error=falha_atualizar');
         }
     }
-    
+
     /**
      * Deletar Categoria
      */

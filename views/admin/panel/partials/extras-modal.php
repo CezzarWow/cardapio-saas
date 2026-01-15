@@ -1,6 +1,6 @@
 <!-- MODAL DE ADICIONAIS -->
 <!--
-    Partial incluído via: require __DIR__ . '/partials/extras-modal.php';
+    Partial incluído via: \App\Core\View::renderFromScope('admin/panel/partials/extras-modal.php', get_defined_vars());
     FUNÇÕES JS NECESSÁRIAS:
     - closeExtrasModal()
     - confirmExtras()

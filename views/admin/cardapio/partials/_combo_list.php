@@ -63,7 +63,7 @@
                         <!-- Data e Botões -->
                         <div style="display: flex; align-items: center; gap: 15px;">
                             <div style="display: flex; align-items: center; gap: 4px; color: #16a34a; font-size: 0.85rem;" title="Validade">
-                                <?php 
+                                <?php
                                     if (empty($combo['valid_until'])) {
                                         echo '<i data-lucide="infinity" style="width: 14px; height: 14px;"></i> <span>Ativo</span>';
                                     } elseif ($combo['valid_until'] == date('Y-m-d')) {
@@ -71,7 +71,7 @@
                                     } else {
                                         echo '<i data-lucide="calendar" style="width: 14px; height: 14px;"></i> <span>' . date('d/m/y', strtotime($combo['valid_until'])) . '</span>';
                                     }
-                                ?>
+                ?>
                             </div>
 
                             <div style="display: flex; gap: 8px;">

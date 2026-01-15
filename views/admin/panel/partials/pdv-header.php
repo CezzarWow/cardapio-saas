@@ -1,7 +1,7 @@
 <?php
 /**
  * PDV-HEADER.PHP - Header do PDV
- * 
+ *
  * Contém: Banners de edição, Título dinâmico, Barra de busca
  * Variáveis esperadas: $mesa_numero, $mesa_id, $contaAberta, $isEditingPaid, $editingOrderId, $isEditing
  */

@@ -4,7 +4,7 @@ namespace App\Services\Order;
 
 /**
  * Enum de Status de Pedido
- * 
+ *
  * Centraliza todos os status válidos para evitar strings soltas.
  * Usado em todos os fluxos (Balcão, Mesa, Comanda, Delivery).
  */
@@ -17,14 +17,14 @@ final class OrderStatus
     public const PRONTO = 'pronto';
     public const EM_ENTREGA = 'em_entrega';
     public const ENTREGUE = 'entregue';
-    
+
     // Status FINANCEIROS (Contas)
     public const ABERTO = 'aberto';
-    
+
     // Status FINAIS
     public const CONCLUIDO = 'concluido';
     public const CANCELADO = 'cancelado';
-    
+
     /**
      * Retorna todos os status válidos
      */
@@ -42,7 +42,7 @@ final class OrderStatus
             self::CANCELADO,
         ];
     }
-    
+
     /**
      * Verifica se um status é válido
      */
@@ -50,7 +50,7 @@ final class OrderStatus
     {
         return in_array($status, self::all(), true);
     }
-    
+
     /**
      * Status que indicam pedido fechado
      */

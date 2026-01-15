@@ -10,6 +10,12 @@
         "vlucas/phpdotenv": "^5.6"
     },
     "require-dev": {
-        "phpunit/phpunit": "^11.5"
+        "phpunit/phpunit": "^11.5",
+        "friendsofphp/php-cs-fixer": "^3.92"
+    },
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml",
+        "lint": "powershell -Command \"Get-ChildItem -Recurse -Filter '*.php' | ForEach-Object { php -l $_.FullName }\"",
+        "cs:fix": "php-cs-fixer fix --config=.php-cs-fixer.dist.php"
     }
 }

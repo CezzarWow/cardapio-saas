@@ -1,11 +1,12 @@
 <?php
+
 namespace App\Services\Additional;
 
-use App\Repositories\AdditionalItemRepository;
-use App\Repositories\AdditionalGroupRepository;
-use App\Repositories\AdditionalPivotRepository;
-use App\Repositories\AdditionalCategoryRepository;
 use App\Core\Database;
+use App\Repositories\AdditionalCategoryRepository;
+use App\Repositories\AdditionalGroupRepository;
+use App\Repositories\AdditionalItemRepository;
+use App\Repositories\AdditionalPivotRepository;
 use Exception;
 
 /**
@@ -84,13 +85,13 @@ class AdditionalService
         $conn = Database::connect();
         try {
             $conn->beginTransaction();
-            
+
             $itemId = $this->itemRepo->save($rid, $data['name'], $this->parsePrice($data['price'] ?? '0'));
-            
+
             if (!empty($data['group_ids'])) {
                 $this->linkMultipleGroups($itemId, $data['group_ids'], $rid);
             }
-            
+
             $conn->commit();
             return $itemId;
         } catch (Exception $e) {
@@ -104,15 +105,15 @@ class AdditionalService
         $conn = Database::connect();
         try {
             $conn->beginTransaction();
-            
+
             $this->itemRepo->update($data['id'], $rid, $data['name'], $this->parsePrice($data['price'] ?? '0'));
-            
+
             // Sincroniza grupos (limpa e insere)
             $this->pivotRepo->unlinkAllGroups($data['id']);
             if (!empty($data['group_ids'])) {
                 $this->linkMultipleGroups($data['id'], $data['group_ids'], $rid);
             }
-            
+
             $conn->commit();
         } catch (Exception $e) {
             $conn->rollBack();
@@ -145,8 +146,10 @@ class AdditionalService
 
     public function linkMultipleItems(int $groupId, array $itemIds, int $rid): void
     {
-        if (!$this->groupRepo->findById($groupId, $rid)) return;
-        
+        if (!$this->groupRepo->findById($groupId, $rid)) {
+            return;
+        }
+
         foreach ($itemIds as $itemId) {
             if ($this->itemRepo->findById($itemId, $rid)) {
                 $this->pivotRepo->link($groupId, $itemId);
@@ -156,18 +159,20 @@ class AdditionalService
 
     public function updateCategoryLinks(int $groupId, array $categoryIds, int $rid): void
     {
-        if (!$this->groupRepo->findById($groupId, $rid)) return;
-        
+        if (!$this->groupRepo->findById($groupId, $rid)) {
+            return;
+        }
+
         $conn = Database::connect();
         try {
             $conn->beginTransaction();
-            
+
             $this->categoryRepo->unlinkAll($groupId);
             foreach ($categoryIds as $catId) {
                 // Verifica validação se necessário
                 $this->categoryRepo->link($groupId, $catId);
             }
-            
+
             $conn->commit();
         } catch (Exception $e) {
             $conn->rollBack();

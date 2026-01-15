@@ -4,14 +4,13 @@ namespace App\Controllers\Admin;
 
 use App\Services\OrderOrchestratorService;
 use App\Validators\OrderValidator;
-use Exception;
 
 /**
  * OrderController - Super Thin
- * 
+ *
  * Gerencia operações de pedidos: criar, fechar mesa/comanda,
  * remover itens, cancelar, entregar e incluir em pedido pago.
- * 
+ *
  * Toda lógica de negócio está no OrderOrchestratorService.
  * Validações estão no OrderValidator.
  */

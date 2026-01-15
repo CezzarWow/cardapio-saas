@@ -1,19 +1,19 @@
-<?php 
+<?php
 /**
  * ============================================
  * REPOSIÇÃO DE ESTOQUE (Orquestrador)
- * 
+ *
  * Arquivo refatorado que inclui:
  * - partials/_product_grid.php (Grid de produtos)
  * - partials/_adjust_modal.php (Modal de ajuste)
- * 
+ *
  * JavaScript extraído para:
  * - public/js/admin/reposition.js
  * ============================================
  */
 
-require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php';
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/panel/layout/sidebar.php', get_defined_vars());
 
 $STOCK_CRITICAL_LIMIT = 5;
 $totalProducts = count($products);
@@ -23,8 +23,11 @@ $criticalCount = 0;
 $negativeCount = 0;
 foreach ($products as $p) {
     $s = intval($p['stock']);
-    if ($s < 0) $negativeCount++;
-    elseif ($s <= $STOCK_CRITICAL_LIMIT) $criticalCount++;
+    if ($s < 0) {
+        $negativeCount++;
+    } elseif ($s <= $STOCK_CRITICAL_LIMIT) {
+        $criticalCount++;
+    }
 }
 ?>
 
@@ -105,16 +108,16 @@ foreach ($products as $p) {
             </div>
         </div>
 
-        <?php // Grid de Produtos ?>
-        <?php require __DIR__ . '/partials/_product_grid.php'; ?>
+        <?php // Grid de Produtos?>
+        <?php \App\Core\View::renderFromScope('admin/reposition/partials/_product_grid.php', get_defined_vars()); ?>
 
     </div>
 </main>
 
-<?php // Modal de Ajuste ?>
-<?php require __DIR__ . '/partials/_adjust_modal.php'; ?>
+<?php // Modal de Ajuste?>
+<?php \App\Core\View::renderFromScope('admin/reposition/partials/_adjust_modal.php', get_defined_vars()); ?>
 
-<?php // Script de Reposição ?>
+<?php // Script de Reposição?>
 <script src="<?= BASE_URL ?>/js/admin/reposition.js?v=<?= time() ?>"></script>
 
-<?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

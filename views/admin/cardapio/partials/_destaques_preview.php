@@ -2,7 +2,7 @@
 /**
  * PARTIAL: Preview de Destaques
  * Extraído de _tab_destaques.php
- * 
+ *
  * Requer $featuredProducts e $categories já definidos no escopo
  */
 ?>
@@ -39,9 +39,9 @@
         <div class="cardapio-admin-destaques-preview-section">
             <h5 class="cardapio-admin-destaques-preview-title">📂 Categorias</h5>
             <?php if (!empty($categories)): ?>
-                <?php 
+                <?php
                 $sortedCategories = $categories;
-                usort($sortedCategories, fn($a, $b) => ($a['sort_order'] ?? 0) - ($b['sort_order'] ?? 0));
+                usort($sortedCategories, fn ($a, $b) => ($a['sort_order'] ?? 0) - ($b['sort_order'] ?? 0));
                 ?>
                 <?php foreach ($sortedCategories as $idx => $cat): ?>
                 <div class="cardapio-admin-destaques-preview-item">

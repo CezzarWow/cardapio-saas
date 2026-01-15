@@ -4,7 +4,7 @@ namespace App\Core;
 
 /**
  * Container - Simple Dependency Injection implementation
- * 
+ *
  * Rules:
  * 1. Manual binding (no reflection magic)
  * 2. Explicit factory closures
@@ -28,7 +28,7 @@ class Container
      */
     public function singleton(string $key, callable $factory): void
     {
-        $this->bindings[$key] = function($c) use ($factory, $key) {
+        $this->bindings[$key] = function ($c) use ($factory, $key) {
             if (!isset($this->instances[$key])) {
                 $this->instances[$key] = $factory($c);
             }

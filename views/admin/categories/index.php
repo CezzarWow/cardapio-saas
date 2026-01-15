@@ -1,12 +1,12 @@
-<?php 
-require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php';
+<?php
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/panel/layout/sidebar.php', get_defined_vars());
 ?>
 
 <!-- stock-v2 removido - usando stock-consolidated.css global -->
 
 <main class="main-content">
-    <?php require __DIR__ . '/../panel/layout/messages.php'; ?>
+    <?php \App\Core\View::renderFromScope('admin/panel/layout/messages.php', get_defined_vars()); ?>
     <div style="padding: 2rem; width: 100%; overflow-y: auto;">
         
         <!-- Header -->
@@ -79,9 +79,9 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                     </thead>
                     <tbody id="categoriesTable">
                         <?php foreach ($sortedCategories as $cat): ?>
-                        <?php 
+                        <?php
                             $isSystemCategory = in_array($cat['category_type'] ?? 'default', ['featured', 'combos']);
-                        ?>
+                            ?>
                         <tr class="category-row" data-name="<?= strtolower(htmlspecialchars($cat['name'])) ?>">
                             <td>
                                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -145,4 +145,4 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 
 <script src="<?= BASE_URL ?>/js/admin/categories.js?v=<?= time() ?>"></script>
 
-<?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

@@ -15,7 +15,8 @@ class ConfigController extends BaseController
     private ConfigService $service;
     private ConfigValidator $validator;
 
-    public function __construct(ConfigService $service, ConfigValidator $validator) {
+    public function __construct(ConfigService $service, ConfigValidator $validator)
+    {
         $this->service = $service;
         $this->validator = $validator;
     }
@@ -23,27 +24,29 @@ class ConfigController extends BaseController
     /**
      * Tela de Configurações
      */
-    public function index(): void {
+    public function index(): void
+    {
         $restaurantId = $this->getRestaurantId();
-        
+
         $loja = $this->service->getStoreData($restaurantId);
 
-        require __DIR__ . '/../../../views/admin/config/index.php';
+        View::renderFromScope('admin/config/index', get_defined_vars());
     }
 
     /**
      * Atualizar Configurações
      */
-    public function update(): void {
+    public function update(): void
+    {
         $restaurantId = $this->getRestaurantId();
-        
+
         // Coleta arquivo de upload se houver
         $file = !empty($_FILES['logo']) ? $_FILES['logo'] : null;
 
         // Validação
         $errors = $this->validator->validateUpdate($_POST, $file);
         if ($this->validator->hasErrors($errors)) {
-            // Como o form original não parece ter exibição de erro por campo detalhado, 
+            // Como o form original não parece ter exibição de erro por campo detalhado,
             // e o anterior usava alert JS, vamos mandar o primeiro erro na URL
             // ou poderíamos injetar um script se fosse crítico, mas padronizaremos.
             $msg = urlencode($this->validator->getFirstError($errors));

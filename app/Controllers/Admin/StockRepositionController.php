@@ -24,21 +24,23 @@ class StockRepositionController extends BaseController
     }
 
     // 1. LISTAR PRODUTOS PARA REPOSIÇÃO
-    public function index(): void {
+    public function index(): void
+    {
         $rid = $this->getRestaurantId();
-        
+
         $products = $this->service->getProducts($rid);
         $categories = $this->service->getCategories($rid);
 
-        require __DIR__ . '/../../../views/admin/reposition/index.php';
+        View::renderFromScope('admin/reposition/index', get_defined_vars());
     }
 
     // 2. AJUSTAR ESTOQUE (INCREMENTAL)
-    public function adjust(): void {
+    public function adjust(): void
+    {
         $rid = $this->getRestaurantId(); // Valida sessão
-        
+
         $data = $this->getJsonBody(); // Helper do BaseController
-        
+
         // Validação
         $errors = $this->validator->validateReposition($data);
         if ($this->validator->hasErrors($errors)) {
@@ -48,12 +50,12 @@ class StockRepositionController extends BaseController
         try {
             $productId = (int)$data['product_id'];
             $amount = (int)$data['amount'];
-            
+
             $result = $this->service->adjustStock($rid, $productId, $amount);
-            
+
             // Retorna sucesso com mensagem do service
             $this->json([
-                'success' => true, 
+                'success' => true,
                 'message' => 'Estoque ajustado com sucesso',
                 'new_stock' => $result['new_stock'],
                 'product_name' => $result['product_name']

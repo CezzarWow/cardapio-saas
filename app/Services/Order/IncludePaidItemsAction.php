@@ -3,11 +3,11 @@
 namespace App\Services\Order;
 
 use App\Core\Database;
-use App\Services\PaymentService;
-use App\Services\CashRegisterService;
-use App\Repositories\StockRepository;
-use App\Repositories\Order\OrderRepository;
 use App\Repositories\Order\OrderItemRepository;
+use App\Repositories\Order\OrderRepository;
+use App\Repositories\StockRepository;
+use App\Services\CashRegisterService;
+use App\Services\PaymentService;
 use Exception;
 
 class IncludePaidItemsAction
@@ -40,7 +40,9 @@ class IncludePaidItemsAction
             $conn->beginTransaction();
 
             $order = $this->orderRepo->find($orderId);
-            if (!$order) throw new Exception("Pedido não encontrado");
+            if (!$order) {
+                throw new Exception('Pedido não encontrado');
+            }
 
             $newTotal = 0;
 
@@ -49,7 +51,7 @@ class IncludePaidItemsAction
                 $price = floatval($item['price'] ?? 0);
                 $itemTotal = $qty * $price;
                 $newTotal += $itemTotal;
-                
+
                 $this->itemRepo->add($orderId, [
                     'product_id' => $item['id'],
                     'qty' => $qty,
@@ -69,11 +71,11 @@ class IncludePaidItemsAction
             if (!empty($payments)) {
                 $paymentTotal = array_sum(array_column($payments, 'amount'));
                 $desc = 'Inclusão Pedido #' . $orderId;
-                
+
                 // Agora delegamos ao CashRegisterService em vez de SQL direto
                 // Mas preciso do ID do caixa aberto.
                 $caixa = $this->cashRegisterService->assertOpen($conn, $restaurantId);
-                
+
                 $this->cashRegisterService->registerMovement(
                     $conn,
                     $caixa['id'],

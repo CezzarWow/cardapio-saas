@@ -15,14 +15,14 @@ $STOCK_CRITICAL_LIMIT = 5;
         </div>
     <?php else: ?>
         <?php foreach ($products as $prod): ?>
-        <?php 
+        <?php
             $stock = intval($prod['stock']);
             $isCritical = $stock <= $STOCK_CRITICAL_LIMIT && $stock >= 0;
             $isNegative = $stock < 0;
             $isNormal = $stock > $STOCK_CRITICAL_LIMIT;
             $stockClass = $isNegative ? 'stock-product-card-stock--danger' : ($isCritical ? 'stock-product-card-stock--warning' : 'stock-product-card-stock--ok');
             $statusLabel = $isNegative ? 'Negativo' : ($isCritical ? 'Crítico' : 'Normal');
-        ?>
+            ?>
         <div class="stock-product-card product-row" 
              data-id="<?= $prod['id'] ?>"
              data-name="<?= strtolower($prod['name']) ?>" 
@@ -30,7 +30,7 @@ $STOCK_CRITICAL_LIMIT = 5;
              data-category="<?= htmlspecialchars($prod['category_name']) ?>">
             
             <!-- Imagem -->
-            <?php if($prod['image']): ?>
+            <?php if ($prod['image']): ?>
                 <img src="<?= BASE_URL ?>/uploads/<?= $prod['image'] ?>" loading="lazy" 
                      style="width: 100%; height: 140px; object-fit: cover; border-radius: 12px 12px 0 0;"
                      alt="<?= htmlspecialchars($prod['name']) ?>">

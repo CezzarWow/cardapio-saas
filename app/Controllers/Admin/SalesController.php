@@ -7,7 +7,7 @@ use App\Validators\SalesValidator;
 
 /**
  * SalesController - Super Thin
- * 
+ *
  * Gerencia histórico de vendas, cancelamento e reativação de mesas.
  * Lógica de negócio no SalesService.
  * Validações no SalesValidator.
@@ -30,16 +30,16 @@ class SalesController extends BaseController
     {
         $rid = $this->getRestaurantId();
         $rawOrders = $this->service->listOrders($rid);
-        
+
         // --- PREPARAÇÃO DO VIEWMODEL ---
         // Calcular total para a View
         $totalSalesVal = array_sum(array_column($rawOrders, 'calculated_total'));
         $totalSalesFormatted = number_format($totalSalesVal, 2, ',', '.');
 
-        $orders = array_map(function($sale) {
+        $orders = array_map(function ($sale) {
             $isConcluido = ($sale['status'] === 'concluido');
             $isCancelado = ($sale['status'] === 'cancelado');
-            
+
             return array_merge($sale, [
                 'formatted_id' => '#' . str_pad($sale['id'], 4, '0', STR_PAD_LEFT),
                 'formatted_date' => date('d/m/Y H:i', strtotime($sale['created_at'])),
@@ -51,7 +51,7 @@ class SalesController extends BaseController
                 'status_label' => ucfirst($sale['status']) // Fallback simples se precisar
             ]);
         }, $rawOrders);
-        
+
         // Passa variáveis prontas para a View
         $viewData = [
             'orders' => $orders,
@@ -59,8 +59,8 @@ class SalesController extends BaseController
             'totalSalesFormatted' => $totalSalesFormatted
         ];
         extract($viewData);
-        
-        require __DIR__ . '/../../../views/admin/sales/index.php';
+
+        View::renderFromScope('admin/sales/index', get_defined_vars());
     }
 
     /**
@@ -69,12 +69,12 @@ class SalesController extends BaseController
     public function getItems(): void
     {
         $orderId = $this->getInt('id');
-        
+
         $errors = $this->validator->validateGetId($orderId);
         if ($this->validator->hasErrors($errors)) {
             $this->json(['success' => false, 'message' => $this->validator->getFirstError($errors)], 400);
         }
-        
+
         $items = $this->service->getOrderItems($orderId);
         $this->json($items);
     }

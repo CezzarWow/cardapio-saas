@@ -16,4 +16,14 @@ class ViewHelper
     {
         return CsrfMiddleware::getToken();
     }
+
+    /**
+     * Verifica se a rota atual contém o nome desejado
+     * Compatível com a implementação antiga em App\Core\ViewHelper
+     */
+    public static function isRouteActive(string $rotaDesejada): bool
+    {
+        $rotaAtual = $_SERVER['REQUEST_URI'] ?? '';
+        return preg_match('/\/' . preg_quote($rotaDesejada, '/') . '(\/|$|\?)/', $rotaAtual) === 1;
+    }
 }

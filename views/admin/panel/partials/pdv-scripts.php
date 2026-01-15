@@ -1,7 +1,7 @@
 <?php
 /**
  * PDV-SCRIPTS.PHP - Scripts JavaScript do PDV
- * 
+ *
  * Contém: Variáveis globais JS injetadas do PHP e inclusão de scripts modulares
  * Variáveis esperadas: $cartRecovery, $isEditingPaid, $originalPaidTotalFromDB, $editingOrderId, $deliveryFee, $mesa_id
  */
@@ -28,7 +28,7 @@
     const PDV_TABLE_ID = <?= $mesa_id ?: 0 ?>;
 </script>
 
-<?php require __DIR__ . '/extras-modal.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/partials/extras-modal.php', get_defined_vars()); ?>
 
 <!-- ============================================ -->
 <!-- MÓDULOS PDV (Ordem de Dependência) -->

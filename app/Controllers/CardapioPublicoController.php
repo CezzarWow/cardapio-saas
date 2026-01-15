@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ═══════════════════════════════════════════════════════════════════════════
  * CARDÁPIO PÚBLICO - DDD Lite
@@ -8,17 +9,19 @@
 
 namespace App\Controllers;
 
+use App\Core\View;
 use App\Services\CardapioPublico\CardapioPublicoQueryService;
 
-class CardapioPublicoController {
-
+class CardapioPublicoController
+{
     /**
      * Exibe o cardápio público de um restaurante
      * @param int $restaurantId ID do restaurante
      */
     private CardapioPublicoQueryService $queryService;
 
-    public function __construct(CardapioPublicoQueryService $queryService) {
+    public function __construct(CardapioPublicoQueryService $queryService)
+    {
         $this->queryService = $queryService;
     }
 
@@ -26,11 +29,12 @@ class CardapioPublicoController {
      * Exibe o cardápio público de um restaurante
      * @param int $restaurantId ID do restaurante
      */
-    public function show($restaurantId) {
+    public function show($restaurantId)
+    {
         $data = $this->queryService->getCardapioData((int) $restaurantId);
-        
+
         if (!$data) {
-            echo "Restaurante não encontrado ou inativo.";
+            echo 'Restaurante não encontrado ou inativo.';
             exit;
         }
 
@@ -38,7 +42,10 @@ class CardapioPublicoController {
         if (!($data['cardapioConfig']['is_open'] ?? 1)) {
             $restaurant = $data['restaurant'];
             $cardapioConfig = $data['cardapioConfig'];
-            require __DIR__ . '/../../views/loja_fechada.php';
+            View::render('loja_fechada', [
+                'restaurant' => $restaurant,
+                'cardapioConfig' => $cardapioConfig
+            ]);
             return;
         }
 
@@ -57,16 +64,22 @@ class CardapioPublicoController {
 
         // --- LÓGICA DE VIEW MOVIDA PARA CÁ ---
         // Prepara JSON seguro para o Front-end
-        
+
         // 1. Achata produtos
         $flatProducts = [];
         if (!empty($productsByCategory)) {
             foreach ($productsByCategory as $cat => $prods) {
                 foreach ($prods as $p) {
-                    if (empty($p['additionals'])) $p['additionals'] = [];
+                    if (empty($p['additionals'])) {
+                        $p['additionals'] = [];
+                    }
                     // Sanitiza strings para não quebrar JS
-                    if (isset($p['description'])) $p['description'] = preg_replace('/[\r\n]+/', ' ', $p['description']);
-                    if (isset($p['name'])) $p['name'] = preg_replace('/[\r\n]+/', ' ', $p['name']);
+                    if (isset($p['description'])) {
+                        $p['description'] = preg_replace('/[\r\n]+/', ' ', $p['description']);
+                    }
+                    if (isset($p['name'])) {
+                        $p['name'] = preg_replace('/[\r\n]+/', ' ', $p['name']);
+                    }
                     $flatProducts[] = $p;
                 }
             }
@@ -76,7 +89,9 @@ class CardapioPublicoController {
         $safeCombos = [];
         if (!empty($combos)) {
             foreach ($combos as $c) {
-                if (isset($c['description'])) $c['description'] = preg_replace('/[\r\n]+/', ' ', $c['description']);
+                if (isset($c['description'])) {
+                    $c['description'] = preg_replace('/[\r\n]+/', ' ', $c['description']);
+                }
                 $safeCombos[] = $c;
             }
         }
@@ -105,22 +120,40 @@ class CardapioPublicoController {
         // Raw config for checkout-order.js (keeps snake_case)
         $jsConfigRaw = json_encode($cardapioConfig ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?: '{}';
 
-        // Renderizar view pública
-        require __DIR__ . '/../../views/cardapio_publico.php';
+        // Renderizar view pública via View renderer
+        View::render('cardapio_publico', [
+            'restaurant' => $restaurant,
+            'categories' => $categories,
+            'allProducts' => $allProducts,
+            'featuredProducts' => $featuredProducts,
+            'productsByCategory' => $productsByCategory,
+            'combos' => $combos,
+            'additionalGroups' => $additionalGroups,
+            'additionalItems' => $additionalItems,
+            'productRelations' => $productRelations,
+            'cardapioConfig' => $cardapioConfig,
+            'todayHour' => $todayHour,
+            'jsProducts' => $jsProducts,
+            'jsCombos' => $jsCombos,
+            'jsRelations' => $jsRelations,
+            'jsConfig' => $jsConfig,
+            'jsConfigRaw' => $jsConfigRaw
+        ]);
     }
 
     /**
      * Exibe o cardápio público buscando pelo slug
      * @param string $slug Slug do restaurante
      */
-    public function showBySlug($slug) {
+    public function showBySlug($slug)
+    {
         $restaurantId = $this->queryService->findRestaurantBySlug($slug);
-        
+
         if (!$restaurantId) {
-            echo "<h1>404 - Restaurante não encontrado 😢</h1>";
+            echo '<h1>404 - Restaurante não encontrado 😢</h1>';
             return;
         }
-        
+
         // Reutiliza o método show()
         $this->show($restaurantId);
     }

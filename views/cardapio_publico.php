@@ -23,7 +23,7 @@
 <main class="main-content">
     <div class="cardapio-container">
         
-        <?php require __DIR__ . '/cardapio/partials/header.php'; ?>
+        <?php \App\Core\View::renderFromScope('cardapio/partials/header.php', get_defined_vars()); ?>
 
         <!-- BUSCA -->
         <div class="cardapio-search-container" style="display: none;">
@@ -38,16 +38,16 @@
             </div>
         </div>
 
-        <?php require __DIR__ . '/cardapio/partials/categories.php'; ?>
+        <?php \App\Core\View::renderFromScope('cardapio/partials/categories.php', get_defined_vars()); ?>
 
-        <?php require __DIR__ . '/cardapio/partials/products.php'; ?>
+        <?php \App\Core\View::renderFromScope('cardapio/partials/products.php', get_defined_vars()); ?>
 
     </div>
 </main>
 
-<?php require __DIR__ . '/cardapio/partials/modals/product.php'; ?>
+<?php \App\Core\View::renderFromScope('cardapio/partials/modals/product.php', get_defined_vars()); ?>
 
-<?php require __DIR__ . '/cardapio/partials/modals/combo.php'; ?>
+<?php \App\Core\View::renderFromScope('cardapio/partials/modals/combo.php', get_defined_vars()); ?>
 
 <!-- CARRINHO FLUTUANTE (BOTÃO COMPACTO) -->
 <button id="floatingCart" class="cardapio-floating-cart-btn" onclick="openCartModal()">
@@ -56,13 +56,13 @@
     <i data-lucide="arrow-right" size="18"></i>
 </button>
 
-<?php require __DIR__ . '/cardapio/partials/modals/cart.php'; ?>
+<?php \App\Core\View::renderFromScope('cardapio/partials/modals/cart.php', get_defined_vars()); ?>
 
-<?php require __DIR__ . '/cardapio/partials/modals/suggestions.php'; ?>
+<?php \App\Core\View::renderFromScope('cardapio/partials/modals/suggestions.php', get_defined_vars()); ?>
 
-<?php require __DIR__ . '/cardapio/partials/modals/order_review.php'; ?>
+<?php \App\Core\View::renderFromScope('cardapio/partials/modals/order_review.php', get_defined_vars()); ?>
 
-<?php require __DIR__ . '/cardapio/partials/modals/payment.php'; ?>
+<?php \App\Core\View::renderFromScope('cardapio/partials/modals/payment.php', get_defined_vars()); ?>
 
 <script>
     // Variables injected by CardapioPublicoController

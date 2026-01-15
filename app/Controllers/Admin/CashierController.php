@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers\Admin;
 
 use App\Services\Cashier\CashierDashboardService;
@@ -9,10 +10,10 @@ use App\Validators\CashierValidator;
  * CashierController - Super Thin (v3)
  * Usa Services para lógica de negócio
  */
-class CashierController extends BaseController {
-
+class CashierController extends BaseController
+{
     private const BASE = '/admin/loja/caixa';
-    
+
     private CashierValidator $v;
     private CashierDashboardService $dashboard;
     private CashierTransactionService $transaction;
@@ -28,12 +29,13 @@ class CashierController extends BaseController {
     }
 
     // === DASHBOARD ===
-    public function index() {
+    public function index()
+    {
         $rid = $this->getRestaurantId();
 
         $caixa = $this->dashboard->getOpenCashier($rid);
         if (!$caixa) {
-            require __DIR__ . '/../../../views/admin/cashier/open.php';
+            View::renderFromScope('admin/cashier/open', get_defined_vars());
             return;
         }
 
@@ -42,11 +44,14 @@ class CashierController extends BaseController {
         // Calcular totais
         list($totalSuprimentos, $totalSangrias) = $this->dashboard->sumMovements($movimentos);
         $dinheiroEmCaixa = $this->dashboard->calculateCashInDrawer(
-            $caixa['opening_balance'], $resumo['dinheiro'], $totalSuprimentos, $totalSangrias
+            $caixa['opening_balance'],
+            $resumo['dinheiro'],
+            $totalSuprimentos,
+            $totalSangrias
         );
 
         // Decorar movimentos para a View (ViewModel)
-        $movimentosView = array_map(function($m) {
+        $movimentosView = array_map(function ($m) {
             $isSangria = $m['type'] == 'sangria';
             return [
                 'id' => $m['id'],
@@ -65,38 +70,44 @@ class CashierController extends BaseController {
             ];
         }, $movimentos);
 
-        require __DIR__ . '/../../../views/admin/cashier/dashboard.php';
+        View::renderFromScope('admin/cashier/dashboard', get_defined_vars());
     }
 
     // === ABRIR CAIXA ===
-    public function open() {
+    public function open()
+    {
         $this->handleValidatedPost(
-            fn() => $this->v->validateOpenCashier($_POST),
-            fn() => $this->v->sanitizeOpenCashier($_POST),
-            fn($data, $rid) => $this->dashboard->openCashier($rid, $data['opening_balance']),
-            self::BASE, 'aberto'
+            fn () => $this->v->validateOpenCashier($_POST),
+            fn () => $this->v->sanitizeOpenCashier($_POST),
+            fn ($data, $rid) => $this->dashboard->openCashier($rid, $data['opening_balance']),
+            self::BASE,
+            'aberto'
         );
     }
 
     // === FECHAR CAIXA ===
-    public function close() {
+    public function close()
+    {
         $rid = $this->getRestaurantId();
         $this->dashboard->closeCashier($rid);
         $this->redirect(self::BASE);
     }
 
     // === ADICIONAR MOVIMENTO ===
-    public function addMovement() {
+    public function addMovement()
+    {
         $this->handleValidatedPost(
-            fn() => $this->v->validateMovement($_POST),
-            fn() => $this->v->sanitizeMovement($_POST),
-            fn($data, $rid) => $this->addMovementToCashier($rid, $data),
-            self::BASE, 'movimento_adicionado'
+            fn () => $this->v->validateMovement($_POST),
+            fn () => $this->v->sanitizeMovement($_POST),
+            fn ($data, $rid) => $this->addMovementToCashier($rid, $data),
+            self::BASE,
+            'movimento_adicionado'
         );
     }
 
     // === REVERTER PARA PDV ===
-    public function reverseToPdv() {
+    public function reverseToPdv()
+    {
         $movementId = $this->getInt('id');
         if ($movementId <= 0) {
             $this->redirect(self::BASE . '?error=id_invalido');
@@ -114,10 +125,11 @@ class CashierController extends BaseController {
     }
 
     // === REVERTER PARA MESA ===
-    public function reverseToTable() {
+    public function reverseToTable()
+    {
         $rid = $this->getRestaurantId();
         $movementId = $this->getInt('id');
-        
+
         if ($movementId <= 0) {
             $this->redirect(self::BASE . '?error=id_invalido');
         }
@@ -132,9 +144,10 @@ class CashierController extends BaseController {
     }
 
     // === REMOVER MOVIMENTO ===
-    public function removeMovement() {
+    public function removeMovement()
+    {
         $movementId = $this->getInt('id');
-        
+
         if ($movementId <= 0) {
             $this->redirect(self::BASE . '?error=id_invalido');
         }
@@ -149,7 +162,8 @@ class CashierController extends BaseController {
     }
 
     // === HELPER ===
-    private function addMovementToCashier(int $rid, array $data): void {
+    private function addMovementToCashier(int $rid, array $data): void
+    {
         $caixa = $this->dashboard->getOpenCashier($rid);
         if (!$caixa) {
             throw new \Exception('Nenhum caixa aberto');

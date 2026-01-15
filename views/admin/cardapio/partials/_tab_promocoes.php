@@ -2,22 +2,22 @@
 /**
  * ============================================
  * PARTIAL: Aba Promoções (Orquestrador)
- * 
+ *
  * Arquivo refatorado que inclui:
  * - _combo_form.php (Formulário de combo)
  * - _combo_list.php (Lista de combos ativos)
- * 
+ *
  * O JavaScript foi extraído para:
  * - combos-ui.js
  * ============================================
  */
 ?>
 
-<?php // Formulário de Criação/Edição ?>
-<?php require __DIR__ . '/_combo_form.php'; ?>
+<?php // Formulário de Criação/Edição?>
+<?php \App\Core\View::renderFromScope('admin/cardapio/partials/_combo_form.php', get_defined_vars()); ?>
 
-<?php // Lista de Combos Ativos ?>
-<?php require __DIR__ . '/_combo_list.php'; ?>
+<?php // Lista de Combos Ativos?>
+<?php \App\Core\View::renderFromScope('admin/cardapio/partials/_combo_list.php', get_defined_vars()); ?>
 
 <style>
 /* Estilos Específicos para Abas do Combo */

@@ -2,7 +2,7 @@
 /**
  * PARTIAL: Produtos em Destaque (Bloco 2)
  * Extraído de _tab_destaques.php
- * 
+ *
  * Requer $featuredProducts já definido no escopo
  */
 ?>

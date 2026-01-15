@@ -3,22 +3,21 @@
 namespace App\Services\Order;
 
 use App\Core\Database;
-use App\Services\PaymentService;
-use App\Services\CashRegisterService;
 use App\Repositories\Order\OrderRepository;
-use PDO;
+use App\Services\CashRegisterService;
+use App\Services\PaymentService;
 use Exception;
 use RuntimeException;
 
 /**
  * Fecha uma comanda (conta de cliente).
- * 
+ *
  * Responsabilidades:
  * - Registrar pagamentos
  * - Atualizar is_paid e payment_method
  * - Atualizar status para 'concluido'
  * - Registrar movimento de caixa
- * 
+ *
  * @see implementation_plan.md Seção 0 (Separação Pedido vs Conta)
  */
 class CloseCommandAction
@@ -39,7 +38,7 @@ class CloseCommandAction
 
     /**
      * Executa o fechamento da comanda.
-     * 
+     *
      * @param int $restaurantId ID do restaurante
      * @param int $orderId ID da comanda (pedido com status 'aberto')
      * @param array $payments Lista de pagamentos [{method, amount}, ...]
@@ -49,7 +48,7 @@ class CloseCommandAction
     public function execute(int $restaurantId, int $orderId, array $payments): void
     {
         $conn = Database::connect();
-        
+
         // Validar caixa aberto antes de iniciar transação
         $caixa = $this->cashRegisterService->assertOpen($conn, $restaurantId);
 
@@ -84,7 +83,7 @@ class CloseCommandAction
                 $totalPago = $this->paymentService->registerPayments($conn, $orderId, $payments);
 
                 // Registrar movimento de caixa
-                $desc = "Comanda #" . $orderId;
+                $desc = 'Comanda #' . $orderId;
                 $this->cashRegisterService->registerMovement(
                     $conn,
                     $caixa['id'],
@@ -99,7 +98,7 @@ class CloseCommandAction
 
             // 5. ATUALIZAR STATUS PARA CONCLUIDO (crítico)
             $affected = $this->orderRepo->updateStatus($orderId, 'concluido');
-            
+
             if ($affected === 0) {
                 throw new RuntimeException(
                     "updateStatus affected 0 rows for orderId: {$orderId}"
@@ -118,4 +117,3 @@ class CloseCommandAction
         }
     }
 }
-

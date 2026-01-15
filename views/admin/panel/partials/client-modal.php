@@ -1,6 +1,6 @@
 <!-- MODAL NOVO CLIENTE -->
 <!--
-    Partial incluído via: require __DIR__ . '/partials/client-modal.php';
+    Partial incluído via: \App\Core\View::renderFromScope('admin/panel/partials/client-modal.php', get_defined_vars());
     FUNÇÕES JS NECESSÁRIAS:
     - PDVTables.searchClientInModal()
     - saveClient()

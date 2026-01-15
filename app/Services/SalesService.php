@@ -2,17 +2,16 @@
 
 namespace App\Services;
 
-use App\Repositories\Order\OrderRepository;
-use App\Repositories\Order\OrderItemRepository;
-use App\Repositories\TableRepository;
-use App\Repositories\StockRepository;
-use App\Services\CashRegisterService;
 use App\Core\Database;
+use App\Repositories\Order\OrderItemRepository;
+use App\Repositories\Order\OrderRepository;
+use App\Repositories\StockRepository;
+use App\Repositories\TableRepository;
 use Exception;
 
 /**
  * SalesService - Lógica de Negócio de Vendas/Histórico
- * 
+ *
  * Gerencia listagem de vendas, cancelamento e reativação de mesas.
  */
 class SalesService
@@ -69,7 +68,7 @@ class SalesService
             $order = $this->orderRepo->find($orderId);
 
             if (!$order || $order['status'] !== 'concluido') {
-                throw new Exception("Pedido não encontrado ou já cancelado.");
+                throw new Exception('Pedido não encontrado ou já cancelado.');
             }
 
             // 2. Devolve Estoque
@@ -98,7 +97,7 @@ class SalesService
 
     /**
      * Reativa mesa: recria pedido com status aberto, ocupa mesa novamente.
-     * 
+     *
      * NOTA: Transição concluido→aberto é inválida no modelo de estados.
      * Esta função recria o pedido com status 'aberto' ao invés de transitar.
      */
@@ -113,14 +112,14 @@ class SalesService
             $mov = $this->cashService->findByOrderId($conn, $orderId);
 
             if (!$mov) {
-                throw new Exception("Pagamento não encontrado no caixa.");
+                throw new Exception('Pagamento não encontrado no caixa.');
             }
 
             // 2. Buscar pedido original para restaurar dados
             $originalOrder = $this->orderRepo->find($orderId);
-            
+
             if (!$originalOrder || $originalOrder['status'] !== 'concluido') {
-                throw new Exception("Pedido não está concluído ou não existe.");
+                throw new Exception('Pedido não está concluído ou não existe.');
             }
 
             // Extrai número da mesa da descrição "Pagamento Mesa #5"
@@ -128,14 +127,14 @@ class SalesService
             $tableNum = $matches[1] ?? null;
 
             if (!$tableNum) {
-                throw new Exception("Não foi possível identificar a mesa.");
+                throw new Exception('Não foi possível identificar a mesa.');
             }
 
             // 3. Verifica se mesa está livre
             $table = $this->tableRepo->findByNumber($restaurantId, $tableNum);
 
             if (!$table) {
-                throw new Exception("Mesa não encontrada.");
+                throw new Exception('Mesa não encontrada.');
             }
 
             if ($table['status'] === 'ocupada') {

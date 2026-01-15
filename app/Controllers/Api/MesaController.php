@@ -2,18 +2,18 @@
 
 namespace App\Controllers\Api;
 
-use App\Services\Order\Flows\Mesa\MesaValidator;
-use App\Services\Order\Flows\Mesa\OpenMesaAccountAction;
+use App\Middleware\RequestSanitizerMiddleware;
 use App\Services\Order\Flows\Mesa\AddItemsToMesaAction;
 use App\Services\Order\Flows\Mesa\CloseMesaAccountAction;
-use App\Middleware\RequestSanitizerMiddleware;
+use App\Services\Order\Flows\Mesa\MesaValidator;
+use App\Services\Order\Flows\Mesa\OpenMesaAccountAction;
 
 /**
  * Controller API: Fluxo Mesa
- * 
+ *
  * Endpoints ISOLADOS para operações de mesa.
  * Não compartilha com Balcão, Comanda ou Delivery.
- * 
+ *
  * Dependências injetadas explicitamente via construtor.
  */
 class MesaController
@@ -37,36 +37,38 @@ class MesaController
         $this->openAction = $openAction;
         $this->addItemsAction = $addItemsAction;
         $this->closeAction = $closeAction;
-        
+
         // Restaurant ID vem da sessão
         $this->restaurantId = $_SESSION['user']['restaurant_id'] ?? 0;
     }
 
     /**
      * POST /api/v1/mesa/abrir
-     * 
+     *
      * Abre conta de mesa
      */
     public function open(): void
     {
         header('Content-Type: application/json');
-        
+
         $data = $this->getPayload();
-        
-        if (!$this->validateRestaurant()) return;
-        
+
+        if (!$this->validateRestaurant()) {
+            return;
+        }
+
         // Validar contrato
         $errors = $this->validator->validateOpen($data);
-        
+
         if (!empty($errors)) {
             $this->json(['success' => false, 'message' => 'Dados inválidos', 'errors' => $errors], 400);
             return;
         }
-        
+
         // Executar Action
         try {
             $result = $this->openAction->execute($this->restaurantId, $data);
-            
+
             $this->json([
                 'success' => true,
                 'order_id' => $result['order_id'],
@@ -76,7 +78,7 @@ class MesaController
                 'status' => 'aberto',
                 'message' => 'Mesa aberta com sucesso'
             ], 201);
-            
+
         } catch (\Throwable $e) {
             $this->handleError($e);
         }
@@ -84,29 +86,31 @@ class MesaController
 
     /**
      * POST /api/v1/mesa/{id}/itens
-     * 
+     *
      * Adiciona itens a mesa aberta
      */
     public function addItems(): void
     {
         header('Content-Type: application/json');
-        
+
         $data = $this->getPayload();
-        
-        if (!$this->validateRestaurant()) return;
-        
+
+        if (!$this->validateRestaurant()) {
+            return;
+        }
+
         // Validar contrato
         $errors = $this->validator->validateAddItems($data);
-        
+
         if (!empty($errors)) {
             $this->json(['success' => false, 'message' => 'Dados inválidos', 'errors' => $errors], 400);
             return;
         }
-        
+
         // Executar Action
         try {
             $result = $this->addItemsAction->execute($this->restaurantId, $data);
-            
+
             $this->json([
                 'success' => true,
                 'order_id' => $result['order_id'],
@@ -115,7 +119,7 @@ class MesaController
                 'new_total' => $result['new_total'],
                 'message' => 'Itens adicionados com sucesso'
             ], 200);
-            
+
         } catch (\Throwable $e) {
             $this->handleError($e);
         }
@@ -123,29 +127,31 @@ class MesaController
 
     /**
      * POST /api/v1/mesa/{id}/fechar
-     * 
+     *
      * Fecha conta de mesa com pagamento
      */
     public function close(): void
     {
         header('Content-Type: application/json');
-        
+
         $data = $this->getPayload();
-        
-        if (!$this->validateRestaurant()) return;
-        
+
+        if (!$this->validateRestaurant()) {
+            return;
+        }
+
         // Validar contrato
         $errors = $this->validator->validateClose($data);
-        
+
         if (!empty($errors)) {
             $this->json(['success' => false, 'message' => 'Dados inválidos', 'errors' => $errors], 400);
             return;
         }
-        
+
         // Executar Action
         try {
             $result = $this->closeAction->execute($this->restaurantId, $data);
-            
+
             $this->json([
                 'success' => true,
                 'order_id' => $result['order_id'],
@@ -155,7 +161,7 @@ class MesaController
                 'status' => $result['status'],
                 'message' => 'Mesa fechada com sucesso'
             ], 200);
-            
+
         } catch (\Throwable $e) {
             $this->handleError($e);
         }
@@ -180,10 +186,10 @@ class MesaController
 
     private function handleError(\Throwable $e): void
     {
-        error_log("[MESA_CONTROLLER] Erro: " . $e->getMessage());
-        
+        error_log('[MESA_CONTROLLER] Erro: ' . $e->getMessage());
+
         $code = str_contains($e->getMessage(), 'não encontrad') ? 404 : 500;
-        
+
         $this->json([
             'success' => false,
             'message' => $e->getMessage()

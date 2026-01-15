@@ -109,7 +109,8 @@
                 
                 <!-- Abas de Categorias -->
                 <div class="combo-category-tabs" style="display: flex; overflow-x: auto; background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 4px;">
-                    <?php $i = 0; foreach ($productsByCategory as $categoryName => $products): $active = $i === 0 ? 'active' : ''; ?>
+                    <?php $i = 0;
+                foreach ($productsByCategory as $categoryName => $products): $active = $i === 0 ? 'active' : ''; ?>
                     <button type="button" 
                             class="combo-tab-btn <?= $active ?>" 
                             onclick="toggleComboTab(this, 'cat_<?= md5($categoryName) ?>')"
@@ -121,7 +122,8 @@
 
                 <!-- Conteúdo das Abas -->
                 <div class="combo-category-contents" style="padding: 20px; background: #fff;">
-                    <?php $i = 0; foreach ($productsByCategory as $categoryName => $products): $display = $i === 0 ? 'grid' : 'none'; ?>
+                    <?php $i = 0;
+                foreach ($productsByCategory as $categoryName => $products): $display = $i === 0 ? 'grid' : 'none'; ?>
                     <div id="cat_<?= md5($categoryName) ?>" class="combo-tab-content" style="display: <?= $display ?>; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
                         <?php foreach ($products as $product): ?>
                             <div class="combo-product-card" 

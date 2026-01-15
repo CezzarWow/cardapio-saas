@@ -2,11 +2,11 @@
 
 namespace App\Controllers\Admin;
 
+use App\Core\Logger;
+use App\Services\Admin\ComboService;
 use App\Services\Cardapio\CardapioQueryService;
 use App\Services\Cardapio\UpdateCardapioConfigService;
-use App\Services\Admin\ComboService;
 use App\Validators\CardapioValidator;
-use App\Core\Logger;
 use Exception;
 
 /**
@@ -38,11 +38,11 @@ class CardapioController extends BaseController
     public function index(): void
     {
         $restaurantId = $this->getRestaurantId();
-        
+
         $data = $this->queryService->getIndexData($restaurantId);
         extract($data);
 
-        require __DIR__ . '/../../../views/admin/cardapio/index.php';
+        View::renderFromScope('admin/cardapio/index', get_defined_vars());
     }
 
     /**
@@ -51,10 +51,10 @@ class CardapioController extends BaseController
     public function update(): void
     {
         $restaurantId = $this->getRestaurantId();
-        
+
         // Validação (opcional por enquanto, mas estrutura pronta)
         // $errors = $this->validator->validateConfig($_POST);
-        
+
         try {
             $this->configService->execute($restaurantId, $_POST);
 
@@ -83,7 +83,7 @@ class CardapioController extends BaseController
         $data = $this->queryService->getComboFormData($restaurantId);
         $products = $data['products'];
 
-        require __DIR__ . '/../../../views/admin/cardapio/combo_form.php';
+        View::renderFromScope('admin/cardapio/combo_form', get_defined_vars());
     }
 
     /**
@@ -149,12 +149,12 @@ class CardapioController extends BaseController
         $combo = $result['combo'];
         $comboProducts = $result['comboProducts'];
         $comboItemsSettings = $result['comboItemsSettings'];
-        
+
         // Produtos para o select
         $data = $this->queryService->getComboFormData($restaurantId);
         $products = $data['products'];
 
-        require __DIR__ . '/../../../views/admin/cardapio/combo_form.php';
+        View::renderFromScope('admin/cardapio/combo_form', get_defined_vars());
     }
 
     /**

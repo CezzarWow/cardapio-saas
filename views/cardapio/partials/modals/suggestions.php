@@ -25,16 +25,16 @@
                     Bebidas
                 </h3>
                 <div class="suggestion-items">
-                    <?php 
+                    <?php
                     // Filtrar produtos da categoria "Bebidas" ou similar
                     $drinks = [];
-                    foreach ($allProducts as $p) {
-                        $catLower = strtolower($p['category_name'] ?? '');
-                        if (strpos($catLower, 'bebida') !== false || strpos($catLower, 'drink') !== false || strpos($catLower, 'refrigerante') !== false || strpos($catLower, 'suco') !== false) {
-                            $drinks[] = $p;
-                        }
-                    }
-                    if (empty($drinks)): ?>
+foreach ($allProducts as $p) {
+    $catLower = strtolower($p['category_name'] ?? '');
+    if (strpos($catLower, 'bebida') !== false || strpos($catLower, 'drink') !== false || strpos($catLower, 'refrigerante') !== false || strpos($catLower, 'suco') !== false) {
+        $drinks[] = $p;
+    }
+}
+if (empty($drinks)): ?>
                         <p class="suggestion-empty">Nenhuma bebida disponível</p>
                     <?php else: ?>
                         <?php foreach ($drinks as $drink): ?>
@@ -69,14 +69,14 @@
                     Molhos Extras
                 </h3>
                 <div class="suggestion-items">
-                    <?php 
-                    $hasSauces = false;
-                    foreach ($additionalGroups as $group): 
-                        $groupLower = strtolower($group['name']);
-                        if (strpos($groupLower, 'molho') !== false || strpos($groupLower, 'sauce') !== false):
-                            $hasSauces = true;
-                            if (isset($additionalItems[$group['id']])):
-                                foreach ($additionalItems[$group['id']] as $sauce): ?>
+                    <?php
+$hasSauces = false;
+foreach ($additionalGroups as $group):
+    $groupLower = strtolower($group['name']);
+    if (strpos($groupLower, 'molho') !== false || strpos($groupLower, 'sauce') !== false):
+        $hasSauces = true;
+        if (isset($additionalItems[$group['id']])):
+            foreach ($additionalItems[$group['id']] as $sauce): ?>
                                     <div class="suggestion-item">
                                         <div class="suggestion-item-info">
                                             <div class="suggestion-item-image-placeholder sauce">
@@ -93,10 +93,10 @@
                                         </button>
                                     </div>
                                 <?php endforeach;
-                            endif;
-                        endif;
-                    endforeach;
-                    if (!$hasSauces): ?>
+        endif;
+    endif;
+endforeach;
+if (!$hasSauces): ?>
                         <p class="suggestion-empty">Nenhum molho extra disponível</p>
                     <?php endif; ?>
                 </div>

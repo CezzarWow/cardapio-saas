@@ -1,6 +1,6 @@
-<?php 
-require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php';
+<?php
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/panel/layout/sidebar.php', get_defined_vars());
 ?>
 
 <!-- stock-v2 removido - usando stock-consolidated.css global -->
@@ -217,11 +217,11 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 </main>
 
 <!-- Modais (Partials) -->
-<?php require __DIR__ . '/partials/group-modal.php'; ?>
-<?php require __DIR__ . '/partials/item-modal.php'; ?>
-<?php require __DIR__ . '/partials/link-modal.php'; ?>
-<?php require __DIR__ . '/partials/category-modal.php'; ?>
-<?php require __DIR__ . '/../partials/delete-modal.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/additionals/partials/group-modal.php', get_defined_vars()); ?>
+<?php \App\Core\View::renderFromScope('admin/additionals/partials/item-modal.php', get_defined_vars()); ?>
+<?php \App\Core\View::renderFromScope('admin/additionals/partials/link-modal.php', get_defined_vars()); ?>
+<?php \App\Core\View::renderFromScope('admin/additionals/partials/category-modal.php', get_defined_vars()); ?>
+<?php \App\Core\View::renderFromScope('admin/partials/delete-modal.php', get_defined_vars()); ?>
 
 <!-- Scripts -->
 <script>window.BASE_URL = '<?= BASE_URL ?>';</script>
@@ -232,4 +232,4 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 <script src="<?= BASE_URL ?>/js/admin/additionals-delete-modal.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/admin/additionals-ui.js?v=<?= time() ?>"></script>
 
-<?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

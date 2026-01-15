@@ -2,7 +2,7 @@
 /**
  * Partial: Card Compacto para Kanban
  * Variáveis: $order
- * 
+ *
  * Refatorado: Acessibilidade adicionada (ARIA, tabindex, keyboard)
  */
 
@@ -75,7 +75,7 @@ $orderJson = htmlspecialchars(json_encode([
                 } else {
                     echo 'Cliente';
                 }
-            ?>
+?>
         </span>
         <span class="delivery-card-compact-time">
             <i data-lucide="clock" style="width: 12px; height: 12px;"></i>
@@ -85,44 +85,44 @@ $orderJson = htmlspecialchars(json_encode([
 
     <div class="delivery-card-compact-info">
         <?php
-            // Define cor e label baseado no tipo
-            if ($orderType === 'local') {
-                $badgeColor = '#7c3aed'; // Roxo
-                $badgeLabel = '🍽️ Local';
-            } elseif ($orderType === 'pickup') {
-                $badgeColor = '#ea580c'; // Laranja
-                $badgeLabel = '🏪 Retirada';
-            } else {
-                $badgeColor = '#3b82f6'; // Azul
-                $badgeLabel = '🚚 Delivery';
-            }
-        ?>
+// Define cor e label baseado no tipo
+if ($orderType === 'local') {
+    $badgeColor = '#7c3aed'; // Roxo
+    $badgeLabel = '🍽️ Local';
+} elseif ($orderType === 'pickup') {
+    $badgeColor = '#ea580c'; // Laranja
+    $badgeLabel = '🏪 Retirada';
+} else {
+    $badgeColor = '#3b82f6'; // Azul
+    $badgeLabel = '🚚 Delivery';
+}
+?>
         <span class="delivery-card-compact-customer" style="color: <?= $badgeColor ?>; font-weight: 700;">
             <?= $badgeLabel ?>
         </span>
         
         <?php
-            // Badge de Pagamento - usa DeliveryConstants via JS render seria ideal,
-            // mas mantemos PHP para SSR
-            $isPaid = $order['is_paid'] ?? 0;
-            $paymentMethod = $order['payment_method'] ?? '';
-            
-            if ($isPaid == 1) {
-                $paymentBadge = '✅ PAGO';
-                $paymentColor = '#16a34a'; // Verde
-            } else {
-                // Labels de pagamento (sincronizado com constants.js)
-                $paymentBadge = match($paymentMethod) {
-                    'dinheiro' => '💵 Dinheiro',
-                    'pix' => '📱 Pix',
-                    'credito' => '💳 Crédito',
-                    'debito' => '💳 Débito',
-                    'multiplo' => '💰 Múltiplo',
-                    default => '💰 A pagar'
-                };
-                $paymentColor = '#dc2626'; // Vermelho
-            }
-        ?>
+    // Badge de Pagamento - usa DeliveryConstants via JS render seria ideal,
+    // mas mantemos PHP para SSR
+    $isPaid = $order['is_paid'] ?? 0;
+$paymentMethod = $order['payment_method'] ?? '';
+
+if ($isPaid == 1) {
+    $paymentBadge = '✅ PAGO';
+    $paymentColor = '#16a34a'; // Verde
+} else {
+    // Labels de pagamento (sincronizado com constants.js)
+    $paymentBadge = match($paymentMethod) {
+        'dinheiro' => '💵 Dinheiro',
+        'pix' => '📱 Pix',
+        'credito' => '💳 Crédito',
+        'debito' => '💳 Débito',
+        'multiplo' => '💰 Múltiplo',
+        default => '💰 A pagar'
+    };
+    $paymentColor = '#dc2626'; // Vermelho
+}
+?>
         <span style="font-size: 0.75rem; font-weight: 600; color: <?= $paymentColor ?>;">
             <?= $paymentBadge ?>
         </span>

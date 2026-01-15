@@ -1,7 +1,7 @@
-<?php 
+<?php
 /**
  * EDIT.PHP - Edição de Produto
- * 
+ *
  * View refatorada usando componentes externos:
  * - partials/cropper-modal.php (Modal de recorte)
  * - js/components/icon-selector.js (Seletor de ícone)
@@ -9,8 +9,8 @@
  * - js/components/cropper-modal.js (Lógica de cropper)
  * - js/components/multi-select.js (Multi-select existente)
  */
-require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php'; 
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/panel/layout/sidebar.php', get_defined_vars());
 ?>
 
 <main class="main-content">
@@ -42,14 +42,16 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                         <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Vincular Adicionais</label>
                         
                         <div class="custom-select-container" style="position: relative;">
-                            <?php 
+                            <?php
                                 $checkedCount = 0;
-                                foreach($additionalGroups as $g) {
-                                    if(in_array($g['id'], $linkedGroups)) $checkedCount++;
-                                }
-                                $triggerLabel = $checkedCount > 0 ? $checkedCount . ' Selecionado(s)' : 'Selecione...';
-                                $triggerStyle = $checkedCount > 0 ? 'color: #1f2937; font-weight: 600;' : 'color: #6b7280;';
-                            ?>
+foreach ($additionalGroups as $g) {
+    if (in_array($g['id'], $linkedGroups)) {
+        $checkedCount++;
+    }
+}
+$triggerLabel = $checkedCount > 0 ? $checkedCount . ' Selecionado(s)' : 'Selecione...';
+$triggerStyle = $checkedCount > 0 ? 'color: #1f2937; font-weight: 600;' : 'color: #6b7280;';
+?>
                             <div class="select-trigger" onclick="toggleSelect(this)" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
                                 <span class="trigger-text" style="<?= $triggerStyle ?>"><?= $triggerLabel ?></span>
                                 <i data-lucide="chevron-down" size="16" style="color: #9ca3af;"></i>
@@ -88,7 +90,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                 </div>
 
                 <!-- FOTO E ÍCONE -->
-                <?php 
+                <?php
                 $icons = [
                     '🍔' => 'Hambúrguer', '🌭' => 'Cachorro Quente', '🍺' => 'Cerveja Garrafa',
                     '🍾' => 'Cerveja Longneck', '🥫' => 'Latinha', '🍻' => 'Chopp',
@@ -97,11 +99,13 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                     '🍫' => 'Chocolate', '🍟' => 'Batata Frita', '🍱' => 'Combos',
                     '🍰' => 'Sobremesas', '🍦' => 'Sorvete'
                 ];
-                $currentIcon = $product['icon'] ?? '🍔'; 
-                if (!array_key_exists($currentIcon, $icons)) $currentIcon = '🍔';
-                $hasImage = !empty($product['image']); 
-                $iconAsPhoto = ($product['icon_as_photo'] ?? 0) == 1;
-                ?>
+$currentIcon = $product['icon'] ?? '🍔';
+if (!array_key_exists($currentIcon, $icons)) {
+    $currentIcon = '🍔';
+}
+$hasImage = !empty($product['image']);
+$iconAsPhoto = ($product['icon_as_photo'] ?? 0) == 1;
+?>
                 
                 <div style="display: flex; gap: 20px;">
                     <!-- FOTO -->
@@ -147,9 +151,9 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                             </div>
                             
                             <div id="iconGrid" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 50; max-height: 300px; overflow-y: auto; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 8px; padding: 15px; background: white; border: 1px solid #e5e7eb; border-top: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-                                <?php foreach ($icons as $emoji => $label): 
+                                <?php foreach ($icons as $emoji => $label):
                                     $isSelected = ($emoji === $currentIcon);
-                                ?>
+                                    ?>
                                     <div class="icon-option" data-icon="<?= $emoji ?>" onclick="selectIcon('<?= $emoji ?>')" 
                                          title="<?= $label ?>"
                                          style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 50px; background: <?= $isSelected ? '#eff6ff' : 'white' ?>; border: 2px solid <?= $isSelected ? '#2563eb' : '#e5e7eb' ?>; border-radius: 6px; cursor: pointer; transition: all 0.15s;">
@@ -178,13 +182,13 @@ require __DIR__ . '/../panel/layout/sidebar.php';
     </div>
 </main>
 
-<?php // Modal de Recorte ?>
-<?php require __DIR__ . '/../partials/cropper-modal.php'; ?>
+<?php // Modal de Recorte?>
+<?php \App\Core\View::renderFromScope('admin/products/partials/cropper-modal.php', get_defined_vars()); ?>
 
-<?php // Scripts de Componentes ?>
+<?php // Scripts de Componentes?>
 <script src="<?= BASE_URL ?>/js/components/multi-select.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/components/icon-selector.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/components/price-mask.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/components/cropper-modal.js?v=<?= time() ?>"></script>
 
-<?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

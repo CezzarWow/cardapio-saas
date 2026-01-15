@@ -1,6 +1,6 @@
-<?php 
-require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php';
+<?php
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/panel/layout/sidebar.php', get_defined_vars());
 
 $productFilter = $_GET['product'] ?? '';
 $categoryFilter = $_GET['category'] ?? '';
@@ -140,7 +140,7 @@ $saidas = $stats['saidas'] ?? 0;
                             </td>
                             <td>
                                 <div style="display: flex; align-items: center; gap: 10px;">
-                                    <?php if($mov['product_image']): ?>
+                                    <?php if ($mov['product_image']): ?>
                                         <img src="<?= BASE_URL ?>/uploads/<?= $mov['product_image'] ?>" style="width: 35px; height: 35px; object-fit: cover; border-radius: 6px;" loading="lazy">
                                     <?php else: ?>
                                         <div style="width: 35px; height: 35px; background: #eee; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #999;">
@@ -189,4 +189,4 @@ $saidas = $stats['saidas'] ?? 0;
     </div>
 </main>
 
-<?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

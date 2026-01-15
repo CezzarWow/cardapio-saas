@@ -9,6 +9,6 @@ class InfrastructureProvider implements Provider
     public function register(Container $container): void
     {
         // --- CACHE ---
-        $container->singleton(\App\Core\SimpleCache::class, fn() => new \App\Core\SimpleCache());
+        $container->singleton(\App\Core\SimpleCache::class, fn () => new \App\Core\SimpleCache());
     }
 }

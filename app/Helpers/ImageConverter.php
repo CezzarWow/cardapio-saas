@@ -1,18 +1,22 @@
 <?php
+
 /**
  * Helper de Conversão de Imagens para WebP
  * Converte PNG, JPG, JPEG para WebP com qualidade otimizada
  */
 
-class ImageConverter {
-    
+namespace App\Helpers;
+
+class ImageConverter
+{
     /**
      * Converte uma imagem para WebP
      * @param string $sourcePath Caminho completo do arquivo original
      * @param int $quality Qualidade (1-100), padrão 85
      * @return string|false Nome do arquivo WebP gerado ou false em caso de erro
      */
-    public static function toWebp(string $sourcePath, int $quality = 85) {
+    public static function toWebp(string $sourcePath, int $quality = 85)
+    {
         // Verifica se o arquivo existe
         if (!file_exists($sourcePath)) {
             return false;
@@ -60,7 +64,7 @@ class ImageConverter {
 
         // Converte para WebP
         $success = imagewebp($image, $webpPath, $quality);
-        
+
         // Libera memória
         imagedestroy($image);
 
@@ -77,7 +81,8 @@ class ImageConverter {
      * @param string $uploadDir Diretório de destino
      * @return string|false Nome do arquivo WebP ou false em caso de erro
      */
-    public static function uploadAndConvert(array $file, string $uploadDir, int $quality = 85) {
+    public static function uploadAndConvert(array $file, string $uploadDir, int $quality = 85)
+    {
         if (empty($file['name']) || $file['error'] !== UPLOAD_ERR_OK) {
             return false;
         }
@@ -85,7 +90,7 @@ class ImageConverter {
         // Gera nome único
         $uniqueName = md5(time() . rand(0, 9999));
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        
+
         // Extensões permitidas
         $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         if (!in_array($ext, $allowedExts)) {
@@ -105,14 +110,14 @@ class ImageConverter {
         // Move temporariamente para converter
         $tempName = $uniqueName . '.' . $ext;
         $tempPath = rtrim($uploadDir, '/') . '/' . $tempName;
-        
+
         if (!move_uploaded_file($file['tmp_name'], $tempPath)) {
             return false;
         }
 
         // Converte para WebP
         $webpName = self::toWebp($tempPath, $quality);
-        
+
         if ($webpName) {
             // Remove o arquivo original
             @unlink($tempPath);

@@ -1,6 +1,6 @@
-<?php 
-require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php'; 
+<?php
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/panel/layout/sidebar.php', get_defined_vars());
 ?>
 
 <main class="main-content">
@@ -16,16 +16,16 @@ require __DIR__ . '/../panel/layout/sidebar.php';
             <form action="<?= BASE_URL ?>/admin/loja/config/salvar" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 20px;">
                 <?= \App\Helpers\ViewHelper::csrfField() ?>
                 
-                <?php 
+                <?php
                 $isEditing = isset($_GET['edit']) && $_GET['edit'] === 'true';
-                $disabled = $isEditing ? '' : 'disabled';
-                $inputBg = $isEditing ? 'white' : '#f3f4f6';
-                ?>
+$disabled = $isEditing ? '' : 'disabled';
+$inputBg = $isEditing ? 'white' : '#f3f4f6';
+?>
                 
                 <div style="display: flex; gap: 20px; align-items: flex-start;">
                     <div style="width: 120px; text-align: center;">
                         <div class="logo-preview-container" style="width: 100px; height: 100px; border-radius: 50%; background: #f3f4f6; border: 2px dashed #d1d5db; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0 auto 10px auto;">
-                            <?php if(!empty($loja['logo'])): ?>
+                            <?php if (!empty($loja['logo'])): ?>
                                 <img src="<?= BASE_URL ?>/uploads/<?= $loja['logo'] ?>" style="width: 100%; height: 100%; object-fit: cover;">
                             <?php else: ?>
                                 <i data-lucide="store" color="#9ca3af" size="40"></i>
@@ -119,4 +119,4 @@ require __DIR__ . '/../panel/layout/sidebar.php';
         }
     });
 </script>
-<?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

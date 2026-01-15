@@ -1,7 +1,7 @@
 <?php
 /**
  * PDV-CART-SIDEBAR.PHP - Sidebar do Carrinho
- * 
+ *
  * Contém: Header do carrinho, Estado vazio, Itens já pedidos, Footer com totais e botões
  * Variáveis esperadas: $mesa_id, $mesa_numero, $contaAberta, $itensJaPedidos, $isEditingPaid
  */
@@ -123,10 +123,10 @@
             
             <!-- 1. Botão SALVAR COMANDA/MESA (Sem pagar) -->
             <?php if (!empty($showSaveCommand)): ?>
-            <?php 
+            <?php
                 // Botão aparece se: mesa selecionada OU comanda existente
                 $showSaveBtn = !empty($mesa_id) || !empty($contaAberta['id']);
-            ?>
+                ?>
             <button id="btn-save-command" onclick="saveClientOrder()" 
                     style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: <?= $showSaveBtn ? 'flex' : 'none' ?>; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                 Salvar
@@ -195,12 +195,12 @@
                                 <div style="font-weight: 700; color: #111827; font-size: 1rem;">
                                     <?= $item['quantity'] ?>x <?= $item['name'] ?>
                                 </div>
-                                <?php 
-                                // Mostrar adicionais se existirem
-                                if (!empty($item['extras'])): 
-                                    $extras = is_string($item['extras']) ? json_decode($item['extras'], true) : $item['extras'];
-                                    if (!empty($extras)):
-                                ?>
+                                <?php
+                                    // Mostrar adicionais se existirem
+                                    if (!empty($item['extras'])):
+                                        $extras = is_string($item['extras']) ? json_decode($item['extras'], true) : $item['extras'];
+                                        if (!empty($extras)):
+                                            ?>
                                     <div style="margin-top: 4px; padding-left: 12px; border-left: 2px solid #d1d5db;">
                                         <?php foreach ($extras as $extra): ?>
                                             <div style="font-size: 0.85rem; color: #6b7280;">

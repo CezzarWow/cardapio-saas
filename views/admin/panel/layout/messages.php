@@ -3,13 +3,12 @@
  * ============================================
  * COMPONENTE: Mensagens de Feedback
  * Arquivo: views/admin/panel/layout/messages.php
- * 
+ *
  * Como usar:
  * 1. Incluir após o header nas views:
+ *    <?php \App\Core\View::renderFromScope('admin/panel/layout/messages.php', get_defined_vars()); ?>
+ *    // ou (se não for renderizar via View class ainda):
  *    <?php require __DIR__ . '/layout/messages.php'; ?>
- * 
- * 2. Redirecionar com parâmetros:
- *    header('Location: ../produtos?success=salvo');
  *    header('Location: ../produtos?error=' . urlencode('Mensagem de erro'));
  * ============================================
  */
@@ -34,12 +33,15 @@ $msgMap = [
     ]
 ];
 
-function renderToast($type, $icon, $bg, $border, $text, $msgMap) {
-    if (!isset($_GET[$type])) return;
-    
+function renderToast($type, $icon, $bg, $border, $text, $msgMap)
+{
+    if (!isset($_GET[$type])) {
+        return;
+    }
+
     $code = $_GET[$type];
     $message = $msgMap[$type][$code] ?? htmlspecialchars(urldecode($code));
-    
+
     // Fallback para sucesso genérico
     if ($type === 'success' && !isset($msgMap['success'][$code])) {
         $message = 'Operação realizada com sucesso!';

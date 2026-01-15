@@ -13,12 +13,12 @@ class TableRepository
     public function findWithCurrentOrder(int $tableId, int $restaurantId): ?array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT t.*, o.total as order_total 
+        $stmt = $conn->prepare('SELECT t.*, o.total as order_total 
                                 FROM tables t 
                                 LEFT JOIN orders o ON t.current_order_id = o.id 
-                                WHERE t.id = :tid AND t.restaurant_id = :rid");
+                                WHERE t.id = :tid AND t.restaurant_id = :rid');
         $stmt->execute(['tid' => $tableId, 'rid' => $restaurantId]);
-        
+
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ?: null;
     }
@@ -49,12 +49,12 @@ class TableRepository
     public function findAll(int $restaurantId): array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT t.*, o.total as order_total, c.credit_limit, c.name as client_name 
+        $stmt = $conn->prepare('SELECT t.*, o.total as order_total, c.credit_limit, c.name as client_name 
                                 FROM tables t 
                                 LEFT JOIN orders o ON t.current_order_id = o.id 
                                 LEFT JOIN clients c ON o.client_id = c.id
                                 WHERE t.restaurant_id = :rid 
-                                ORDER BY CAST(t.number AS UNSIGNED)");
+                                ORDER BY CAST(t.number AS UNSIGNED)');
         $stmt->execute(['rid' => $restaurantId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -65,7 +65,7 @@ class TableRepository
     public function findByNumber(int $restaurantId, string $number): ?array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM tables WHERE restaurant_id = :rid AND number = :num");
+        $stmt = $conn->prepare('SELECT * FROM tables WHERE restaurant_id = :rid AND number = :num');
         $stmt->execute(['rid' => $restaurantId, 'num' => $number]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ?: null;
@@ -88,7 +88,7 @@ class TableRepository
     public function delete(int $tableId): void
     {
         $conn = Database::connect();
-        $conn->prepare("DELETE FROM tables WHERE id = :id")->execute(['id' => $tableId]);
+        $conn->prepare('DELETE FROM tables WHERE id = :id')->execute(['id' => $tableId]);
     }
 
     /**
@@ -97,7 +97,7 @@ class TableRepository
     public function findByOrderId(int $orderId): ?array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM tables WHERE current_order_id = :oid LIMIT 1");
+        $stmt = $conn->prepare('SELECT * FROM tables WHERE current_order_id = :oid LIMIT 1');
         $stmt->execute(['oid' => $orderId]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ?: null;
@@ -109,7 +109,7 @@ class TableRepository
     public function findById(int $tableId): ?array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM tables WHERE id = :id");
+        $stmt = $conn->prepare('SELECT * FROM tables WHERE id = :id');
         $stmt->execute(['id' => $tableId]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ?: null;

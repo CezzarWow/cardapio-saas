@@ -5,8 +5,8 @@
  * Filtro por dia operacional
  * ============================================
  */
-require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php'; 
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/panel/layout/sidebar.php', get_defined_vars());
 
 // [VIEW CLEANUP] Lógica de datas e status movida para o Controller (ViewModel)
 // Variáveis disponíveis: $displayDate, $dayName, $orders (com formatted_* e status_*), $total*Formatted
@@ -29,7 +29,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
         </div>
 
         <!-- Abas Unificadas (Filtros) -->
-        <?php require __DIR__ . '/partials/filters.php'; ?>
+        <?php \App\Core\View::renderFromScope('admin/delivery/partials/filters.php', get_defined_vars()); ?>
 
         <!-- Barra superior: Filtro + Período + Totais -->
         <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; align-items: stretch;">
@@ -105,10 +105,10 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 </main>
 
 <!-- Modal do Histórico -->
-<?php require __DIR__ . '/partials/modals/history_details.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/delivery/partials/modals/history_details.php', get_defined_vars()); ?>
 
 <!-- Modal de Impressão -->
-<?php require __DIR__ . '/partials/modals/print_slip.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/delivery/partials/modals/print_slip.php', get_defined_vars()); ?>
 
 <!-- JS -->
 <script>
@@ -126,4 +126,4 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 <!-- Orquestrador (carregar POR ÚLTIMO) -->
 <script src="<?= BASE_URL ?>/js/delivery/print.js?v=<?= time() ?>"></script>
 
-<?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

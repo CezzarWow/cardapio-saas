@@ -24,7 +24,7 @@ class CashRegisterRepository
     public function find(int $id): ?array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM cash_registers WHERE id = :id");
+        $stmt = $conn->prepare('SELECT * FROM cash_registers WHERE id = :id');
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
@@ -56,8 +56,8 @@ class CashRegisterRepository
     public function addMovement(int $cashRegisterId, string $type, float $amount, string $description, ?int $orderId = null, ?string $date = null): void
     {
         $conn = Database::connect();
-        $sql = "INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, :type, :amount, :desc, :oid, :date)";
-        
+        $sql = 'INSERT INTO cash_movements (cash_register_id, type, amount, description, order_id, created_at) VALUES (:cid, :type, :amount, :desc, :oid, :date)';
+
         $params = [
             'cid' => $cashRegisterId,
             'type' => $type,
@@ -77,7 +77,7 @@ class CashRegisterRepository
     public function findMovements(int $cashRegisterId): array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM cash_movements WHERE cash_register_id = :cid ORDER BY created_at DESC");
+        $stmt = $conn->prepare('SELECT * FROM cash_movements WHERE cash_register_id = :cid ORDER BY created_at DESC');
         $stmt->execute(['cid' => $cashRegisterId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -88,7 +88,7 @@ class CashRegisterRepository
     public function findMovementByOrder(int $orderId): ?array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM cash_movements WHERE order_id = :oid");
+        $stmt = $conn->prepare('SELECT * FROM cash_movements WHERE order_id = :oid');
         $stmt->execute(['oid' => $orderId]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
@@ -99,7 +99,7 @@ class CashRegisterRepository
     public function findMovement(int $id): ?array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM cash_movements WHERE id = :id");
+        $stmt = $conn->prepare('SELECT * FROM cash_movements WHERE id = :id');
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
@@ -110,7 +110,7 @@ class CashRegisterRepository
     public function deleteMovement(int $id): void
     {
         $conn = Database::connect();
-        $conn->prepare("DELETE FROM cash_movements WHERE id = :id")->execute(['id' => $id]);
+        $conn->prepare('DELETE FROM cash_movements WHERE id = :id')->execute(['id' => $id]);
     }
 
     /**
@@ -119,6 +119,6 @@ class CashRegisterRepository
     public function deleteMovementByOrder(int $orderId): void
     {
         $conn = Database::connect();
-        $conn->prepare("DELETE FROM cash_movements WHERE order_id = :oid")->execute(['oid' => $orderId]);
+        $conn->prepare('DELETE FROM cash_movements WHERE order_id = :oid')->execute(['oid' => $orderId]);
     }
 }

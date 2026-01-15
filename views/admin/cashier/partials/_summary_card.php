@@ -8,7 +8,8 @@
  * @param string $subtitle - Subtítulo opcional
  */
 if (!function_exists('renderSummaryCard')) {
-    function renderSummaryCard($label, $value, $color, $textColor = null, $subtitle = null) {
+    function renderSummaryCard($label, $value, $color, $textColor = null, $subtitle = null)
+    {
         $textColor = $textColor ?? $color;
         ?>
         <div style="background: white; padding: 20px; border-radius: 12px; border-left: 5px solid <?= $color ?>; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">

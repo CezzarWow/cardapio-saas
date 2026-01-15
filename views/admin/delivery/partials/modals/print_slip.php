@@ -2,7 +2,7 @@
 /**
  * ============================================
  * Modal: Impressão de Ficha (Motoboy ou Cozinha)
- * 
+ *
  * Refatorado: Usa classes CSS + Acessibilidade
  * ============================================
  */

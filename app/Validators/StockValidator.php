@@ -1,41 +1,45 @@
 <?php
+
 namespace App\Validators;
 
 /**
  * StockValidator - Validação e Sanitização de Produtos (Estoque)
  */
-class StockValidator {
-
-    public function validateProduct(array $data): array {
+class StockValidator
+{
+    public function validateProduct(array $data): array
+    {
         $errors = [];
-        
+
         if (empty(trim($data['name'] ?? ''))) {
             $errors['name'] = 'Nome do produto é obrigatório';
         }
-        
+
         $price = str_replace(',', '.', $data['price'] ?? '');
         if (!is_numeric($price) || floatval($price) < 0) {
             $errors['price'] = 'Preço deve ser um número válido';
         }
-        
+
         if (empty($data['category_id']) || intval($data['category_id']) <= 0) {
             $errors['category_id'] = 'Categoria é obrigatória';
         }
-        
+
         return $errors;
     }
 
-    public function validateProductUpdate(array $data): array {
+    public function validateProductUpdate(array $data): array
+    {
         $errors = $this->validateProduct($data);
-        
+
         if (empty($data['id']) || intval($data['id']) <= 0) {
             $errors['id'] = 'ID do produto é inválido';
         }
-        
+
         return $errors;
     }
 
-    public function validateReposition(array $data): array {
+    public function validateReposition(array $data): array
+    {
         $errors = [];
 
         $productId = intval($data['product_id'] ?? 0);
@@ -52,7 +56,8 @@ class StockValidator {
         return $errors;
     }
 
-    public function sanitizeProduct(array $data): array {
+    public function sanitizeProduct(array $data): array
+    {
         return [
             'id' => intval($data['id'] ?? 0),
             'name' => trim(strip_tags($data['name'] ?? '')),
@@ -66,7 +71,8 @@ class StockValidator {
         ];
     }
 
-    public function hasErrors(array $errors): bool {
+    public function hasErrors(array $errors): bool
+    {
         return !empty($errors);
     }
 }

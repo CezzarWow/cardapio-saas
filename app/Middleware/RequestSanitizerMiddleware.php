@@ -10,7 +10,7 @@ class RequestSanitizerMiddleware
 {
     /**
      * Handle the incoming request
-     * 
+     *
      * @return bool Returns true to continue execution
      */
     public static function handle(): bool
@@ -25,7 +25,7 @@ class RequestSanitizerMiddleware
 
     /**
      * Recursively clean the array
-     * 
+     *
      * @param array $data Passed by reference
      */
     private static function clean(array &$data): void
@@ -37,13 +37,13 @@ class RequestSanitizerMiddleware
                 if (is_string($value)) {
                     // 1. Trim whitespace
                     $value = trim($value);
-                    
+
                     // 2. Remove internal null bytes
                     $value = str_replace(chr(0), '', $value); // Null byte injection
-                    
+
                     // 3. Normalize newlines
                     $value = str_replace(["\r\n", "\r"], "\n", $value);
-                    
+
                     // 4. Strip tags
                     $value = strip_tags($value);
                 }

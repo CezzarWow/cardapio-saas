@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Repositories\CategoryRepository;
@@ -11,7 +12,8 @@ class CategoryService
 {
     private CategoryRepository $repo;
 
-    public function __construct(CategoryRepository $repo) {
+    public function __construct(CategoryRepository $repo)
+    {
         $this->repo = $repo;
     }
 
@@ -56,7 +58,7 @@ class CategoryService
         $category = $this->repo->find($id, $restaurantId);
 
         if ($category && in_array($category['category_type'], ['featured', 'combos'])) {
-            throw new Exception("Categorias de sistema não podem ser excluídas.");
+            throw new Exception('Categorias de sistema não podem ser excluídas.');
         }
 
         $this->repo->delete($id, $restaurantId);

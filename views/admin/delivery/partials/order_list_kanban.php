@@ -26,23 +26,32 @@ $columns = [
     'preparo' => ['label' => 'Em Preparo', 'icon' => 'chef-hat'],
     'rota' => ['label' => 'Em Rota / Retirada', 'icon' => 'bike'],
     'entregue' => ['label' => 'Entregue', 'icon' => 'check-circle'],
-    // 'cancelado' removido do Kanban padrão - aparece apenas via filtro
+    'cancelado' => ['label' => 'Cancelado', 'icon' => 'x-circle'],
 ];
 
-// Coluna cancelado só aparece se filtrado diretamente
-$statusFilter = $statusFilter ?? null;
-if ($statusFilter === 'cancelado') {
-    $showColumns = [
-        'cancelado' => ['label' => 'Cancelado', 'icon' => 'x-circle'],
-    ];
-} else {
-    $showColumns = $columns;
-}
+// Define quais colunas mostrar inicialmente baseado no filtro PHP (fallback)
+// Se não houver filtro, mostra todas MENOS cancelado (via style no loop)
+$statusFilter = $statusFilter ?? 'todos';
 ?>
 
 <div class="delivery-kanban">
-    <?php foreach ($showColumns as $status => $col): ?>
-        <div class="delivery-column delivery-column--<?= $status ?>">
+    <?php foreach ($columns as $status => $col):
+        // Lógica de exibição inicial:
+        // - Se filtro for 'todos' (ou nulo): mostra tudo MENOS cancelado
+        // - Se filtro for específico: mostra apenas ele (já tratado pelo JS, mas aqui garantimos o render inicial correto)
+        $style = 'display: flex;';
+
+        if ($statusFilter === 'todos' || $statusFilter === null) {
+            if ($status === 'cancelado') {
+                $style = 'display: none;';
+            }
+        } else {
+            if ($status !== $statusFilter) {
+                $style = 'display: none;';
+            }
+        }
+        ?>
+        <div class="delivery-column delivery-column--<?= $status ?>" style="<?= $style ?>">
             
             <div class="delivery-column-header">
                 <span class="delivery-column-title">
@@ -60,7 +69,7 @@ if ($statusFilter === 'cancelado') {
                     </div>
                 <?php else: ?>
                     <?php foreach ($ordersByStatus[$status] as $order): ?>
-                        <?php require __DIR__ . '/order_card_compact.php'; ?>
+                        <?php \App\Core\View::renderFromScope('admin/delivery/partials/order_card_compact.php', get_defined_vars()); ?>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>

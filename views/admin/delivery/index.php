@@ -1,12 +1,12 @@
-<?php 
+<?php
 /**
  * ============================================
  * DELIVERY ADMIN — View Principal (Orquestrador)
  * Layout Kanban (4 colunas)
  * ============================================
  */
-require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php'; 
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/panel/layout/sidebar.php', get_defined_vars());
 
 $statusFilter = $_GET['status'] ?? null;
 ?>
@@ -34,18 +34,18 @@ $statusFilter = $_GET['status'] ?? null;
         </div>
 
         <!-- Filtros -->
-        <?php require __DIR__ . '/partials/filters.php'; ?>
+        <?php \App\Core\View::renderFromScope('admin/delivery/partials/filters.php', get_defined_vars()); ?>
 
         <!-- Lista Kanban -->
-        <?php require __DIR__ . '/partials/order_list_kanban.php'; ?>
+        <?php \App\Core\View::renderFromScope('admin/delivery/partials/order_list_kanban.php', get_defined_vars()); ?>
 
     </div>
 </main>
 
 <!-- Modais -->
-<?php require __DIR__ . '/partials/modals/order_details.php'; ?>
-<?php require __DIR__ . '/partials/modals/cancel_order.php'; ?>
-<?php require __DIR__ . '/partials/modals/print_slip.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/delivery/partials/modals/order_details.php', get_defined_vars()); ?>
+<?php \App\Core\View::renderFromScope('admin/delivery/partials/modals/cancel_order.php', get_defined_vars()); ?>
+<?php \App\Core\View::renderFromScope('admin/delivery/partials/modals/print_slip.php', get_defined_vars()); ?>
 
 <!-- JS do Delivery -->
 <script>
@@ -77,4 +77,4 @@ $statusFilter = $_GET['status'] ?? null;
     }
 </script>
 
-<?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

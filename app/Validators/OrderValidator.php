@@ -4,7 +4,7 @@ namespace App\Validators;
 
 /**
  * OrderValidator - Validação de Dados de Pedidos
- * 
+ *
  * Centraliza todas as validações relacionadas a pedidos:
  * criar, fechar mesa/comanda, remover item, cancelar, entregar
  */

@@ -1,12 +1,12 @@
-<?php 
-require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php';
+<?php
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/panel/layout/sidebar.php', get_defined_vars());
 
 // [VIEW CLEANUP] Dados pré-calculados pelo Controller ($totalProducts, $criticalStockCount)
 ?>
 
 <main class="main-content">
-    <?php require __DIR__ . '/../panel/layout/messages.php'; ?>
+    <?php \App\Core\View::renderFromScope('admin/panel/layout/messages.php', get_defined_vars()); ?>
     <div style="padding: 2rem; width: 100%; overflow-y: auto;">
         
         <!-- Header com título e botão -->
@@ -83,11 +83,11 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                      data-category="<?= htmlspecialchars($prod['category_name']) ?>">
                     
                     <!-- Imagem -->
-                    <?php if($prod['image']): ?>
+                    <?php if ($prod['image']): ?>
                         <img src="<?= BASE_URL ?>/uploads/<?= $prod['image'] ?>" loading="lazy" 
                              style="width: 100%; height: 140px; object-fit: cover; border-radius: 12px 12px 0 0;"
                              alt="<?= htmlspecialchars($prod['name']) ?>">
-                    <?php elseif(($prod['icon_as_photo'] ?? 0) == 1): ?>
+                    <?php elseif (($prod['icon_as_photo'] ?? 0) == 1): ?>
                         <div style="width: 100%; height: 140px; background: #eff6ff; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                             <?php if ($prod['is_lucide_icon']): ?>
                                 <i data-lucide="<?= $prod['display_icon'] ?>" style="width: 64px; height: 64px; color: #3b82f6;"></i>
@@ -157,4 +157,4 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 <script>const BASE_URL = '<?= BASE_URL ?>';</script>
 <script src="<?= BASE_URL ?>/js/admin/stock.js"></script>
 
-<?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

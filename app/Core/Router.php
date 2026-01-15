@@ -1,14 +1,15 @@
 <?php
+
 /**
  * Router Class - Sistema de Roteamento Simples
- * 
+ *
  * Substitui o switch/case gigante do index.php por uma sintaxe mais limpa.
- * 
+ *
  * REGRAS DE MIGRAÇÃO:
  * - Nenhuma lógica alterada
  * - Mesmos controllers, mesmos métodos
  * - Mesma ordem de execução
- * 
+ *
  * @package App\Core
  */
 
@@ -31,7 +32,7 @@ class Router
 
     /**
      * Registra uma rota estática
-     * 
+     *
      * @param string $path Caminho da URL (ex: '/admin')
      * @param string $controller Classe do controller
      * @param string $method Método a ser chamado
@@ -46,7 +47,7 @@ class Router
 
     /**
      * Registra uma rota com padrão regex (para rotas dinâmicas)
-     * 
+     *
      * @param string $pattern Padrão regex
      * @param string $controller Classe do controller
      * @param string $method Método a ser chamado
@@ -62,7 +63,7 @@ class Router
 
     /**
      * Define o handler padrão (fallback/default)
-     * 
+     *
      * @param callable $handler Função de fallback
      */
     public static function setDefault(callable $handler): void
@@ -93,7 +94,7 @@ class Router
 
     /**
      * Processa a requisição atual
-     * 
+     *
      * @param string $path Caminho da URL atual
      * @return bool True se encontrou rota, false se não
      */

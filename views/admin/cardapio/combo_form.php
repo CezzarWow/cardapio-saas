@@ -1,12 +1,12 @@
-<?php 
+<?php
 /**
  * ============================================
  * ADMIN CARDÁPIO - FORMULÁRIO DE COMBO
  * ============================================
  */
 
-require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php';
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/panel/layout/sidebar.php', get_defined_vars());
 
 $isEdit = isset($combo) && $combo;
 $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
@@ -25,7 +25,7 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/responsive.css?v=<?= time() ?>">
 
 <main class="main-content">
-    <?php require __DIR__ . '/../panel/layout/messages.php'; ?>
+    <?php \App\Core\View::renderFromScope('admin/panel/layout/messages.php', get_defined_vars()); ?>
     
     <div class="cardapio-admin-container">
         
@@ -179,4 +179,4 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
 <script src="<?= BASE_URL ?>/js/cardapio-admin/featured.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio-admin/index.js?v=<?= time() ?>"></script>
 
-<?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use App\Repositories\RestaurantRepository;
-use App\Repositories\CategoryRepository;
 use App\Core\Database;
+use App\Repositories\CategoryRepository;
+use App\Repositories\RestaurantRepository;
 use Exception;
 
 /**
  * RestaurantService - Lógica de Negócio de Restaurantes
- * 
+ *
  * Gerencia operações CRUD de restaurantes e criação de
  * categorias de sistema padrão.
  */
@@ -42,7 +42,7 @@ class RestaurantService
         // We need to keep Transaction logic here, likely.
         // But Repositories use `Database::connect()` which is singleton PDO.
         // So `beginTransaction` on `Database::connect()` works across repos.
-        
+
         $conn = Database::connect();
 
         try {

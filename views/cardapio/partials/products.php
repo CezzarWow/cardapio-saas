@@ -12,14 +12,14 @@
 <div class="cardapio-products">
     
     <?php foreach ($categories as $category): ?>
-        <?php 
+        <?php
             $catType = $category['category_type'] ?? 'default';
-            $catName = $category['name'];
-            $catId = $category['id'];
-            
-            // RENDERIZAÇÃO: COMBOS
-            if ($catType === 'combos' && !empty($combos)): 
-        ?>
+        $catName = $category['name'];
+        $catId = $category['id'];
+
+        // RENDERIZAÇÃO: COMBOS
+        if ($catType === 'combos' && !empty($combos)):
+            ?>
             <div class="cardapio-category-section" data-category-id="<?= $catId ?>" style="margin-bottom: 20px;">
                 <h2 class="cardapio-category-title" style="display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(90deg, #f59e0b, #d97706); color: white; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; font-size: 0.95rem;">
                     <i data-lucide="package-plus" size="16"></i>
@@ -61,10 +61,10 @@
                 <?php endforeach; ?>
             </div>
 
-        <?php 
-            // RENDERIZAÇÃO: DESTAQUES
-            elseif ($catType === 'featured' && !empty($featuredProducts)): 
-        ?>
+        <?php
+                // RENDERIZAÇÃO: DESTAQUES
+                elseif ($catType === 'featured' && !empty($featuredProducts)):
+                    ?>
             <div class="cardapio-category-section" data-category-id="<?= $catId ?>">
                 <h2 class="cardapio-category-title" style="display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(90deg, #ef4444, #dc2626); color: white; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; font-size: 0.95rem;">
                     <i data-lucide="star" size="16" style="fill: white;"></i>
@@ -105,10 +105,10 @@
                 <?php endforeach; ?>
             </div>
 
-        <?php 
-            // RENDERIZAÇÃO: CATEGORIAS PADRÃO
-            elseif ($catType === 'default' && !empty($productsByCategory[$catName])): 
-        ?>
+        <?php
+                        // RENDERIZAÇÃO: CATEGORIAS PADRÃO
+                        elseif ($catType === 'default' && !empty($productsByCategory[$catName])):
+                            ?>
             <div class="cardapio-category-section" data-category-id="<?= $catId ?>">
                 <h2 class="cardapio-category-title" style="display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(90deg, #ea580c, #c2410c); color: white; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; font-size: 0.95rem;">
                     <i data-lucide="package" size="16"></i>

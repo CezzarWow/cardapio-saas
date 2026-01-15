@@ -42,10 +42,10 @@ class CardapioPublicoQueryService
 
         // Produtos
         $allProducts = $this->repository->getProducts($restaurantId);
-        
+
         // Separar produtos destacados
-        $featuredProducts = array_filter($allProducts, fn($p) => !empty($p['is_featured']));
-        
+        $featuredProducts = array_filter($allProducts, fn ($p) => !empty($p['is_featured']));
+
         // Agrupar por categoria
         $productsByCategory = $this->groupProductsByCategory($allProducts);
 
@@ -126,13 +126,17 @@ class CardapioPublicoQueryService
         if ($todayHour && $todayHour['is_open']) {
             $open = $todayHour['open_time'];
             $close = $todayHour['close_time'];
-            
+
             if ($close < $open) {
                 // Vira a noite (ex: 18:00 às 02:00)
-                if ($currentTime >= $open) $isOpenByToday = true;
+                if ($currentTime >= $open) {
+                    $isOpenByToday = true;
+                }
             } else {
                 // Normal (ex: 08:00 às 22:00)
-                if ($currentTime >= $open && $currentTime <= $close) $isOpenByToday = true;
+                if ($currentTime >= $open && $currentTime <= $close) {
+                    $isOpenByToday = true;
+                }
             }
         }
 
@@ -140,15 +144,17 @@ class CardapioPublicoQueryService
         if ($yesterdayHour && $yesterdayHour['is_open']) {
             $yOpen = $yesterdayHour['open_time'];
             $yClose = $yesterdayHour['close_time'];
-            
+
             if ($yClose < $yOpen) {
-                if ($currentTime <= $yClose) $isOpenByYesterday = true;
+                if ($currentTime <= $yClose) {
+                    $isOpenByYesterday = true;
+                }
             }
         }
 
         $isOpenNow = $isOpenByToday || $isOpenByYesterday;
         $closedReason = '';
-        
+
         if (!$isOpenNow) {
             $closedReason = ($todayHour && !$todayHour['is_open']) ? 'day_closed' : 'outside_hours';
         }

@@ -1,11 +1,9 @@
 <?php
+
 namespace App\Services;
 
 use App\Repositories\RestaurantRepository;
 use Exception;
-
-// Importa Helper Global
-require_once __DIR__ . '/../Helpers/ImageConverter.php';
 
 /**
  * ConfigService - Lógica de Negócio de Configurações da Loja
@@ -14,7 +12,8 @@ class ConfigService
 {
     private RestaurantRepository $repo;
 
-    public function __construct(RestaurantRepository $repo) {
+    public function __construct(RestaurantRepository $repo)
+    {
         $this->repo = $repo;
     }
 
@@ -43,14 +42,14 @@ class ConfigService
 
         if ($file && !empty($file['name'])) {
             $uploadDir = __DIR__ . '/../../public/uploads/';
-            
+
             // Usa o Helper para converter/salvar
-            $logoName = \ImageConverter::uploadAndConvert($file, $uploadDir);
+            $logoName = \App\Helpers\ImageConverter::uploadAndConvert($file, $uploadDir);
 
             if ($logoName) {
                 $updateData['logo'] = $logoName;
             } else {
-                throw new Exception("Falha ao salvar ou converter a logo.");
+                throw new Exception('Falha ao salvar ou converter a logo.');
             }
         }
 

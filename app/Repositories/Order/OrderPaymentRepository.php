@@ -7,7 +7,7 @@ use PDO;
 
 /**
  * Repository para Pagamentos de Pedido
- * 
+ *
  * Responsável exclusivamente pela tabela `order_payments`
  */
 class OrderPaymentRepository
@@ -18,7 +18,7 @@ class OrderPaymentRepository
     public function deleteAll(int $orderId): void
     {
         $conn = Database::connect();
-        $conn->prepare("DELETE FROM order_payments WHERE order_id = :oid")
+        $conn->prepare('DELETE FROM order_payments WHERE order_id = :oid')
              ->execute(['oid' => $orderId]);
     }
 
@@ -28,13 +28,13 @@ class OrderPaymentRepository
     public function addPayment(int $orderId, string $method, float $amount): void
     {
         $conn = Database::connect();
-        $conn->prepare("INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)")
+        $conn->prepare('INSERT INTO order_payments (order_id, method, amount) VALUES (:oid, :method, :amount)')
              ->execute(['oid' => $orderId, 'method' => $method, 'amount' => $amount]);
     }
 
     /**
      * Retorna resumo de vendas por método de pagamento
-     * 
+     *
      * Usado para fechamento de caixa
      */
     public function getSalesSummary(int $restaurantId, string $openedAt): array

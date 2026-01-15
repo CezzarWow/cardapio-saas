@@ -1,15 +1,15 @@
 <?php
 
-use App\Core\Container;
+use App\Config\Providers\ControllerProvider;
 use App\Config\Providers\InfrastructureProvider;
 use App\Config\Providers\RepositoryProvider;
-use App\Config\Providers\ValidatorProvider;
 use App\Config\Providers\ServiceProvider;
-use App\Config\Providers\ControllerProvider;
+use App\Config\Providers\ValidatorProvider;
+use App\Core\Container;
 
 /**
  * dependencies.php
- * 
+ *
  * Registers all application dependencies in the Container.
  * NOW MODULARIZED WITH PROVIDERS.
  * Returns the configured Container instance.

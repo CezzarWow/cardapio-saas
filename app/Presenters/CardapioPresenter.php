@@ -28,7 +28,7 @@ class CardapioPresenter
         foreach ($days as $dayNum => $dayName) {
             $defaultOpen = ($dayNum > 0 && $dayNum < 6);
             $current = $dbHours[$dayNum] ?? [];
-            
+
             $list[$dayNum] = [
                 'name' => $dayName,
                 'is_open' => $current['is_open'] ?? $defaultOpen,
@@ -50,15 +50,23 @@ class CardapioPresenter
         $afterList = [];
 
         if (isset($data['before']) || isset($data['after'])) {
-             $beforeList = $data['before'] ?? [];
-             $afterList = $data['after'] ?? [];
-        } else if (is_array($data)) {
-             if (count($data) >= 1) $beforeList[] = $data[0];
-             if (count($data) >= 2) $afterList[] = $data[1];
+            $beforeList = $data['before'] ?? [];
+            $afterList = $data['after'] ?? [];
+        } elseif (is_array($data)) {
+            if (count($data) >= 1) {
+                $beforeList[] = $data[0];
+            }
+            if (count($data) >= 2) {
+                $afterList[] = $data[1];
+            }
         }
 
-        if (empty($beforeList)) $beforeList[] = 'Olá! Gostaria de fazer um pedido:';
-        if (empty($afterList)) $afterList[] = 'Aguardo a confirmação.';
+        if (empty($beforeList)) {
+            $beforeList[] = 'Olá! Gostaria de fazer um pedido:';
+        }
+        if (empty($afterList)) {
+            $afterList[] = 'Aguardo a confirmação.';
+        }
 
         return [
             'before' => $beforeList,
@@ -73,9 +81,9 @@ class CardapioPresenter
     {
         foreach ($combos as &$combo) {
             $items = $combo['items'] ?? [];
-            
+
             // Se precisar remover o array bruto da view, descomente:
-            // unset($combo['items']); 
+            // unset($combo['items']);
 
             $counts = [];
             $originalPrice = 0;
@@ -89,12 +97,12 @@ class CardapioPresenter
             // Descrição: "2 X-Burger + 1 Coca"
             $descParts = [];
             foreach ($counts as $name => $qty) {
-                $descParts[] = ($qty > 1 ? "{$qty} " : "") . $name;
+                $descParts[] = ($qty > 1 ? "{$qty} " : '') . $name;
             }
-            
-            $combo['items_description'] = implode(" + ", $descParts);
+
+            $combo['items_description'] = implode(' + ', $descParts);
             $combo['original_price'] = $originalPrice;
-            
+
             // Cálculo de desconto visual
             if ($originalPrice > 0) {
                 $discount = (($originalPrice - $combo['price']) / $originalPrice) * 100;
@@ -103,7 +111,7 @@ class CardapioPresenter
                 $combo['discount_percent'] = 0;
             }
         }
-        
+
         return $combos;
     }
 }

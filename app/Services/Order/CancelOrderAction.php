@@ -3,11 +3,10 @@
 namespace App\Services\Order;
 
 use App\Core\Database;
-use App\Services\Stock\StockService;
-use App\Repositories\Order\OrderRepository;
 use App\Repositories\Order\OrderItemRepository;
+use App\Repositories\Order\OrderRepository;
 use App\Repositories\TableRepository;
-use PDO;
+use App\Services\Stock\StockService;
 use Exception;
 
 class CancelOrderAction

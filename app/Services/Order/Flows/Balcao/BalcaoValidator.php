@@ -6,7 +6,7 @@ use App\Services\Order\TotalCalculator;
 
 /**
  * Validador do Fluxo Balcão
- * 
+ *
  * Valida contrato de payload para venda direta.
  * Usa TotalCalculator para cálculos (mesmo método da Action).
  */
@@ -14,19 +14,19 @@ class BalcaoValidator
 {
     /**
      * Valida payload do fluxo Balcão
-     * 
+     *
      * @param array $data Payload recebido
      * @return array Erros encontrados (vazio = válido)
      */
     public function validate(array $data): array
     {
         $errors = [];
-        
+
         // 1. flow_type obrigatório
         if (($data['flow_type'] ?? '') !== 'balcao') {
             $errors['flow_type'] = 'flow_type deve ser "balcao"';
         }
-        
+
         // 2. Carrinho obrigatório
         if (empty($data['cart']) || !is_array($data['cart'])) {
             $errors['cart'] = 'Carrinho não pode estar vazio';
@@ -44,7 +44,7 @@ class BalcaoValidator
                 }
             }
         }
-        
+
         // 3. Pagamento obrigatório para Balcão
         if (empty($data['payments']) || !is_array($data['payments'])) {
             $errors['payments'] = 'Pagamento obrigatório para venda balcão';
@@ -59,11 +59,11 @@ class BalcaoValidator
                 }
             }
         }
-        
+
         // 4. Validar se pagamento cobre o total (usando TotalCalculator)
         if (empty($errors) && !empty($data['cart']) && !empty($data['payments'])) {
             $discount = floatval($data['discount'] ?? 0);
-            
+
             if (!TotalCalculator::isPaymentSufficient($data['cart'], $data['payments'], $discount)) {
                 $total = TotalCalculator::fromCart($data['cart'], $discount);
                 $paid = TotalCalculator::fromPayments($data['payments']);
@@ -74,7 +74,7 @@ class BalcaoValidator
                 );
             }
         }
-        
+
         return $errors;
     }
 }

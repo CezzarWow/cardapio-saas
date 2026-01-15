@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers\Admin;
 
 /**
@@ -7,10 +8,11 @@ namespace App\Controllers\Admin;
  */
 class PanelController extends BaseController
 {
-    public function index() {
+    public function index()
+    {
         // Valida sessão (BaseController)
-        $this->getRestaurantId(); 
-        
+        $this->getRestaurantId();
+
         // Redireciona para o controller real do PDV
         $this->redirect('/admin/loja/pdv');
     }

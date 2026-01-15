@@ -2,7 +2,7 @@
 /**
  * Modal de Detalhes do Pedido - HISTÓRICO
  * Versão simplificada com ficha única de impressão
- * 
+ *
  * Refatorado: Usa classes CSS + Acessibilidade
  */
 ?>

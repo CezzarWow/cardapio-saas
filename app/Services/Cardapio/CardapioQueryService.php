@@ -2,8 +2,8 @@
 
 namespace App\Services\Cardapio;
 
-use App\Repositories\Cardapio\CardapioConfigRepository;
 use App\Repositories\Cardapio\BusinessHoursRepository;
+use App\Repositories\Cardapio\CardapioConfigRepository;
 use App\Repositories\Cardapio\CategoryRepository;
 use App\Repositories\Cardapio\ProductRepository;
 use App\Repositories\ComboRepository;

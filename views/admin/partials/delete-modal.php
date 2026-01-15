@@ -1,6 +1,6 @@
 <!-- Modal de Exclusão Genérico -->
 <!--
-    USO: require __DIR__ . '/../partials/delete-modal.php';
+    USO: \App\Core\View::renderFromScope('admin/partials/delete-modal.php', get_defined_vars());
     
     FUNÇÕES JS NECESSÁRIAS (em additionals.js ou global):
     - openDeleteModal(actionUrl, itemName)

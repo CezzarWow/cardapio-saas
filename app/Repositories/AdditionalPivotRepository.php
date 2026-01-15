@@ -12,7 +12,7 @@ class AdditionalPivotRepository
     public function link(int $groupId, int $itemId): void
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("INSERT IGNORE INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)");
+        $stmt = $conn->prepare('INSERT IGNORE INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)');
         $stmt->execute([
             'gid' => $groupId,
             'iid' => $itemId
@@ -25,7 +25,7 @@ class AdditionalPivotRepository
     public function unlinkAllByItem(int $itemId): void
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("DELETE FROM additional_group_items WHERE item_id = :iid");
+        $stmt = $conn->prepare('DELETE FROM additional_group_items WHERE item_id = :iid');
         $stmt->execute(['iid' => $itemId]);
     }
 
@@ -35,7 +35,7 @@ class AdditionalPivotRepository
     public function unlink(int $groupId, int $itemId): void
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("DELETE FROM additional_group_items WHERE group_id = :gid AND item_id = :iid");
+        $stmt = $conn->prepare('DELETE FROM additional_group_items WHERE group_id = :gid AND item_id = :iid');
         $stmt->execute(['gid' => $groupId, 'iid' => $itemId]);
     }
 
@@ -44,11 +44,13 @@ class AdditionalPivotRepository
      */
     public function linkMultiple(int $groupId, array $itemIds): void
     {
-        if (empty($itemIds)) return;
-        
+        if (empty($itemIds)) {
+            return;
+        }
+
         $conn = Database::connect();
-        $stmt = $conn->prepare("INSERT IGNORE INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)");
-        
+        $stmt = $conn->prepare('INSERT IGNORE INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)');
+
         foreach ($itemIds as $itemId) {
             $itemId = intval($itemId);
             if ($itemId > 0) {
@@ -64,14 +66,14 @@ class AdditionalPivotRepository
     public function syncGroupsForItem(int $itemId, array $groupIds): void
     {
         $conn = Database::connect();
-        
+
         // Remove todos os vínculos atuais
-        $stmt = $conn->prepare("DELETE FROM additional_group_items WHERE item_id = :iid");
+        $stmt = $conn->prepare('DELETE FROM additional_group_items WHERE item_id = :iid');
         $stmt->execute(['iid' => $itemId]);
-        
+
         // Insere os novos vínculos
         if (!empty($groupIds)) {
-            $stmtLink = $conn->prepare("INSERT INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)");
+            $stmtLink = $conn->prepare('INSERT INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)');
             foreach ($groupIds as $gid) {
                 $gid = intval($gid);
                 if ($gid > 0) {

@@ -2,20 +2,19 @@
 
 namespace App\Services;
 
-use App\Services\Order\CreateOrderAction;
-use App\Services\Order\CloseTableAction;
-use App\Services\Order\CloseCommandAction;
-use App\Services\Order\RemoveItemAction;
-use App\Services\Order\CancelOrderAction;
-use App\Services\Order\IncludePaidItemsAction;
-use App\Services\Order\DeliverOrderAction;
-use App\Services\Order\CreateDeliveryLinkedAction;
-
 use App\Repositories\Order\OrderRepository;
+use App\Services\Order\CancelOrderAction;
+use App\Services\Order\CloseCommandAction;
+use App\Services\Order\CloseTableAction;
+use App\Services\Order\CreateDeliveryLinkedAction;
+use App\Services\Order\CreateOrderAction;
+use App\Services\Order\DeliverOrderAction;
+use App\Services\Order\IncludePaidItemsAction;
+use App\Services\Order\RemoveItemAction;
 
 /**
  * Facade para as Ações de Pedido
- * 
+ *
  * Este serviço NÃO contém lógica de negócios.
  * Apenas delega para as Actions específicas em App\Services\Order.
  */
@@ -55,9 +54,9 @@ class OrderOrchestratorService
 
     public function createOrder(int $restaurantId, int $userId, array $data): int
     {
-        error_log("[DEBUG Orchestrator] createOrder called. Data keys: " . implode(',', array_keys($data)));
-        error_log("[DEBUG Orchestrator] link_to_comanda=" . ($data['link_to_comanda'] ?? 'NULL') . ", client_id=" . ($data['client_id'] ?? 'NULL'));
-        error_log("[DEBUG Orchestrator] link_to_table=" . ($data['link_to_table'] ?? 'NULL') . ", table_id=" . ($data['table_id'] ?? 'NULL'));
+        error_log('[DEBUG Orchestrator] createOrder called. Data keys: ' . implode(',', array_keys($data)));
+        error_log('[DEBUG Orchestrator] link_to_comanda=' . ($data['link_to_comanda'] ?? 'NULL') . ', client_id=' . ($data['client_id'] ?? 'NULL'));
+        error_log('[DEBUG Orchestrator] link_to_table=' . ($data['link_to_table'] ?? 'NULL') . ', table_id=' . ($data['table_id'] ?? 'NULL'));
 
         // LÓGICA DE DELIVERY/PICKUP COM CLIENTE/MESA:
         // - NÃO PAGO + cliente/mesa: Cria comanda (para cobrar depois) e vai pro Kanban
@@ -67,7 +66,7 @@ class OrderOrchestratorService
         $hasClient = !empty($data['client_id']);
         $hasTable = !empty($data['table_id']);
         $isPaid = !empty($data['payments']) || (isset($data['is_paid']) && $data['is_paid'] == 1);
-        
+
         if ($isDeliveryOrPickup && ($hasClient || $hasTable) && !$isPaid) {
             // Delivery/Pickup NÃO PAGO com cliente/mesa -> Cria comanda + vai pro Kanban
             error_log("[DEBUG Orchestrator] {$orderType} NOT PAID: Creating linked order.");
@@ -82,13 +81,13 @@ class OrderOrchestratorService
         // Delivery/Pickup vinculado a Mesa ou Comanda (apenas se EXPLICITAMENTE solicitado)
         $linkToTable = !empty($data['link_to_table']) && !empty($data['table_id']);
         $linkToComanda = !empty($data['link_to_comanda']) && !empty($data['client_id']);
-        
+
         if ($linkToTable || $linkToComanda) {
-            error_log("[DEBUG Orchestrator] Routing to CreateDeliveryLinkedAction (Explicit Flag)");
+            error_log('[DEBUG Orchestrator] Routing to CreateDeliveryLinkedAction (Explicit Flag)');
             return $this->createDeliveryLinkedAction->execute($restaurantId, $userId, $data);
         }
-        
-        error_log("[DEBUG Orchestrator] Routing to CreateOrderAction");
+
+        error_log('[DEBUG Orchestrator] Routing to CreateOrderAction');
         return $this->createOrderAction->execute($restaurantId, $userId, $data);
     }
 

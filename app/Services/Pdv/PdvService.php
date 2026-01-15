@@ -1,21 +1,22 @@
 <?php
+
 namespace App\Services\Pdv;
 
 use App\Core\Database;
-use App\Repositories\TableRepository;
-use App\Repositories\Order\OrderRepository;
-use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\CategoryRepository;
+use App\Repositories\Order\OrderItemRepository;
+use App\Repositories\Order\OrderRepository;
 use App\Repositories\ProductRepository;
 use App\Repositories\StockRepository;
+use App\Repositories\TableRepository;
 use App\Services\CashRegisterService;
 use Exception;
 
 /**
  * PdvService - Lógica de Negócio do PDV (Frente de Caixa)
  */
-class PdvService {
-
+class PdvService
+{
     private TableRepository $tableRepo;
     private OrderRepository $orderRepo;
     private OrderItemRepository $itemRepo;
@@ -45,11 +46,12 @@ class PdvService {
     /**
      * Busca dados do contexto atual (Mesa ou Comanda Aberta)
      */
-    public function getContextData(int $restaurantId, ?int $mesaId, ?int $orderId): array {
+    public function getContextData(int $restaurantId, ?int $mesaId, ?int $orderId): array
+    {
         $contaAberta = null;
         $itensJaPedidos = [];
         $isComanda = false;
-        
+
         // 1. Se for Mesa
         if ($mesaId) {
             $mesaDados = $this->tableRepo->findWithCurrentOrder($mesaId, $restaurantId);
@@ -57,7 +59,7 @@ class PdvService {
             if ($mesaDados && $mesaDados['status'] == 'ocupada' && $mesaDados['current_order_id']) {
                 $contaAberta = $this->orderRepo->find($mesaDados['current_order_id']);
                 $itensJaPedidos = $this->itemRepo->findAll($mesaDados['current_order_id']);
-                
+
                 // Recálculo do total real
                 if ($contaAberta) {
                     $contaAberta['total'] = $this->calculateTotal($itensJaPedidos);
@@ -76,9 +78,9 @@ class PdvService {
             // Vou usar `find` normal e se precisar de nome do cliente, front busca ou eu busco separado.
             // Mas `getContextData` retorna `contaAberta` que o front espera ter `client_name`.
             // Vou usar uma query customizada no OrderRepository ou Service.
-            // Para evitar SQL aqui, vou adicionar `findWithClient` no OrderRepository depois? 
+            // Para evitar SQL aqui, vou adicionar `findWithClient` no OrderRepository depois?
             // Ou uso o `find` e busco Client.
-            
+
             $order = $this->orderRepo->find($orderId, $restaurantId);
             // Aceitar comandas com status aberto ou novo (não concluído/cancelado)
             $validStatus = ['aberto', 'novo'];
@@ -98,7 +100,7 @@ class PdvService {
                 $isComanda = true;
             }
         }
-        
+
         return [
             'contaAberta' => $contaAberta,
             'itensJaPedidos' => $itensJaPedidos,
@@ -109,10 +111,11 @@ class PdvService {
     /**
      * Busca Menu (Categorias e Produtos) para o PDV
      */
-    public function getMenu(int $restaurantId): array {
+    public function getMenu(int $restaurantId): array
+    {
         $categories = $this->catRepo->findAll($restaurantId);
         $products = $this->prodRepo->findActiveWithExtras($restaurantId);
-        
+
         // Agrupar produtos por categoria em PHP para evitar query em loop
         $productsByCat = [];
         foreach ($products as $p) {
@@ -122,14 +125,15 @@ class PdvService {
         foreach ($categories as &$cat) {
             $cat['products'] = $productsByCat[$cat['id']] ?? [];
         }
-        
+
         return $categories;
     }
 
     /**
      * Restaura um pedido cancelado (Desfaz a edição)
      */
-    public function restoreOrder(array $backup): void {
+    public function restoreOrder(array $backup): void
+    {
         $conn = Database::connect(); // Needed for transaction
 
         try {
@@ -141,7 +145,7 @@ class PdvService {
             // 2. Restaura Itens
             $orderId = $backup['order']['id'];
             $this->itemRepo->insert($orderId, $backup['items']);
-            
+
             // 3. Restaura Estoque (Decrementa pois está restaurando a venda)
             foreach ($backup['items'] as $item) {
                 // StockService->decrement or StockRepo->decrement?
@@ -161,7 +165,7 @@ class PdvService {
                 // registerMovement uses NOW().
                 // I need a way to insert with specific date.
                 // I will add `restoreMovement` to CashRegisterService or use Repo here effectively.
-                // Since I cannot change CashRegisterService easily right now (it is used), I will add `restoreMovement` to it if possible? Use SQL here? 
+                // Since I cannot change CashRegisterService easily right now (it is used), I will add `restoreMovement` to it if possible? Use SQL here?
                 // NO SQL.
                 // I will use `registerMovement` but date will be NOW(). Restore usually implies reverting state. Order date is restored. Financial movement date... matches restore time or original time?
                 // Original code: "VALUES ... :date". So original time.
@@ -172,12 +176,13 @@ class PdvService {
             $conn->commit();
         } catch (Exception $e) {
             $conn->rollBack();
-            throw new Exception("Erro ao restaurar backup: " . $e->getMessage());
+            throw new Exception('Erro ao restaurar backup: ' . $e->getMessage());
         }
     }
-    
+
     // Helper para cálculo
-    private function calculateTotal(array $items): float {
+    private function calculateTotal(array $items): float
+    {
         $total = 0;
         foreach ($items as $item) {
             $total += ($item['price'] * $item['quantity']);

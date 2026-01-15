@@ -16,10 +16,10 @@ class CardapioConfigRepository
     public function findByRestaurant(int $restaurantId): ?array
     {
         $conn = Database::connect();
-        
-        $stmt = $conn->prepare("SELECT * FROM cardapio_config WHERE restaurant_id = :rid");
+
+        $stmt = $conn->prepare('SELECT * FROM cardapio_config WHERE restaurant_id = :rid');
         $stmt->execute(['rid' => $restaurantId]);
-        
+
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ?: null;
     }
@@ -30,8 +30,8 @@ class CardapioConfigRepository
     public function createDefault(int $restaurantId): void
     {
         $conn = Database::connect();
-        
-        $stmt = $conn->prepare("INSERT INTO cardapio_config (restaurant_id) VALUES (:rid)");
+
+        $stmt = $conn->prepare('INSERT INTO cardapio_config (restaurant_id) VALUES (:rid)');
         $stmt->execute(['rid' => $restaurantId]);
     }
 
@@ -41,8 +41,8 @@ class CardapioConfigRepository
     public function update(int $restaurantId, array $data): void
     {
         $conn = Database::connect();
-        
-        $sql = "UPDATE cardapio_config SET 
+
+        $sql = 'UPDATE cardapio_config SET 
                     whatsapp_enabled = :whatsapp_enabled,
                     whatsapp_number = :whatsapp_number,
                     whatsapp_message = :whatsapp_message,
@@ -63,7 +63,7 @@ class CardapioConfigRepository
                     accept_pix = :accept_pix,
                     pix_key = :pix_key,
                     pix_key_type = :pix_key_type
-                WHERE restaurant_id = :rid";
+                WHERE restaurant_id = :rid';
 
         $data['rid'] = $restaurantId;
         $conn->prepare($sql)->execute($data);
@@ -75,12 +75,12 @@ class CardapioConfigRepository
     public function findOrCreate(int $restaurantId): array
     {
         $config = $this->findByRestaurant($restaurantId);
-        
+
         if (!$config) {
             $this->createDefault($restaurantId);
             $config = $this->findByRestaurant($restaurantId);
         }
-        
+
         return $config;
     }
 }

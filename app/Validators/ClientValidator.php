@@ -1,48 +1,52 @@
 <?php
+
 namespace App\Validators;
 
 /**
  * ClientValidator - Validação e Sanitização de Clientes
  */
-class ClientValidator {
-
-    public function validateStore(array $data): array {
+class ClientValidator
+{
+    public function validateStore(array $data): array
+    {
         $errors = [];
-        
+
         $name = trim($data['name'] ?? '');
         if (empty($name)) {
             $errors['name'] = 'Nome é obrigatório';
         } elseif (strlen($name) > 200) {
             $errors['name'] = 'Nome deve ter no máximo 200 caracteres';
         }
-        
+
         // Documento opcional, mas se informado deve ter formato válido
         $document = preg_replace('/\D/', '', $data['document'] ?? '');
         if (!empty($document) && !$this->isValidDocument($document)) {
             $errors['document'] = 'CPF/CNPJ inválido';
         }
-        
+
         // Telefone opcional
         $phone = preg_replace('/\D/', '', $data['phone'] ?? '');
         if (!empty($phone) && strlen($phone) < 10) {
             $errors['phone'] = 'Telefone deve ter pelo menos 10 dígitos';
         }
-        
+
         return $errors;
     }
 
-    public function validateSearch(array $data): array {
+    public function validateSearch(array $data): array
+    {
         $errors = [];
-        
+
         $term = trim($data['q'] ?? '');
         if (strlen($term) < 2) {
             $errors['q'] = 'Termo de busca deve ter pelo menos 2 caracteres';
         }
-        
+
         return $errors;
     }
 
-    public function sanitizeStore(array $data): array {
+    public function sanitizeStore(array $data): array
+    {
         return [
             'name' => trim(strip_tags($data['name'] ?? '')),
             'type' => in_array($data['type'] ?? '', ['PF', 'PJ']) ? $data['type'] : 'PF',
@@ -58,11 +62,13 @@ class ClientValidator {
         ];
     }
 
-    public function hasErrors(array $errors): bool {
+    public function hasErrors(array $errors): bool
+    {
         return !empty($errors);
     }
 
-    private function isValidDocument(string $doc): bool {
+    private function isValidDocument(string $doc): bool
+    {
         // CPF: 11 dígitos, CNPJ: 14 dígitos
         return strlen($doc) === 11 || strlen($doc) === 14;
     }

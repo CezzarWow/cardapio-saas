@@ -11,11 +11,11 @@
         Todos
     </button>
     <?php foreach ($categories as $category): ?>
-        <?php 
+        <?php
             $catType = $category['category_type'] ?? 'default';
-            // Mostra categorias normais E combos (não mostra featured)
-            if ($catType === 'default' || $catType === 'combos'): 
-        ?>
+        // Mostra categorias normais E combos (não mostra featured)
+        if ($catType === 'default' || $catType === 'combos'):
+            ?>
             <button class="cardapio-category-btn" data-category="<?= $category['id'] ?>">
                 <?= htmlspecialchars($category['name']) ?>
             </button>

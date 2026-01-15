@@ -1,38 +1,42 @@
 <?php
+
 namespace App\Controllers\Admin;
 
-use App\Services\Product\ProductService;
-use App\Validators\StockValidator; // Podemos reutilizar ou renomear para ProductValidator
+use App\Core\View;
+use App\Services\Product\ProductService; // Podemos reutilizar ou renomear para ProductValidator
+use App\Validators\StockValidator;
 
 /**
  * ProductController - Gerenciamento de Produtos (Catálogo)
  * Separado do StockController (que fica com Estoque)
  */
-class ProductController extends BaseController {
-
+class ProductController extends BaseController
+{
     private const BASE = '/admin/loja/produtos';
-    
-    private StockValidator $v; 
+
+    private StockValidator $v;
     private ProductService $service;
 
-    public function __construct(ProductService $service, StockValidator $validator) {
+    public function __construct(ProductService $service, StockValidator $validator)
+    {
         $this->service = $service;
         $this->v = $validator;
     }
 
     // === LISTAGEM (CATÁLOGO) ===
-    public function index() {
+    public function index()
+    {
         $rid = $this->getRestaurantId();
-        
+
         $rawProducts = $this->service->getProducts($rid);
         $categories = $this->service->getCategories($rid);
 
         // --- PREPARAÇÃO DO VIEWMODEL (Lógica de Apresentação) ---
-        $stockCriticalLimit = 5; 
+        $stockCriticalLimit = 5;
         $totalProducts = count($rawProducts);
         $criticalStockCount = 0;
-        
-        $products = array_map(function($prod) use ($stockCriticalLimit, &$criticalStockCount) {
+
+        $products = array_map(function ($prod) use ($stockCriticalLimit, &$criticalStockCount) {
             $stock = intval($prod['stock']);
             $isNegative = $stock < 0;
             $isCritical = $stock <= $stockCriticalLimit;
@@ -63,7 +67,7 @@ class ProductController extends BaseController {
                 'display_icon' => $icon
             ]);
         }, $rawProducts);
-        
+
         // Dados para a View (ViewModel)
         $viewData = [
             'products' => $products,
@@ -72,37 +76,37 @@ class ProductController extends BaseController {
             'criticalStockCount' => $criticalStockCount,
             'hasProducts' => !empty($products)
         ];
-        
-        // Extrai para variáveis locais para manter compatibilidade com a View atual se necessário,
-        // mas o ideal é a view usar $viewData ou variáveis extraídas.
-        // Vamos extrair para manter o padrão de variáveis soltas
-        extract($viewData);
-        
-        require __DIR__ . '/../../../views/admin/products/index.php';
+
+        // Use o renderer centralizado passando o scope local de forma segura
+        View::renderFromScope('admin/products/index', get_defined_vars());
     }
 
     // === FORMULÁRIO CRIAR ===
-    public function create() {
+    public function create()
+    {
         $rid = $this->getRestaurantId();
-        
+
         $categories = $this->service->getCategories($rid);
         $additionalGroups = $this->service->getAdditionalGroups($rid);
 
-        require __DIR__ . '/../../../views/admin/products/create.php';
+        View::renderFromScope('admin/products/create', get_defined_vars());
     }
 
     // === SALVAR NOVO ===
-    public function store() {
+    public function store()
+    {
         $this->handleValidatedPost(
-            fn() => $this->v->validateProduct($_POST),
-            fn() => $this->v->sanitizeProduct($_POST),
-            fn($data, $rid) => $this->service->create($rid, $data, $this->service->handleImageUpload($_FILES['image'] ?? null)),
-            self::BASE, 'criado'
+            fn () => $this->v->validateProduct($_POST),
+            fn () => $this->v->sanitizeProduct($_POST),
+            fn ($data, $rid) => $this->service->create($rid, $data, $this->service->handleImageUpload($_FILES['image'] ?? null)),
+            self::BASE,
+            'criado'
         );
     }
 
     // === FORMULÁRIO EDITAR ===
-    public function edit() {
+    public function edit()
+    {
         $rid = $this->getRestaurantId();
         $id = $this->getInt('id');
 
@@ -115,23 +119,26 @@ class ProductController extends BaseController {
         $additionalGroups = $this->service->getAdditionalGroups($rid);
         $linkedGroups = $this->service->getLinkedGroups($id); // Helper method added to Service
 
-        require __DIR__ . '/../../../views/admin/products/edit.php';
+        View::renderFromScope('admin/products/edit', get_defined_vars());
     }
 
     // === ATUALIZAR ===
-    public function update() {
+    public function update()
+    {
         $this->handleValidatedPost(
-            fn() => $this->v->validateProductUpdate($_POST),
-            fn() => $this->v->sanitizeProduct($_POST),
-            fn($data, $rid) => $this->service->update($rid, $data, $this->service->handleImageUpload($_FILES['image'] ?? null)),
-            self::BASE, 'atualizado'
+            fn () => $this->v->validateProductUpdate($_POST),
+            fn () => $this->v->sanitizeProduct($_POST),
+            fn ($data, $rid) => $this->service->update($rid, $data, $this->service->handleImageUpload($_FILES['image'] ?? null)),
+            self::BASE,
+            'atualizado'
         );
     }
 
     // === DELETAR ===
-    public function delete() {
+    public function delete()
+    {
         $this->handleDelete(
-            fn($id, $rid) => $this->service->delete($id, $rid),
+            fn ($id, $rid) => $this->service->delete($id, $rid),
             self::BASE
         );
     }

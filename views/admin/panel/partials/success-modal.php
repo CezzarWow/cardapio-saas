@@ -1,6 +1,6 @@
 <!-- SUCCESS MODAL -->
 <!--
-    Partial incluído via: require __DIR__ . '/partials/success-modal.php';
+    Partial incluído via: \App\Core\View::renderFromScope('admin/panel/partials/success-modal.php', get_defined_vars());
     FUNÇÃO JS: Modal é exibido automaticamente via JS
 -->
     <div id="successModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; align-items: center; justify-content: center; pointer-events: none;">

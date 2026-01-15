@@ -1,7 +1,7 @@
 <?php
 /**
  * PDV-PRODUCTS.PHP - Grid de Produtos
- * 
+ *
  * Contém: Filtros de categoria (chips), Grid de produtos
  * Variáveis esperadas: $categories
  */
@@ -39,7 +39,7 @@
                         
                         <div class="product-card product-card-compact" 
                              data-category="<?= htmlspecialchars($category['name']) ?>"
-                             onclick='PDV.clickProduct(<?= $product['id'] ?>, <?= json_encode($product['name']) ?>, <?= $product['price'] ?>, <?= $product['has_extras'] ? "true" : "false" ?>)'>
+                             onclick='PDV.clickProduct(<?= $product['id'] ?>, <?= json_encode($product['name']) ?>, <?= $product['price'] ?>, <?= $product['has_extras'] ? 'true' : 'false' ?>)'>
                             
                             <div class="product-info">
                                 <h3><?= htmlspecialchars($product['name']) ?></h3>

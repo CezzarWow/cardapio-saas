@@ -1,14 +1,14 @@
-<?php 
+<?php
 /**
  * DASHBOARD.PHP - Orquestrador do PDV
- * 
+ *
  * Este arquivo inicializa variáveis e orquestra os partials.
  * Os blocos de UI estão em arquivos separados:
  * - partials/pdv-header.php (Banners + Header)
  * - partials/pdv-products.php (Grid de Produtos)
  * - partials/pdv-cart-sidebar.php (Sidebar do Carrinho)
  * - partials/pdv-scripts.php (Scripts JS)
- * 
+ *
  * ORDEM DE CARGA:
  * 1. Layout (header, sidebar)
  * 2. Variáveis PHP
@@ -18,23 +18,23 @@
  * 6. Footer
  */
 
-require __DIR__ . '/layout/header.php'; 
-require __DIR__ . '/layout/sidebar.php'; 
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/panel/layout/sidebar.php', get_defined_vars());
 ?>
 
 <main class="main-content">
     <section class="catalog-section">
 
-        <?php 
+        <?php
           // Variáveis já inicializadas no PdvController
           // ($isEditingPaid, $originalPaidTotalFromDB, $deliveryFee, etc)
-        ?>
+?>
 
-        <?php // HEADER (Banners + Título + Busca) ?>
-        <?php require __DIR__ . '/partials/pdv-header.php'; ?>
+        <?php // HEADER (Banners + Título + Busca)?>
+        <?php \App\Core\View::renderFromScope('admin/panel/partials/pdv-header.php', get_defined_vars()); ?>
 
-        <?php // GRID DE PRODUTOS ?>
-        <?php require __DIR__ . '/partials/pdv-products.php'; ?>
+        <?php // GRID DE PRODUTOS?>
+        <?php \App\Core\View::renderFromScope('admin/panel/partials/pdv-products.php', get_defined_vars()); ?>
 
     </section>
 
@@ -45,17 +45,17 @@ require __DIR__ . '/layout/sidebar.php';
     <input type="hidden" id="current_client_name" value="<?= $contaAberta['client_name'] ?? '' ?>">
     <input type="hidden" id="table-initial-total" value="<?= $contaAberta['total'] ?? 0 ?>">
 
-    <?php // SIDEBAR DO CARRINHO ?>
-    <?php require __DIR__ . '/partials/pdv-cart-sidebar.php'; ?>
+    <?php // SIDEBAR DO CARRINHO?>
+    <?php \App\Core\View::renderFromScope('admin/panel/partials/pdv-cart-sidebar.php', get_defined_vars()); ?>
 
 </main>
 
-<?php // MODAIS ?>
-<?php require __DIR__ . '/partials/success-modal.php'; ?>
-<?php require __DIR__ . '/partials/checkout-modal.php'; ?>
-<?php require __DIR__ . '/partials/client-modal.php'; ?>
+<?php // MODAIS?>
+<?php \App\Core\View::renderFromScope('admin/panel/partials/success-modal.php', get_defined_vars()); ?>
+<?php \App\Core\View::renderFromScope('admin/panel/partials/checkout-modal.php', get_defined_vars()); ?>
+<?php \App\Core\View::renderFromScope('admin/panel/partials/client-modal.php', get_defined_vars()); ?>
 
-<?php // SCRIPTS ?>
-<?php require __DIR__ . '/partials/pdv-scripts.php'; ?>
+<?php // SCRIPTS?>
+<?php \App\Core\View::renderFromScope('admin/panel/partials/pdv-scripts.php', get_defined_vars()); ?>
 
-<?php require __DIR__ . '/layout/footer.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

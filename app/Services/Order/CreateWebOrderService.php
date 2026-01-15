@@ -4,8 +4,8 @@ namespace App\Services\Order;
 
 use App\Core\Database;
 use App\Repositories\ClientRepository;
-use App\Repositories\Order\OrderRepository;
 use App\Repositories\Order\OrderItemRepository;
+use App\Repositories\Order\OrderRepository;
 
 /**
  * Service para criar pedidos via Cardápio Web
@@ -40,7 +40,7 @@ class CreateWebOrderService
 
     /**
      * Cria um pedido completo (cliente + pedido + itens)
-     * 
+     *
      * @return array ['success' => bool, 'message' => string, 'order_id' => ?int]
      */
     public function execute(array $input): array
@@ -75,7 +75,9 @@ class CreateWebOrderService
 
             // 3. Mapear tipo de pedido
             $orderTypeRaw = trim($input['order_type'] ?? 'delivery');
-            if (empty($orderTypeRaw)) $orderTypeRaw = 'delivery';
+            if (empty($orderTypeRaw)) {
+                $orderTypeRaw = 'delivery';
+            }
             $orderType = self::ORDER_TYPE_MAP[$orderTypeRaw] ?? 'delivery';
 
             // 4. Processar troco
@@ -104,7 +106,9 @@ class CreateWebOrderService
             ];
 
         } catch (\Exception $e) {
-            if (isset($conn)) $conn->rollBack();
+            if (isset($conn)) {
+                $conn->rollBack();
+            }
             return ['success' => false, 'message' => 'Erro ao criar pedido: ' . $e->getMessage()];
         }
     }
@@ -144,11 +148,13 @@ class CreateWebOrderService
      */
     private function parseChangeAmount($value): ?float
     {
-        if (!$value) return null;
+        if (!$value) {
+            return null;
+        }
 
         $value = str_replace(['R$', ' ', '.'], '', $value);
         $value = str_replace(',', '.', $value);
-        
+
         return floatval($value) ?: null;
     }
 }

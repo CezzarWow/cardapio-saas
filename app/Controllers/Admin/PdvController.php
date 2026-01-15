@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers\Admin;
 
 use App\Services\Pdv\PdvService;
@@ -7,19 +8,21 @@ use App\Services\Pdv\PdvService;
  * PdvController - Painel de Vendas (Super Thin)
  * Responsável pelo Frente de Caixa
  */
-class PdvController extends BaseController {
-
+class PdvController extends BaseController
+{
     private PdvService $service;
 
-    public function __construct(PdvService $service) {
+    public function __construct(PdvService $service)
+    {
         $this->service = $service;
     }
 
-    public function index() {
+    public function index()
+    {
         $rid = $this->getRestaurantId();
-        
+
         // Contexto (Mesa ou Comanda)
-        $mesaId = $this->getInt('mesa_id'); 
+        $mesaId = $this->getInt('mesa_id');
         $mesaNumero = $_GET['mesa_numero'] ?? null;
         $orderId = $this->getInt('order_id');
 
@@ -44,16 +47,16 @@ class PdvController extends BaseController {
 
         // Busca dados do contexto
         $context = $this->service->getContextData($rid, $mesaId > 0 ? $mesaId : null, $orderId > 0 ? $orderId : null);
-        
+
         $contaAberta = $context['contaAberta'];
         $itensJaPedidos = $context['itensJaPedidos'];
-        
+
         // Variáveis para View (snake_case)
         $mesa_id = $mesaId;
         $mesa_numero = $mesaNumero;
 
         // --- Lógica movida da View (dashboard.php) ---
-        
+
         // 1. Detecta modo edição (Pedido Pago/Retirada)
         $isEditingPaid = isset($_GET['edit_paid']) && $_GET['edit_paid'] == '1';
         $editingOrderId = $orderId;
@@ -61,7 +64,7 @@ class PdvController extends BaseController {
         $originalPaidTotalFromDB = 0;
         if ($isEditingPaid && $editingOrderId) {
             $conn = \App\Core\Database::connect();
-            $stmt = $conn->prepare("SELECT total FROM orders WHERE id = :oid");
+            $stmt = $conn->prepare('SELECT total FROM orders WHERE id = :oid');
             $stmt->execute(['oid' => $editingOrderId]);
             $orderData = $stmt->fetch(\PDO::FETCH_ASSOC);
             $originalPaidTotalFromDB = floatval($orderData['total'] ?? 0);
@@ -85,7 +88,7 @@ class PdvController extends BaseController {
         if ($mesa_id) {
             // Contexto: MESA
             $showCloseTable = true;
-            $showSaveCommand = true; // Permite adicionar mais itens ao pedido existente 
+            $showSaveCommand = true; // Permite adicionar mais itens ao pedido existente
         } elseif (!empty($contaAberta['id'])) {
             // Contexto: COMANDA EXISTENTE
             if ($isEditingPaid) {
@@ -110,15 +113,18 @@ class PdvController extends BaseController {
         $categories = $this->service->getMenu($rid);
 
         // Renderiza
-        require __DIR__ . '/../../../views/admin/panel/dashboard.php';
+        View::renderFromScope('admin/panel/dashboard', get_defined_vars());
     }
 
     /**
      * Cancela a edição e restaura o backup do pedido
      */
-    public function cancelEdit() {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        
+    public function cancelEdit()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         if (!isset($_SESSION['edit_backup'])) {
             header('Location: ../../admin/loja/pdv');
             exit;
@@ -134,7 +140,7 @@ class PdvController extends BaseController {
             exit;
 
         } catch (\Exception $e) {
-            die("Erro crítico ao cancelar edição: " . $e->getMessage());
+            die('Erro crítico ao cancelar edição: ' . $e->getMessage());
         }
     }
 }

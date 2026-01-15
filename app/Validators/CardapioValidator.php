@@ -13,10 +13,10 @@ class CardapioValidator
     public function validateConfig(array $data): array
     {
         $errors = [];
-        
+
         // Aqui poderíamos validar campos específicos de config se necessário
         // Por enquanto, aceitamos tudo como string opcional, mas vamos garantir sanidade básica
-        
+
         return $errors;
     }
 

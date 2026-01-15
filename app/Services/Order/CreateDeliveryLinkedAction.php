@@ -5,18 +5,17 @@ namespace App\Services\Order;
 use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\TableRepository;
-use Exception;
 
 /**
  * Cria pedido de entrega vinculado a uma conta existente (mesa ou comanda de cliente).
- * 
+ *
  * O pedido de delivery vai para o Kanban normalmente, mas a cobrança
  * aparece como item na conta da mesa/comanda para pagamento posterior.
- * 
+ *
  * ⚠️ REGRA CRÍTICA (implementation_plan.md Seção 0):
  * Apenas adiciona item financeiro (order_items) e atualiza total.
  * O status da comanda só muda via CloseCommandAction.
- * 
+ *
  * @deprecated Este fluxo está sendo substituído pelo fluxo isolado de Delivery.
  * Não utilizar em novos códigos.
  */
@@ -41,7 +40,7 @@ class CreateDeliveryLinkedAction
 
     /**
      * Executa a criação de delivery vinculado.
-     * 
+     *
      * @param int $restaurantId
      * @param int $userId
      * @param array $data
@@ -105,7 +104,7 @@ class CreateDeliveryLinkedAction
 
     /**
      * Busca ou cria pedido da mesa.
-     * 
+     *
      * Se criar novo pedido, cria diretamente com status 'aberto'.
      */
     private function getOrCreateTableOrder(int $restaurantId, int $tableId): int
@@ -134,7 +133,7 @@ class CreateDeliveryLinkedAction
 
     /**
      * Busca ou cria comanda do cliente.
-     * 
+     *
      * Se criar nova comanda, cria diretamente com status 'aberto'.
      */
     private function getOrCreateClientComanda(int $restaurantId, int $clientId): int
@@ -179,7 +178,7 @@ class CreateDeliveryLinkedAction
 
     /**
      * Adiciona item representando a entrega na conta vinculada.
-     * 
+     *
      * ⚠️ Apenas adiciona ITEM na tabela order_items.
      * NÃO altera status da comanda.
      */
@@ -198,7 +197,7 @@ class CreateDeliveryLinkedAction
         $obs = implode(', ', $resumoItens);
 
         $deliveryFee = $data['delivery_fee'] ?? 0;
-        $obsComplete = "Vinculado: {$obs}" . ($deliveryFee > 0 ? " (+Taxa: {$deliveryFee})" : "");
+        $obsComplete = "Vinculado: {$obs}" . ($deliveryFee > 0 ? " (+Taxa: {$deliveryFee})" : '');
 
         $this->itemRepo->add($orderId, [
             'product_id' => 999999, // ID fictício para entrega/retirada vinculada

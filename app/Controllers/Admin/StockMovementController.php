@@ -12,16 +12,18 @@ class StockMovementController extends BaseController
 {
     private StockService $service;
 
-    public function __construct(StockService $service) {
+    public function __construct(StockService $service)
+    {
         $this->service = $service;
     }
 
     /**
      * Listar Movimentações (Relatório)
      */
-    public function index(): void {
+    public function index(): void
+    {
         $restaurantId = $this->getRestaurantId();
-        
+
         // Coleta filtros
         $filters = [
             'product'    => $_GET['product'] ?? '',
@@ -35,6 +37,6 @@ class StockMovementController extends BaseController
         $products = $this->service->getProducts($restaurantId);
         $categories = $this->service->getCategories($restaurantId);
 
-        require __DIR__ . '/../../../views/admin/movements/index.php';
+        View::renderFromScope('admin/movements/index', get_defined_vars());
     }
 }

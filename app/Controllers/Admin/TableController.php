@@ -1,16 +1,18 @@
 <?php
+
 namespace App\Controllers\Admin;
 
 use App\Services\TableService;
 use App\Validators\TableValidator;
 use Exception;
 
-class TableController extends BaseController {
-
+class TableController extends BaseController
+{
     private TableService $service;
     private TableValidator $validator;
 
-    public function __construct(TableService $service, TableValidator $validator) {
+    public function __construct(TableService $service, TableValidator $validator)
+    {
         $this->service = $service;
         $this->validator = $validator;
     }
@@ -18,7 +20,8 @@ class TableController extends BaseController {
     /**
      * Renderiza a View Principal de Mesas
      */
-    public function index() {
+    public function index()
+    {
         $this->checkSession();
         $rid = $this->getRestaurantId();
 
@@ -28,17 +31,18 @@ class TableController extends BaseController {
             $clientOrders = $this->service->getOpenClientOrders($rid);
 
             // Renderiza View
-            require __DIR__ . '/../../../views/admin/tables/index.php';
-            
+            View::renderFromScope('admin/tables/index', get_defined_vars());
+
         } catch (Exception $e) {
-            die("Erro ao carregar mesas: " . $e->getMessage());
+            die('Erro ao carregar mesas: ' . $e->getMessage());
         }
     }
 
     /**
      * API: Salva (Cria) nova Mesa
      */
-    public function store() {
+    public function store()
+    {
         $this->checkSession();
         $rid = $this->getRestaurantId();
         $data = $this->getJsonBody();
@@ -61,7 +65,8 @@ class TableController extends BaseController {
     /**
      * API: Deleta Mesa
      */
-    public function deleteByNumber() {
+    public function deleteByNumber()
+    {
         $this->checkSession();
         $rid = $this->getRestaurantId();
         $data = $this->getJsonBody();
@@ -81,7 +86,7 @@ class TableController extends BaseController {
                 $this->json(['success' => true]);
             } else {
                 // Retorna flag 'occupied' para frontend pedir confirmação
-                $this->json($result); 
+                $this->json($result);
             }
         } catch (Exception $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -91,10 +96,11 @@ class TableController extends BaseController {
     /**
      * API: Busca Simples (usado pelo PDV)
      */
-    public function search() {
+    public function search()
+    {
         $this->checkSession();
         $rid = $this->getRestaurantId();
-        
+
         try {
             // Reutiliza o método getAllTables mas filtra campos se necessário no frontend
             // Ou cria um metodo especifico 'getSimpleList' no service se performance for critica

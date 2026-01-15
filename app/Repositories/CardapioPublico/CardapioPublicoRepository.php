@@ -7,7 +7,7 @@ use PDO;
 
 /**
  * Repository para o Cardápio Público (Read-Only)
- * 
+ *
  * Busca dados para renderização do cardápio público.
  */
 class CardapioPublicoRepository
@@ -36,7 +36,7 @@ class CardapioPublicoRepository
     public function findRestaurantById(int $id): ?array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM restaurants WHERE id = :rid");
+        $stmt = $conn->prepare('SELECT * FROM restaurants WHERE id = :rid');
         $stmt->execute(['rid' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
@@ -44,7 +44,7 @@ class CardapioPublicoRepository
     public function findRestaurantBySlug(string $slug): ?int
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT id FROM restaurants WHERE slug = :slug");
+        $stmt = $conn->prepare('SELECT id FROM restaurants WHERE slug = :slug');
         $stmt->execute(['slug' => $slug]);
         $result = $stmt->fetchColumn();
         return $result !== false ? (int) $result : null;
@@ -57,11 +57,11 @@ class CardapioPublicoRepository
     public function getCategories(int $restaurantId): array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("
+        $stmt = $conn->prepare('
             SELECT * FROM categories 
             WHERE restaurant_id = :rid AND is_active = 1
             ORDER BY COALESCE(sort_order, 999) ASC, name ASC
-        ");
+        ');
         $stmt->execute(['rid' => $restaurantId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -69,7 +69,7 @@ class CardapioPublicoRepository
     public function getProducts(int $restaurantId): array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("
+        $stmt = $conn->prepare('
             SELECT 
                 p.id, p.name, p.description, p.price, p.image, p.stock,
                 p.is_featured, p.icon, p.icon_as_photo,
@@ -79,7 +79,7 @@ class CardapioPublicoRepository
             LEFT JOIN categories c ON p.category_id = c.id
             WHERE p.restaurant_id = :rid
             ORDER BY COALESCE(c.sort_order, 999) ASC, c.name ASC, p.display_order ASC, p.name ASC
-        ");
+        ');
         $stmt->execute(['rid' => $restaurantId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -87,7 +87,7 @@ class CardapioPublicoRepository
     public function getProductAdditionalRelations(): array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT product_id, group_id FROM product_additional_relations");
+        $stmt = $conn->prepare('SELECT product_id, group_id FROM product_additional_relations');
         $stmt->execute();
         $raw = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -105,13 +105,13 @@ class CardapioPublicoRepository
     public function getCombosWithItems(int $restaurantId): array
     {
         $conn = Database::connect();
-        
+
         // Buscar combos
-        $stmt = $conn->prepare("
+        $stmt = $conn->prepare('
             SELECT * FROM combos 
             WHERE restaurant_id = :rid AND is_active = 1
             ORDER BY display_order ASC, name ASC
-        ");
+        ');
         $stmt->execute(['rid' => $restaurantId]);
         $combos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -122,7 +122,7 @@ class CardapioPublicoRepository
         // Buscar itens dos combos
         $comboIds = array_column($combos, 'id');
         $inQuery = implode(',', array_fill(0, count($comboIds), '?'));
-        
+
         $stmtItems = $conn->prepare("
             SELECT ci.combo_id, ci.allow_additionals,
                    p.id as product_id, p.name as product_name, p.image as product_image
@@ -133,13 +133,13 @@ class CardapioPublicoRepository
         ");
         $stmtItems->execute($comboIds);
         $comboItems = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Agrupar itens por combo
         $itemsByCombo = [];
         foreach ($comboItems as $item) {
             $itemsByCombo[$item['combo_id']][] = $item;
         }
-        
+
         // Injetar itens nos combos
         foreach ($combos as &$combo) {
             $combo['items'] = $itemsByCombo[$combo['id']] ?? [];
@@ -156,13 +156,13 @@ class CardapioPublicoRepository
     public function getAdditionalsWithItems(int $restaurantId): array
     {
         $conn = Database::connect();
-        
+
         // Buscar grupos
-        $stmt = $conn->prepare("
+        $stmt = $conn->prepare('
             SELECT * FROM additional_groups 
             WHERE restaurant_id = :rid 
             ORDER BY name ASC
-        ");
+        ');
         $stmt->execute(['rid' => $restaurantId]);
         $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -173,7 +173,7 @@ class CardapioPublicoRepository
         // Buscar itens
         $groupIds = array_column($groups, 'id');
         $inQuery = implode(',', array_fill(0, count($groupIds), '?'));
-        
+
         $stmtItems = $conn->prepare("
             SELECT ai.*, agi.group_id 
             FROM additional_items ai
@@ -183,7 +183,7 @@ class CardapioPublicoRepository
         ");
         $stmtItems->execute($groupIds);
         $allItems = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Agrupar items
         $itemsByGroup = [];
         foreach ($allItems as $item) {
@@ -200,7 +200,7 @@ class CardapioPublicoRepository
     public function getConfig(int $restaurantId): array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM cardapio_config WHERE restaurant_id = :rid");
+        $stmt = $conn->prepare('SELECT * FROM cardapio_config WHERE restaurant_id = :rid');
         $stmt->execute(['rid' => $restaurantId]);
         $config = $stmt->fetch(PDO::FETCH_ASSOC);
         return $config ?: self::DEFAULT_CONFIG;
@@ -209,18 +209,18 @@ class CardapioPublicoRepository
     public function getBusinessHours(int $restaurantId): array
     {
         $conn = Database::connect();
-        
+
         $dayOfWeek = (int) date('w');
         $yesterdayDay = ($dayOfWeek - 1 < 0) ? 6 : $dayOfWeek - 1;
-        
-        $stmt = $conn->prepare("SELECT * FROM business_hours WHERE restaurant_id = :rid AND day_of_week = :day");
-        
+
+        $stmt = $conn->prepare('SELECT * FROM business_hours WHERE restaurant_id = :rid AND day_of_week = :day');
+
         $stmt->execute(['rid' => $restaurantId, 'day' => $dayOfWeek]);
         $today = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         $stmt->execute(['rid' => $restaurantId, 'day' => $yesterdayDay]);
         $yesterday = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         return ['today' => $today ?: null, 'yesterday' => $yesterday ?: null];
     }
 }

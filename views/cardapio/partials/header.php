@@ -36,17 +36,17 @@
             <?php else: ?>
                 <div style="display: flex; align-items: center; justify-content: center; padding: 4px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; background: #fee2e2; color: #dc2626; width: 100%; box-sizing: border-box;">
                     <span style="width: 6px; height: 6px; background: currentColor; border-radius: 50%; margin-right: 6px; flex-shrink: 0;"></span>
-                    <?php 
+                    <?php
                         $reason = $cardapioConfig['closed_reason'] ?? '';
-                        if ($reason === 'outside_hours' && ($cardapioConfig['today_hours'] ?? null)) {
-                            $hours = $cardapioConfig['today_hours'];
-                            echo "Abre " . substr($hours['open_time'], 0, 5);
-                        } elseif ($reason === 'day_closed') {
-                            echo "Fechado hoje";
-                        } else {
-                            echo "Fechado";
-                        }
-                    ?>
+                if ($reason === 'outside_hours' && ($cardapioConfig['today_hours'] ?? null)) {
+                    $hours = $cardapioConfig['today_hours'];
+                    echo 'Abre ' . substr($hours['open_time'], 0, 5);
+                } elseif ($reason === 'day_closed') {
+                    echo 'Fechado hoje';
+                } else {
+                    echo 'Fechado';
+                }
+                ?>
                 </div>
             <?php endif; ?>
         </div>

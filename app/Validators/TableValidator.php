@@ -1,9 +1,11 @@
 <?php
+
 namespace App\Validators;
 
-class TableValidator {
-
-    public function validateStore(array $data) {
+class TableValidator
+{
+    public function validateStore(array $data)
+    {
         $errors = [];
         $number = $data['number'] ?? null;
 
@@ -16,7 +18,8 @@ class TableValidator {
         return $errors;
     }
 
-    public function validateDelete(array $data) {
+    public function validateDelete(array $data)
+    {
         $errors = [];
         $number = $data['number'] ?? null;
 
@@ -27,7 +30,8 @@ class TableValidator {
         return $errors;
     }
 
-    public function hasErrors(array $errors) {
+    public function hasErrors(array $errors)
+    {
         return !empty($errors);
     }
 }

@@ -6,11 +6,11 @@
 ?>
 <div class="table-grid">
     <?php foreach ($tables as $mesa): ?>
-        <?php 
+        <?php
             $isOccupied = ($mesa['status'] == 'ocupada');
-            $cardClass = $isOccupied ? 'table-card--ocupada' : 'table-card--livre';
-            $statusText = $isOccupied ? 'OCUPADA' : 'LIVRE';
-            $valor = $isOccupied ? 'R$ ' . number_format($mesa['order_total'] ?? 0, 2, ',', '.') : '';
+        $cardClass = $isOccupied ? 'table-card--ocupada' : 'table-card--livre';
+        $statusText = $isOccupied ? 'OCUPADA' : 'LIVRE';
+        $valor = $isOccupied ? 'R$ ' . number_format($mesa['order_total'] ?? 0, 2, ',', '.') : '';
         ?>
 
         <div class="table-card <?= $cardClass ?>" 

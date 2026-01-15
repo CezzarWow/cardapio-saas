@@ -1,7 +1,7 @@
-<?php 
+<?php
 /**
  * CREATE.PHP - Cadastro de Produto
- * 
+ *
  * View refatorada usando componentes externos:
  * - partials/cropper-modal.php (Modal de recorte)
  * - js/components/icon-selector.js (Seletor de ícone)
@@ -9,8 +9,8 @@
  * - js/components/cropper-modal.js (Lógica de cropper)
  * - js/components/multi-select.js (Multi-select existente)
  */
-require __DIR__ . '/../panel/layout/header.php'; 
-require __DIR__ . '/../panel/layout/sidebar.php'; 
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+\App\Core\View::renderFromScope('admin/panel/layout/sidebar.php', get_defined_vars());
 ?>
 
 <main class="main-content">
@@ -76,7 +76,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                 </div>
 
                 <!-- FOTO E ÍCONE -->
-                <?php 
+                <?php
                 $icons = [
                     '🍔' => 'Hambúrguer', '🌭' => 'Cachorro Quente', '🍺' => 'Cerveja Garrafa',
                     '🍾' => 'Cerveja Longneck', '🥫' => 'Latinha', '🍻' => 'Chopp',
@@ -85,7 +85,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
                     '🍫' => 'Chocolate', '🍟' => 'Batata Frita', '🍱' => 'Combos',
                     '🍰' => 'Sobremesas', '🍦' => 'Sorvete'
                 ];
-                ?>
+?>
                 
                 <div style="display: flex; gap: 20px;">
                     <!-- FOTO -->
@@ -147,13 +147,13 @@ require __DIR__ . '/../panel/layout/sidebar.php';
     </div>
 </main>
 
-<?php // Modal de Recorte ?>
-<?php require __DIR__ . '/../partials/cropper-modal.php'; ?>
+<?php // Modal de Recorte?>
+<?php \App\Core\View::renderFromScope('admin/products/partials/cropper-modal.php', get_defined_vars()); ?>
 
-<?php // Scripts de Componentes ?>
+<?php // Scripts de Componentes?>
 <script src="<?= BASE_URL ?>/js/components/multi-select.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/components/icon-selector.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/components/price-mask.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/components/cropper-modal.js?v=<?= time() ?>"></script>
 
-<?php require __DIR__ . '/../panel/layout/footer.php'; ?>
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

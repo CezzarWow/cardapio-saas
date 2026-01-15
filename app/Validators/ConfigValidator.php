@@ -25,7 +25,7 @@ class ConfigValidator
         if (empty(trim($data['address'] ?? ''))) {
             $errors['address'] = 'Endereço é obrigatório';
         }
-        
+
         // Validação de Upload (se houver arquivo enviado)
         if ($file && !empty($file['name'])) {
             if ($file['error'] !== UPLOAD_ERR_OK) {

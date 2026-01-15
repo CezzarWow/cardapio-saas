@@ -8,7 +8,7 @@ use Exception;
 
 /**
  * RestaurantController - Super Thin
- * 
+ *
  * Gerencia CRUD de restaurantes.
  * Lógica de negócio no RestaurantService.
  * Validações no RestaurantValidator.
@@ -29,7 +29,7 @@ class RestaurantController extends BaseController
      */
     public function create(): void
     {
-        require __DIR__ . '/../../../views/admin/restaurants/create.php';
+        View::renderFromScope('admin/restaurants/create', get_defined_vars());
     }
 
     /**
@@ -51,7 +51,7 @@ class RestaurantController extends BaseController
         try {
             $userId = $this->getUserId();
             $restaurantId = $this->service->create($data, $userId);
-            
+
             $this->redirect('/admin?success=restaurante_criado');
         } catch (Exception $e) {
             error_log('RestaurantController::store Error: ' . $e->getMessage());
@@ -65,19 +65,19 @@ class RestaurantController extends BaseController
     public function edit(): void
     {
         $id = $this->getInt('id');
-        
+
         $errors = $this->validator->validateId($id);
         if ($this->validator->hasErrors($errors)) {
             $this->redirect('/admin?error=id_invalido');
         }
 
         $restaurant = $this->service->findById($id);
-        
+
         if (!$restaurant) {
             $this->redirect('/admin?error=restaurante_nao_encontrado');
         }
 
-        require __DIR__ . '/../../../views/admin/restaurants/edit.php';
+        View::renderFromScope('admin/restaurants/edit', get_defined_vars());
     }
 
     /**

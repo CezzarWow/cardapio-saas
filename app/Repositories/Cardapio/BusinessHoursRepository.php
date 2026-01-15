@@ -16,8 +16,8 @@ class BusinessHoursRepository
     public function findAll(int $restaurantId): array
     {
         $conn = Database::connect();
-        
-        $stmt = $conn->prepare("SELECT * FROM business_hours WHERE restaurant_id = :rid");
+
+        $stmt = $conn->prepare('SELECT * FROM business_hours WHERE restaurant_id = :rid');
         $stmt->execute(['rid' => $restaurantId]);
         $hoursRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -26,7 +26,7 @@ class BusinessHoursRepository
         foreach ($hoursRaw as $h) {
             $businessHours[$h['day_of_week']] = $h;
         }
-        
+
         return $businessHours;
     }
 
@@ -36,7 +36,7 @@ class BusinessHoursRepository
     public function createDefaults(int $restaurantId): void
     {
         $conn = Database::connect();
-        
+
         $defaults = [
             0 => ['is_open' => 0, 'open' => '09:00', 'close' => '22:00'], // Domingo
             1 => ['is_open' => 1, 'open' => '09:00', 'close' => '22:00'],
@@ -47,11 +47,11 @@ class BusinessHoursRepository
             6 => ['is_open' => 1, 'open' => '09:00', 'close' => '23:00'], // Sábado
         ];
 
-        $stmt = $conn->prepare("
+        $stmt = $conn->prepare('
             INSERT INTO business_hours (restaurant_id, day_of_week, is_open, open_time, close_time) 
             VALUES (:rid, :day, :is_open, :open, :close)
-        ");
-        
+        ');
+
         foreach ($defaults as $day => $h) {
             $stmt->execute([
                 'rid' => $restaurantId,
@@ -69,15 +69,15 @@ class BusinessHoursRepository
     public function save(int $restaurantId, array $hoursData): void
     {
         $conn = Database::connect();
-        
-        $stmt = $conn->prepare("
+
+        $stmt = $conn->prepare('
             INSERT INTO business_hours (restaurant_id, day_of_week, is_open, open_time, close_time)
             VALUES (:rid, :day, :is_open, :open, :close)
             ON DUPLICATE KEY UPDATE 
                 is_open = VALUES(is_open),
                 open_time = VALUES(open_time),
                 close_time = VALUES(close_time)
-        ");
+        ');
 
         for ($day = 0; $day <= 6; $day++) {
             $stmt->execute([
@@ -96,12 +96,12 @@ class BusinessHoursRepository
     public function findOrCreate(int $restaurantId): array
     {
         $hours = $this->findAll($restaurantId);
-        
+
         if (empty($hours)) {
             $this->createDefaults($restaurantId);
             $hours = $this->findAll($restaurantId);
         }
-        
+
         return $hours;
     }
 }

@@ -181,11 +181,11 @@
         </div>
     </div>
 
-    <?php // Tipo de Pedido ?>
-    <?php require __DIR__ . '/_checkout_order_type.php'; ?>
+    <?php // Tipo de Pedido?>
+    <?php \App\Core\View::renderFromScope('admin/panel/partials/_checkout_order_type.php', get_defined_vars()); ?>
 
-    <?php // Footer com Botões ?>
-    <?php require __DIR__ . '/_checkout_footer.php'; ?>
+    <?php // Footer com Botões?>
+    <?php \App\Core\View::renderFromScope('admin/panel/partials/_checkout_footer.php', get_defined_vars()); ?>
     
 </div>
 <!-- FIM CHECKOUT PRINCIPAL -->

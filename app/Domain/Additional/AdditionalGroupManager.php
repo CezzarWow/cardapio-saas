@@ -24,12 +24,12 @@ class AdditionalGroupManager
         $name = trim($name);
 
         if (empty($name)) {
-            throw new Exception("O nome do grupo é obrigatório.");
+            throw new Exception('O nome do grupo é obrigatório.');
         }
 
         // Validação de duplicidade (Regra de Domínio)
         if ($this->repository->nameExists($restaurantId, $name)) {
-            throw new Exception("Já existe um grupo com este nome.");
+            throw new Exception('Já existe um grupo com este nome.');
         }
 
         // Persistência
