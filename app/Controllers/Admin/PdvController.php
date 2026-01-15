@@ -3,18 +3,32 @@
 namespace App\Controllers\Admin;
 
 use App\Services\Pdv\PdvService;
+use App\Services\RestaurantService;
+use App\Repositories\TableRepository;
+use App\Repositories\Order\OrderRepository;
+use App\Core\View;
 
 /**
- * PdvController - Painel de Vendas (Super Thin)
+ * PdvController - Painel de Vendas
  * Responsável pelo Frente de Caixa
  */
 class PdvController extends BaseController
 {
     private PdvService $service;
+    private TableRepository $tableRepo;
+    private RestaurantService $restaurantService;
+    private OrderRepository $orderRepo;
 
-    public function __construct(PdvService $service)
-    {
+    public function __construct(
+        PdvService $service, 
+        TableRepository $tableRepo,
+        RestaurantService $restaurantService,
+        OrderRepository $orderRepo
+    ) {
         $this->service = $service;
+        $this->tableRepo = $tableRepo;
+        $this->restaurantService = $restaurantService;
+        $this->orderRepo = $orderRepo;
     }
 
     public function index()
@@ -28,8 +42,7 @@ class PdvController extends BaseController
 
         // Se acessa via order_id, buscar a mesa vinculada (se houver)
         if ($orderId > 0 && $mesaId <= 0) {
-            $tableRepo = new \App\Repositories\TableRepository();
-            $linkedTable = $tableRepo->findByOrderId($orderId);
+            $linkedTable = $this->tableRepo->findByOrderId($orderId);
             if ($linkedTable) {
                 $mesaId = (int) $linkedTable['id'];
                 $mesaNumero = $linkedTable['number'];
@@ -38,8 +51,7 @@ class PdvController extends BaseController
 
         // Se tem mesa_id mas não tem mesa_numero, buscar o número
         if ($mesaId > 0 && !$mesaNumero) {
-            $tableRepo = $tableRepo ?? new \App\Repositories\TableRepository();
-            $tableData = $tableRepo->findById($mesaId);
+            $tableData = $this->tableRepo->findById($mesaId);
             if ($tableData) {
                 $mesaNumero = $tableData['number'];
             }
@@ -55,28 +67,22 @@ class PdvController extends BaseController
         $mesa_id = $mesaId;
         $mesa_numero = $mesaNumero;
 
-        // --- Lógica movida da View (dashboard.php) ---
-
         // 1. Detecta modo edição (Pedido Pago/Retirada)
+        // Nota: Acesso direto a GET mantido pois é parâmetro de rota/query
         $isEditingPaid = isset($_GET['edit_paid']) && $_GET['edit_paid'] == '1';
         $editingOrderId = $orderId;
 
         $originalPaidTotalFromDB = 0;
         if ($isEditingPaid && $editingOrderId) {
-            $conn = \App\Core\Database::connect();
-            $stmt = $conn->prepare('SELECT total FROM orders WHERE id = :oid');
-            $stmt->execute(['oid' => $editingOrderId]);
-            $orderData = $stmt->fetch(\PDO::FETCH_ASSOC);
-            $originalPaidTotalFromDB = floatval($orderData['total'] ?? 0);
+            $orderData = $this->orderRepo->find($editingOrderId);
+            if ($orderData) {
+                $originalPaidTotalFromDB = floatval($orderData['total'] ?? 0);
+            }
         }
 
         // 2. Carrega Configurações (Taxa de Entrega)
-        $deliveryFee = 5.0;
-        $settingsPath = __DIR__ . '/../../../data/restaurants/' . $rid . '/cardapio_settings.json';
-        if (file_exists($settingsPath)) {
-            $settings = json_decode(file_get_contents($settingsPath), true);
-            $deliveryFee = floatval($settings['delivery_fee'] ?? 5.0);
-        }
+        $settings = $this->restaurantService->getSettings($rid);
+        $deliveryFee = floatval($settings['delivery_fee'] ?? 5.0);
 
         // 3. Lógica de Exibição de Botões (TableViewFlags)
         $showQuickSale = false;   // Botão "Finalizar" (Venda Rápida)

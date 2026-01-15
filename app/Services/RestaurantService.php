@@ -110,4 +110,16 @@ class RestaurantService
     {
         $this->restaurantRepo->toggleStatus($id);
     }
+
+    /**
+     * Busca configurações do restaurante (JSON)
+     */
+    public function getSettings(int $restaurantId): array
+    {
+        $settingsPath = __DIR__ . '/../../../data/restaurants/' . $restaurantId . '/cardapio_settings.json';
+        if (file_exists($settingsPath)) {
+            return json_decode(file_get_contents($settingsPath), true) ?: [];
+        }
+        return [];
+    }
 }

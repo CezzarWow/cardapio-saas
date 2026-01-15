@@ -195,22 +195,7 @@ try {
 }
 
 // Funções legado
-window.selectOrderType = (t) => CardapioCheckout.setOrderType(t);
-window.openOrderReviewModal = () => CardapioCheckout.openOrderReview();
-window.closeOrderReviewModal = () => CardapioCheckout.closeOrderReview();
-window.finalizarPedido = () => {
-    CardapioCheckout.openOrderReview();
-    if (typeof closeSuggestionsModal === 'function') {
-        setTimeout(() => closeSuggestionsModal(), 100);
-    }
-};
-window.goToPayment = () => CardapioCheckout.goToPayment();
-window.closePaymentModal = () => CardapioCheckout.closePayment();
-window.sendOrder = () => CardapioCheckout.sendOrder();
-window.toggleNoNumber = () => CardapioCheckout.toggleNoNumber();
-window.toggleNoChange = () => CardapioCheckout.toggleNoChange();
-window.confirmChange = () => CardapioCheckout.confirmChange();
-window.editChange = () => CardapioCheckout.editChange();
+
 
 // Evento Global de Pagamento
 document.addEventListener('change', function (e) {

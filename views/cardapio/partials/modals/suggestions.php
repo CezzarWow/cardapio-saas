@@ -105,7 +105,7 @@ if (!$hasSauces): ?>
         
     </div>
     <!-- Botão fora do conteiner de conteúdo para não ser afetado pelo transform -->
-    <button id="suggestionsFloatingCart" class="cardapio-floating-cart-btn suggestions-cart-btn show" onclick="finalizarPedido()">
+    <button id="suggestionsFloatingCart" class="cardapio-floating-cart-btn suggestions-cart-btn show" onclick="CardapioCheckout.openOrderReview(); if(typeof closeSuggestionsModal === 'function') closeSuggestionsModal();">
         <i data-lucide="shopping-cart" size="20"></i>
         <span id="suggestionsCartTotal">R$ 0,00</span>
         <i data-lucide="arrow-right" size="18"></i>
