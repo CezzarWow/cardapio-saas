@@ -36,6 +36,7 @@
 
 <!-- Core: State e Carrinho -->
 <script src="<?= BASE_URL ?>/js/pdv/state.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/pdv/pdv-extras.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/pdv/pdv-cart.js?v=<?= time() ?>"></script>
 
 <!-- Tables: Mesas e Clientes -->
