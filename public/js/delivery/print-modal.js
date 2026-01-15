@@ -43,9 +43,10 @@
 
             content.innerHTML = '<div style="padding: 40px; text-align: center; color: #64748b;">Carregando...</div>';
             modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
 
             try {
-                const baseUrl = (typeof BASE_URL !== 'undefined') ? BASE_URL : '';
+                const baseUrl = DeliveryHelpers.getBaseUrl();
                 const response = await fetch(baseUrl + '/admin/loja/delivery/details?id=' + orderId);
                 const data = await response.json();
 
@@ -108,7 +109,10 @@
          */
         close: function () {
             const modal = document.getElementById('deliveryPrintModal');
-            if (modal) modal.style.display = 'none';
+            if (modal) {
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+            }
             currentOrderId = null;
         }
     };

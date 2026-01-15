@@ -1,7 +1,8 @@
 /**
  * TABLES-CRUD.JS - CRUD de Mesas
  * Módulo: TablesAdmin.Crud
- * Refatorado para usar BASE_URL
+ * 
+ * Dependência: tables-helpers.js (carregar antes)
  */
 
 (function () {
@@ -9,15 +10,12 @@
 
     window.TablesAdmin = window.TablesAdmin || {};
 
-    // Helper para URL Segura
-    const getBaseUrl = () => typeof BASE_URL !== 'undefined' ? BASE_URL : '/cardapio-saas/public';
-    // Helper para CSRF
-    const getCsrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
     TablesAdmin.Crud = {
 
         openNewModal: function () {
-            document.getElementById('newTableModal').style.display = 'flex';
+            const modal = document.getElementById('newTableModal');
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
             setTimeout(() => document.getElementById('new_table_number').focus(), 50);
         },
 
@@ -25,11 +23,11 @@
             const number = document.getElementById('new_table_number').value;
             if (!number) return;
 
-            fetch(getBaseUrl() + '/admin/loja/mesas/salvar', {
+            fetch(TablesHelpers.getBaseUrl() + '/admin/loja/mesas/salvar', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': getCsrf()
+                    'X-CSRF-TOKEN': TablesHelpers.getCsrf()
                 },
                 body: JSON.stringify({ number: number })
             })
@@ -42,7 +40,9 @@
         },
 
         openRemoveModal: function () {
-            document.getElementById('removeTableModal').style.display = 'flex';
+            const modal = document.getElementById('removeTableModal');
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
             setTimeout(() => document.getElementById('remove_table_number').focus(), 50);
         },
 
@@ -52,13 +52,13 @@
 
             if (!confirm(`Tem certeza que deseja excluir a MESA ${number}?`)) return;
 
-            const url = getBaseUrl() + '/admin/loja/mesas/deletar';
+            const url = TablesHelpers.getBaseUrl() + '/admin/loja/mesas/deletar';
 
             fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': getCsrf()
+                    'X-CSRF-TOKEN': TablesHelpers.getCsrf()
                 },
                 body: JSON.stringify({ number: number, force: false })
             })
@@ -83,7 +83,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': getCsrf()
+                    'X-CSRF-TOKEN': TablesHelpers.getCsrf()
                 },
                 body: JSON.stringify({ number: number, force: true })
             })
@@ -96,7 +96,7 @@
         },
 
         abrir: function (id, numero) {
-            window.location.href = getBaseUrl() + '/admin/loja/pdv?mesa_id=' + id + '&mesa_numero=' + numero;
+            window.location.href = TablesHelpers.getBaseUrl() + '/admin/loja/pdv?mesa_id=' + id + '&mesa_numero=' + numero;
         }
     };
 

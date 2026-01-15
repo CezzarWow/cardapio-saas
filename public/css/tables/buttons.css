@@ -1,0 +1,99 @@
+/**
+ * ============================================
+ * TABLES CSS — Botões
+ * ============================================
+ */
+
+/* Base de botão */
+.btn-action {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    border: none;
+}
+
+.btn-action:hover {
+    transform: translateY(-1px);
+}
+
+.btn-action:active {
+    transform: translateY(0);
+}
+
+.btn-action:focus {
+    outline: 3px solid rgba(37, 99, 235, 0.4);
+    outline-offset: 2px;
+}
+
+/* Variantes */
+.btn-action--primary {
+    background: var(--btn-primary);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+
+.btn-action--primary:hover {
+    box-shadow: 0 6px 10px -1px rgba(37, 99, 235, 0.3);
+}
+
+.btn-action--success {
+    background: var(--btn-success);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2);
+}
+
+.btn-action--success:hover {
+    box-shadow: 0 6px 10px -1px rgba(5, 150, 105, 0.3);
+}
+
+.btn-action--purple {
+    background: var(--btn-purple);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+}
+
+.btn-action--purple:hover {
+    box-shadow: 0 6px 10px -1px rgba(79, 70, 229, 0.3);
+}
+
+.btn-action--danger-outline {
+    background: white;
+    color: var(--table-occupied-text);
+    border: 1px solid var(--btn-danger-light);
+}
+
+.btn-action--danger-outline:hover {
+    background: #fef2f2;
+}
+
+/* Header da seção */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.section-header--mesas {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.section-actions {
+    display: flex;
+    gap: 10px;
+}

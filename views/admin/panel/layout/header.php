@@ -33,6 +33,8 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/utilities.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/featured/index.css?v=<?= time() ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/responsive.css?v=<?= time() ?>">
+    <!-- Tables CSS -->
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/tables/tables.css?v=<?= time() ?>">
     
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>

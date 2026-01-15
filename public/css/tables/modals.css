@@ -1,0 +1,162 @@
+/**
+ * ============================================
+ * TABLES CSS — Modais
+ * ============================================
+ */
+
+/* Overlay do Modal */
+.table-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+}
+
+.table-modal[aria-hidden="false"] {
+    display: flex;
+}
+
+/* Container do Modal */
+.table-modal__content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    max-width: 95%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.table-modal__content--small {
+    width: 300px;
+    padding: 25px;
+}
+
+.table-modal__content--medium {
+    width: 420px;
+}
+
+.table-modal__content--large {
+    width: 600px;
+}
+
+.table-modal__content--super {
+    width: 900px;
+}
+
+/* Header do Modal */
+.table-modal__header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-light);
+}
+
+.table-modal__header--success {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    border-bottom: none;
+}
+
+.table-modal__header--dark {
+    background: var(--text-primary);
+    color: white;
+    border-bottom: none;
+}
+
+.table-modal__title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.table-modal__header--success .table-modal__title,
+.table-modal__header--dark .table-modal__title {
+    color: white;
+}
+
+/* Botão de fechar */
+.table-modal__close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+    padding: 5px;
+    transition: color var(--transition-fast);
+}
+
+.table-modal__close:hover {
+    color: var(--text-primary);
+}
+
+.table-modal__close:focus {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.table-modal__header--success .table-modal__close,
+.table-modal__header--dark .table-modal__close {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.table-modal__header--success .table-modal__close:hover,
+.table-modal__header--dark .table-modal__close:hover {
+    color: white;
+}
+
+/* Body do Modal */
+.table-modal__body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Footer do Modal */
+.table-modal__footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-light);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* Input dentro do Modal */
+.table-modal__input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 1.2rem;
+    text-align: center;
+    font-weight: bold;
+    transition: border-color var(--transition-fast);
+}
+
+.table-modal__input:focus {
+    outline: none;
+    border-color: var(--btn-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.table-modal__input--danger {
+    border-color: var(--btn-danger-light);
+    border-width: 2px;
+    color: var(--table-occupied-text);
+}
+
+.table-modal__input--danger:focus {
+    border-color: var(--btn-danger);
+}

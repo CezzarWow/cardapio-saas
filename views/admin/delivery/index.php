@@ -15,6 +15,7 @@ $statusFilter = $_GET['status'] ?? null;
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/base.css">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/kanban.css?v=<?= time() ?>">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/cards-compact.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/modals.css?v=<?= time() ?>">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/states.css">
 
 <main class="main-content">
@@ -50,6 +51,9 @@ $statusFilter = $_GET['status'] ?? null;
 <script>
     const BASE_URL = '<?= BASE_URL ?>';
 </script>
+<!-- Constantes e helpers compartilhados (carregar PRIMEIRO) -->
+<script src="<?= BASE_URL ?>/js/delivery/helpers.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/delivery/constants.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/delivery/tabs.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/delivery/actions.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/delivery/ui.js?v=<?= time() ?>"></script>

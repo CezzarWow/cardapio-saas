@@ -1,0 +1,12 @@
+/**
+ * ============================================
+ * TABLES CSS — Principal
+ * Importa todos os módulos CSS
+ * ============================================
+ */
+
+@import 'base.css';
+@import 'grids.css';
+@import 'cards.css';
+@import 'buttons.css';
+@import 'modals.css';

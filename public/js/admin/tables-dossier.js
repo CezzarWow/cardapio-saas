@@ -1,16 +1,14 @@
 /**
  * TABLES-DOSSIER.JS - Dossiê do Cliente
  * Módulo: TablesAdmin.Dossier
- * Refatorado com helpers de render e BASE_URL
+ * 
+ * Dependência: tables-helpers.js (carregar antes)
  */
 
 (function () {
     'use strict';
 
     window.TablesAdmin = window.TablesAdmin || {};
-
-    // Helper URL
-    const getBaseUrl = () => typeof BASE_URL !== 'undefined' ? BASE_URL : '/cardapio-saas/public';
 
     TablesAdmin.Dossier = {
 
@@ -20,6 +18,7 @@
 
             // Reset UI
             modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
             document.getElementById('dos_name').innerText = 'Buscando dados...';
             document.getElementById('dos_info').innerText = '...';
             document.getElementById('dos_history_list').innerHTML = '<p style="color:#94a3b8; text-align:center">Carregando...</p>';
@@ -28,12 +27,12 @@
             const btnOrder = document.getElementById('btn-dossier-order');
             if (btnOrder) {
                 btnOrder.onclick = () => {
-                    window.location.href = getBaseUrl() + '/admin/loja/pdv?client_id=' + clientId;
+                    window.location.href = TablesHelpers.getBaseUrl() + '/admin/loja/pdv?client_id=' + clientId;
                 };
             }
 
             // Fetch Dados
-            fetch(getBaseUrl() + '/admin/loja/clientes/detalhes?id=' + clientId)
+            fetch(TablesHelpers.getBaseUrl() + '/admin/loja/clientes/detalhes?id=' + clientId)
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
@@ -63,8 +62,8 @@
             // Financeiro
             const debt = parseFloat(cli.current_debt || 0);
             const limit = parseFloat(cli.credit_limit || 0);
-            document.getElementById('dos_debt').innerText = this._formatCurrency(debt);
-            document.getElementById('dos_limit').innerText = this._formatCurrency(limit);
+            document.getElementById('dos_debt').innerText = TablesHelpers.formatCurrency(debt);
+            document.getElementById('dos_limit').innerText = TablesHelpers.formatCurrency(limit);
 
             // Histórico
             this._renderHistory(data.history);
@@ -91,7 +90,7 @@
             const color = isPay ? '#16a34a' : '#ef4444';
             const sign = isPay ? '+' : '-';
             const dateStr = new Date(item.created_at).toLocaleDateString('pt-BR');
-            const amountStr = this._formatCurrency(item.amount).replace('R$ ', '');
+            const amountStr = TablesHelpers.formatCurrency(item.amount).replace('R$ ', '');
 
             return `
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
@@ -104,12 +103,7 @@
                     </div>
                 </div>
             `;
-        },
-
-        _formatCurrency: function (val) {
-            return 'R$ ' + parseFloat(val).toFixed(2).replace('.', ',');
         }
     };
-
 
 })();

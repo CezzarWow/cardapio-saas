@@ -4,52 +4,31 @@
  * Variáveis esperadas: $tables (array de mesas)
  */
 ?>
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); gap: 1rem; margin-bottom: 3rem;">
+<div class="table-grid">
     <?php foreach ($tables as $mesa): ?>
         <?php 
             $isOccupied = ($mesa['status'] == 'ocupada');
-            
-            // Visual Clássico que você gostou
-            if ($isOccupied) {
-                // OCUPADA: Fundo Vermelho claro, Borda Vermelha
-                $bg = '#fef2f2';
-                $border = '#ef4444';
-                $textColor = '#b91c1c';
-                $iconColor = '#ef4444';
-                $statusText = 'OCUPADA';
-                $valor = 'R$ ' . number_format($mesa['order_total'] ?? 0, 2, ',', '.');
-            } else {
-                // LIVRE: Fundo Branco, Borda Verde/Cinza
-                $bg = 'white';
-                $border = '#22c55e'; // Borda verde para destacar que está livre
-                $textColor = '#15803d';
-                $iconColor = '#22c55e';
-                $statusText = 'LIVRE';
-                $valor = 'Disponível';
-            }
+            $cardClass = $isOccupied ? 'table-card--ocupada' : 'table-card--livre';
+            $statusText = $isOccupied ? 'OCUPADA' : 'LIVRE';
+            $valor = $isOccupied ? 'R$ ' . number_format($mesa['order_total'] ?? 0, 2, ',', '.') : '';
         ?>
 
-        <div onclick="abrirMesa(<?= $mesa['id'] ?>, <?= $mesa['number'] ?>)" 
-             style="background: <?= $bg ?>; border: 2px solid <?= $border ?>; border-radius: 10px; cursor: pointer; transition: transform 0.1s; position: relative; overflow: hidden; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+        <div class="table-card <?= $cardClass ?>" 
+             onclick="abrirMesa(<?= $mesa['id'] ?>, <?= $mesa['number'] ?>)"
+             tabindex="0"
+             role="button"
+             aria-label="Mesa <?= $mesa['number'] ?> - <?= $statusText ?>"
+             onkeypress="if(event.key==='Enter') abrirMesa(<?= $mesa['id'] ?>, <?= $mesa['number'] ?>)">
             
             <?php if ($isOccupied && !empty($mesa['credit_limit']) && $mesa['credit_limit'] > 0): ?>
-                <div style="position: absolute; top: 0; right: 0; background: #ea580c; color: white; font-size: 0.6rem; padding: 2px 6px; border-bottom-left-radius: 6px; font-weight: 800; letter-spacing: 0.5px;">
-                    CREDIÁRIO
-                </div>
+                <span class="table-card__badge">CREDIÁRIO</span>
             <?php endif; ?>
 
-            <span style="font-size: 2.2rem; font-weight: 800; color: <?= $textColor ?>; line-height: 1;">
-                <?= $mesa['number'] ?>
-            </span>
-            
-            <span style="font-size: 0.75rem; font-weight: 700; color: <?= $iconColor ?>; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px;">
-                <?= $statusText ?>
-            </span>
+            <span class="table-card__number"><?= $mesa['number'] ?></span>
+            <span class="table-card__status"><?= $statusText ?></span>
 
             <?php if ($isOccupied): ?>
-                <div style="margin-top: 8px; background: rgba(255,255,255,0.6); padding: 2px 8px; border-radius: 4px; font-weight: 800; color: <?= $textColor ?>; font-size: 0.9rem;">
-                    <?= $valor ?>
-                </div>
+                <span class="table-card__value"><?= $valor ?></span>
             <?php endif; ?>
         </div>
     <?php endforeach; ?>

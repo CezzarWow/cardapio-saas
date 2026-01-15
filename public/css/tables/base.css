@@ -1,0 +1,47 @@
+/**
+ * ============================================
+ * TABLES CSS — Base (Variáveis e Reset)
+ * ============================================
+ */
+
+:root {
+    /* Cores - Mesas */
+    --table-libre-bg: #ffffff;
+    --table-libre-border: #22c55e;
+    --table-libre-text: #15803d;
+
+    --table-occupied-bg: #fef2f2;
+    --table-occupied-border: #ef4444;
+    --table-occupied-text: #b91c1c;
+
+    /* Cores - Comandas */
+    --comanda-open-bg: #fffbeb;
+    --comanda-open-border: #f59e0b;
+    --comanda-open-text: #b45309;
+
+    --comanda-paid-bg: #f0fdf4;
+    --comanda-paid-border: #22c55e;
+    --comanda-paid-text: #15803d;
+
+    /* Cores - Ações */
+    --btn-primary: #2563eb;
+    --btn-success: #059669;
+    --btn-purple: #4f46e5;
+    --btn-danger: #ef4444;
+    --btn-danger-light: #fca5a5;
+
+    /* Cores - UI */
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --border-light: #e2e8f0;
+    --bg-light: #f8fafc;
+
+    /* Sombras */
+    --shadow-card: 0 2px 5px rgba(0, 0, 0, 0.05);
+    --shadow-button: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+
+    /* Transições */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.2s ease;
+}

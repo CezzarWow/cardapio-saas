@@ -1,7 +1,9 @@
 /**
  * ============================================
  * DELIVERY JS — UI (Modais)
- * FASE 4: Abrir/fechar modais, sem lógica de negócio
+ * Abrir/fechar modais, sem lógica de negócio
+ * 
+ * Dependência: constants.js (carregar antes)
  * ============================================
  */
 
@@ -95,34 +97,19 @@ const DeliveryUI = {
 
         // [DEBUG] Forçar conversão para número
         const isPaidValue = parseInt(orderData.is_paid) || 0;
-if (isPaidValue === 1) {
+        if (isPaidValue === 1) {
             paymentEl.textContent = '✅ PAGO';
             paymentContainer.style.background = '#dcfce7';
             paymentEl.style.color = '#166534';
         } else {
-            const methodLabels = {
-                'dinheiro': '💵 Dinheiro',
-                'pix': '📱 Pix',
-                'credito': '💳 Crédito',
-                'debito': '💳 Débito',
-                'multiplo': '💰 Múltiplo'
-            };
-            paymentEl.textContent = methodLabels[orderData.payment_method] || orderData.payment_method || 'A pagar';
+            paymentEl.textContent = DeliveryConstants.getMethodLabel(orderData.payment_method);
             paymentContainer.style.background = '#fee2e2';
             paymentEl.style.color = '#dc2626';
         }
 
         // Badge de status
         const badge = document.getElementById('modal-order-badge');
-        const statusLabels = {
-            'novo': 'Novo',
-            'aceito': 'Aceito',
-            'preparo': 'Em Preparo',
-            'rota': 'Em Rota',
-            'entregue': 'Entregue',
-            'cancelado': 'Cancelado'
-        };
-        badge.textContent = statusLabels[orderData.status] || orderData.status;
+        badge.textContent = DeliveryConstants.getStatusLabel(orderData.status);
         badge.className = 'delivery-badge delivery-badge--' + orderData.status;
 
         // Lista de itens (se disponível)
@@ -142,6 +129,7 @@ if (isPaidValue === 1) {
 
         // Exibe modal
         modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
         if (typeof lucide !== 'undefined') lucide.createIcons();
     },
 
@@ -150,7 +138,10 @@ if (isPaidValue === 1) {
      */
     closeDetailsModal: function () {
         const modal = document.getElementById('deliveryDetailsModal');
-        if (modal) modal.style.display = 'none';
+        if (modal) {
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+        }
         this.currentOrder = null;
     },
 
@@ -166,6 +157,7 @@ if (isPaidValue === 1) {
         document.getElementById('cancel-reason').value = '';
 
         modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
         if (typeof lucide !== 'undefined') lucide.createIcons();
     },
 
@@ -174,7 +166,10 @@ if (isPaidValue === 1) {
      */
     closeCancelModal: function () {
         const modal = document.getElementById('deliveryCancelModal');
-        if (modal) modal.style.display = 'none';
+        if (modal) {
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+        }
     },
 
     /**

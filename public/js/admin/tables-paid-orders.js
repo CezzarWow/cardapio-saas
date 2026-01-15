@@ -1,16 +1,14 @@
 /**
  * TABLES-PAID-ORDERS.JS - Pedidos Pagos (Retirada)
  * Módulo: TablesAdmin.PaidOrders
- * Refatorado para usar BASE_URL
+ * 
+ * Dependência: tables-helpers.js (carregar antes)
  */
 
 (function () {
     'use strict';
 
     window.TablesAdmin = window.TablesAdmin || {};
-
-    // Helper URL
-    const getBaseUrl = () => typeof BASE_URL !== 'undefined' ? BASE_URL : '/cardapio-saas/public';
 
     let currentPaidOrderId = null;
     let currentPaidClientId = null;
@@ -26,24 +24,33 @@
             const modal = document.getElementById('paidOrderModal');
 
             if (nameEl) nameEl.innerText = clientName;
-            if (totalEl) totalEl.innerText = 'R$ ' + total.toFixed(2).replace('.', ',');
-            if (modal) modal.style.display = 'flex';
+            if (totalEl) totalEl.innerText = TablesHelpers.formatCurrency(total);
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.setAttribute('aria-hidden', 'false');
+            }
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
         },
 
         closeModal: function () {
             const modal = document.getElementById('paidOrderModal');
-            if (modal) modal.style.display = 'none';
+            if (modal) {
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+            }
             currentPaidOrderId = null;
         },
 
         deliver: function () {
             if (!currentPaidOrderId) return;
 
-            fetch(getBaseUrl() + '/admin/loja/pedidos/entregar', {
+            fetch(TablesHelpers.getBaseUrl() + '/admin/loja/pedidos/entregar', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': TablesHelpers.getCsrf()
+                },
                 body: JSON.stringify({ order_id: currentPaidOrderId })
             })
                 .then(r => r.json())
@@ -60,12 +67,11 @@
 
         edit: function () {
             if (!currentPaidOrderId) return;
-            window.location.href = getBaseUrl() + '/admin/loja/pdv?order_id=' + currentPaidOrderId + '&edit_paid=1';
+            window.location.href = TablesHelpers.getBaseUrl() + '/admin/loja/pdv?order_id=' + currentPaidOrderId + '&edit_paid=1';
         },
 
         getCurrentOrderId: () => currentPaidOrderId,
         getCurrentClientId: () => currentPaidClientId
     };
-
 
 })();

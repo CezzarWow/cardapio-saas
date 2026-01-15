@@ -15,6 +15,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 <!-- CSS do Delivery -->
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/base.css">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/history.css">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/modals.css?v=<?= time() ?>">
 
 <main class="main-content">
     <div class="history-container">
@@ -114,6 +115,9 @@ require __DIR__ . '/../panel/layout/sidebar.php';
     const BASE_URL = '<?= BASE_URL ?>';
     if (typeof lucide !== 'undefined') lucide.createIcons();
 </script>
+<!-- Constantes e helpers compartilhados (carregar PRIMEIRO) -->
+<script src="<?= BASE_URL ?>/js/delivery/helpers.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/delivery/constants.js?v=<?= time() ?>"></script>
 <!-- DeliveryPrint Modules (carregar SUB-MÓDULOS primeiro) -->
 <script src="<?= BASE_URL ?>/js/delivery/print-helpers.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/delivery/print-generators.js?v=<?= time() ?>"></script>
@@ -121,8 +125,5 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 <script src="<?= BASE_URL ?>/js/delivery/print-actions.js?v=<?= time() ?>"></script>
 <!-- Orquestrador (carregar POR ÚLTIMO) -->
 <script src="<?= BASE_URL ?>/js/delivery/print.js?v=<?= time() ?>"></script>
-
-<!-- Área de impressão (oculta) -->
-<div id="print-area" style="display: none;"></div>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>

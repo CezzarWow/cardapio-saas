@@ -1,0 +1,28 @@
+/**
+ * ============================================
+ * TABLES CSS — Grids (Layouts)
+ * ============================================
+ */
+
+/* Grid de Mesas */
+.table-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+    gap: 1rem;
+    margin-bottom: 3rem;
+}
+
+/* Grid de Comandas (ligeiramente maior) */
+.comanda-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 3rem;
+}
+
+/* Separador entre seções */
+.section-divider {
+    border: 0;
+    border-top: 2px dashed var(--border-light);
+    margin: 2rem 0;
+}

@@ -30,7 +30,8 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 <script src="<?= BASE_URL ?>/js/admin/client-validator.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/admin/clientes.js?v=<?= time() ?>"></script>
 
-<!-- TablesAdmin Modules (carregar SUB-MÓDULOS primeiro) -->
+<!-- TablesAdmin Modules (carregar HELPERS primeiro) -->
+<script src="<?= BASE_URL ?>/js/admin/tables-helpers.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/admin/tables-crud.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/admin/tables-clients.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/admin/tables-paid-orders.js?v=<?= time() ?>"></script>
@@ -40,5 +41,7 @@ require __DIR__ . '/../panel/layout/sidebar.php';
 
 
 <?php require __DIR__ . '/partials/modals/dossie.php'; ?>
+
+<?php require __DIR__ . '/partials/modals/pedido_pago.php'; ?>
 
 <?php require __DIR__ . '/../panel/layout/footer.php'; ?>

@@ -28,10 +28,10 @@ const DeliveryPolling = {
      */
     initSound: function () {
         try {
-            this.audio = new Audio(BASE_URL + '/sounds/new-order.mp3');
+            this.audio = new Audio(DeliveryHelpers.getBaseUrl() + '/sounds/new-order.mp3');
             this.audio.volume = 1.0; // Volume máximo
             // this.audio.playbackRate = 1.5; // Desativado - velocidade normal
-} catch (e) {
+        } catch (e) {
             console.warn('[Delivery] Audio não suportado');
         }
     },
@@ -45,7 +45,7 @@ const DeliveryPolling = {
         try {
             this.audio.currentTime = 0;
             this.audio.play();
-} catch (e) {
+        } catch (e) {
             console.warn('[Delivery] Erro ao tocar som:', e);
         }
     },
@@ -73,7 +73,7 @@ const DeliveryPolling = {
         //         this.resume();
         //     }
         // });
-},
+    },
 
     /**
      * Para polling
@@ -84,14 +84,14 @@ const DeliveryPolling = {
             this.timerId = null;
         }
         this.isActive = false;
-},
+    },
 
     /**
      * Pausa temporariamente
      */
     pause: function () {
         this.isPaused = true;
-},
+    },
 
     /**
      * Retoma polling
@@ -100,7 +100,7 @@ const DeliveryPolling = {
         if (this.isPaused) {
             this.isPaused = false;
             this.poll(); // Atualiza imediatamente
-}
+        }
     },
 
     /**
@@ -119,7 +119,7 @@ const DeliveryPolling = {
         if (cancelModal && cancelModal.style.display === 'flex') return;
 
         try {
-            const url = BASE_URL + '/admin/loja/delivery/list';
+            const url = DeliveryHelpers.getBaseUrl() + '/admin/loja/delivery/list';
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -133,9 +133,9 @@ const DeliveryPolling = {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
             const newCount = tempDiv.querySelectorAll('.delivery-column--novo .delivery-card-compact').length;
-// Se tem mais pedidos novos, toca som!
+            // Se tem mais pedidos novos, toca som!
             if (newCount > this.lastNewCount) {
-this.playSound();
+                this.playSound();
             }
             this.lastNewCount = newCount;
 

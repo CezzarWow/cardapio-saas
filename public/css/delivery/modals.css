@@ -1,0 +1,297 @@
+/**
+ * ============================================
+ * DELIVERY CSS — Modais
+ * Extraído de inline styles para manutenção
+ * ============================================
+ */
+
+/* Overlay do Modal */
+.delivery-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+}
+
+.delivery-modal[aria-hidden="false"] {
+    display: flex;
+}
+
+/* Container do Modal */
+.delivery-modal__content {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    max-height: 90vh;
+    max-width: 95%;
+    display: flex;
+    flex-direction: column;
+}
+
+.delivery-modal__content--small {
+    width: 420px;
+}
+
+.delivery-modal__content--medium {
+    width: 500px;
+}
+
+.delivery-modal__content--large {
+    width: 600px;
+}
+
+/* Header do Modal */
+.delivery-modal__header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.delivery-modal__header--dark {
+    background: #1e293b;
+    color: white;
+}
+
+.delivery-modal__header--danger {
+    background: #fef2f2;
+    border-bottom: 1px solid #fecaca;
+}
+
+.delivery-modal__title {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.delivery-modal__header--dark .delivery-modal__title {
+    color: white;
+}
+
+.delivery-modal__header--danger .delivery-modal__title {
+    color: #b91c1c;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Botão de fechar */
+.delivery-modal__close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delivery-modal__close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.delivery-modal__close:focus {
+    outline: 2px solid white;
+    outline-offset: 2px;
+}
+
+.delivery-modal__close i {
+    width: 24px;
+    height: 24px;
+    color: white;
+}
+
+/* Body do Modal */
+.delivery-modal__body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Footer do Modal */
+.delivery-modal__footer {
+    padding: 16px 20px;
+    border-top: 2px solid #e2e8f0;
+    background: #f8fafc;
+    display: flex;
+    gap: 10px;
+}
+
+/* Seção dentro do modal */
+.delivery-modal__section {
+    margin-bottom: 16px;
+}
+
+.delivery-modal__section-title {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.delivery-modal__section-content {
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+/* Cards de info lado a lado */
+.delivery-modal__info-row {
+    display: flex;
+    gap: 10px;
+}
+
+.delivery-modal__info-card {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.delivery-modal__info-card--success {
+    background: #dcfce7;
+}
+
+.delivery-modal__info-card--neutral {
+    background: #f1f5f9;
+}
+
+.delivery-modal__info-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.delivery-modal__info-card--success .delivery-modal__info-label {
+    color: #166534;
+}
+
+.delivery-modal__info-card--neutral .delivery-modal__info-label {
+    color: #64748b;
+}
+
+.delivery-modal__info-value {
+    font-weight: 800;
+}
+
+.delivery-modal__info-card--success .delivery-modal__info-value {
+    font-size: 1.2rem;
+    color: #166534;
+}
+
+.delivery-modal__info-card--neutral .delivery-modal__info-value {
+    font-size: 1rem;
+    color: #334155;
+}
+
+/* Botões de ação */
+.delivery-modal__btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    border: none;
+}
+
+.delivery-modal__btn:focus {
+    outline: 3px solid rgba(59, 130, 246, 0.4);
+    outline-offset: 2px;
+}
+
+.delivery-modal__btn--primary {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.delivery-modal__btn--primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.delivery-modal__btn--purple {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.delivery-modal__btn--purple:hover {
+    transform: translateY(-1px);
+}
+
+.delivery-modal__btn--danger {
+    background: #dc2626;
+    color: white;
+}
+
+.delivery-modal__btn--danger:hover {
+    background: #b91c1c;
+}
+
+.delivery-modal__btn--secondary {
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+}
+
+.delivery-modal__btn--secondary:hover {
+    background: #f8fafc;
+}
+
+/* Textarea */
+.delivery-modal__textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    resize: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+}
+
+.delivery-modal__textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Timestamp */
+.delivery-modal__timestamp {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+/* Print footer específico */
+.delivery-modal__print-section {
+    padding: 16px 20px;
+    border-top: 2px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.delivery-modal__print-title {
+    font-size: 0.8rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-align: center;
+}

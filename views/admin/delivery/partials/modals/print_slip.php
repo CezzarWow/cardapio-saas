@@ -2,43 +2,69 @@
 /**
  * ============================================
  * Modal: Impressão de Ficha (Motoboy ou Cozinha)
+ * 
+ * Refatorado: Usa classes CSS + Acessibilidade
  * ============================================
  */
 ?>
-<div id="deliveryPrintModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1100; align-items: center; justify-content: center;">
-    <div style="background: white; width: 420px; max-width: 95%; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); max-height: 90vh; display: flex; flex-direction: column;">
+<div id="deliveryPrintModal" 
+     class="delivery-modal" 
+     style="z-index: 1100;"
+     role="dialog" 
+     aria-modal="true" 
+     aria-labelledby="deliveryPrintModalTitle"
+     aria-hidden="true">
+    <div class="delivery-modal__content delivery-modal__content--small">
         
         <!-- Header -->
-        <div style="padding: 15px 20px; background: #1e293b; color: white; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700;">🖨️ Imprimir Ficha</span>
-            <button onclick="DeliveryPrint.closeModal()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">✕</button>
+        <div class="delivery-modal__header delivery-modal__header--dark">
+            <span id="deliveryPrintModalTitle" style="font-weight: 700;">🖨️ Imprimir Ficha</span>
+            <button onclick="DeliveryPrint.closeModal()" 
+                    class="delivery-modal__close"
+                    aria-label="Fechar impressão">
+                <span style="color: white; font-size: 1.2rem;">✕</span>
+            </button>
         </div>
 
-        <!-- Abas de seleção (escondidas quando tipo já é especificado) -->
-        <div id="print-tabs-container" style="display: flex; border-bottom: 1px solid #e2e8f0;">
-            <button onclick="DeliveryPrint.showDeliverySlip()" id="tab-delivery" 
-                    style="flex: 1; padding: 12px; background: #f8fafc; border: none; font-weight: 600; cursor: pointer; border-bottom: 3px solid #3b82f6; color: #1e293b;">
+        <!-- Abas de seleção -->
+        <div id="print-tabs-container" class="print-tabs" role="tablist">
+            <button onclick="DeliveryPrint.showDeliverySlip()" 
+                    id="tab-delivery" 
+                    class="print-tabs__btn print-tabs__btn--active"
+                    role="tab"
+                    aria-selected="true"
+                    aria-controls="print-slip-content">
                 🛵 Motoboy
             </button>
-            <button onclick="DeliveryPrint.showKitchenSlip()" id="tab-kitchen" 
-                    style="flex: 1; padding: 12px; background: white; border: none; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; color: #64748b;">
+            <button onclick="DeliveryPrint.showKitchenSlip()" 
+                    id="tab-kitchen" 
+                    class="print-tabs__btn"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="print-slip-content">
                 🍳 Cozinha
             </button>
         </div>
 
-        <!-- Conteúdo da Ficha (será preenchido via JS) -->
-        <div id="print-slip-content" style="overflow-y: auto; flex: 1; max-height: 50vh;">
-            <!-- Prévia da ficha -->
+        <!-- Conteúdo da Ficha -->
+        <div id="print-slip-content" 
+             class="print-slip-container"
+             role="tabpanel"
+             aria-labelledby="tab-delivery">
+            <!-- Prévia da ficha (preenchido via JS) -->
         </div>
 
-        <!-- Footer com botão de imprimir -->
-        <div style="padding: 15px 20px; border-top: 1px solid #e2e8f0; display: flex; gap: 10px;">
+        <!-- Footer -->
+        <div class="delivery-modal__footer">
             <button onclick="DeliveryPrint.closeModal()" 
-                    style="flex: 1; padding: 12px; background: #f1f5f9; color: #64748b; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                    class="delivery-modal__btn delivery-modal__btn--secondary"
+                    aria-label="Cancelar impressão">
                 Cancelar
             </button>
             <button onclick="DeliveryPrint.print()" 
-                    style="flex: 2; padding: 12px; background: #1e293b; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    class="delivery-modal__btn delivery-modal__btn--primary"
+                    style="flex: 2;"
+                    aria-label="Imprimir ficha">
                 <i data-lucide="printer" style="width: 18px; height: 18px;"></i>
                 Imprimir
             </button>
@@ -50,6 +76,50 @@
 <div id="print-area" style="display: none;"></div>
 
 <style>
+/* Tabs de impressão */
+.print-tabs {
+    display: flex;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.print-tabs__btn {
+    flex: 1;
+    padding: 12px;
+    background: white;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    color: #64748b;
+    transition: all 0.15s ease;
+}
+
+.print-tabs__btn:hover {
+    background: #f8fafc;
+}
+
+.print-tabs__btn:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+}
+
+.print-tabs__btn--active {
+    background: #f8fafc;
+    color: #1e293b;
+    border-bottom-color: #3b82f6;
+}
+
+.print-tabs__btn--kitchen.print-tabs__btn--active {
+    border-bottom-color: #8b5cf6;
+}
+
+.print-slip-container {
+    overflow-y: auto;
+    flex: 1;
+    max-height: 50vh;
+}
+
+/* Estilos de impressão */
 @media print {
     body * { visibility: hidden; }
     #print-area, #print-area * { visibility: visible; }
@@ -108,26 +178,28 @@
 </style>
 
 <script>
-// Atualiza visual das abas ao trocar
+// Atualiza visual e ARIA das abas ao trocar
 const originalShowDelivery = DeliveryPrint.showDeliverySlip;
 DeliveryPrint.showDeliverySlip = function() {
     originalShowDelivery.call(this);
-    document.getElementById('tab-delivery').style.borderBottomColor = '#3b82f6';
-    document.getElementById('tab-delivery').style.background = '#f8fafc';
-    document.getElementById('tab-delivery').style.color = '#1e293b';
-    document.getElementById('tab-kitchen').style.borderBottomColor = 'transparent';
-    document.getElementById('tab-kitchen').style.background = 'white';
-    document.getElementById('tab-kitchen').style.color = '#64748b';
+    const tabDelivery = document.getElementById('tab-delivery');
+    const tabKitchen = document.getElementById('tab-kitchen');
+    
+    tabDelivery.classList.add('print-tabs__btn--active');
+    tabDelivery.setAttribute('aria-selected', 'true');
+    tabKitchen.classList.remove('print-tabs__btn--active');
+    tabKitchen.setAttribute('aria-selected', 'false');
 };
 
 const originalShowKitchen = DeliveryPrint.showKitchenSlip;
 DeliveryPrint.showKitchenSlip = function() {
     originalShowKitchen.call(this);
-    document.getElementById('tab-kitchen').style.borderBottomColor = '#8b5cf6';
-    document.getElementById('tab-kitchen').style.background = '#f8fafc';
-    document.getElementById('tab-kitchen').style.color = '#1e293b';
-    document.getElementById('tab-delivery').style.borderBottomColor = 'transparent';
-    document.getElementById('tab-delivery').style.background = 'white';
-    document.getElementById('tab-delivery').style.color = '#64748b';
+    const tabDelivery = document.getElementById('tab-delivery');
+    const tabKitchen = document.getElementById('tab-kitchen');
+    
+    tabKitchen.classList.add('print-tabs__btn--active', 'print-tabs__btn--kitchen');
+    tabKitchen.setAttribute('aria-selected', 'true');
+    tabDelivery.classList.remove('print-tabs__btn--active');
+    tabDelivery.setAttribute('aria-selected', 'false');
 };
 </script>

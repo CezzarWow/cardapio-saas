@@ -2,6 +2,8 @@
 /**
  * Partial: Card Compacto para Kanban
  * Variáveis: $order
+ * 
+ * Refatorado: Acessibilidade adicionada (ARIA, tabindex, keyboard)
  */
 
 $status = $order['status'] ?? 'novo';
@@ -36,6 +38,10 @@ $now = new DateTime();
 $diff = $now->diff($createdAt);
 $timeAgo = $diff->h > 0 ? $diff->h . 'h' : $diff->i . 'm';
 
+// Cliente para aria-label
+$clientName = htmlspecialchars($order['client_name'] ?? 'Cliente');
+$statusLabel = ucfirst($status);
+
 // JSON para modal
 $orderJson = htmlspecialchars(json_encode([
     'id' => $order['id'],
@@ -52,14 +58,18 @@ $orderJson = htmlspecialchars(json_encode([
 ?>
 
 <div class="delivery-card-compact delivery-card-compact--<?= $status ?>" 
-     onclick='DeliveryUI.openDetailsModal(<?= $orderJson ?>)'>
+     onclick='DeliveryUI.openDetailsModal(<?= $orderJson ?>)'
+     tabindex="0"
+     role="button"
+     aria-label="Pedido de <?= $clientName ?> - Status: <?= $statusLabel ?> - R$ <?= number_format($order['total'] ?? 0, 2, ',', '.') ?>"
+     onkeypress="if(event.key==='Enter') DeliveryUI.openDetailsModal(<?= $orderJson ?>)">
     
     <div class="delivery-card-compact-header">
         <span class="delivery-card-compact-id">
             <?php
                 // Prioridade: cliente > mesa > fallback
                 if (!empty($order['client_name'])) {
-                    echo htmlspecialchars($order['client_name']);
+                    echo $clientName;
                 } elseif (!empty($order['table_number'])) {
                     echo 'Mesa ' . htmlspecialchars($order['table_number']);
                 } else {
@@ -92,7 +102,8 @@ $orderJson = htmlspecialchars(json_encode([
         </span>
         
         <?php
-            // Badge de Pagamento
+            // Badge de Pagamento - usa DeliveryConstants via JS render seria ideal,
+            // mas mantemos PHP para SSR
             $isPaid = $order['is_paid'] ?? 0;
             $paymentMethod = $order['payment_method'] ?? '';
             
@@ -100,15 +111,15 @@ $orderJson = htmlspecialchars(json_encode([
                 $paymentBadge = '✅ PAGO';
                 $paymentColor = '#16a34a'; // Verde
             } else {
-                // Mostra forma de pagamento esperada
-                $methodLabels = [
+                // Labels de pagamento (sincronizado com constants.js)
+                $paymentBadge = match($paymentMethod) {
                     'dinheiro' => '💵 Dinheiro',
                     'pix' => '📱 Pix',
                     'credito' => '💳 Crédito',
                     'debito' => '💳 Débito',
-                    'multiplo' => '💰 Múltiplo'
-                ];
-                $paymentBadge = $methodLabels[$paymentMethod] ?? '💰 ' . ucfirst($paymentMethod ?: 'A pagar');
+                    'multiplo' => '💰 Múltiplo',
+                    default => '💰 A pagar'
+                };
                 $paymentColor = '#dc2626'; // Vermelho
             }
         ?>
@@ -124,7 +135,8 @@ $orderJson = htmlspecialchars(json_encode([
     <div class="delivery-card-compact-actions" onclick="event.stopPropagation()">
         <?php if ($action): ?>
             <button class="delivery-card-compact-btn delivery-card-compact-btn--primary"
-                    onclick="DeliveryActions.advance(<?= $order['id'] ?>, '<?= $status ?>', '<?= $orderType ?>')">
+                    onclick="DeliveryActions.advance(<?= $order['id'] ?>, '<?= $status ?>', '<?= $orderType ?>')"
+                    aria-label="<?= $action['label'] ?>">
                 <i data-lucide="<?= $action['icon'] ?>" style="width: 14px; height: 14px;"></i>
                 <?= $action['label'] ?>
             </button>
@@ -132,7 +144,8 @@ $orderJson = htmlspecialchars(json_encode([
 
         <?php if (in_array($status, ['novo', 'preparo', 'rota'])): ?>
             <button class="delivery-card-compact-btn delivery-card-compact-btn--cancel"
-                    onclick="DeliveryUI.openCancelModal(<?= $order['id'] ?>)">
+                    onclick="DeliveryUI.openCancelModal(<?= $order['id'] ?>)"
+                    aria-label="Cancelar pedido">
                 <i data-lucide="x" style="width: 14px; height: 14px;"></i>
             </button>
         <?php endif; ?>

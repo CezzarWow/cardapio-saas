@@ -3,84 +3,95 @@
  * ============================================
  * Modal: Detalhes do Pedido Delivery
  * Com opções de impressão (Motoboy / Cozinha)
+ * 
+ * Refatorado: Usa classes CSS + Acessibilidade
  * ============================================
  */
 ?>
-<div id="deliveryDetailsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center;">
-    <div style="background: white; width: 500px; max-width: 95%; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); max-height: 90vh; display: flex; flex-direction: column;">
+<div id="deliveryDetailsModal" 
+     class="delivery-modal" 
+     role="dialog" 
+     aria-modal="true" 
+     aria-labelledby="deliveryDetailsModalTitle"
+     aria-hidden="true">
+    <div class="delivery-modal__content delivery-modal__content--medium">
         
-        <!-- Header com X destacado -->
-        <div style="padding: 16px 20px; background: #1e293b; display: flex; justify-content: space-between; align-items: center;">
+        <!-- Header -->
+        <div class="delivery-modal__header delivery-modal__header--dark">
             <div>
-                <h2 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: white;">
+                <h2 id="deliveryDetailsModalTitle" class="delivery-modal__title">
                     Pedido #<span id="modal-order-id">--</span>
                 </h2>
                 <span id="modal-order-badge" class="delivery-badge" style="margin-top: 4px; display: inline-block;"></span>
             </div>
-            <button onclick="DeliveryUI.closeDetailsModal()" style="background: rgba(255,255,255,0.2); border: none; cursor: pointer; padding: 8px; border-radius: 8px; transition: background 0.2s;">
-                <i data-lucide="x" style="width: 24px; height: 24px; color: white;"></i>
+            <button onclick="DeliveryUI.closeDetailsModal()" 
+                    class="delivery-modal__close"
+                    aria-label="Fechar detalhes do pedido">
+                <i data-lucide="x"></i>
             </button>
         </div>
 
-        <!-- Body (scrollable) -->
-        <div style="padding: 20px; overflow-y: auto; flex: 1;">
+        <!-- Body -->
+        <div class="delivery-modal__body">
             
             <!-- Cliente -->
-            <div style="margin-bottom: 16px;">
-                <h4 style="font-size: 0.8rem; color: #64748b; font-weight: 700; margin-bottom: 6px; text-transform: uppercase;">Cliente</h4>
-                <div style="background: #f8fafc; padding: 12px; border-radius: 8px;">
+            <div class="delivery-modal__section">
+                <h4 class="delivery-modal__section-title">Cliente</h4>
+                <div class="delivery-modal__section-content">
                     <div style="font-weight: 600; color: #1e293b; margin-bottom: 2px;" id="modal-client-name">--</div>
                     <div style="font-size: 0.85rem; color: #64748b;" id="modal-client-phone">--</div>
                 </div>
             </div>
 
             <!-- Endereço -->
-            <div style="margin-bottom: 16px;">
-                <h4 style="font-size: 0.8rem; color: #64748b; font-weight: 700; margin-bottom: 6px; text-transform: uppercase;">Endereço</h4>
-                <div style="background: #f8fafc; padding: 12px; border-radius: 8px; display: flex; align-items: flex-start; gap: 8px;">
+            <div class="delivery-modal__section">
+                <h4 class="delivery-modal__section-title">Endereço</h4>
+                <div class="delivery-modal__section-content" style="display: flex; align-items: flex-start; gap: 8px;">
                     <i data-lucide="map-pin" style="width: 16px; height: 16px; color: #f59e0b; flex-shrink: 0; margin-top: 2px;"></i>
                     <span id="modal-address" style="color: #334155; font-size: 0.9rem;">--</span>
                 </div>
             </div>
 
             <!-- Itens -->
-            <div style="margin-bottom: 16px;">
-                <h4 style="font-size: 0.8rem; color: #64748b; font-weight: 700; margin-bottom: 6px; text-transform: uppercase;">Itens</h4>
-                <div id="modal-items-list" style="background: #f8fafc; padding: 12px; border-radius: 8px;">
+            <div class="delivery-modal__section">
+                <h4 class="delivery-modal__section-title">Itens</h4>
+                <div id="modal-items-list" class="delivery-modal__section-content">
                     <!-- Preenchido via JS -->
                 </div>
             </div>
 
             <!-- Total + Pagamento -->
-            <div style="display: flex; gap: 10px;">
-                <div style="flex: 1; background: #dcfce7; padding: 12px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 0.75rem; color: #166534; text-transform: uppercase;">Total</div>
-                    <div id="modal-total" style="font-size: 1.2rem; font-weight: 800; color: #166534;">R$ --</div>
+            <div class="delivery-modal__info-row">
+                <div class="delivery-modal__info-card delivery-modal__info-card--success">
+                    <div class="delivery-modal__info-label">Total</div>
+                    <div id="modal-total" class="delivery-modal__info-value">R$ --</div>
                 </div>
-                <div style="flex: 1; background: #f1f5f9; padding: 12px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase;">Pagamento</div>
-                    <div id="modal-payment" style="font-size: 1rem; font-weight: 700; color: #334155;">--</div>
+                <div class="delivery-modal__info-card delivery-modal__info-card--neutral">
+                    <div class="delivery-modal__info-label">Pagamento</div>
+                    <div id="modal-payment" class="delivery-modal__info-value">--</div>
                 </div>
             </div>
 
             <!-- Horário -->
-            <div style="margin-top: 12px; text-align: center; font-size: 0.8rem; color: #94a3b8;">
+            <div class="delivery-modal__timestamp">
                 Pedido realizado em <span id="modal-time" style="font-weight: 600;">--</span>
             </div>
         </div>
 
         <!-- Footer: Opções de Impressão -->
-        <div style="padding: 16px 20px; border-top: 2px solid #e2e8f0; background: #f8fafc;">
-            <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 10px; text-align: center;">
+        <div class="delivery-modal__print-section">
+            <div class="delivery-modal__print-title">
                 🖨️ Imprimir Ficha
             </div>
-            <div style="display: flex; gap: 10px;">
+            <div class="delivery-modal__info-row">
                 <button onclick="DeliveryPrint.openModal(DeliveryUI.currentOrder?.id, 'delivery')" 
-                        style="flex: 1; padding: 14px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(59,130,246,0.3);">
+                        class="delivery-modal__btn delivery-modal__btn--primary"
+                        aria-label="Imprimir ficha do motoboy">
                     🛵 Motoboy
                 </button>
                 <button onclick="DeliveryPrint.openModal(DeliveryUI.currentOrder?.id, 'kitchen')" 
-                        style="flex: 1; padding: 14px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(139,92,246,0.3);">
+                        class="delivery-modal__btn delivery-modal__btn--purple"
+                        aria-label="Imprimir ficha da cozinha">
                     🍳 Cozinha
                 </button>
             </div>
