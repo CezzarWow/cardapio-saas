@@ -9,6 +9,7 @@ use App\Services\PaymentService;
 use App\Services\CashRegisterService;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\CashRegisterRepository;
+use App\Repositories\Order\OrderPaymentRepository;
 
 /**
  * Integration tests for CloseCommandAction
@@ -29,6 +30,7 @@ class CloseCommandActionIntegrationTest extends TestCase
     
     private $testOrderId;
     private $testCaixaId;
+    private static $testUserId = 1;
     private static $testRestaurantId = 1; // Use existing test restaurant
 
     public static function setUpBeforeClass(): void
@@ -40,7 +42,7 @@ class CloseCommandActionIntegrationTest extends TestCase
     {
         $this->orderRepo = new OrderRepository();
         $this->cashRegisterRepo = new CashRegisterRepository();
-        $this->paymentService = new PaymentService();
+        $this->paymentService = new PaymentService(new OrderPaymentRepository());
         $this->cashRegisterService = new CashRegisterService($this->cashRegisterRepo);
 
         $this->action = new CloseCommandAction(
@@ -48,6 +50,9 @@ class CloseCommandActionIntegrationTest extends TestCase
             $this->cashRegisterService,
             $this->orderRepo
         );
+
+        // Garantir que restaurante existe
+        $this->ensureRestaurantExists();
 
         // Criar caixa aberto para testes
         $this->ensureOpenCashRegister();
@@ -124,7 +129,7 @@ class CloseCommandActionIntegrationTest extends TestCase
         // Verificar se já existe caixa aberto
         $stmt = self::$conn->prepare("
             SELECT id FROM cash_registers 
-            WHERE restaurant_id = :rid AND status = 'open' 
+            WHERE restaurant_id = :rid AND status = 'aberto' 
             LIMIT 1
         ");
         $stmt->execute(['rid' => self::$testRestaurantId]);
@@ -138,7 +143,7 @@ class CloseCommandActionIntegrationTest extends TestCase
         // Criar caixa aberto
         $stmt = self::$conn->prepare("
             INSERT INTO cash_registers (restaurant_id, status, opening_balance, opened_at)
-            VALUES (:rid, 'open', 100.00, NOW())
+            VALUES (:rid, 'aberto', 100.00, NOW())
         ");
         $stmt->execute(['rid' => self::$testRestaurantId]);
         $this->testCaixaId = self::$conn->lastInsertId();
@@ -184,5 +189,40 @@ class CloseCommandActionIntegrationTest extends TestCase
             AND total = 50.00 
             AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
         ")->execute(['rid' => self::$testRestaurantId]);
+    }
+    private function ensureRestaurantExists(): void
+    {
+        // Garantir que user existe
+        $this->ensureUserExists();
+
+        // Verificar se restaurante 1 existe
+        $stmt = self::$conn->prepare("SELECT id FROM restaurants WHERE id = :id");
+        $stmt->execute(['id' => self::$testRestaurantId]);
+        
+        if (!$stmt->fetch()) {
+            // Criar restaurante de teste
+            $stmt = self::$conn->prepare("
+                INSERT INTO restaurants (id, user_id, name, slug, created_at)
+                VALUES (:id, :uid, 'Test Restaurant', 'test-restaurant', NOW())
+            ");
+            $stmt->execute([
+                'id' => self::$testRestaurantId,
+                'uid' => self::$testUserId
+            ]);
+        }
+    }
+
+    private function ensureUserExists(): void
+    {
+        $stmt = self::$conn->prepare("SELECT id FROM users WHERE id = :id");
+        $stmt->execute(['id' => self::$testUserId]);
+
+        if (!$stmt->fetch()) {
+            $stmt = self::$conn->prepare("
+                INSERT INTO users (id, name, email, password, created_at)
+                VALUES (:id, 'Test User', 'test@example.com', 'password', NOW())
+            ");
+            $stmt->execute(['id' => self::$testUserId]);
+        }
     }
 }

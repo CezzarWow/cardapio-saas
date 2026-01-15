@@ -36,10 +36,7 @@
 
 <!-- Core: State e Carrinho -->
 <script src="<?= BASE_URL ?>/js/pdv/state.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/cart.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/cart-core.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/cart-ui.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/cart-extras-modal.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/pdv/pdv-cart.js?v=<?= time() ?>"></script>
 
 <!-- Tables: Mesas e Clientes -->
 <script src="<?= BASE_URL ?>/js/pdv/tables.js?v=<?= time() ?>"></script>
@@ -68,4 +65,6 @@
 <script src="<?= BASE_URL ?>/js/pdv/checkout/index.js?v=<?= time() ?>"></script>
 
 <!-- Orquestrador Principal -->
+<script src="<?= BASE_URL ?>/js/pdv/pdv-events.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/pdv/pdv-search.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/pdv.js?v=<?= time() ?>"></script>

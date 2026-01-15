@@ -81,52 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Atualiza a UI do carrinho inicialmente
     PDVCart.updateUI();
 
-    // 5. FILTRO DE CATEGORIAS (Chips) E BUSCA (Texto + F2)
-    let selectedCategory = '';
-    let searchTerm = '';
-    const searchInput = document.getElementById('product-search-input');
-
-    function filterPdvProducts() {
-        const cards = document.querySelectorAll('.product-card');
-        cards.forEach(card => {
-            const cat = card.dataset.category;
-            const nameEl = card.querySelector('h3');
-            const name = nameEl ? nameEl.innerText.toLowerCase() : '';
-
-            const matchCat = (!selectedCategory || cat === selectedCategory);
-            const matchText = name.includes(searchTerm);
-
-            if (matchCat && matchText) {
-                card.style.display = '';
-            } else {
-                card.style.display = 'none';
-            }
-        });
-    }
-
-    document.querySelectorAll('.pdv-category-chip').forEach(chip => {
-        chip.addEventListener('click', function () {
-            document.querySelectorAll('.pdv-category-chip').forEach(c => c.classList.remove('active'));
-            this.classList.add('active');
-            selectedCategory = this.dataset.category;
-            filterPdvProducts();
-        });
-    });
-
-    // Eventos de Busca
-    if (searchInput) {
-        searchInput.addEventListener('input', function () {
-            searchTerm = this.value.toLowerCase().trim();
-            filterPdvProducts();
-        });
-
-        // Atalho F2
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'F2') {
-                e.preventDefault();
-                searchInput.focus();
-            }
-        });
+    // 5. FILTRO DE CATEGORIAS E BUSCA
+    if (window.PDVSearch) {
+        PDVSearch.init();
+    } else {
+        console.warn('PDVSearch module not found');
     }
 
     // 6. ÍCONES (Lucide)

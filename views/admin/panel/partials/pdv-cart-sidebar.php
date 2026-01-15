@@ -13,15 +13,15 @@
             <i data-lucide="shopping-cart" color="#2563eb"></i> Carrinho
         </h2>
         <div style="display: flex; gap: 5px;">
-            <button id="btn-undo-clear" class="btn-icon" onclick="PDVCart.undoClear()" title="Desfazer Limpeza" style="display: none; color: #2563eb; background: #eff6ff; border-color: #bfdbfe;">
+            <button id="btn-undo-clear" class="btn-icon" data-action="cart-undo" title="Desfazer Limpeza" style="display: none; color: #2563eb; background: #eff6ff; border-color: #bfdbfe;">
                 <i data-lucide="rotate-ccw"></i>
             </button>
             <?php if (!empty($contaAberta['id'])): ?>
-            <button class="btn-icon" onclick="openFichaModal()" title="Ver Ficha do Cliente" style="color: #2563eb; background: #eff6ff; border-color: #bfdbfe;">
+            <button class="btn-icon" data-action="ficha-open" title="Ver Ficha do Cliente" style="color: #2563eb; background: #eff6ff; border-color: #bfdbfe;">
                 <i data-lucide="clipboard-list"></i>
             </button>
             <?php endif; ?>
-            <button class="btn-icon" onclick="clearCart()" title="Limpar Carrinho"><i data-lucide="trash-2"></i></button>
+            <button class="btn-icon" data-action="cart-clear" title="Limpar Carrinho"><i data-lucide="trash-2"></i></button>
         </div>
     </div>
     
@@ -45,7 +45,10 @@
                         <span><?= $itemAntigo['quantity'] ?>x <?= $itemAntigo['name'] ?></span>
                         <div style="display:flex; align-items:center; gap:5px;">
                             <span>R$ <?= number_format($itemAntigo['price'], 2, ',', '.') ?></span>
-                            <button onclick="deleteSavedItem(<?= $itemAntigo['id'] ?>, <?= $contaAberta['id'] ?>)" title="Remover item salvo"
+                            <button data-action="saved-item-delete" 
+                                    data-id="<?= $itemAntigo['id'] ?>" 
+                                    data-order-id="<?= $contaAberta['id'] ?>"
+                                    title="Remover item salvo"
                                     style="border:none; background:none; cursor:pointer; color:#ef4444; display:flex; align-items:center;">
                                 <i data-lucide="trash" style="width:14px; height:14px;"></i>
                             </button>
@@ -54,7 +57,9 @@
                 <?php endforeach; ?>
             </div>
             <div style="text-align: right; margin-top: 5px;">
-                 <button onclick="cancelTableOrder(<?= $mesa_id ?>, <?= $contaAberta['id'] ?>)" 
+                 <button data-action="table-cancel" 
+                         data-table-id="<?= $mesa_id ?>"
+                         data-order-id="<?= $contaAberta['id'] ?>"
                          style="background: none; border: none; color: #dc2626; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-decoration: underline;">
                      Cancelar Pedido da Mesa
                  </button>
@@ -68,7 +73,7 @@
         <div style="margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px dashed #e5e7eb;">
             <label style="font-size: 1.1rem; font-weight: 800; color: #1f2937; margin-bottom: 10px; display: block;">Identificar Mesa / Cliente</label>
             
-                <div id="client-search-area" style="display: flex; gap: 8px; align-items: center; height: 44px;">
+            <div id="client-search-area" style="display: flex; gap: 8px; align-items: center; height: 44px;">
                 <!-- Wrapper relativo apenas para o Input e Resultados -->
                 <form id="form-client-search" action="#" onsubmit="return false;" style="position: relative; flex: 1; height: 100%;">
                     <input type="text" id="client-search" name="pdv_main_search_<?= time() ?>" autocomplete="off" data-lpignore="true" placeholder="Clique para ver mesas ou digite..."
@@ -79,7 +84,7 @@
                     </div>
                 </form>
                 
-                <button type="button" onclick="const m=document.getElementById('clientModal'); if(m) { document.body.appendChild(m); m.style.display='flex'; m.style.zIndex='9999'; document.getElementById('new_client_name').focus(); }" title="Novo Cliente"
+                <button type="button" data-action="client-new" title="Novo Cliente"
                         style="flex-shrink: 0; background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; height: 100%; width: 44px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
                     <i data-lucide="user-plus" style="width: 20px;"></i>
                 </button>
@@ -90,7 +95,7 @@
                     <i data-lucide="user" style="width: 18px; color: #059669;"></i>
                     <span id="selected-client-name" style="font-size: 0.95rem; font-weight: 600; color: #065f46;">Nome</span>
                 </div>
-                <button onclick="clearClient()" style="border: none; background: #d1fae5; color: #059669; cursor: pointer; font-weight: bold; font-size: 1.2rem; padding: 4px 10px; border-radius: 6px; display: flex; align-items: center; justify-content: center; height: 32px; width: 32px;">&times;</button>
+                <button data-action="client-clear" style="border: none; background: #d1fae5; color: #059669; cursor: pointer; font-weight: bold; font-size: 1.2rem; padding: 4px 10px; border-radius: 6px; display: flex; align-items: center; justify-content: center; height: 32px; width: 32px;">&times;</button>
             </div>
             
             <input type="hidden" id="current_client_id" name="client_id">
@@ -127,7 +132,7 @@
                 // Botão aparece se: mesa selecionada OU comanda existente
                 $showSaveBtn = !empty($mesa_id) || !empty($contaAberta['id']);
                 ?>
-            <button id="btn-save-command" onclick="saveClientOrder()" 
+            <button id="btn-save-command" data-action="order-save"
                     style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: <?= $showSaveBtn ? 'flex' : 'none' ?>; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                 Salvar
             </button>
@@ -135,7 +140,7 @@
 
             <!-- 2. Botão INCLUIR (Edição de Pedido Pago) -->
             <?php if (!empty($showIncludePaid)): ?>
-            <button id="btn-include-paid" onclick="includePaidOrderItems()" 
+            <button id="btn-include-paid" data-action="order-include-paid"
                     style="flex: 1; background: #16a34a; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                 <i data-lucide="plus-circle" size="20"></i> Incluir
             </button>
@@ -143,7 +148,7 @@
 
             <!-- 3. Botão FINALIZAR (Balcão - Venda Rápida) -->
             <?php if (!empty($showQuickSale)): ?>
-            <button id="btn-finalizar" class="btn-primary" onclick="finalizeSale()" 
+            <button id="btn-finalizar" class="btn-primary" data-action="order-finalize-quick"
                     style="flex: 1; display: flex; padding: 16px; font-size: 1.1rem; align-items: center; justify-content: center;">
                 Finalizar
             </button>
@@ -151,7 +156,7 @@
 
             <!-- 4. Botão FECHAR MESA -->
             <?php if (!empty($showCloseTable)): ?>
-                <button onclick="fecharContaMesa(<?= $mesa_id ?>)" 
+                <button data-action="order-close-table" data-table-id="<?= $mesa_id ?>"
                         style="flex: 1; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                     Finalizar
                 </button>
@@ -159,7 +164,7 @@
 
             <!-- 5. Botão ENTREGAR/BAIXAR (Comanda) -->
             <?php if (!empty($showCloseCommand)): ?>
-                <button onclick="fecharComanda(<?= $contaAberta['id'] ?>)" 
+                <button data-action="order-close-command" data-order-id="<?= $contaAberta['id'] ?>"
                         style="flex: 1; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                     Finalizar
                 </button>
@@ -180,7 +185,7 @@
                     <i data-lucide="receipt" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;"></i>
                     Ficha <?= $mesa_id ? 'Mesa ' . $mesa_numero : 'Cliente' ?>
                 </h2>
-                <button onclick="closeFichaModal()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.5rem; line-height: 1;">&times;</button>
+                <button data-action="ficha-close" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.5rem; line-height: 1;">&times;</button>
             </div>
             <p style="font-size: 0.9rem; opacity: 0.9; margin-top: 5px;">Consumo atual • <?= date('d/m/Y H:i') ?></p>
         </div>
@@ -249,11 +254,11 @@
         
         <!-- Botões -->
         <div style="padding: 1rem 1.5rem; background: #f9fafb; display: flex; gap: 10px;">
-            <button onclick="printFicha()" 
+            <button data-action="ficha-print"
                     style="flex: 1; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <i data-lucide="printer" style="width: 20px; height: 20px;"></i> Imprimir
             </button>
-            <button onclick="closeFichaModal()" 
+            <button data-action="ficha-close"
                     style="flex: 1; padding: 14px; background: #6b7280; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 1rem;">
                 Fechar
             </button>
@@ -261,4 +266,3 @@
     </div>
 </div>
 <?php endif; ?>
-
