@@ -128,6 +128,11 @@ Router::add('/admin/loja/movimentacoes', \App\Controllers\Admin\StockMovementCon
 Router::add('/admin/loja/catalogo', \App\Controllers\Admin\StockDashboardController::class, 'index');
 Router::pattern('/^\/admin\/loja\/catalogo\/partial\/([a-z]+)$/', \App\Controllers\Admin\StockDashboardController::class, 'partial');
 
+// --- SPA Admin Shell (Navegação Unificada) ---
+Router::add('/admin/loja/spa', \App\Controllers\Admin\AppShellController::class, 'index');
+Router::pattern('/^\/admin\/spa\/partial\/([a-z]+)$/', \App\Controllers\Admin\AppShellController::class, 'partial');
+
+
 // ============================================================
 // GRUPO 7: Categorias (migradas para Router)
 // ============================================================

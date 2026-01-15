@@ -1,0 +1,88 @@
+<?php
+/**
+ * Shell SPA - Layout Principal com Sidebar Fixa
+ * 
+ * Este arquivo é o "app shell" do SPA.
+ * - Header e Sidebar são fixos
+ * - Conteúdo é carregado dinamicamente via AJAX no #spa-content
+ */
+
+use App\Core\ViewHelper;
+
+\App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
+?>
+<!-- SPA CSS -->
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/spa.css?v=<?= time() ?>">
+
+<?php // Sidebar com navegação SPA (links interceptados pelo AdminSPA.js) ?>
+<aside class="sidebar">
+    <div class="brand-area">
+        <a href="<?= BASE_URL ?>/admin/loja/config" title="Configurações da Loja">
+            <?php if (!empty($_SESSION['loja_ativa_logo'])): ?>
+                <img src="<?= BASE_URL ?>/uploads/<?= $_SESSION['loja_ativa_logo'] ?>" class="store-logo" alt="Logo">
+            <?php else: ?>
+                <div class="brand-icon">
+                    <i data-lucide="store" color="white" size="32"></i>
+                </div>
+            <?php endif; ?>
+        </a>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <a href="<?= BASE_URL ?>/admin/loja/pdv" class="nav-item" data-section="balcao">
+            <i data-lucide="layout-dashboard" size="36"></i>
+            <span class="nav-label">Balcão</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/admin/loja/mesas" class="nav-item" data-section="mesas">
+            <i data-lucide="utensils-crossed" size="36"></i>
+            <span class="nav-label">Mesas</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/admin/loja/delivery" class="nav-item" data-section="delivery">
+            <i data-lucide="bike" size="36"></i>
+            <span class="nav-label">Delivery</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/admin/loja/cardapio" class="nav-item" data-section="cardapio">
+            <i data-lucide="book-open" size="36"></i>
+            <span class="nav-label">Cardápio</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/admin/loja/catalogo" class="nav-item" data-section="estoque">
+            <i data-lucide="package" size="36"></i>
+            <span class="nav-label">Estoque</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/admin/loja/caixa" class="nav-item" data-section="caixa">
+            <i data-lucide="wallet" size="36"></i>
+            <span class="nav-label">Caixa</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/admin" class="nav-item center-exit" title="Sair">
+            <i data-lucide="log-out" size="22"></i>
+        </a>
+    </nav>
+</aside>
+
+<?php // Container principal do SPA - conteúdo carregado via AJAX ?>
+<main class="main-content">
+    <div id="spa-content" class="spa-content-container">
+        <!-- Skeleton inicial enquanto carrega primeira seção -->
+        <div class="skeleton-container">
+            <div class="skeleton-header"></div>
+            <div class="skeleton-grid">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<?php // Scripts do SPA ?>
+<script>const BASE_URL = '<?= BASE_URL ?>';</script>
+<script src="<?= BASE_URL ?>/js/admin/admin-spa.js?v=<?= time() ?>"></script>
+
+<?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

@@ -1,0 +1,132 @@
+/**
+ * SPA Global Styles
+ * 
+ * Estilos globais para o Admin SPA:
+ * - Container de conteúdo
+ * - Transições entre seções
+ * - Skeleton loaders
+ */
+
+/* ========== SPA CONTENT CONTAINER ========== */
+.spa-content-container {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #f9fafb;
+    min-height: 100%;
+}
+
+/* ========== TRANSITIONS ========== */
+.spa-content-container {
+    animation: spaFadeIn 0.2s ease-out;
+}
+
+@keyframes spaFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========== SKELETON LOADERS ========== */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton-container {
+    padding: 20px;
+}
+
+.skeleton-header {
+    height: 40px;
+    width: 60%;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+}
+
+.skeleton-row {
+    height: 80px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+}
+
+.skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.skeleton-card {
+    height: 240px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+}
+
+.skeleton-chips {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.skeleton-chip {
+    height: 32px;
+    width: 80px;
+    border-radius: 20px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+}
+
+/* Staggered animation delays */
+.skeleton-card:nth-child(2),
+.skeleton-row:nth-child(2),
+.skeleton-chip:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.skeleton-card:nth-child(3),
+.skeleton-row:nth-child(3),
+.skeleton-chip:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.skeleton-card:nth-child(4),
+.skeleton-row:nth-child(4),
+.skeleton-chip:nth-child(4) {
+    animation-delay: 0.3s;
+}
+
+.skeleton-card:nth-child(5),
+.skeleton-row:nth-child(5) {
+    animation-delay: 0.4s;
+}
+
+.skeleton-card:nth-child(6),
+.skeleton-row:nth-child(6) {
+    animation-delay: 0.5s;
+}
+
+/* ========== NAV ACTIVE STATE ========== */
+.sidebar-nav .nav-item.active {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+}

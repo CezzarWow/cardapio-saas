@@ -85,6 +85,17 @@ class ControllerProvider implements Provider
             );
         });
 
+        // App Shell Controller (SPA Principal)
+        $container->bind(\App\Controllers\Admin\AppShellController::class, function ($c) {
+            return new \App\Controllers\Admin\AppShellController(
+                $c->get(\App\Services\Product\ProductService::class),
+                $c->get(\App\Services\CategoryService::class),
+                $c->get(\App\Services\Cardapio\CardapioQueryService::class)
+            );
+        });
+
+
+
         $container->bind(\App\Controllers\Admin\TableController::class, function ($c) {
             return new \App\Controllers\Admin\TableController(
                 $c->get(\App\Services\TableService::class),
