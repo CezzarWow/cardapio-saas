@@ -13,8 +13,8 @@
 
         openModal: function (startType) {
             // Verifica se o ClientManager existe (carregado via clientes.js)
-            if (window.ClientManager && window.ClientManager.ui) {
-                window.ClientManager.ui.openModal(startType);
+            if (window.ClientManager) {
+                window.ClientManager.openModal(startType);
             } else {
                 console.error('ClientManager não encontrado. Verifique se clientes.js foi carregado.');
                 alert('Erro: Módulo de Clientes não carregado.');

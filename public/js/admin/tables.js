@@ -58,7 +58,7 @@
 
     // Alias para Clientes (Prioriza ClientManager direto se possível, fallback pro TablesAdmin)
     window.openNewClientModal = (type) => {
-        if (window.ClientManager) window.ClientManager.ui.openModal(type);
+        if (window.ClientManager) window.ClientManager.openModal(type);
         else TablesAdmin.openNewClientModal(type);
     };
 
