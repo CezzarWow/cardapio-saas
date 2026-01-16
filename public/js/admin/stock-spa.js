@@ -5,7 +5,7 @@
  * 
  * @version 2.1 - Com cache de abas
  */
-const StockSPA = {
+window.StockSPA = {
     currentTab: 'produtos',
     isLoading: false,
     tabCache: {}, // Cache para armazenar HTML das abas já carregadas
@@ -14,8 +14,7 @@ const StockSPA = {
      * Inicializa o módulo SPA
      */
     init() {
-        console.log('[StockSPA] Initializing...');
-
+        // [StockSPA] Initializing...
         this.bindTabs();
         this.loadInitialTab();
         this.bindCategoryChips();
@@ -40,8 +39,6 @@ const StockSPA = {
             if (!tab || tab.classList.contains('active') || this.isLoading) return;
 
             const tabName = tab.dataset.tab;
-            console.log('[StockSPA] Tab clicked:', tabName);
-
             this.loadTab(tabName);
         });
     },
@@ -86,7 +83,6 @@ const StockSPA = {
 
         // Se existe no cache, usa direto (instantâneo!) com requestAnimationFrame
         if (this.tabCache[tabName]) {
-            console.log('[StockSPA] Using cached content for:', tabName);
             requestAnimationFrame(() => {
                 contentContainer.innerHTML = this.tabCache[tabName];
                 this.reinitComponents();
@@ -100,7 +96,6 @@ const StockSPA = {
 
         try {
             const url = `${BASE_URL}/admin/loja/catalogo/partial/${tabName}`;
-            console.log('[StockSPA] Fetching:', url);
 
             const response = await fetch(url, {
                 headers: {
@@ -193,7 +188,6 @@ const StockSPA = {
         } else {
             this.tabCache = {};
         }
-        console.log('[StockSPA] Cache cleared:', tabName || 'all');
     },
 
     /**

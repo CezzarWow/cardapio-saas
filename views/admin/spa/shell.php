@@ -83,6 +83,8 @@ use App\Core\ViewHelper;
 
 <?php // Scripts do SPA ?>
 <script>const BASE_URL = '<?= BASE_URL ?>';</script>
+<script src="<?= BASE_URL ?>/js/admin/spa-config.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/admin/spa-ui.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/admin/admin-spa.js?v=<?= time() ?>"></script>
 
 <?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

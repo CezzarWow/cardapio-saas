@@ -82,17 +82,18 @@ Router::add('/admin/restaurantes/status', RestaurantController::class, 'toggleSt
 Router::add('/admin/autologin', AutologinController::class, 'login');
 
 // ============================================================
-// GRUPO 3: Painel/PDV (migradas para Router)
+// GRUPO 3: Painel/PDV → REDIRECT TO SPA
 // ============================================================
-Router::add('/admin/loja/painel', \App\Controllers\Admin\PdvController::class, 'index');
-Router::add('/admin/loja/pdv', \App\Controllers\Admin\PdvController::class, 'index');
-Router::add('/admin/loja/mesas', \App\Controllers\Admin\TableController::class, 'index');
+// Legacy routes redirect to SPA shell
+Router::add('/admin/loja/painel', \App\Controllers\Admin\RedirectController::class, 'toSpaBalcao');
+Router::add('/admin/loja/pdv', \App\Controllers\Admin\RedirectController::class, 'toSpaBalcao');
+Router::add('/admin/loja/mesas', \App\Controllers\Admin\RedirectController::class, 'toSpaMesas');
 Router::add('/admin/loja/pdv/cancelar-edicao', \App\Controllers\Admin\PdvController::class, 'cancelEdit');
 
 // ============================================================
-// GRUPO 4: Delivery (migradas para Router)
+// GRUPO 4: Delivery → REDIRECT TO SPA (except API endpoints)
 // ============================================================
-Router::add('/admin/loja/delivery', \App\Controllers\Admin\DeliveryController::class, 'index');
+Router::add('/admin/loja/delivery', \App\Controllers\Admin\RedirectController::class, 'toSpaDelivery');
 Router::add('/admin/loja/delivery/status', \App\Controllers\Admin\DeliveryController::class, 'updateStatus');
 Router::add('/admin/loja/delivery/list', \App\Controllers\Admin\DeliveryController::class, 'list');
 Router::add('/admin/loja/delivery/details', \App\Controllers\Admin\DeliveryController::class, 'getOrderDetails');
@@ -100,9 +101,9 @@ Router::add('/admin/loja/delivery/history', \App\Controllers\Admin\DeliveryContr
 Router::add('/admin/loja/delivery/send-to-table', \App\Controllers\Admin\DeliveryController::class, 'sendToTable');
 
 // ============================================================
-// GRUPO 5: Cardápio Admin (migradas para Router)
+// GRUPO 5: Cardápio Admin → REDIRECT TO SPA (except form endpoints)
 // ============================================================
-Router::add('/admin/loja/cardapio', \App\Controllers\Admin\CardapioController::class, 'index');
+Router::add('/admin/loja/cardapio', \App\Controllers\Admin\RedirectController::class, 'toSpaCardapio');
 Router::add('/admin/loja/cardapio/salvar', \App\Controllers\Admin\CardapioController::class, 'update');
 Router::add('/admin/loja/cardapio/combo/novo', \App\Controllers\Admin\CardapioController::class, 'comboForm');
 Router::add('/admin/loja/cardapio/combo/salvar', \App\Controllers\Admin\CardapioController::class, 'storeCombo');
@@ -124,8 +125,8 @@ Router::add('/admin/loja/reposicao', \App\Controllers\Admin\StockRepositionContr
 Router::add('/admin/loja/reposicao/ajustar', \App\Controllers\Admin\StockRepositionController::class, 'adjust');
 Router::add('/admin/loja/movimentacoes', \App\Controllers\Admin\StockMovementController::class, 'index');
 
-// --- SPA Stock Dashboard (Catálogo Unificado) ---
-Router::add('/admin/loja/catalogo', \App\Controllers\Admin\StockDashboardController::class, 'index');
+// --- SPA Stock Dashboard (Catálogo Unificado) → REDIRECT TO SPA
+Router::add('/admin/loja/catalogo', \App\Controllers\Admin\RedirectController::class, 'toSpaEstoque');
 Router::pattern('/^\/admin\/loja\/catalogo\/partial\/([a-z]+)$/', \App\Controllers\Admin\StockDashboardController::class, 'partial');
 
 // --- SPA Admin Shell (Navegação Unificada) ---
@@ -163,9 +164,9 @@ Router::add('/admin/loja/adicionais/vincular-categoria', \App\Controllers\Admin\
 Router::add('/admin/loja/adicionais/get-linked-categories', \App\Controllers\Admin\AdditionalController::class, 'getLinkedCategories');
 
 // ============================================================
-// GRUPO 9: Caixa/Financeiro (migradas para Router)
+// GRUPO 9: Caixa/Financeiro → REDIRECT TO SPA (except action endpoints)
 // ============================================================
-Router::add('/admin/loja/caixa', \App\Controllers\Admin\CashierController::class, 'index');
+Router::add('/admin/loja/caixa', \App\Controllers\Admin\RedirectController::class, 'toSpaCaixa');
 Router::add('/admin/loja/caixa/abrir', \App\Controllers\Admin\CashierController::class, 'open');
 Router::add('/admin/loja/caixa/fechar', \App\Controllers\Admin\CashierController::class, 'close');
 Router::add('/admin/loja/caixa/movimentar', \App\Controllers\Admin\CashierController::class, 'addMovement');

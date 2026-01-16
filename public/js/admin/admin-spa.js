@@ -1,14 +1,6 @@
 /**
- * AdminSPA - Sistema de Navegação SPA para o Painel Admin
- * 
- * Features:
- * - Router client-side (hash-based)
- * - State Manager centralizado
- * - Cache de conteúdo por seção
- * - Skeleton loader automático
- * - Lifecycle hooks (onEnter, onLeave)
- * 
- * @version 1.0.0
+ * AdminSPA - Core Logic
+ * Responsável por: Router, Loader, State Management
  */
 const AdminSPA = {
     // =========================================================================
@@ -16,101 +8,60 @@ const AdminSPA = {
     // =========================================================================
     currentSection: null,
     isLoading: false,
-    contentCache: {},
+    cache: {},
     state: {},
-    sectionModules: {},
-
-    // =========================================================================
-    // CONFIGURAÇÃO DE SEÇÕES
-    // =========================================================================
-    sections: {
-        'balcao': {
-            url: '/admin/loja/pdv',
-            partial: '/admin/spa/partial/balcao',
-            skeleton: 'grid',
-            hasPolling: false
-        },
-        'mesas': {
-            url: '/admin/loja/mesas',
-            partial: '/admin/spa/partial/mesas',
-            skeleton: 'grid',
-            hasPolling: false
-        },
-        'delivery': {
-            url: '/admin/loja/delivery',
-            partial: '/admin/spa/partial/delivery',
-            skeleton: 'kanban',
-            hasPolling: true
-        },
-        'cardapio': {
-            url: '/admin/loja/cardapio',
-            partial: '/admin/spa/partial/cardapio',
-            skeleton: 'tabs',
-            hasPolling: false
-        },
-        'estoque': {
-            url: '/admin/loja/catalogo',
-            partial: '/admin/spa/partial/estoque',
-            skeleton: 'grid',
-            hasPolling: false
-        },
-        'caixa': {
-            url: '/admin/loja/caixa',
-            partial: '/admin/spa/partial/caixa',
-            skeleton: 'table',
-            hasPolling: false
-        }
-    },
+    modules: {},
+    loadedScripts: new Set(),
+    spaContentContainer: null,
 
     // =========================================================================
     // INICIALIZAÇÃO
     // =========================================================================
     init() {
-        console.log('[AdminSPA] Initializing...');
+        this.cacheDOM();
 
-        // Registra módulos com Lifecycle
-        this.registerModule('delivery', {
-            onEnter: async () => {
-                if (window.DeliveryPolling) DeliveryPolling.init();
-            },
-            onLeave: async () => {
-                if (window.DeliveryPolling) DeliveryPolling.stop();
-            }
-        });
+        // Bind Config Sections
+        this.sections = SpaConfig.sections;
 
-        // Módulo Mesas
-        this.registerModule('mesas', {
-            onEnter: async () => {
-                // Placeholder para init customizado se necessário
-                console.log('[AdminSPA] Mesas module entered');
-            }
-        });
-
-        // Módulo PDV / Balcão
-        const pdvHandler = {
-            onEnter: async () => {
-                if (window.PDV && typeof PDV.init === 'function') {
-                    PDV.init();
-                }
-            },
-            onLeave: async () => {
-                // Persiste carrinho no SessionStorage ao sair
-                if (window.PDVCart && typeof PDVCart.saveForMigration === 'function') {
-                    console.log('[AdminSPA] Saving PDV state...');
-                    PDVCart.saveForMigration();
-                }
-            }
-        };
-        this.registerModule('pdv', pdvHandler);
-        this.registerModule('balcao', pdvHandler); // Alias
+        // Registra módulos padrão
+        this.registerDefaultModules();
 
         this.bindNavigation();
         this.bindPopState();
-        this.loadInitialSection();
-
-        console.log('[AdminSPA] Ready');
+        this.handleInitialState();
     },
 
+    cacheDOM() {
+        this.spaContentContainer = document.getElementById('spa-content');
+    },
+
+    registerDefaultModules() {
+        // Delivery
+        this.registerModule('delivery', {
+            onEnter: async () => { if (window.DeliveryPolling) DeliveryPolling.init(); },
+            onLeave: async () => { if (window.DeliveryPolling) DeliveryPolling.stop(); }
+        });
+
+        // Mesas (Placeholder)
+        this.registerModule('mesas', {});
+
+        // PDV/Balcão
+        const pdvHandler = {
+            onEnter: async () => { if (window.PDV && PDV.init) PDV.init(); },
+            onLeave: async () => { if (window.PDV && PDV.saveState) PDV.saveState(); }
+        };
+        this.registerModule('pdv', pdvHandler);
+        this.registerModule('balcao', pdvHandler);
+
+        // Caixa
+        this.registerModule('caixa', {
+            onEnter: async () => { if (window.CashierSPA && CashierSPA.init) CashierSPA.init(); }
+        });
+    },
+
+    // =========================================================================
+    // NAVEGAÇÃO & UI
+    // =========================================================================
     bindNavigation() {
         const sidebar = document.querySelector('.sidebar-nav');
         if (!sidebar) return;
@@ -119,9 +70,7 @@ const AdminSPA = {
             const link = e.target.closest('.nav-item');
             if (!link || link.classList.contains('center-exit')) return;
 
-            e.preventDefault();
-
-            const section = this.getSectionFromUrl(link.href);
+            const section = link.dataset.section;
             if (section && section !== this.currentSection) {
                 this.navigateTo(section);
             }
@@ -137,26 +86,14 @@ const AdminSPA = {
         });
     },
 
-    loadInitialSection() {
+    handleInitialState() {
         const section = this.getSectionFromHash() || 'balcao';
         this.navigateTo(section, false);
     },
 
-    // =========================================================================
-    // HELPERS DE RECARREGAMENTO
-    // =========================================================================
-    async reloadCurrentSection() {
-        if (!this.currentSection) return;
-
-        console.log('[AdminSPA] Reloading section:', this.currentSection);
-        await this.loadSectionContent(this.currentSection, this.sections[this.currentSection]);
-    },
-
-    // =========================================================================
-    // NAVEGAÇÃO
-    // =========================================================================
-    async navigateTo(sectionName, updateHistory = true) {
-        if (this.isLoading || sectionName === this.currentSection) return;
+    async navigateTo(sectionName, updateHistory = true, forceReload = false) {
+        if (this.isLoading && !forceReload) return;
+        if (sectionName === this.currentSection && !forceReload) return;
 
         const config = this.sections[sectionName];
         if (!config) {
@@ -164,75 +101,49 @@ const AdminSPA = {
             return;
         }
 
-        console.log('[AdminSPA] Navigating to:', sectionName);
-
-        // Lifecycle: sair da seção atual
+        // 1. Leave Logic
         await this.leaveCurrentSection();
 
-        // Atualiza estado
-        const previousSection = this.currentSection;
+        // 2. State Update
         this.currentSection = sectionName;
-        this.updateActiveNav(sectionName);
+        SpaUI.updateActiveNav(sectionName); // UI Helper
 
         if (updateHistory) {
             history.pushState({ section: sectionName }, '', `#${sectionName}`);
         }
 
-        // Carrega conteúdo
-        await this.loadSectionContent(sectionName, config);
+        // 3. Load Content
+        await this.loadSectionContent(sectionName, config, forceReload);
 
-        // Lifecycle: entrar na seção
+        // 4. Enter Logic
         await this.enterSection(sectionName);
     },
 
-    async leaveCurrentSection() {
-        if (!this.currentSection) return;
+    async loadSectionContent(sectionName, config, forceReload = false) {
+        const container = this.spaContentContainer;
+        if (!container) return;
 
-        const module = this.sectionModules[this.currentSection];
-        if (module && typeof module.onLeave === 'function') {
-            console.log('[AdminSPA] Leaving section:', this.currentSection);
-            await module.onLeave();
-        }
-    },
-
-    async enterSection(sectionName) {
-        const module = this.sectionModules[sectionName];
-        if (module && typeof module.onEnter === 'function') {
-            console.log('[AdminSPA] Entering section:', sectionName);
-            await module.onEnter();
-        }
-
-        // Re-init Lucide icons
-        if (window.lucide) {
-            lucide.createIcons();
-        }
-    },
-
-    // =========================================================================
-    // CARREGAMENTO DE CONTEÚDO
-    // =========================================================================
-    async loadSectionContent(sectionName, config) {
-        const container = document.getElementById('spa-content');
-        if (!container) {
-            console.error('[AdminSPA] Content container #spa-content not found');
+        // Cache Hit (Instant Load)
+        if (this.cache[sectionName] && !forceReload) {
+            this.renderSection(this.cache[sectionName]);
             return;
         }
 
-        // Usa cache se disponível (sem scripts, já foram executados)
-        if (this.contentCache[sectionName]) {
-            console.log('[AdminSPA] Using cached content for:', sectionName);
-            requestAnimationFrame(() => {
-                container.innerHTML = this.contentCache[sectionName];
-                this.executeScripts(container);
-                this.enterSection(sectionName);
-            });
-            return;
-        }
+        // Start Transition (only for network fetch)
+        container.classList.add('fade-out');
 
-        // Mostra skeleton
+        // Skeleton
         this.isLoading = true;
-        this.showSkeleton(container, config.skeleton);
 
+        // Delay skeleton just a bit to avoid flashing on super fast connections
+        const skeletonTimeout = setTimeout(() => {
+            if (this.isLoading) {
+                SpaUI.showSkeleton(container, config.skeleton);
+                container.classList.remove('fade-out');
+            }
+        }, 100);
+
+        // Fetch
         try {
             const response = await fetch(`${BASE_URL}${config.partial}`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -241,246 +152,115 @@ const AdminSPA = {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
             const html = await response.text();
-            this.contentCache[sectionName] = html;
+            this.cache[sectionName] = html;
 
-            requestAnimationFrame(() => {
-                container.innerHTML = html;
-                this.executeScripts(container);
-            });
+            clearTimeout(skeletonTimeout);
 
-            console.log('[AdminSPA] Loaded:', sectionName);
+            // Render with smooth entry
+            if (this.isLoading) { // Ensure we haven't navigated away
+                container.classList.add('fade-out');
+                requestAnimationFrame(() => {
+                    this.renderSection(html);
+                    requestAnimationFrame(() => {
+                        container.classList.remove('fade-out');
+                    });
+                });
+            }
 
         } catch (error) {
-            console.error('[AdminSPA] Load error:', error);
-            container.innerHTML = this.getErrorHtml(sectionName);
+            clearTimeout(skeletonTimeout);
+            container.innerHTML = SpaUI.getErrorHtml(sectionName);
+            console.error('[AdminSPA]', error);
+            container.classList.remove('fade-out');
         } finally {
             this.isLoading = false;
         }
     },
 
-    /**
-     * Executa scripts carregados via innerHTML (que não executam automaticamente)
-     */
-    executeScripts(container) {
-        const scripts = container.querySelectorAll('script[src]');
-        const scriptPromises = [];
-
-        scripts.forEach(oldScript => {
-            // Pula se já carregado
-            const src = oldScript.src;
-            if (this.loadedScripts && this.loadedScripts.has(src)) {
-                console.log('[AdminSPA] Script already loaded:', src);
-                return;
-            }
-
-            // Carrega script dinamicamente
-            const promise = new Promise((resolve) => {
-                const newScript = document.createElement('script');
-                newScript.src = src;
-                newScript.onload = () => {
-                    console.log('[AdminSPA] Script loaded:', src);
-                    resolve();
-                };
-                newScript.onerror = () => {
-                    console.error('[AdminSPA] Script failed:', src);
-                    resolve();
-                };
-                document.head.appendChild(newScript);
-            });
-            scriptPromises.push(promise);
-
-            // Track loaded scripts
-            if (!this.loadedScripts) this.loadedScripts = new Set();
-            this.loadedScripts.add(src);
-        });
-
-        // Após carregar todos os scripts, inicializa módulos conhecidos
-        Promise.all(scriptPromises).then(() => {
-            this.initLoadedModules();
-        });
-
-        // Se não há scripts novos, inicializa módulos existentes
-        if (scriptPromises.length === 0) {
-            this.initLoadedModules();
-        }
-    },
-
-    /**
-     * Inicializa módulos carregados (StockSPA, CardapioAdmin, etc.)
-     */
-    initLoadedModules() {
-        // StockSPA
-        if (window.StockSPA && typeof StockSPA.init === 'function') {
-            console.log('[AdminSPA] Initializing StockSPA');
-            StockSPA.init();
-        }
-
-        // CardapioAdmin
-        if (window.CardapioAdmin && typeof CardapioAdmin.init === 'function') {
-            console.log('[AdminSPA] Initializing CardapioAdmin');
-            CardapioAdmin.init();
-        }
-
-        // Delivery Polling
-        if (window.DeliveryPolling && typeof DeliveryPolling.init === 'function') {
-            const currentSection = this.currentSection;
-            // Só inicia se estiver na seção delivery
-            if (currentSection === 'delivery') {
-                console.log('[AdminSPA] Initializing DeliveryPolling');
-                DeliveryPolling.init();
-            }
-        }
-
-        // PDV
-        if (window.PDV && typeof PDV.init === 'function') {
-            const currentSection = this.currentSection;
-            if (currentSection === 'pdv' || currentSection === 'balcao') {
-                console.log('[AdminSPA] Initializing PDV');
-                PDV.init();
-            }
-        }
-
-        // Lucide icons
-        if (window.lucide) {
-            lucide.createIcons();
-        }
-    },
-
-    // =========================================================================
-    // UI HELPERS
-    // =========================================================================
-    updateActiveNav(sectionName) {
-        document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
-            item.classList.remove('active');
-            const itemSection = this.getSectionFromUrl(item.href);
-            if (itemSection === sectionName) {
-                item.classList.add('active');
+    renderSection(htmlContent) {
+        requestAnimationFrame(() => {
+            if (this.spaContentContainer) {
+                this.spaContentContainer.innerHTML = htmlContent;
+                this.executeScripts(this.spaContentContainer);
             }
         });
     },
 
-    showSkeleton(container, type) {
-        const skeletons = {
-            grid: `
-                <div class="skeleton-container">
-                    <div class="skeleton-header"></div>
-                    <div class="skeleton-grid">
-                        <div class="skeleton-card"></div>
-                        <div class="skeleton-card"></div>
-                        <div class="skeleton-card"></div>
-                        <div class="skeleton-card"></div>
-                        <div class="skeleton-card"></div>
-                        <div class="skeleton-card"></div>
-                    </div>
-                </div>`,
-            table: `
-                <div class="skeleton-container">
-                    <div class="skeleton-header"></div>
-                    <div class="skeleton-row"></div>
-                    <div class="skeleton-row"></div>
-                    <div class="skeleton-row"></div>
-                    <div class="skeleton-row"></div>
-                </div>`,
-            kanban: `
-                <div class="skeleton-container" style="display: flex; gap: 20px;">
-                    <div style="flex: 1;">
-                        <div class="skeleton-header"></div>
-                        <div class="skeleton-card"></div>
-                        <div class="skeleton-card"></div>
-                    </div>
-                    <div style="flex: 1;">
-                        <div class="skeleton-header"></div>
-                        <div class="skeleton-card"></div>
-                    </div>
-                    <div style="flex: 1;">
-                        <div class="skeleton-header"></div>
-                        <div class="skeleton-card"></div>
-                    </div>
-                </div>`,
-            tabs: `
-                <div class="skeleton-container">
-                    <div class="skeleton-chips">
-                        <div class="skeleton-chip"></div>
-                        <div class="skeleton-chip"></div>
-                        <div class="skeleton-chip"></div>
-                    </div>
-                    <div class="skeleton-row"></div>
-                    <div class="skeleton-row"></div>
-                </div>`
-        };
-
-        container.innerHTML = skeletons[type] || skeletons.grid;
-    },
-
-    getErrorHtml(sectionName) {
-        return `
-            <div style="padding: 3rem; text-align: center; color: #dc2626;">
-                <i data-lucide="alert-circle" style="width: 48px; height: 48px; margin-bottom: 15px;"></i>
-                <h3 style="margin-bottom: 10px;">Erro ao carregar</h3>
-                <p style="color: #6b7280; margin-bottom: 20px;">Não foi possível carregar "${sectionName}".</p>
-                <button onclick="AdminSPA.navigateTo('${sectionName}')" 
-                        style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                    Tentar Novamente
-                </button>
-            </div>`;
-    },
-
     // =========================================================================
-    // HELPERS
+    // HELPERS & LIFECYCLE
     // =========================================================================
-    getSectionFromUrl(url) {
-        const urlObj = new URL(url, window.location.origin);
-        const path = urlObj.pathname;
-
-        for (const [name, config] of Object.entries(this.sections)) {
-            if (path.includes(config.url.split('/').pop())) {
-                return name;
-            }
-        }
-        return null;
-    },
-
     getSectionFromHash() {
         const hash = window.location.hash.replace('#', '');
         return this.sections[hash] ? hash : null;
     },
 
-    // =========================================================================
-    // STATE MANAGER
-    // =========================================================================
-    setState(key, value) {
-        this.state[key] = value;
-        console.log('[AdminSPA] State updated:', key, value);
+    async leaveCurrentSection() {
+        if (!this.currentSection) return;
+        const module = this.modules[this.currentSection];
+        if (module && module.onLeave) await module.onLeave();
     },
 
-    getState(key) {
-        return this.state[key];
+    async enterSection(sectionName) {
+        const module = this.modules[sectionName];
+        if (module && module.onEnter) await module.onEnter();
+        if (window.lucide) lucide.createIcons();
     },
 
-    // =========================================================================
-    // CACHE CONTROL
-    // =========================================================================
-    clearCache(sectionName = null) {
-        if (sectionName) {
-            delete this.contentCache[sectionName];
-        } else {
-            this.contentCache = {};
-        }
-        console.log('[AdminSPA] Cache cleared:', sectionName || 'all');
-    },
-
-    // =========================================================================
-    // MODULE REGISTRATION
-    // =========================================================================
     registerModule(sectionName, module) {
-        this.sectionModules[sectionName] = module;
-        console.log('[AdminSPA] Module registered:', sectionName);
+        this.modules[sectionName] = module;
+    },
+
+    setState(key, value) { this.state[key] = value; },
+    getState(key) { return this.state[key]; },
+
+    // =========================================================================
+    // SCRIPT LOADING
+    // =========================================================================
+    executeScripts(container) {
+        const scripts = container.querySelectorAll('script[src]');
+        const scriptPromises = [];
+
+        scripts.forEach(oldScript => {
+            const src = oldScript.src;
+            if (this.loadedScripts.has(src)) return;
+
+            const promise = new Promise((resolve) => {
+                const newScript = document.createElement('script');
+                newScript.src = src;
+                newScript.async = false;
+                newScript.onload = () => resolve();
+                newScript.onerror = () => resolve();
+                document.head.appendChild(newScript);
+            });
+
+            scriptPromises.push(promise);
+            this.loadedScripts.add(src);
+        });
+
+        Promise.all(scriptPromises).then(() => this.initLoadedModules());
+        if (scriptPromises.length === 0) this.initLoadedModules();
+    },
+
+    initLoadedModules() {
+        const section = this.currentSection;
+
+        // Context-aware initialization
+        if (section === 'estoque' && window.StockSPA?.init) StockSPA.init();
+        if (section === 'cardapio' && window.CardapioAdmin?.init) CardapioAdmin.init();
+        if (section === 'delivery' && window.DeliveryPolling?.init) DeliveryPolling.init();
+        if ((section === 'pdv' || section === 'balcao') && window.PDV?.init) PDV.init();
+        if (section === 'caixa' && window.CashierSPA?.init) CashierSPA.init();
+
+        if (window.lucide) lucide.createIcons();
+    },
+
+    // Alias para compatibilidade
+    reloadCurrentSection() {
+        if (this.currentSection) this.navigateTo(this.currentSection, false, true);
     }
 };
 
-// Auto-init quando DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
-    // Só inicializa se estiver na página do shell SPA
     if (document.getElementById('spa-content')) {
         AdminSPA.init();
     }

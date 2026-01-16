@@ -126,12 +126,21 @@
     // EXPORTAR GLOBALMENTE
     // ==========================================
     window.CashierAdmin = CashierAdmin;
+    window.CashierSPA = {
+        init: () => CashierAdmin.init(),
+        openModal: (type) => CashierAdmin.Movimento.open(type),
+        openOrderDetails: (id, total, date) => CashierAdmin.OrderDetails.open(id, total, date)
+    };
 
-    // Aliases
+    // Aliases (legado)
     window.openModal = (type) => CashierAdmin.Movimento.open(type);
     window.openOrderDetails = (id, total, date) => CashierAdmin.OrderDetails.open(id, total, date);
 
-    // Auto-init
-    document.addEventListener('DOMContentLoaded', () => CashierAdmin.init());
+    // Auto-init apenas fora do SPA (fallback)
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!document.getElementById('spa-content')) {
+            CashierAdmin.init();
+        }
+    });
 
 })();

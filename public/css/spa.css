@@ -1,30 +1,79 @@
-/**
- * SPA Global Styles
- * 
- * Estilos globais para o Admin SPA:
- * - Container de conteúdo
- * - Transições entre seções
- * - Skeleton loaders
- */
-
-/* ========== SPA CONTENT CONTAINER ========== */
+/* SPA Transitions */
 .spa-content-container {
-    flex: 1;
+    opacity: 1;
+    width: 100%;
+    min-height: 600px;
+    /* Prevents layout collapse/jumping */
+    transform: translateY(0);
+    padding: 2rem;
+    box-sizing: border-box;
+    transition:
+        opacity 0.25s ease-out,
+        transform 0.25s cubic-bezier(0.2, 0.0, 0.2, 1);
+}
+
+.spa-content-container.fade-out {
+    opacity: 0.4;
+    /* Don't fade to black, keep context */
+    transform: translateY(10px);
+    /* Subtle drop for exit */
+    pointer-events: none;
+}
+
+.spa-content-container.fade-in {
+    opacity: 1;
+}
+
+/* Skeletons */
+.skeleton-container {
     padding: 20px;
-    overflow-y: auto;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.skeleton-header {
+    height: 48px;
+    background: #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    width: 30%;
+}
+
+.skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.skeleton-card {
+    height: 240px;
+    background: #f3f4f6;
+    border-radius: 12px;
+}
+
+.skeleton-row {
+    height: 64px;
     background: #f9fafb;
-    min-height: 100%;
+    border-radius: 8px;
+    margin-bottom: 12px;
 }
 
-/* ========== TRANSITIONS ========== */
-.spa-content-container {
-    animation: spaFadeIn 0.2s ease-out;
+.skeleton-chips {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
 }
 
-@keyframes spaFadeIn {
+.skeleton-chip {
+    width: 80px;
+    height: 32px;
+    background: #e5e7eb;
+    border-radius: 16px;
+}
+
+@keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(-5px);
+        transform: translateY(5px);
     }
 
     to {
@@ -33,7 +82,6 @@
     }
 }
 
-/* ========== SKELETON LOADERS ========== */
 @keyframes shimmer {
     0% {
         background-position: -200% 0;
@@ -44,89 +92,12 @@
     }
 }
 
-.skeleton-container {
-    padding: 20px;
-}
-
-.skeleton-header {
-    height: 40px;
-    width: 60%;
-    margin-bottom: 20px;
-    border-radius: 8px;
-    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite ease-in-out;
-}
-
-.skeleton-row {
-    height: 80px;
-    margin-bottom: 16px;
-    border-radius: 12px;
-    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite ease-in-out;
-}
-
-.skeleton-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-}
-
-.skeleton-card {
-    height: 240px;
-    border-radius: 12px;
-    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite ease-in-out;
-}
-
-.skeleton-chips {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
+/* Shimmer Effect for Skeletons */
+.skeleton-header,
+.skeleton-card,
+.skeleton-row,
 .skeleton-chip {
-    height: 32px;
-    width: 80px;
-    border-radius: 20px;
-    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
     background-size: 200% 100%;
-    animation: shimmer 1.5s infinite ease-in-out;
-}
-
-/* Staggered animation delays */
-.skeleton-card:nth-child(2),
-.skeleton-row:nth-child(2),
-.skeleton-chip:nth-child(2) {
-    animation-delay: 0.1s;
-}
-
-.skeleton-card:nth-child(3),
-.skeleton-row:nth-child(3),
-.skeleton-chip:nth-child(3) {
-    animation-delay: 0.2s;
-}
-
-.skeleton-card:nth-child(4),
-.skeleton-row:nth-child(4),
-.skeleton-chip:nth-child(4) {
-    animation-delay: 0.3s;
-}
-
-.skeleton-card:nth-child(5),
-.skeleton-row:nth-child(5) {
-    animation-delay: 0.4s;
-}
-
-.skeleton-card:nth-child(6),
-.skeleton-row:nth-child(6) {
-    animation-delay: 0.5s;
-}
-
-/* ========== NAV ACTIVE STATE ========== */
-.sidebar-nav .nav-item.active {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
+    animation: shimmer 1.5s infinite linear;
 }

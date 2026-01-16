@@ -184,7 +184,7 @@ const PDVCart = {
                     </div>
                     <div style="display: flex; gap: 5px; align-items: center; margin-top: 5px;">
                          <button onclick="PDVCart.remove('${item.cartItemId}')" style="background: #fee2e2; color: #991b1b; border: none; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-weight:bold;">-</button>
-                         <button onclick='PDVCart.add(${item.id}, "${item.name.replace(/"/g, '&quot;').replace(/'/g, "\\'")}", ${item.price}, 1, ${JSON.stringify(item.extras || []).replace(/'/g, "&#39;")})' style="background: #dcfce7; color: #166534; border: none; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-weight:bold;">+</button>
+                         <button onclick='PDVCart.add(${item.id}, "${(item.name || '').replace(/"/g, '&quot;').replace(/'/g, "\\'")}", ${item.price}, 1, ${JSON.stringify(item.extras || []).replace(/'/g, "&#39;")})' style="background: #dcfce7; color: #166534; border: none; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-weight:bold;">+</button>
                     </div>
                 </div>`;
             });

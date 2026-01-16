@@ -10,6 +10,7 @@ use App\Services\Delivery\DeliveryService;
 use App\Services\TableService;
 use App\Services\Pdv\PdvService;
 use App\Services\RestaurantService;
+use App\Services\Cashier\CashierDashboardService;
 use App\Repositories\TableRepository;
 use App\Repositories\Order\OrderRepository;
 
@@ -25,6 +26,7 @@ class AppShellController extends BaseController
     private TableService $tableService;
     private PdvService $pdvService;
     private RestaurantService $restaurantService;
+    private CashierDashboardService $cashierDashboard;
     private TableRepository $tableRepo;
     private OrderRepository $orderRepo;
 
@@ -36,6 +38,7 @@ class AppShellController extends BaseController
         TableService $tableService,
         PdvService $pdvService,
         RestaurantService $restaurantService,
+        CashierDashboardService $cashierDashboard,
         TableRepository $tableRepo,
         OrderRepository $orderRepo
     ) {
@@ -46,6 +49,7 @@ class AppShellController extends BaseController
         $this->tableService = $tableService;
         $this->pdvService = $pdvService;
         $this->restaurantService = $restaurantService;
+        $this->cashierDashboard = $cashierDashboard;
         $this->tableRepo = $tableRepo;
         $this->orderRepo = $orderRepo;
     }
@@ -213,10 +217,50 @@ class AppShellController extends BaseController
 
     private function renderCaixaPartial(int $rid): void
     {
-        echo '<div style="padding: 40px; text-align: center; color: #6b7280;">
-            <h2>Caixa</h2>
-            <p>Esta seção será migrada na Etapa 6</p>
-        </div>';
+        // Busca caixa aberto
+        $caixa = $this->cashierDashboard->getOpenCashier($rid);
+        
+        // Se não há caixa aberto, renderiza tela de abertura
+        if (!$caixa) {
+            $resumo = [];
+            $movimentosView = [];
+            $dinheiroEmCaixa = 0;
+            require __DIR__ . '/../../../views/admin/spa/partials/_caixa.php';
+            return;
+        }
+
+        // Caixa aberto: busca dados do dashboard
+        $resumo = $this->cashierDashboard->calculateSalesSummary($rid, $caixa['opened_at']);
+        $movimentos = $this->cashierDashboard->getMovements($caixa['id']);
+        
+        list($totalSuprimentos, $totalSangrias) = $this->cashierDashboard->sumMovements($movimentos);
+        $dinheiroEmCaixa = $this->cashierDashboard->calculateCashInDrawer(
+            $caixa['opening_balance'],
+            $resumo['dinheiro'],
+            $totalSuprimentos,
+            $totalSangrias
+        );
+
+        // Decorar movimentos para a View (ViewModel)
+        $movimentosView = array_map(function ($m) {
+            $isSangria = $m['type'] == 'sangria';
+            return [
+                'id' => $m['id'],
+                'type' => $m['type'],
+                'description' => $m['description'],
+                'amount' => $m['amount'],
+                'created_at' => $m['created_at'],
+                'order_id' => $m['order_id'],
+                'is_sangria' => $isSangria,
+                'color_bg' => $isSangria ? '#fee2e2' : '#dcfce7',
+                'color_text' => $isSangria ? '#991b1b' : '#166534',
+                'icon' => $isSangria ? 'arrow-up-right' : 'arrow-down-left',
+                'sign' => $isSangria ? '-' : '+',
+                'is_table_reopen' => strpos($m['description'] ?? '', 'Mesa') !== false
+            ];
+        }, $movimentos);
+
+        require __DIR__ . '/../../../views/admin/spa/partials/_caixa.php';
     }
 
     private function isAjaxRequest(): bool

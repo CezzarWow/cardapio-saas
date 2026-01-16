@@ -34,7 +34,11 @@
 
         // 1. Checar Hash na URL ao carregar
         const currentHash = window.location.hash.replace('#', '');
-        if (currentHash) {
+
+        // Verifica se o hash corresponde a uma aba existente
+        const hasTab = document.querySelector(`.cardapio-admin-tab-btn[data-tab="${currentHash}"]`);
+
+        if (currentHash && hasTab) {
             activateTab(currentHash);
         }
 
