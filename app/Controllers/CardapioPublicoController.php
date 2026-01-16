@@ -65,34 +65,51 @@ class CardapioPublicoController
         // --- LÓGICA DE VIEW MOVIDA PARA CÁ ---
         // Prepara JSON seguro para o Front-end
 
-        // 1. Achata produtos
+        // 1. Achata produtos — criar versão mínima para envio ao cliente (reduz payload)
         $flatProducts = [];
         if (!empty($productsByCategory)) {
             foreach ($productsByCategory as $cat => $prods) {
                 foreach ($prods as $p) {
-                    if (empty($p['additionals'])) {
-                        $p['additionals'] = [];
+                    // Garante estrutura mínima
+                    $additionals = $p['additionals'] ?? [];
+
+                    // Sanitiza e encurta strings para evitar payloads enormes
+                    $name = isset($p['name']) ? preg_replace('/[\r\n]+/', ' ', $p['name']) : '';
+                    $description = isset($p['description']) ? preg_replace('/[\r\n]+/', ' ', $p['description']) : '';
+                    if (mb_strlen($description) > 140) {
+                        $description = mb_substr($description, 0, 137) . '...';
                     }
-                    // Sanitiza strings para não quebrar JS
-                    if (isset($p['description'])) {
-                        $p['description'] = preg_replace('/[\r\n]+/', ' ', $p['description']);
-                    }
-                    if (isset($p['name'])) {
-                        $p['name'] = preg_replace('/[\r\n]+/', ' ', $p['name']);
-                    }
-                    $flatProducts[] = $p;
+
+                    $flatProducts[] = [
+                        'id' => $p['id'] ?? null,
+                        'name' => $name,
+                        'description' => $description,
+                        'price' => isset($p['price']) ? (float)$p['price'] : 0.0,
+                        'image' => $p['image'] ?? null,
+                        'icon' => $p['icon'] ?? null,
+                        'icon_as_photo' => $p['icon_as_photo'] ?? false,
+                        'has_additionals' => !empty($additionals),
+                        'category' => $cat,
+                    ];
                 }
             }
         }
 
-        // 2. Sanitiza Combos
+        // 2. Sanitiza Combos — versão reduzida para frontend
         $safeCombos = [];
         if (!empty($combos)) {
             foreach ($combos as $c) {
-                if (isset($c['description'])) {
-                    $c['description'] = preg_replace('/[\r\n]+/', ' ', $c['description']);
-                }
-                $safeCombos[] = $c;
+                $desc = isset($c['description']) ? preg_replace('/[\r\n]+/', ' ', $c['description']) : '';
+                if (mb_strlen($desc) > 140) $desc = mb_substr($desc, 0, 137) . '...';
+
+                $safeCombos[] = [
+                    'id' => $c['id'] ?? null,
+                    'name' => $c['name'] ?? '',
+                    'description' => $desc,
+                    'price' => isset($c['price']) ? (float)$c['price'] : 0.0,
+                    'image' => $c['image'] ?? null,
+                    'products_list' => $c['products_list'] ?? null,
+                ];
             }
         }
 

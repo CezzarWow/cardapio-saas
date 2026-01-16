@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Core\Database;
+use App\Core\Cache;
 use PDO;
 
 /**
@@ -25,7 +26,14 @@ class AdditionalItemRepository
             'price' => $price
         ]);
 
-        return (int) $conn->lastInsertId();
+        $id = (int) $conn->lastInsertId();
+        try {
+            $cache = new Cache();
+            $cache->forget('additionals_' . $restaurantId);
+            $cache->forget('product_additional_relations');
+        } catch (\Exception $e) {
+        }
+        return $id;
     }
 
     /**
@@ -42,6 +50,12 @@ class AdditionalItemRepository
             'id' => $id,
             'rid' => $restaurantId
         ]);
+        try {
+            $cache = new Cache();
+            $cache->forget('additionals_' . $restaurantId);
+            $cache->forget('product_additional_relations');
+        } catch (\Exception $e) {
+        }
     }
 
     /**
@@ -59,6 +73,12 @@ class AdditionalItemRepository
         // Remove o item
         $stmt = $conn->prepare('DELETE FROM additional_items WHERE id = :id AND restaurant_id = :rid');
         $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
+        try {
+            $cache = new Cache();
+            $cache->forget('additionals_' . $restaurantId);
+            $cache->forget('product_additional_relations');
+        } catch (\Exception $e) {
+        }
     }
 
     /**

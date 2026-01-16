@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Core\Database;
+use App\Core\Cache;
 use PDO;
 
 class AdditionalGroupRepository
@@ -22,7 +23,14 @@ class AdditionalGroupRepository
             'req' => $required
         ]);
 
-        return (int) $conn->lastInsertId();
+        $id = (int) $conn->lastInsertId();
+        try {
+            $cache = new Cache();
+            $cache->forget('additionals_' . $restaurantId);
+            $cache->forget('product_additional_relations');
+        } catch (\Exception $e) {
+        }
+        return $id;
     }
 
     /**
@@ -104,6 +112,12 @@ class AdditionalGroupRepository
         // Depois remove o grupo
         $stmt = $conn->prepare('DELETE FROM additional_groups WHERE id = :id');
         $stmt->execute(['id' => $id]);
+        try {
+            $cache = new Cache();
+            // Não temos restaurantId aqui; invalidar relações globalmente
+            $cache->forget('product_additional_relations');
+        } catch (\Exception $e) {
+        }
     }
     /**
      * Lista todos os grupos de forma simples

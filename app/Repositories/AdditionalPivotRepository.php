@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Core\Database;
+use App\Core\Cache;
 
 class AdditionalPivotRepository
 {
@@ -17,6 +18,11 @@ class AdditionalPivotRepository
             'gid' => $groupId,
             'iid' => $itemId
         ]);
+        try {
+            $cache = new Cache();
+            $cache->forget('product_additional_relations');
+        } catch (\Exception $e) {
+        }
     }
 
     /**
@@ -27,6 +33,11 @@ class AdditionalPivotRepository
         $conn = Database::connect();
         $stmt = $conn->prepare('DELETE FROM additional_group_items WHERE item_id = :iid');
         $stmt->execute(['iid' => $itemId]);
+        try {
+            $cache = new Cache();
+            $cache->forget('product_additional_relations');
+        } catch (\Exception $e) {
+        }
     }
 
     /**
@@ -37,6 +48,11 @@ class AdditionalPivotRepository
         $conn = Database::connect();
         $stmt = $conn->prepare('DELETE FROM additional_group_items WHERE group_id = :gid AND item_id = :iid');
         $stmt->execute(['gid' => $groupId, 'iid' => $itemId]);
+        try {
+            $cache = new Cache();
+            $cache->forget('product_additional_relations');
+        } catch (\Exception $e) {
+        }
     }
 
     /**
@@ -56,6 +72,11 @@ class AdditionalPivotRepository
             if ($itemId > 0) {
                 $stmt->execute(['gid' => $groupId, 'iid' => $itemId]);
             }
+        }
+        try {
+            $cache = new Cache();
+            $cache->forget('product_additional_relations');
+        } catch (\Exception $e) {
         }
     }
 
@@ -80,6 +101,11 @@ class AdditionalPivotRepository
                     $stmtLink->execute(['gid' => $gid, 'iid' => $itemId]);
                 }
             }
+        }
+        try {
+            $cache = new Cache();
+            $cache->forget('product_additional_relations');
+        } catch (\Exception $e) {
         }
     }
 }

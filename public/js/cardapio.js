@@ -6,6 +6,17 @@
 (function () {
     'use strict';
 
+    // Pequeno utilitário debounce para reduzir re-renders na busca
+    function debounce(fn, wait) {
+        let t = null;
+        return function () {
+            const args = arguments;
+            const ctx = this;
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(ctx, args), wait);
+        };
+    }
+
     const CardapioManager = {
         // ==========================================
         // INICIALIZAÇÃO
@@ -42,7 +53,10 @@
             // 2. Busca
             const searchInput = document.getElementById('cardapioSearchInput');
             if (searchInput) {
-                searchInput.addEventListener('input', (e) => this.ui.handleSearch(e));
+                // Cache nodes once and debounce o handler para reduzir trabalho no input
+                this.ui.cacheNodes();
+                const ui = this.ui;
+                searchInput.addEventListener('input', debounce((e) => ui.handleSearch(e), 180));
             }
 
             // 3. Filtros
@@ -79,26 +93,42 @@
             },
 
             // --- Busca ---
+            cacheNodes: function () {
+                // Cacheia NodeLists convertidos para arrays para operações mais rápidas
+                try {
+                    this._products = Array.from(document.querySelectorAll('.cardapio-product-card'));
+                    this._categories = Array.from(document.querySelectorAll('.cardapio-category-section'));
+                } catch (err) {
+                    this._products = [];
+                    this._categories = [];
+                }
+            },
+
             handleSearch: function (e) {
-                const term = e.target.value.toLowerCase();
-                const products = document.querySelectorAll('.cardapio-product-card');
-                const categories = document.querySelectorAll('.cardapio-category-section');
+                const term = (e.target.value || '').toLowerCase().trim();
 
+                // Usa cache se disponível
+                const products = this._products || Array.from(document.querySelectorAll('.cardapio-product-card'));
+                const categories = this._categories || Array.from(document.querySelectorAll('.cardapio-category-section'));
+
+                // Minimiza leituras de DOM, extrai dados uma vez
                 products.forEach(product => {
-                    const name = (product.getAttribute('data-product-name') || '').toLowerCase();
-                    const desc = (product.getAttribute('data-product-description') || '').toLowerCase();
+                    let name = product.dataset.productName;
+                    let desc = product.dataset.productDescription;
+                    if (typeof name === 'undefined') name = (product.getAttribute('data-product-name') || '');
+                    if (typeof desc === 'undefined') desc = (product.getAttribute('data-product-description') || '');
 
-                    if (name.includes(term) || desc.includes(term)) {
-                        product.style.display = 'flex';
-                    } else {
-                        product.style.display = 'none';
-                    }
+                    const hay = (name + ' ' + desc).toLowerCase();
+                    const visible = term === '' || hay.indexOf(term) !== -1;
+
+                    product.style.display = visible ? 'flex' : 'none';
                 });
 
-                // Esconde categorias vazias
+                // Esconde categorias vazias verificando filhos visíveis (melhor que seletor por style)
                 categories.forEach(category => {
-                    const visibleProducts = category.querySelectorAll('.cardapio-product-card[style="display: flex;"]');
-                    category.style.display = (visibleProducts.length === 0 && term !== '') ? 'none' : 'block';
+                    const children = Array.from(category.querySelectorAll('.cardapio-product-card'));
+                    const hasVisible = children.some(c => c.style.display !== 'none');
+                    category.style.display = (hasVisible || term === '') ? 'block' : 'none';
                 });
             },
 

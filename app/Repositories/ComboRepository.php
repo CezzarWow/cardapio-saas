@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Core\Database;
+use App\Core\Cache;
 use PDO;
 
 class ComboRepository
@@ -22,7 +23,13 @@ class ComboRepository
             'order' => $data['display_order'],
             'active' => $data['is_active']
         ]);
-        return (int) $conn->lastInsertId();
+        $id = (int) $conn->lastInsertId();
+        try {
+            $cache = new Cache();
+            $cache->forget('combos_' . $data['restaurant_id']);
+        } catch (\Exception $e) {
+        }
+        return $id;
     }
 
     /**
@@ -40,6 +47,15 @@ class ComboRepository
                 $allow = isset($allowAdditionals[$pid]) ? 1 : 0;
                 $stmt->execute(['cid' => $comboId, 'pid' => $pid, 'allow' => $allow]);
             }
+        }
+
+        // Invalida cache de combos (assume que chamador sabe restaurantId se necessário)
+        try {
+            $cache = new Cache();
+            // Não temos restaurantId aqui; invalidar globalmente por chave genérica
+            // Chamador de alto nível deve também invalidar combos_{rid} quando possível
+            $cache->forget('product_additional_relations');
+        } catch (\Exception $e) {
         }
     }
 
@@ -98,6 +114,11 @@ class ComboRepository
             'id' => $id,
             'rid' => $data['restaurant_id']
         ]);
+        try {
+            $cache = new Cache();
+            $cache->forget('combos_' . $data['restaurant_id']);
+        } catch (\Exception $e) {
+        }
     }
 
     /**
@@ -107,6 +128,11 @@ class ComboRepository
     {
         $conn = Database::connect();
         $conn->prepare('DELETE FROM combos WHERE id = :id AND restaurant_id = :rid')->execute(['id' => $id, 'rid' => $restaurantId]);
+        try {
+            $cache = new Cache();
+            $cache->forget('combos_' . $restaurantId);
+        } catch (\Exception $e) {
+        }
     }
 
     /**
@@ -117,6 +143,11 @@ class ComboRepository
         $conn = Database::connect();
         $conn->prepare('UPDATE combos SET is_active = :status WHERE id = :id AND restaurant_id = :rid')
              ->execute(['status' => $status, 'id' => $id, 'rid' => $restaurantId]);
+        try {
+            $cache = new Cache();
+            $cache->forget('combos_' . $restaurantId);
+        } catch (\Exception $e) {
+        }
     }
 
     /**

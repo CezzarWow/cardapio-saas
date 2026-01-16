@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Core\Database;
+use App\Core\Cache;
 use PDO;
 
 class CategoryRepository
@@ -36,6 +37,15 @@ class CategoryRepository
             'active' => $data['is_active'] ?? 1
         ]);
 
-        return (int) $conn->lastInsertId();
+        $id = (int) $conn->lastInsertId();
+
+        // Invalida cache de categorias
+        try {
+            $cache = new Cache();
+            $cache->forget('categories_' . $data['restaurant_id']);
+        } catch (\Exception $e) {
+        }
+
+        return $id;
     }
 }

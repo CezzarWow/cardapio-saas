@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Middleware\CsrfMiddleware;
+use Exception;
 
 class ViewHelper
 {
@@ -25,5 +26,23 @@ class ViewHelper
     {
         $rotaAtual = $_SERVER['REQUEST_URI'] ?? '';
         return preg_match('/\/' . preg_quote($rotaDesejada, '/') . '(\/|$|\?)/', $rotaAtual) === 1;
+    }
+
+    /**
+     * Retorna a URL do asset a partir do manifest gerado pelo build.
+     * Uso: ViewHelper::asset('cardapio.js')
+     */
+    public static function asset(string $key): string
+    {
+        $manifestPath = __DIR__ . '/../../public/dist/assets-manifest.json';
+        if (!file_exists($manifestPath)) return '/';
+
+        $json = @file_get_contents($manifestPath);
+        if (!$json) return '/';
+
+        $manifest = json_decode($json, true);
+        if (!is_array($manifest)) return '/';
+
+        return $manifest[$key] ?? '/';
     }
 }

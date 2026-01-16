@@ -7,14 +7,14 @@
     <title><?= $restaurant['name'] ?> - Cardápio Digital</title>
     
     <!-- CSS Modular - Cardápio Público -->
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/base.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cards.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/modals/index.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/form.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/publico/index.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/checkout.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-layout.css?v=<?= time() ?>">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-badges.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/base.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cards.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/modals/index.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/form.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/publico/index.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/checkout.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-layout.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-badges.css">
     
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -85,24 +85,9 @@
     });
 </script>
 
-<!-- Scripts Modulares (Refatoração) -->
-<script src="<?= BASE_URL ?>/js/cardapio/utils.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/modules/cart-state.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/modules/cart-view.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/cart.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/modals.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/modals-product.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/modules/combo-validator.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/modules/combo-view.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/modules/combo-controller.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/modals-combo.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/checkout-order.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/checkout-fields.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/checkout-modals.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio/checkout.js?v=<?= time() ?>"></script>
-
-<!-- Main Script (Listeners) -->
-<script src="<?= BASE_URL ?>/js/cardapio.js?v=<?= time() ?>"></script>
+<!-- Bundled & minified assets -->
+<link rel="stylesheet" href="<?= BASE_URL ?><?= \App\Helpers\ViewHelper::asset('cardapio.css') ?>">
+<script src="<?= BASE_URL ?><?= \App\Helpers\ViewHelper::asset('cardapio.js') ?>"></script>
 <script>
     lucide.createIcons();
 </script>

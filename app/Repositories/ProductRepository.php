@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Core\Database;
+use App\Core\Cache;
 use PDO;
 
 class ProductRepository
@@ -111,6 +112,16 @@ class ProductRepository
             'id' => $data['id'],
             'rid' => $data['restaurant_id']
         ]);
+
+        // Invalida cache relevante
+        try {
+            $cache = new Cache();
+            $cache->forget('products_' . $data['restaurant_id']);
+            $cache->forget('combos_' . $data['restaurant_id']);
+            $cache->forget('product_additional_relations');
+        } catch (\Exception $e) {
+            // não bloquear execução em caso de falha no cache
+        }
     }
 
     /**
@@ -121,6 +132,14 @@ class ProductRepository
         $conn = Database::connect();
         $stmt = $conn->prepare('DELETE FROM products WHERE id = :id AND restaurant_id = :rid');
         $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
+
+        try {
+            $cache = new Cache();
+            $cache->forget('products_' . $restaurantId);
+            $cache->forget('combos_' . $restaurantId);
+            $cache->forget('product_additional_relations');
+        } catch (\Exception $e) {
+        }
     }
 
     /**
@@ -152,6 +171,15 @@ class ProductRepository
             foreach ($groupIds as $gid) {
                 $stmtIns->execute(['pid' => $productId, 'gid' => $gid]);
             }
+        }
+
+        // Invalidação de cache
+        try {
+            $cache = new Cache();
+            $cache->forget('product_additional_relations');
+            // produtos cache pode refletir extras
+            // Não temos restaurantId aqui; deixar apenas relations
+        } catch (\Exception $e) {
         }
     }
 

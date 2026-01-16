@@ -104,3 +104,46 @@ const MultiSelect = {
 
 // Expõe globalmente
 window.MultiSelect = MultiSelect;
+
+// Compatibilidade com marcação legada usada em alguns forms (ex: create.php)
+window.toggleSelect = function (triggerEl) {
+    try {
+        const container = triggerEl.closest('.custom-select-container');
+        if (!container) return;
+        const list = container.querySelector('.options-list');
+        if (!list) return;
+        list.style.display = (list.style.display === 'block') ? 'none' : 'block';
+    } catch (e) {
+        console.warn('toggleSelect error', e);
+    }
+};
+
+window.updateTriggerText = function (checkboxEl) {
+    try {
+        const container = checkboxEl.closest('.custom-select-container');
+        if (!container) return;
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+        const triggerText = container.querySelector('.trigger-text');
+        if (!triggerText) return;
+
+        if (checkedCount === 0) {
+            triggerText.textContent = 'Selecione...';
+            triggerText.style.color = '#6b7280';
+            triggerText.style.fontWeight = '400';
+        } else {
+            triggerText.textContent = checkedCount + ' Selecionado(s)';
+            triggerText.style.color = '#1f2937';
+            triggerText.style.fontWeight = '600';
+        }
+    } catch (e) {
+        console.warn('updateTriggerText error', e);
+    }
+};
+
+// Fecha dropdowns legacy ao clicar fora
+document.addEventListener('click', function (e) {
+    if (!e.target.closest('.custom-select-container')) {
+        document.querySelectorAll('.options-list').forEach(l => l.style.display = 'none');
+    }
+});

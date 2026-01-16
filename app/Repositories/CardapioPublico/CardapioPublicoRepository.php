@@ -3,6 +3,7 @@
 namespace App\Repositories\CardapioPublico;
 
 use App\Core\Database;
+use App\Core\Cache;
 use PDO;
 
 /**
@@ -56,6 +57,11 @@ class CardapioPublicoRepository
 
     public function getCategories(int $restaurantId): array
     {
+        $cache = new Cache();
+        $key = 'categories_' . $restaurantId;
+        $cached = $cache->get($key);
+        if ($cached !== null) return $cached;
+
         $conn = Database::connect();
         $stmt = $conn->prepare('
             SELECT * FROM categories 
@@ -63,11 +69,18 @@ class CardapioPublicoRepository
             ORDER BY COALESCE(sort_order, 999) ASC, name ASC
         ');
         $stmt->execute(['rid' => $restaurantId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $res = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $cache->put($key, $res, 3600);
+        return $res;
     }
 
     public function getProducts(int $restaurantId): array
     {
+        $cache = new Cache();
+        $key = 'products_' . $restaurantId;
+        $cached = $cache->get($key);
+        if ($cached !== null) return $cached;
+
         $conn = Database::connect();
         $stmt = $conn->prepare('
             SELECT 
@@ -81,11 +94,18 @@ class CardapioPublicoRepository
             ORDER BY COALESCE(c.sort_order, 999) ASC, c.name ASC, p.display_order ASC, p.name ASC
         ');
         $stmt->execute(['rid' => $restaurantId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $res = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $cache->put($key, $res, 300);
+        return $res;
     }
 
     public function getProductAdditionalRelations(): array
     {
+        $cache = new Cache();
+        $key = 'product_additional_relations';
+        $cached = $cache->get($key);
+        if ($cached !== null) return $cached;
+
         $conn = Database::connect();
         $stmt = $conn->prepare('SELECT product_id, group_id FROM product_additional_relations');
         $stmt->execute();
@@ -95,6 +115,7 @@ class CardapioPublicoRepository
         foreach ($raw as $rel) {
             $relations[$rel['product_id']][] = $rel['group_id'];
         }
+        $cache->put($key, $relations, 3600);
         return $relations;
     }
 
@@ -104,6 +125,11 @@ class CardapioPublicoRepository
 
     public function getCombosWithItems(int $restaurantId): array
     {
+        $cache = new Cache();
+        $key = 'combos_' . $restaurantId;
+        $cached = $cache->get($key);
+        if ($cached !== null) return $cached;
+
         $conn = Database::connect();
 
         // Buscar combos
@@ -146,6 +172,7 @@ class CardapioPublicoRepository
             $combo['products_list'] = implode(', ', array_column($combo['items'], 'product_name'));
         }
 
+        $cache->put($key, $combos, 600);
         return $combos;
     }
 
@@ -155,6 +182,11 @@ class CardapioPublicoRepository
 
     public function getAdditionalsWithItems(int $restaurantId): array
     {
+        $cache = new Cache();
+        $key = 'additionals_' . $restaurantId;
+        $cached = $cache->get($key);
+        if ($cached !== null) return $cached;
+
         $conn = Database::connect();
 
         // Buscar grupos
@@ -190,7 +222,9 @@ class CardapioPublicoRepository
             $itemsByGroup[$item['group_id']][] = $item;
         }
 
-        return ['groups' => $groups, 'items' => $itemsByGroup];
+        $res = ['groups' => $groups, 'items' => $itemsByGroup];
+        $cache->put($key, $res, 600);
+        return $res;
     }
 
     // =========================================================================
@@ -199,15 +233,27 @@ class CardapioPublicoRepository
 
     public function getConfig(int $restaurantId): array
     {
+        $cache = new Cache();
+        $key = 'config_' . $restaurantId;
+        $cached = $cache->get($key);
+        if ($cached !== null) return array_merge(self::DEFAULT_CONFIG, $cached ?: []);
+
         $conn = Database::connect();
         $stmt = $conn->prepare('SELECT * FROM cardapio_config WHERE restaurant_id = :rid');
         $stmt->execute(['rid' => $restaurantId]);
         $config = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $config ?: self::DEFAULT_CONFIG;
+        $cfg = $config ?: self::DEFAULT_CONFIG;
+        $cache->put($key, $cfg, 300);
+        return $cfg;
     }
 
     public function getBusinessHours(int $restaurantId): array
     {
+        $cache = new Cache();
+        $key = 'hours_' . $restaurantId;
+        $cached = $cache->get($key);
+        if ($cached !== null) return $cached;
+
         $conn = Database::connect();
 
         $dayOfWeek = (int) date('w');
@@ -221,6 +267,8 @@ class CardapioPublicoRepository
         $stmt->execute(['rid' => $restaurantId, 'day' => $yesterdayDay]);
         $yesterday = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return ['today' => $today ?: null, 'yesterday' => $yesterday ?: null];
+        $res = ['today' => $today ?: null, 'yesterday' => $yesterday ?: null];
+        $cache->put($key, $res, 60);
+        return $res;
     }
 }
