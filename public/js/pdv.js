@@ -5,7 +5,9 @@
 (function () {
     'use strict';
 
-    window.PDV = {
+    window.PDV = window.PDV || {};
+
+    Object.assign(window.PDV, {
         init: function () {
             console.log('[PDV] Initializing...');
 
@@ -113,7 +115,7 @@
 
             console.log('[PDV] Ready');
         }
-    };
+    });
 
     // ============================================
     // HELPERS GLOBAIS (Compatibilidade)

@@ -37,7 +37,8 @@
                 <?php if (!empty($category['products'])): ?>
                     <?php foreach ($category['products'] as $product): ?>
                         
-                        <div class="product-card product-card-compact js-add-product" 
+                        <div class="product-card product-card-compact" 
+                             onclick="PDV.clickProduct(<?= $product['id'] ?>, '<?= htmlspecialchars(addslashes($product['name'])) ?>', '<?= $product['price'] ?>', '<?= $product['has_extras'] ? 'true' : 'false' ?>')"
                              data-category="<?= htmlspecialchars($category['name']) ?>"
                              data-id="<?= $product['id'] ?>"
                              data-name="<?= htmlspecialchars($product['name']) ?>"

@@ -14,11 +14,11 @@
         <?php foreach ($clientOrders as $order): ?>
             <?php
                 $isPaid = !empty($order['is_paid']) && $order['is_paid'] == 1;
-            $clientName = htmlspecialchars($order['client_name'] ?? 'Cliente');
-            $total = floatval($order['total'] ?? 0);
-            $clientId = intval($order['client_id'] ?? 0);
-            $cardClass = $isPaid ? 'table-card--pago' : 'table-card--aberto';
-            $statusText = $isPaid ? 'PAGO' : 'ABERTO';
+                $clientName = htmlspecialchars($order['client_name'] ?? 'Cliente');
+                $total = floatval($order['total'] ?? 0);
+                $clientId = intval($order['client_id'] ?? 0);
+                $cardClass = $isPaid ? 'table-card--pago' : 'table-card--aberto';
+                $statusText = $isPaid ? 'PAGO' : 'ABERTO';
             ?>
             
             <?php if ($isPaid): ?>
@@ -30,11 +30,11 @@
                      onkeypress="if(event.key==='Enter') showPaidOrderOptions(<?= $order['id'] ?>, '<?= addslashes($clientName) ?>', <?= $total ?>, <?= $clientId ?>)">
             <?php else: ?>
                 <div class="table-card <?= $cardClass ?>"
-                     onclick="window.location.href='<?= BASE_URL ?>/admin/loja/pdv?order_id=<?= $order['id'] ?>'"
+                     onclick="if(typeof AdminSPA!=='undefined') AdminSPA.navigateTo('balcao',true,true,{order_id:<?= $order['id'] ?>}); else window.location.href='<?= BASE_URL ?>/admin/loja/pdv?order_id=<?= $order['id'] ?>'"
                      tabindex="0"
                      role="button"
                      aria-label="Comanda de <?= $clientName ?> - <?= $statusText ?> - R$ <?= number_format($total, 2, ',', '.') ?>"
-                     onkeypress="if(event.key==='Enter') window.location.href='<?= BASE_URL ?>/admin/loja/pdv?order_id=<?= $order['id'] ?>'">
+                     onkeypress="if(event.key==='Enter') { if(typeof AdminSPA!=='undefined') AdminSPA.navigateTo('balcao',true,true,{order_id:<?= $order['id'] ?>}); else window.location.href='<?= BASE_URL ?>/admin/loja/pdv?order_id=<?= $order['id'] ?>'; }">
             <?php endif; ?>
                 
                 <span class="comanda-card__name"><?= $clientName ?></span>

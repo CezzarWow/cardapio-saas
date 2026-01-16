@@ -103,7 +103,16 @@
         },
 
         abrir: function (id, numero) {
-            window.location.href = TablesHelpers.getBaseUrl() + '/admin/loja/pdv?mesa_id=' + id + '&mesa_numero=' + numero;
+            // Usa navegação SPA quando disponível
+            // AdminSPA automaticamente destaca 'mesas' quando há mesa_id
+            if (typeof AdminSPA !== 'undefined') {
+                AdminSPA.navigateTo('balcao', true, true, {
+                    mesa_id: id,
+                    mesa_numero: numero
+                });
+            } else {
+                window.location.href = TablesHelpers.getBaseUrl() + '/admin/loja/pdv?mesa_id=' + id + '&mesa_numero=' + numero;
+            }
         }
     };
 

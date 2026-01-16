@@ -9,6 +9,7 @@
     transform: translateY(0);
     /* Cada partial controla seu próprio padding */
     box-sizing: border-box;
+    will-change: opacity, transform;
     transition:
         opacity 0.25s ease-out,
         transform 0.25s cubic-bezier(0.2, 0.0, 0.2, 1);

@@ -57,7 +57,12 @@
                 .then(data => {
                     if (data.success) {
                         this.closeModal();
-                        window.location.reload();
+                        // Recarrega seção via SPA
+                        if (typeof AdminSPA !== 'undefined') {
+                            AdminSPA.reloadCurrentSection();
+                        } else {
+                            window.location.reload();
+                        }
                     } else {
                         alert('Erro: ' + (data.message || 'Falha ao entregar'));
                     }
@@ -67,7 +72,15 @@
 
         edit: function () {
             if (!currentPaidOrderId) return;
-            window.location.href = TablesHelpers.getBaseUrl() + '/admin/loja/pdv?order_id=' + currentPaidOrderId + '&edit_paid=1';
+            // Navega para PDV com edit_paid via SPA
+            if (typeof AdminSPA !== 'undefined') {
+                AdminSPA.navigateTo('balcao', true, true, {
+                    order_id: currentPaidOrderId,
+                    edit_paid: 1
+                });
+            } else {
+                window.location.href = TablesHelpers.getBaseUrl() + '/admin/loja/pdv?order_id=' + currentPaidOrderId + '&edit_paid=1';
+            }
         },
 
         getCurrentOrderId: () => currentPaidOrderId,

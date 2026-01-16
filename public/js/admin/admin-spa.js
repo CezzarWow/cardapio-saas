@@ -7,6 +7,7 @@ const AdminSPA = {
     // ESTADO
     // =========================================================================
     currentSection: null,
+    currentQueryParams: null,
     isLoading: false,
     cache: {},
     state: {},
@@ -57,6 +58,16 @@ const AdminSPA = {
         this.registerModule('caixa', {
             onEnter: async () => { if (window.CashierSPA && CashierSPA.init) CashierSPA.init(); }
         });
+
+        // Estoque
+        this.registerModule('estoque', {
+            onEnter: async () => { if (window.StockSPA?.init) StockSPA.init(); }
+        });
+
+        // Cardápio
+        this.registerModule('cardapio', {
+            onEnter: async () => { if (window.CardapioAdmin?.init) CardapioAdmin.init(); }
+        });
     },
 
     // =========================================================================
@@ -91,9 +102,10 @@ const AdminSPA = {
         this.navigateTo(section, false);
     },
 
-    async navigateTo(sectionName, updateHistory = true, forceReload = false) {
+    async navigateTo(sectionName, updateHistory = true, forceReload = false, queryParams = null) {
         if (this.isLoading && !forceReload) return;
-        if (sectionName === this.currentSection && !forceReload) return;
+        // Permite recarregar mesma seção se tiver params (ex: order_id diferente)
+        if (sectionName === this.currentSection && !forceReload && !queryParams) return;
 
         const config = this.sections[sectionName];
         if (!config) {
@@ -101,30 +113,39 @@ const AdminSPA = {
             return;
         }
 
+        // Armazena params atuais
+        this.currentQueryParams = queryParams;
+
         // 1. Leave Logic
         await this.leaveCurrentSection();
 
         // 2. State Update
         this.currentSection = sectionName;
-        SpaUI.updateActiveNav(sectionName); // UI Helper
+
+        // [UX] Se carregando balcao com mesa_id ou order_id, destaca 'mesas' ao invés de 'balcao'
+        let navSection = sectionName;
+        if (sectionName === 'balcao' && queryParams && (queryParams.mesa_id || queryParams.order_id)) {
+            navSection = 'mesas';
+        }
+        SpaUI.updateActiveNav(navSection);
 
         if (updateHistory) {
             history.pushState({ section: sectionName }, '', `#${sectionName}`);
         }
 
-        // 3. Load Content
-        await this.loadSectionContent(sectionName, config, forceReload);
+        // 3. Load Content (sempre forceReload se tiver params)
+        await this.loadSectionContent(sectionName, config, forceReload || !!queryParams, queryParams);
 
-        // 4. Enter Logic
-        await this.enterSection(sectionName);
+        // 4. Enter Logic - agora é chamado após scripts carregarem em initLoadedModules()
+        // Não chamar enterSection aqui porque scripts podem não ter carregado ainda
     },
 
-    async loadSectionContent(sectionName, config, forceReload = false) {
+    async loadSectionContent(sectionName, config, forceReload = false, queryParams = null) {
         const container = this.spaContentContainer;
         if (!container) return;
 
-        // Cache Hit (Instant Load)
-        if (this.cache[sectionName] && !forceReload) {
+        // Cache Hit (Instant Load) - só usa cache se não tiver queryParams
+        if (this.cache[sectionName] && !forceReload && !queryParams) {
             this.renderSection(this.cache[sectionName]);
             return;
         }
@@ -143,9 +164,17 @@ const AdminSPA = {
             }
         }, 100);
 
+        // Monta URL com query params se existir
+        let partialUrl = `${BASE_URL}${config.partial}`;
+        if (queryParams) {
+            const params = new URLSearchParams(queryParams);
+            partialUrl += '?' + params.toString();
+            console.log('[AdminSPA] Loading with params:', queryParams);
+        }
+
         // Fetch
         try {
-            const response = await fetch(`${BASE_URL}${config.partial}`, {
+            const response = await fetch(partialUrl, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
 
@@ -242,16 +271,11 @@ const AdminSPA = {
     },
 
     initLoadedModules() {
-        const section = this.currentSection;
+        // IMPORTANTE: Este método é chamado APÓS scripts carregarem.
+        // Então é o lugar correto para chamar onEnter dos módulos.
 
-        // Context-aware initialization
-        if (section === 'estoque' && window.StockSPA?.init) StockSPA.init();
-        if (section === 'cardapio' && window.CardapioAdmin?.init) CardapioAdmin.init();
-        if (section === 'delivery' && window.DeliveryPolling?.init) DeliveryPolling.init();
-        if ((section === 'pdv' || section === 'balcao') && window.PDV?.init) PDV.init();
-        if (section === 'caixa' && window.CashierSPA?.init) CashierSPA.init();
-
-        if (window.lucide) lucide.createIcons();
+        // Chama onEnter do módulo atual (agora os scripts estão carregados)
+        this.enterSection(this.currentSection);
     },
 
     // Alias para compatibilidade

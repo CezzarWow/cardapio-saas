@@ -27,7 +27,11 @@
             const btnOrder = document.getElementById('btn-dossier-order');
             if (btnOrder) {
                 btnOrder.onclick = () => {
-                    window.location.href = TablesHelpers.getBaseUrl() + '/admin/loja/pdv?client_id=' + clientId;
+                    if (typeof AdminSPA !== 'undefined') {
+                        AdminSPA.navigateTo('balcao', true, true, { client_id: clientId });
+                    } else {
+                        window.location.href = TablesHelpers.getBaseUrl() + '/admin/loja/pdv?client_id=' + clientId;
+                    }
                 };
             }
 

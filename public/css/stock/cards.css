@@ -21,6 +21,10 @@
     transition: all 0.2s;
     display: flex;
     flex-direction: column;
+    /* PERFORMANCE OPTIMIZATION */
+    content-visibility: auto;
+    contain-intrinsic-size: 0 350px;
+    /* Estimativa da altura do card */
 }
 
 .stock-product-card:hover {

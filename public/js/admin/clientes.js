@@ -258,7 +258,12 @@
                         var tipo = self.state.currentType === 'PF' ? 'Cliente' : 'Empresa';
                         alert(tipo + ' cadastrado com sucesso!');
                         document.getElementById('superClientModal').style.display = 'none';
-                        window.location.reload();
+                        // Recarrega seção via SPA
+                        if (typeof AdminSPA !== 'undefined') {
+                            AdminSPA.reloadCurrentSection();
+                        } else {
+                            window.location.reload();
+                        }
                     } else {
                         alert('Erro ao salvar: ' + (data.message || 'Erro desconhecido'));
                     }

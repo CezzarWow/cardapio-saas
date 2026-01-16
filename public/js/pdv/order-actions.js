@@ -28,7 +28,12 @@ const PDVOrderActions = {
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    window.location.reload();
+                    // Recarrega seção atual via SPA
+                    if (typeof AdminSPA !== 'undefined') {
+                        AdminSPA.reloadCurrentSection();
+                    } else {
+                        window.location.reload();
+                    }
                 } else {
                     alert('Erro: ' + (data.message || 'Não foi possível remover o item'));
                 }
@@ -60,7 +65,12 @@ const PDVOrderActions = {
             .then(data => {
                 if (data.success) {
                     alert('Pedido cancelado com sucesso!');
-                    window.location.href = BASE_URL + '/admin/loja/mesas';
+                    // Navega para mesas via SPA
+                    if (typeof AdminSPA !== 'undefined') {
+                        AdminSPA.navigateTo('mesas', true, true);
+                    } else {
+                        window.location.href = BASE_URL + '/admin/loja/mesas';
+                    }
                 } else {
                     alert('Erro: ' + (data.message || 'Não foi possível cancelar o pedido'));
                 }

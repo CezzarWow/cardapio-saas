@@ -66,7 +66,12 @@ const SalesAdmin = {
             .then(d => {
                 if (d.success) {
                     alert('Venda cancelada com sucesso! ✅');
-                    location.reload();
+                    // Recarrega seção via SPA
+                    if (typeof AdminSPA !== 'undefined') {
+                        AdminSPA.reloadCurrentSection();
+                    } else {
+                        location.reload();
+                    }
                 } else {
                     alert('Erro: ' + (d.message || 'Erro desconhecido'));
                 }
@@ -94,7 +99,12 @@ const SalesAdmin = {
             .then(d => {
                 if (d.success) {
                     alert('Mesa reaberta! Volte para o mapa de mesas para editar. 🔄');
-                    window.location.href = 'mesas';
+                    // Navega para mesas via SPA
+                    if (typeof AdminSPA !== 'undefined') {
+                        AdminSPA.navigateTo('mesas', true, true);
+                    } else {
+                        window.location.href = 'mesas';
+                    }
                 } else {
                     alert('Erro: ' + (d.message || 'Erro desconhecido'));
                 }

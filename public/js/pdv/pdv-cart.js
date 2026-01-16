@@ -56,6 +56,16 @@ const PDVCart = {
         this.updateUI();
     },
 
+
+
+    increaseQty: function (cartItemId) {
+        const item = this.items.find(i => i.cartItemId === cartItemId);
+        if (item) {
+            item.quantity++;
+            this.updateUI();
+        }
+    },
+
     remove: function (cartItemId) {
         const index = this.items.findIndex(item => item.cartItemId === cartItemId);
         if (index > -1) {
@@ -184,7 +194,7 @@ const PDVCart = {
                     </div>
                     <div style="display: flex; gap: 5px; align-items: center; margin-top: 5px;">
                          <button onclick="PDVCart.remove('${item.cartItemId}')" style="background: #fee2e2; color: #991b1b; border: none; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-weight:bold;">-</button>
-                         <button onclick='PDVCart.add(${item.id}, "${(item.name || '').replace(/"/g, '&quot;').replace(/'/g, "\\'")}", ${item.price}, 1, ${JSON.stringify(item.extras || []).replace(/'/g, "&#39;")})' style="background: #dcfce7; color: #166534; border: none; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-weight:bold;">+</button>
+                         <button onclick="PDVCart.increaseQty('${item.cartItemId}')" style="background: #dcfce7; color: #166534; border: none; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-weight:bold;">+</button>
                     </div>
                 </div>`;
             });
@@ -235,10 +245,41 @@ const PDVCart = {
 };
 
 // ==========================================
+// FUNÇÕES DE CLIQUE (Mapeamento HTML onclick)
+// ==========================================
+window.PDV = window.PDV || {};
+window.PDV.clickProduct = function (id, name, price, hasExtras, encodedExtras = '[]') {
+    const hasExtrasBool = (hasExtras === true || hasExtras === 'true' || hasExtras === 1 || hasExtras === '1');
+    const floatPrice = parseFloat(price);
+
+    if (hasExtrasBool) {
+        if (window.PDVExtras) {
+            PDVExtras.open(id, name, floatPrice);
+        } else {
+            console.error('PDVExtras module not loaded');
+            alert('Erro: Módulo de adicionais não carregado');
+        }
+    } else {
+        if (window.PDVCart) {
+            PDVCart.add(id, name, floatPrice);
+        } else {
+            console.error('PDVCart not loaded');
+        }
+    }
+};
+
+// ==========================================
 // GLOBALS & ALIASES (Compatibilidade)
 // ==========================================
 window.PDVCart = PDVCart;
-window.cart = PDVCart.items;
+
+// IMPORTANTE: Usar getter para que window.cart sempre aponte para o array atual
+// (evita referência stale quando this.items = [] substitui o array)
+Object.defineProperty(window, 'cart', {
+    get: function () { return PDVCart.items; },
+    configurable: true
+});
+
 window.addToCart = (id, name, price, hasExtras = false) => {
     if (hasExtras) {
         if (window.PDVExtras) {

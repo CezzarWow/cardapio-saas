@@ -402,9 +402,5 @@ window.StockSPA = {
 
 };
 
-// ============================================================================
-// INICIALIZAÇÃO
-// ============================================================================
-document.addEventListener('DOMContentLoaded', () => {
-    StockSPA.init();
-});
+// Inicialização é feita pelo AdminSPA via onEnter
+// NÃO usar DOMContentLoaded pois o evento já foi disparado quando o SPA carrega o partial

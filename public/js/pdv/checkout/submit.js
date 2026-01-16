@@ -96,9 +96,13 @@ const CheckoutSubmit = {
             if (data.success) {
                 CheckoutUI.showSuccessModal();
                 PDVCart.clear();
-                // Redireciona para mesas após sucesso
+                // Navega para mesas via SPA após sucesso
                 setTimeout(() => {
-                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
+                    if (typeof AdminSPA !== 'undefined') {
+                        AdminSPA.navigateTo('mesas', true, true);
+                    } else {
+                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
+                    }
                 }, 1000);
             } else {
                 alert('Erro: ' + (data.message || 'Falha ao entregar pedido.'));
@@ -213,8 +217,10 @@ const CheckoutSubmit = {
     // --- Helpers Privados ---
 
     _getCartItems: function () {
+        // IMPORTANTE: PDVCart.items tem prioridade porque window.cart pode ficar desatualizado
+        // (window.cart é uma referência que fica stale quando this.items = [] substitui o array)
+        if (typeof PDVCart !== 'undefined' && PDVCart.items) return PDVCart.items;
         if (typeof cart !== 'undefined' && Array.isArray(cart)) return cart;
-        if (typeof PDVCart !== 'undefined') return PDVCart.items;
         return [];
     },
 
@@ -252,14 +258,24 @@ const CheckoutSubmit = {
         if (data.success) {
             CheckoutUI.showSuccessModal();
             PDVCart.clear();
-            if (typeof cart !== 'undefined') cart.length = 0;
 
             setTimeout(() => {
+                document.getElementById('checkoutModal').style.display = 'none';
+
                 if (isPaidLoop || isMesaClose) {
-                    // Redireciona para página de mesas
-                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
+                    // Navega para mesas via SPA
+                    if (typeof AdminSPA !== 'undefined') {
+                        AdminSPA.navigateTo('mesas', true, true);
+                    } else {
+                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
+                    }
                 } else {
-                    window.location.reload();
+                    // Recarrega seção atual via SPA
+                    if (typeof AdminSPA !== 'undefined') {
+                        AdminSPA.reloadCurrentSection();
+                    } else {
+                        window.location.reload();
+                    }
                 }
             }, 1000);
         } else {
@@ -274,21 +290,32 @@ const CheckoutSubmit = {
         if (data.success) {
             CheckoutUI.showSuccessModal();
             PDVCart.clear();
-            if (typeof cart !== 'undefined') cart.length = 0;
 
             setTimeout(() => {
-                // Se foi salvo com mesa, redireciona de volta para a mesa
-                // Se foi novo pedido, usa o order_id retornado
+                document.getElementById('checkoutModal').style.display = 'none';
+
+                // Se foi salvo com mesa, navega de volta para a mesa
                 const newOrderId = data.order_id || orderId;
 
-                if (tableId) {
-                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') +
-                        '/admin/loja/pdv?mesa_id=' + tableId;
-                } else if (newOrderId) {
-                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') +
-                        '/admin/loja/pdv?order_id=' + newOrderId;
+                if (typeof AdminSPA !== 'undefined') {
+                    if (tableId) {
+                        AdminSPA.navigateTo('balcao', true, true, { mesa_id: tableId });
+                    } else if (newOrderId) {
+                        AdminSPA.navigateTo('balcao', true, true, { order_id: newOrderId });
+                    } else {
+                        AdminSPA.reloadCurrentSection();
+                    }
                 } else {
-                    window.location.reload();
+                    // Fallback para full page redirect
+                    if (tableId) {
+                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') +
+                            '/admin/loja/pdv?mesa_id=' + tableId;
+                    } else if (newOrderId) {
+                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') +
+                            '/admin/loja/pdv?order_id=' + newOrderId;
+                    } else {
+                        window.location.reload();
+                    }
                 }
             }, 1000);
         } else {

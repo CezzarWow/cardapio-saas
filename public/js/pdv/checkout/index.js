@@ -139,7 +139,10 @@ window.PDVCheckout = PDVCheckout;
 // ALIASES DE COMPATIBILIDADE (HTML usa esses)
 // ==========================================
 
-window.finalizeSale = () => PDVCheckout.finalizeSale();
+window.finalizeSale = () => {
+    console.log('[DEBUG] window.finalizeSale called');
+    PDVCheckout.finalizeSale();
+};
 window.fecharContaMesa = (id) => PDVCheckout.fecharContaMesa(id);
 window.fecharComanda = (mid) => PDVCheckout.fecharComanda(mid);
 window.includePaidOrderItems = () => PDVCheckout.finalizeSale();

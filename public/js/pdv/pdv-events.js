@@ -3,44 +3,70 @@
  * 
  * Centraliza os listeners de eventos do PDV para remover 'onclick' do HTML.
  * Padrão: data-action="nomeAcao" e data-payload="{json}"
+ * 
+ * [REFACTOR SPA] Agora suporta init() idempotente com removeEventListener.
  */
 
 const PDVEvents = {
+    // Armazena referência para desvincular eventos
+    clickHandler: null,
+    keydownHandler: null,
+
     init: function () {
-        if (this.isInitialized) return;
+        console.log('[PDV-EVENTS] Initializing...');
         this.bindGlobalClicks();
         this.bindKeyboardShortcuts();
-        this.isInitialized = true;
-
     },
 
     bindGlobalClicks: function () {
-        // ... (resto igual)
-        document.addEventListener('click', (e) => {
-            // PRODUCTS GRID
-            const productCard = e.target.closest('.js-add-product');
-            if (productCard) {
-                this.handleAddProduct(productCard);
-                return;
-            }
+        // 1. Remove listener anterior se existir (Limpeza)
+        if (this.clickHandler) {
+            document.removeEventListener('click', this.clickHandler);
+        }
 
-            // GENERIC ACTIONS (data-action)
-            const actionBtn = e.target.closest('[data-action]');
-            if (actionBtn) {
-                const action = actionBtn.dataset.action;
-                this.handleAction(action, actionBtn);
-            }
-        });
+        // 2. Cria nova referência vinculada (Bind)
+        this.clickHandler = (e) => this.handleDocumentClick(e);
+
+        // 3. Adiciona
+        document.addEventListener('click', this.clickHandler);
+        console.log('[PDV-EVENTS] Click listener bound.');
     },
 
     bindKeyboardShortcuts: function () {
-        // F2 is already handled in pdv-search.js, but we can add global shortcuts here if needed
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (window.closeExtrasModal) window.closeExtrasModal();
-                if (window.closeFichaModal) window.closeFichaModal();
-            }
-        });
+        if (this.keydownHandler) {
+            document.removeEventListener('keydown', this.keydownHandler);
+        }
+
+        this.keydownHandler = (e) => this.handleDocumentKeydown(e);
+        document.addEventListener('keydown', this.keydownHandler);
+    },
+
+    // ===========================================
+    // ROUTERS (Event Routing)
+    // ===========================================
+
+    handleDocumentClick: function (e) {
+        // PRODUCTS GRID
+        const productCard = e.target.closest('.js-add-product');
+        if (productCard) {
+            this.handleAddProduct(productCard);
+            return;
+        }
+
+        // GENERIC ACTIONS (data-action)
+        const actionBtn = e.target.closest('[data-action]');
+        if (actionBtn) {
+            const action = actionBtn.dataset.action;
+            this.handleAction(action, actionBtn);
+        }
+    },
+
+    handleDocumentKeydown: function (e) {
+        // F2 is already handled in pdv-search.js
+        if (e.key === 'Escape') {
+            if (window.closeExtrasModal) window.closeExtrasModal();
+            if (window.closeFichaModal) window.closeFichaModal();
+        }
     },
 
     // ===========================================
@@ -48,12 +74,17 @@ const PDVEvents = {
     // ===========================================
 
     handleAddProduct: function (el) {
+        // Proteção contra duplicação de clique rápido
+        if (el.classList.contains('processing-click')) return;
+        el.classList.add('processing-click');
+        setTimeout(() => el.classList.remove('processing-click'), 300);
+
         const id = el.dataset.id;
-        const name = el.dataset.name; // Name strings are safe via dataset
+        const name = el.dataset.name;
         const price = parseFloat(el.dataset.price);
         const hasExtras = el.dataset.hasExtras === 'true';
 
-        // Animação de clique
+        // Animação visual
         el.classList.add('clicked');
         setTimeout(() => el.classList.remove('clicked'), 150);
 
@@ -69,7 +100,6 @@ const PDVEvents = {
                 PDVCart.add(id, name, price);
             }
 
-            // Toca som de bip se existir (opcional)
             if (window.playBeep) window.playBeep();
         } else {
             console.error('PDVCart module not loaded');
@@ -77,35 +107,39 @@ const PDVEvents = {
     },
 
     handleAction: function (action, el) {
+        console.log('[PDV-EVENTS] Action:', action);
+
         switch (action) {
             // CART ACTIONS
             case 'cart-undo':
-                PDVCart.undoClear();
+                if (window.PDVCart) PDVCart.undoClear();
                 break;
             case 'cart-clear':
-                if (confirm('Limpar carrinho?')) PDVCart.clear();
+                if (confirm('Limpar carrinho?')) {
+                    if (window.PDVCart) PDVCart.clear();
+                }
                 break;
             case 'cart-remove-item':
-                PDVCart.remove(el.dataset.id);
+                if (window.PDVCart) PDVCart.remove(el.dataset.id);
                 break;
 
             // EXTRAS MODAL
             case 'extras-close':
-                PDVExtras.close();
+                if (window.PDVExtras) PDVExtras.close();
                 break;
             case 'extras-confirm':
-                PDVExtras.confirm();
+                if (window.PDVExtras) PDVExtras.confirm();
                 break;
             case 'extras-increase':
-                PDVExtras.increaseQty();
+                if (window.PDVExtras) PDVExtras.increaseQty();
                 break;
             case 'extras-decrease':
-                PDVExtras.decreaseQty();
+                if (window.PDVExtras) PDVExtras.decreaseQty();
                 break;
 
             // TABLE/CLIENT ACTIONS
             case 'ficha-open':
-                if (window.openFichaModal) window.openFichaModal(); // Legacy/Ficha.js
+                if (window.openFichaModal) window.openFichaModal();
                 break;
             case 'ficha-close':
                 if (window.closeFichaModal) window.closeFichaModal();
@@ -125,12 +159,14 @@ const PDVEvents = {
             // ORDER FLOW
             case 'order-save': // Salvar Comanda
                 if (window.saveClientOrder) window.saveClientOrder();
+                else console.error('saveClientOrder not found');
                 break;
             case 'order-include-paid': // Incluir no Pago
                 if (window.includePaidOrderItems) window.includePaidOrderItems();
                 break;
             case 'order-finalize-quick': // Balcão Finalizar
                 if (window.finalizeSale) window.finalizeSale();
+                else console.error('finalizeSale not found');
                 break;
             case 'order-close-table': // Fechar Mesa
                 if (window.fecharContaMesa) window.fecharContaMesa(el.dataset.tableId);
@@ -152,11 +188,14 @@ const PDVEvents = {
             case 'client-clear':
                 if (window.clearClient) window.clearClient();
                 break;
+
+            default:
+                console.warn('[PDV-EVENTS] Unknown action:', action);
         }
     }
 };
 
-// Initialize removido. Gerenciado pelo PDV.init()
-// document.addEventListener('DOMContentLoaded', () => {
-//     PDVEvents.init();
-// });
+// ==========================================
+// EXPORTAR GLOBALMENTE
+// ==========================================
+window.PDVEvents = PDVEvents;

@@ -85,11 +85,23 @@
     // SELECIONAR MESA
     // ==========================================
     PDVTables.selectTable = function (table) {
-        // Se mesa está ocupada e tem order_id, redireciona direto para comanda
+        // Se mesa está ocupada e tem order_id, carrega via SPA navigation
         if (table.status === 'ocupada' && table.current_order_id) {
-            // [MIGRATION] Salva carrinho atual antes de redirecionar
+            // [MIGRATION] Salva carrinho atual antes de navegar
             if (typeof PDVCart !== 'undefined') PDVCart.saveForMigration();
-            window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + table.current_order_id;
+
+            // Usa navegação SPA com query params
+            // AdminSPA automaticamente destaca 'mesas' quando há mesa_id/order_id
+            if (typeof AdminSPA !== 'undefined') {
+                AdminSPA.navigateTo('balcao', true, true, {
+                    order_id: table.current_order_id,
+                    mesa_id: table.id,
+                    mesa_numero: table.number
+                });
+            } else {
+                // Fallback para redirect (fora do SPA)
+                window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + table.current_order_id;
+            }
             return;
         }
 

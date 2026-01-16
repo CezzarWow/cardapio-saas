@@ -62,11 +62,19 @@
     // SELECIONAR CLIENTE
     // ==========================================
     PDVTables.selectClient = function (id, name, openOrderId = null, creditLimit = 0) {
-        // Se cliente tem comanda aberta, redirecionar para ela
+        // Se cliente tem comanda aberta, carregar via SPA navigation
         if (openOrderId) {
-            // [MIGRATION] Salva carrinho atual antes de redirecionar
+            // [MIGRATION] Salva carrinho atual antes de navegar
             if (typeof PDVCart !== 'undefined') PDVCart.saveForMigration();
-            window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
+
+            // Usa navegação SPA com query params
+            // AdminSPA automaticamente destaca 'mesas' quando há order_id
+            if (typeof AdminSPA !== 'undefined') {
+                AdminSPA.navigateTo('balcao', true, true, { order_id: openOrderId });
+            } else {
+                // Fallback para redirect (fora do SPA)
+                window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
+            }
             return;
         }
 
@@ -109,18 +117,26 @@
         if (openOrderId) {
             // Adiciona ou atualiza aviso
             let openWarning = document.getElementById('client-open-warning');
+            const navigateToComanda = () => {
+                if (typeof AdminSPA !== 'undefined') {
+                    AdminSPA.navigateTo('balcao', true, true, { order_id: openOrderId });
+                } else {
+                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
+                }
+            };
+
             if (!openWarning) {
                 openWarning = document.createElement('div');
                 openWarning.id = 'client-open-warning';
                 openWarning.style.cssText = 'width:100%; text-align:center; margin-top:5px; font-size:0.8rem; color:#b91c1c; background:#fecaca; padding:4px; border-radius:4px; cursor:pointer;';
                 openWarning.innerText = 'Clique aqui para ver a comanda';
-                openWarning.onclick = () => window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
+                openWarning.onclick = navigateToComanda;
 
                 // Insere APÓS o selectedArea
                 selectedArea.insertAdjacentElement('afterend', openWarning);
             } else {
                 openWarning.style.display = 'block';
-                openWarning.onclick = () => window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
+                openWarning.onclick = navigateToComanda;
             }
         } else {
             // Esconde aviso se existir
