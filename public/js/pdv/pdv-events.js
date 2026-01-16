@@ -7,12 +7,15 @@
 
 const PDVEvents = {
     init: function () {
+        if (this.isInitialized) return;
         this.bindGlobalClicks();
         this.bindKeyboardShortcuts();
+        this.isInitialized = true;
         console.log('PDV Events Initialized');
     },
 
     bindGlobalClicks: function () {
+        // ... (resto igual)
         document.addEventListener('click', (e) => {
             // PRODUCTS GRID
             const productCard = e.target.closest('.js-add-product');
@@ -153,7 +156,7 @@ const PDVEvents = {
     }
 };
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    PDVEvents.init();
-});
+// Initialize removido. Gerenciado pelo PDV.init()
+// document.addEventListener('DOMContentLoaded', () => {
+//     PDVEvents.init();
+// });

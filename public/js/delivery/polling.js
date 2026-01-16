@@ -168,7 +168,14 @@ const DeliveryPolling = {
 // Expõe globalmente
 window.DeliveryPolling = DeliveryPolling;
 
-// Auto-start quando carrega
+// Alias para padronização SPA
+DeliveryPolling.init = function () {
+    this.start();
+};
+
+// Auto-start APENAS se não estiver no SPA Shell (modo legado)
 document.addEventListener('DOMContentLoaded', () => {
-    DeliveryPolling.start();
+    if (!document.getElementById('spa-content')) {
+        DeliveryPolling.start();
+    }
 });

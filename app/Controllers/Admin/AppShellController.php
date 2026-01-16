@@ -6,46 +6,57 @@ use App\Core\View;
 use App\Services\Product\ProductService;
 use App\Services\CategoryService;
 use App\Services\Cardapio\CardapioQueryService;
+use App\Services\Delivery\DeliveryService;
+use App\Services\TableService;
+use App\Services\Pdv\PdvService;
+use App\Services\RestaurantService;
+use App\Repositories\TableRepository;
+use App\Repositories\Order\OrderRepository;
 
 /**
  * AppShellController - Controlador Principal do SPA
- * 
- * Responsável por:
- * - Renderizar o shell (sidebar + container vazio)
- * - Servir partials das seções via AJAX
  */
 class AppShellController extends BaseController
 {
     private ProductService $productService;
     private CategoryService $categoryService;
     private CardapioQueryService $cardapioQueryService;
+    private DeliveryService $deliveryService;
+    private TableService $tableService;
+    private PdvService $pdvService;
+    private RestaurantService $restaurantService;
+    private TableRepository $tableRepo;
+    private OrderRepository $orderRepo;
 
     public function __construct(
         ProductService $productService,
         CategoryService $categoryService,
-        CardapioQueryService $cardapioQueryService
+        CardapioQueryService $cardapioQueryService,
+        DeliveryService $deliveryService,
+        TableService $tableService,
+        PdvService $pdvService,
+        RestaurantService $restaurantService,
+        TableRepository $tableRepo,
+        OrderRepository $orderRepo
     ) {
         $this->productService = $productService;
         $this->categoryService = $categoryService;
         $this->cardapioQueryService = $cardapioQueryService;
+        $this->deliveryService = $deliveryService;
+        $this->tableService = $tableService;
+        $this->pdvService = $pdvService;
+        $this->restaurantService = $restaurantService;
+        $this->tableRepo = $tableRepo;
+        $this->orderRepo = $orderRepo;
     }
 
-    /**
-     * Renderiza o shell principal do SPA
-     * O conteúdo é carregado via AJAX pelo AdminSPA.js
-     */
     public function index(): void
     {
         View::render('admin/spa/shell');
     }
 
-    /**
-     * Serve o partial de uma seção específica
-     * Chamado via AJAX: /admin/spa/partial/{section}
-     */
     public function partial(string $section): void
     {
-        // Valida que é requisição AJAX
         if (!$this->isAjaxRequest()) {
             $this->redirect('/admin/loja/spa');
             return;
@@ -54,8 +65,9 @@ class AppShellController extends BaseController
         $rid = $this->getRestaurantId();
 
         switch ($section) {
-            case 'balcao':
-                $this->renderBalcaoPartial($rid);
+            case 'balcao': // Agora é o PDV
+            case 'pdv':    // Alias
+                $this->renderPdvPartial($rid);
                 break;
             case 'mesas':
                 $this->renderMesasPartial($rid);
@@ -79,53 +91,123 @@ class AppShellController extends BaseController
     }
 
     // =========================================================================
-    // PARTIALS - Serão implementados conforme migramos cada seção
+    // PARTIALS
     // =========================================================================
 
-    private function renderBalcaoPartial(int $rid): void
+    private function renderPdvPartial(int $rid): void
     {
-        echo '<div style="padding: 40px; text-align: center; color: #6b7280;">
-            <h2>Balcão</h2>
-            <p>Esta seção será migrada na Etapa 5</p>
-        </div>';
+        // Lógica migrada de PdvController::index
+
+        // Contexto via Query Params (AJAX)
+        // O AdminSPA repassa a query string, então $_GET funciona
+        $mesaId = $this->getInt('mesa_id');
+        $mesaNumero = $_GET['mesa_numero'] ?? null;
+        $orderId = $this->getInt('order_id');
+
+        // Se acessa via order_id, buscar a mesa vinculada (se houver)
+        if ($orderId > 0 && $mesaId <= 0) {
+            $linkedTable = $this->tableRepo->findByOrderId($orderId);
+            if ($linkedTable) {
+                $mesaId = (int) $linkedTable['id'];
+                $mesaNumero = $linkedTable['number'];
+            }
+        }
+
+        // Se tem mesa_id mas não tem mesa_numero, buscar o número
+        if ($mesaId > 0 && !$mesaNumero) {
+            $tableData = $this->tableRepo->findById($mesaId);
+            if ($tableData) {
+                $mesaNumero = $tableData['number'];
+            }
+        }
+
+        // Busca dados do contexto
+        $context = $this->pdvService->getContextData($rid, $mesaId > 0 ? $mesaId : null, $orderId > 0 ? $orderId : null);
+
+        $contaAberta = $context['contaAberta'];
+        $itensJaPedidos = $context['itensJaPedidos'];
+
+        // Variáveis para View (snake_case)
+        $mesa_id = $mesaId;
+        $mesa_numero = $mesaNumero;
+
+        // 1. Detecta modo edição (Pedido Pago/Retirada)
+        $isEditingPaid = isset($_GET['edit_paid']) && $_GET['edit_paid'] == '1';
+        $editingOrderId = $orderId;
+
+        $originalPaidTotalFromDB = 0;
+        if ($isEditingPaid && $editingOrderId) {
+            $orderData = $this->orderRepo->find($editingOrderId);
+            if ($orderData) {
+                $originalPaidTotalFromDB = floatval($orderData['total'] ?? 0);
+            }
+        }
+
+        // 2. Carrega Configurações (Taxa de Entrega)
+        $settings = $this->restaurantService->getSettings($rid);
+        $deliveryFee = floatval($settings['delivery_fee'] ?? 5.0);
+
+        // 3. Flags de Visualização (usadas nas partials internas)
+        $showQuickSale = false;
+        $showCloseTable = false;
+        $showCloseCommand = false;
+        $showSaveCommand = false;
+        $showIncludePaid = false;
+
+        if ($mesa_id) {
+            $showCloseTable = true;
+            $showSaveCommand = true;
+        } elseif (!empty($contaAberta['id'])) {
+            if ($isEditingPaid) {
+                $showIncludePaid = true;
+            } else {
+                $showCloseCommand = true;
+                $showSaveCommand = true;
+            }
+        } else {
+            $showQuickSale = true;
+            $showSaveCommand = true;
+        }
+
+        // 4. Carrinho de Recuperação
+        $cartRecovery = ($isEditingPaid && $editingOrderId) ? $itensJaPedidos : [];
+
+        // Carrega Cardápio
+        $categories = $this->pdvService->getMenu($rid);
+
+        // Renderiza o partial do PDV
+        require __DIR__ . '/../../../views/admin/spa/partials/_pdv.php';
     }
 
     private function renderMesasPartial(int $rid): void
     {
-        echo '<div style="padding: 40px; text-align: center; color: #6b7280;">
-            <h2>Mesas</h2>
-            <p>Esta seção será migrada na Etapa 4</p>
-        </div>';
+        $tables = $this->tableService->getAllTables($rid);
+        $clientOrders = $this->tableService->getOpenClientOrders($rid);
+        require __DIR__ . '/../../../views/admin/spa/partials/_mesas.php';
     }
 
     private function renderDeliveryPartial(int $rid): void
     {
-        echo '<div style="padding: 40px; text-align: center; color: #6b7280;">
-            <h2>Delivery</h2>
-            <p>Esta seção será migrada na Etapa 3</p>
-        </div>';
+        $statusFilter = $_GET['status'] ?? null;
+        $orders = $this->deliveryService->getOrders($rid, $statusFilter);
+        require __DIR__ . '/../../../views/admin/spa/partials/_delivery.php';
     }
 
     private function renderCardapioPartial(int $rid): void
     {
-        // Busca dados via CardapioQueryService (mesma lógica do CardapioController::index)
         $data = $this->cardapioQueryService->getIndexData($rid);
         extract($data);
-
-        // Renderiza o partial do Cardápio
         require __DIR__ . '/../../../views/admin/spa/partials/_cardapio.php';
     }
 
     private function renderEstoquePartial(int $rid): void
     {
-        // Dados para o partial (usando métodos existentes + count)
         $products = $this->productService->getProducts($rid);
         $categories = $this->categoryService->list($rid);
         
         $totalProducts = count($products);
         $totalCategories = count($categories);
 
-        // Renderiza o partial do Estoque
         require __DIR__ . '/../../../views/admin/spa/partials/_estoque.php';
     }
 
@@ -136,10 +218,6 @@ class AppShellController extends BaseController
             <p>Esta seção será migrada na Etapa 6</p>
         </div>';
     }
-
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
 
     private function isAjaxRequest(): bool
     {

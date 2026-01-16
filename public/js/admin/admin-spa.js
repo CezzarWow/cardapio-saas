@@ -68,6 +68,42 @@ const AdminSPA = {
     init() {
         console.log('[AdminSPA] Initializing...');
 
+        // Registra módulos com Lifecycle
+        this.registerModule('delivery', {
+            onEnter: async () => {
+                if (window.DeliveryPolling) DeliveryPolling.init();
+            },
+            onLeave: async () => {
+                if (window.DeliveryPolling) DeliveryPolling.stop();
+            }
+        });
+
+        // Módulo Mesas
+        this.registerModule('mesas', {
+            onEnter: async () => {
+                // Placeholder para init customizado se necessário
+                console.log('[AdminSPA] Mesas module entered');
+            }
+        });
+
+        // Módulo PDV / Balcão
+        const pdvHandler = {
+            onEnter: async () => {
+                if (window.PDV && typeof PDV.init === 'function') {
+                    PDV.init();
+                }
+            },
+            onLeave: async () => {
+                // Persiste carrinho no SessionStorage ao sair
+                if (window.PDVCart && typeof PDVCart.saveForMigration === 'function') {
+                    console.log('[AdminSPA] Saving PDV state...');
+                    PDVCart.saveForMigration();
+                }
+            }
+        };
+        this.registerModule('pdv', pdvHandler);
+        this.registerModule('balcao', pdvHandler); // Alias
+
         this.bindNavigation();
         this.bindPopState();
         this.loadInitialSection();
@@ -104,6 +140,16 @@ const AdminSPA = {
     loadInitialSection() {
         const section = this.getSectionFromHash() || 'balcao';
         this.navigateTo(section, false);
+    },
+
+    // =========================================================================
+    // HELPERS DE RECARREGAMENTO
+    // =========================================================================
+    async reloadCurrentSection() {
+        if (!this.currentSection) return;
+
+        console.log('[AdminSPA] Reloading section:', this.currentSection);
+        await this.loadSectionContent(this.currentSection, this.sections[this.currentSection]);
     },
 
     // =========================================================================
@@ -273,6 +319,25 @@ const AdminSPA = {
         if (window.CardapioAdmin && typeof CardapioAdmin.init === 'function') {
             console.log('[AdminSPA] Initializing CardapioAdmin');
             CardapioAdmin.init();
+        }
+
+        // Delivery Polling
+        if (window.DeliveryPolling && typeof DeliveryPolling.init === 'function') {
+            const currentSection = this.currentSection;
+            // Só inicia se estiver na seção delivery
+            if (currentSection === 'delivery') {
+                console.log('[AdminSPA] Initializing DeliveryPolling');
+                DeliveryPolling.init();
+            }
+        }
+
+        // PDV
+        if (window.PDV && typeof PDV.init === 'function') {
+            const currentSection = this.currentSection;
+            if (currentSection === 'pdv' || currentSection === 'balcao') {
+                console.log('[AdminSPA] Initializing PDV');
+                PDV.init();
+            }
         }
 
         // Lucide icons

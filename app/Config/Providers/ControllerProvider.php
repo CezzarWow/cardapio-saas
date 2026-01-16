@@ -90,7 +90,13 @@ class ControllerProvider implements Provider
             return new \App\Controllers\Admin\AppShellController(
                 $c->get(\App\Services\Product\ProductService::class),
                 $c->get(\App\Services\CategoryService::class),
-                $c->get(\App\Services\Cardapio\CardapioQueryService::class)
+                $c->get(\App\Services\Cardapio\CardapioQueryService::class),
+                $c->get(\App\Services\Delivery\DeliveryService::class),
+                $c->get(\App\Services\TableService::class),
+                $c->get(\App\Services\Pdv\PdvService::class),
+                $c->get(\App\Services\RestaurantService::class),
+                $c->get(\App\Repositories\TableRepository::class),
+                $c->get(\App\Repositories\Order\OrderRepository::class)
             );
         });
 

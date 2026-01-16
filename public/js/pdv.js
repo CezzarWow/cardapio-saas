@@ -2,100 +2,131 @@
  * PDV MAIN - Ponto de Entrada
  * Orquestra os módulos: State, Cart, Tables, Checkout.
  */
-
-// Limpa URL após carregar (F5 volta ao balcão limpo)
-// Só limpa se tiver order_id ou mesa_id na URL
 (function () {
-    const url = new URL(window.location.href);
-    if (url.searchParams.has('order_id') || url.searchParams.has('mesa_id')) {
-        const cleanUrl = url.origin + url.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
-    }
-})();
+    'use strict';
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. INICIALIZA ESTADO (PDVState)
-    const tableIdInput = document.getElementById('current_table_id');
-    const clientIdInput = document.getElementById('current_client_id');
-    const orderIdInput = document.getElementById('current_order_id');
+    window.PDV = {
+        init: function () {
+            console.log('[PDV] Initializing...');
 
-    const tableId = tableIdInput ? tableIdInput.value : null;
-    const clientId = clientIdInput ? clientIdInput.value : null;
-    const orderId = orderIdInput ? orderIdInput.value : null;
+            // 1. LER CONFIGURAÇÃO (SPA)
+            const configEl = document.getElementById('pdv-config');
+            let config = {};
+            if (configEl) {
+                try {
+                    config = JSON.parse(configEl.dataset.config);
+                    // Define globais legado se necessário para compatibilidade
+                    if (config.baseUrl) window.BASE_URL = config.baseUrl;
+                    if (config.deliveryFee) window.PDV_DELIVERY_FEE = config.deliveryFee;
+                    if (config.tableId) window.PDV_TABLE_ID = config.tableId;
+                } catch (e) {
+                    console.error('[PDV] Invalid config JSON', e);
+                }
+            }
 
-    // Detecta modo baseado em variáveis PHP
-    let modo = 'balcao';
-    let status = 'aberto';
+            // Limpa URL
+            const url = new URL(window.location.href);
+            if (url.searchParams.has('order_id') || url.searchParams.has('mesa_id')) {
+                const cleanUrl = url.origin + url.pathname + '#pdv'; // Mantém hash se necessário
+                // window.history.replaceState({}, document.title, cleanUrl); // AdminSPA cuida da URL
+            }
 
-    // Variáveis globais injetadas pelo PHP (dashboard.php)
-    if (typeof isEditingPaidOrder !== 'undefined' && isEditingPaidOrder) {
-        modo = 'retirada';
-        status = 'editando_pago';
-    } else if (tableId) {
-        modo = 'mesa';
-    } else if (orderId) {
-        modo = 'comanda';
-    }
+            // 2. INICIALIZA ESTADO (PDVState)
+            const tableIdInput = document.getElementById('current_table_id');
+            const clientIdInput = document.getElementById('current_client_id');
+            const orderIdInput = document.getElementById('current_order_id');
 
-    PDVState.set({
-        modo: modo,
-        mesaId: tableId ? parseInt(tableId) : null,
-        clienteId: clientId ? parseInt(clientId) : null,
-        pedidoId: orderId ? parseInt(orderId) : null
+            const tableId = tableIdInput ? tableIdInput.value : null;
+            const clientId = clientIdInput ? clientIdInput.value : null;
+            const orderId = orderIdInput ? orderIdInput.value : null;
+
+            // Detecta modo baseado config ou inputs
+            let modo = 'balcao';
+            let status = 'aberto';
+
+            if (config.isEditingPaidOrder) {
+                modo = 'retirada';
+                status = 'editando_pago';
+            } else if (tableId) {
+                modo = 'mesa';
+            } else if (orderId) {
+                modo = 'comanda';
+            }
+
+            if (window.PDVState) {
+                PDVState.set({
+                    modo: modo,
+                    mesaId: tableId ? parseInt(tableId) : null,
+                    clienteId: clientId ? parseInt(clientId) : null,
+                    pedidoId: orderId ? parseInt(orderId) : null
+                });
+                PDVState.initStatus(status);
+            }
+
+            // 3. INICIALIZA CARRINHO (PDVCart)
+            if (window.PDVCart) {
+                // Recupera carrinho da config
+                const recoveredCart = config.recoveredCart || [];
+
+                // Mapeia formato do PHP para formato do JS
+                const items = recoveredCart.map(item => ({
+                    id: parseInt(item.id),
+                    name: item.name,
+                    price: parseFloat(item.price),
+                    quantity: parseInt(item.quantity),
+                    extras: item.extras || []
+                }));
+
+                PDVCart.items = []; // Reseta antes de setar
+                PDVCart.setItems(items);
+
+                // [MIGRATION] Recupera itens do balcão se houver migração pendente
+                if (typeof PDVCart.recoverFromMigration === 'function') {
+                    PDVCart.recoverFromMigration();
+                }
+
+                PDVCart.updateUI();
+            }
+
+            // 4. INICIALIZA MÓDULOS DE UI
+            if (window.PDVTables && typeof PDVTables.init === 'function') PDVTables.init();
+            if (window.PDVCheckout && typeof PDVCheckout.init === 'function') PDVCheckout.init();
+
+            // Inicializa Eventos (agora com proteção contra duplicação)
+            if (window.PDVEvents && typeof PDVEvents.init === 'function') PDVEvents.init();
+
+            // 5. VISUAL INICIAL
+            const btn = document.getElementById('btn-finalizar');
+            if (parseInt(tableId) > 0 && btn) {
+                btn.innerText = "Salvar";
+                btn.style.backgroundColor = "#d97706";
+                btn.disabled = false;
+            }
+
+            // 6. FILTRO DE CATEGORIAS E BUSCA
+            if (window.PDVSearch && typeof PDVSearch.init === 'function') {
+                PDVSearch.init();
+            }
+
+            // 7. ÍCONES (Lucide)
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            console.log('[PDV] Ready');
+        }
+    };
+
+    // ============================================
+    // HELPERS GLOBAIS (Compatibilidade)
+    // ============================================
+    window.formatCurrency = function (value) {
+        return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    };
+
+    // Auto-init apenas se não estiver no SPA (fallback legado)
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!document.getElementById('spa-content')) {
+            PDV.init();
+        }
     });
 
-    PDVState.initStatus(status);
-    // 2. INICIALIZA CARRINHO (PDVCart)
-    // Recupera carrinho do PHP (Recovered Cart)
-    if (typeof recoveredCart !== 'undefined' && recoveredCart.length > 0) {
-        // Mapeia formato do PHP para formato do JS (se necessário)
-        const items = recoveredCart.map(item => ({
-            id: parseInt(item.id),
-            name: item.name,
-            price: parseFloat(item.price),
-            quantity: parseInt(item.quantity)
-        }));
-        PDVCart.setItems(items);
-        // alert('Pedido carregado para edição! ✏️'); // Opcional
-    }
-
-    // [MIGRATION] Recupera itens do balcão se houver migração pendente
-    if (typeof PDVCart.recoverFromMigration === 'function') {
-        PDVCart.recoverFromMigration();
-    }
-
-
-    // 3. INICIALIZA MÓDULOS DE UI
-    if (window.PDVTables) PDVTables.init();
-    if (window.PDVCheckout) PDVCheckout.init();
-
-    // 4. VISUAL INICIAL
-    const btn = document.getElementById('btn-finalizar');
-    // FIX: String "0" é truthy em JS, precisamos verificar se é um ID válido (> 0)
-    if (parseInt(tableId) > 0 && btn) {
-        btn.innerText = "Salvar";
-        btn.style.backgroundColor = "#d97706";
-        btn.disabled = false;
-    }
-
-    // Atualiza a UI do carrinho inicialmente
-    PDVCart.updateUI();
-
-    // 5. FILTRO DE CATEGORIAS E BUSCA
-    if (window.PDVSearch) {
-        PDVSearch.init();
-    } else {
-        console.warn('PDVSearch module not found');
-    }
-
-    // 6. ÍCONES (Lucide)
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-});
-
-// ============================================
-// HELPERS GLOBAIS (Compatibilidade)
-// ============================================
-function formatCurrency(value) {
-    return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-window.formatCurrency = formatCurrency;
+})();

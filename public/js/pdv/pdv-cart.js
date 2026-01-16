@@ -259,9 +259,9 @@ window.updateCartUI = () => PDVCart.updateUI();
 window.calculateTotal = () => PDVCart.calculateTotal();
 window.clearCart = () => PDVCart.clear();
 
-// Init
-document.addEventListener('DOMContentLoaded', () => {
-    if (typeof recoveredCart !== 'undefined' && recoveredCart.length > 0) {
-        PDVCart.setItems(recoveredCart);
-    }
-});
+// Init removido. O orquestrador PDV.init() chama setItems().
+// document.addEventListener('DOMContentLoaded', () => {
+//     if (typeof recoveredCart !== 'undefined' && recoveredCart.length > 0) {
+//         PDVCart.setItems(recoveredCart);
+//     }
+// });

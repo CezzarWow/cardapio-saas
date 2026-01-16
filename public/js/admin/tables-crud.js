@@ -33,7 +33,10 @@
             })
                 .then(r => r.json())
                 .then(data => {
-                    if (data.success) window.location.reload();
+                    if (data.success) {
+                        if (window.AdminSPA) window.AdminSPA.reloadCurrentSection();
+                        else window.location.reload();
+                    }
                     else alert(data.message || 'Erro ao salvar mesa');
                 })
                 .catch(err => alert('Erro de conexão ao salvar mesa'));
@@ -65,7 +68,8 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        window.location.reload();
+                        if (window.AdminSPA) window.AdminSPA.reloadCurrentSection();
+                        else window.location.reload();
                     }
                     else if (data.occupied) {
                         if (confirm(`ATENÇÃO: A Mesa ${number} está OCUPADA!\n\nExcluir agora pode causar erros nos pedidos.\nDeseja forçar a exclusão mesmo assim?`)) {
@@ -89,7 +93,10 @@
             })
                 .then(r2 => r2.json())
                 .then(d2 => {
-                    if (d2.success) window.location.reload();
+                    if (d2.success) {
+                        if (window.AdminSPA) window.AdminSPA.reloadCurrentSection();
+                        else window.location.reload();
+                    }
                     else alert('Erro ao excluir (forçado): ' + d2.message);
                 })
                 .catch(err => alert('Erro de conexão (forçado)'));
