@@ -85,6 +85,7 @@ window.StockSPA = {
         if (this.tabCache[tabName]) {
             requestAnimationFrame(() => {
                 contentContainer.innerHTML = this.tabCache[tabName];
+                this.executeScripts(contentContainer);
                 this.reinitComponents();
             });
             return;
@@ -115,6 +116,7 @@ window.StockSPA = {
             // Usa requestAnimationFrame para render suave (evita bloquear thread principal)
             requestAnimationFrame(() => {
                 contentContainer.innerHTML = html;
+                this.executeScripts(contentContainer);
                 this.reinitComponents();
             });
 
@@ -370,15 +372,34 @@ window.StockSPA = {
     },
 
     /**
-     * Placeholder para modais de adicionais
+     * Executa scripts manualmente após inserção via innerHTML
+     * Suporta data-spa-once="true" para evitar re-execução de libs/listeners globais
      */
-    openItemModal() {
-        alert('Funcionalidade em desenvolvimento - use a página completa em /admin/loja/adicionais');
+    executeScripts(container) {
+        const scripts = container.querySelectorAll('script');
+        scripts.forEach(oldScript => {
+            // Verifica scripts únicos (libs/globais)
+            // Requer que o script tenha data-spa-script definido para identificação
+            if (oldScript.dataset.spaOnce === 'true' && oldScript.dataset.spaScript) {
+                if (document.querySelector(`script[data-spa-script="${oldScript.dataset.spaScript}"]`)) {
+                    console.log('[StockSPA] Skipping once-only script:', oldScript.dataset.spaScript);
+                    return;
+                }
+            }
+
+            const newScript = document.createElement('script');
+            Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+            if (!oldScript.src) {
+                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+            }
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+
+            // Se for once, movemos para o head ou mantemos onde está?
+            // replaceChild mantém no DOM, então querySelector vai achar.
+        });
     },
 
-    openGroupModal() {
-        alert('Funcionalidade em desenvolvimento - use a página completa em /admin/loja/adicionais');
-    }
+
 };
 
 // ============================================================================

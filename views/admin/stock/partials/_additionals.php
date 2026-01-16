@@ -32,12 +32,12 @@
     </div>
 
     <div style="display: flex; gap: 10px;">
-        <button onclick="StockSPA.openItemModal()" 
+        <button onclick="openItemModal()" 
            style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
             <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i> Novo Item
         </button>
         
-        <button onclick="StockSPA.openGroupModal()" 
+        <button onclick="openGroupModal()" 
                 style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
             <i data-lucide="folder-plus" style="width: 18px; height: 18px;"></i> Novo Grupo
         </button>
@@ -50,7 +50,7 @@
         <i data-lucide="folder-plus" style="width: 48px; height: 48px; color: #d1d5db; margin-bottom: 15px;"></i>
         <h3 style="color: #6b7280; font-size: 1.1rem; margin-bottom: 10px;">Nenhum grupo de adicionais</h3>
         <p style="color: #9ca3af; margin-bottom: 20px;">Crie grupos para organizar seus adicionais</p>
-        <button onclick="StockSPA.openGroupModal()" style="padding: 12px 24px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+        <button onclick="openGroupModal()" style="padding: 12px 24px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
             Criar Primeiro Grupo
         </button>
     </div>
@@ -98,3 +98,16 @@
         <?php endforeach; ?>
     </div>
 <?php endif; ?>
+
+<!-- Modais de Adicionais (Legado/Original) -->
+<?php \App\Core\View::renderFromScope('admin/additionals/partials/group-modal.php', get_defined_vars()); ?>
+<?php \App\Core\View::renderFromScope('admin/additionals/partials/category-modal.php', get_defined_vars()); ?>
+<?php \App\Core\View::renderFromScope('admin/additionals/partials/link-modal.php', get_defined_vars()); ?>
+<?php \App\Core\View::renderFromScope('admin/additionals/partials/item-modal.php', get_defined_vars()); ?>
+
+<!-- Scripts de Adicionais -->
+<script data-spa-script="shared-multi-select" data-spa-once="true" src="<?= BASE_URL ?>/js/shared/multi-select.js?v=<?= time() ?>"></script>
+<script data-spa-script="admin-additionals-main" data-spa-once="true" src="<?= BASE_URL ?>/js/admin/additionals.js?v=<?= time() ?>"></script>
+<script data-spa-script="admin-additionals-ui" src="<?= BASE_URL ?>/js/admin/additionals-ui.js?v=<?= time() ?>"></script>
+<script data-spa-script="admin-additionals-group" src="<?= BASE_URL ?>/js/admin/additionals-group-modal.js?v=<?= time() ?>"></script>
+<script data-spa-script="admin-additionals-item" src="<?= BASE_URL ?>/js/admin/additionals-item-modal.js?v=<?= time() ?>"></script>

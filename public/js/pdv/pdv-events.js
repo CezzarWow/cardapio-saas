@@ -11,7 +11,7 @@ const PDVEvents = {
         this.bindGlobalClicks();
         this.bindKeyboardShortcuts();
         this.isInitialized = true;
-        console.log('PDV Events Initialized');
+
     },
 
     bindGlobalClicks: function () {

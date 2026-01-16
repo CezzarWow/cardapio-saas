@@ -31,7 +31,7 @@
     </div>
 
     <!-- Items Area com Flex 1 para empurrar rodapé (mas scrolar) -->
-    <div id="cart-items-area" style="flex: 1; overflow-y: auto; padding: 0 1.5rem; display: none;"></div>
+    <div id="cart-items-area" class="cart-items-area" style="display: none;"></div>
 
     <?php if (!empty($itensJaPedidos)): ?>
         <div style="padding: 1rem; background: #fff7ed; border-bottom: 1px solid #fed7aa;">

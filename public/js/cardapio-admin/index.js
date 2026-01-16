@@ -28,7 +28,4 @@ window.CardapioAdmin.init = function () {
     }
 };
 
-// Auto-inicializa quando DOM estiver pronto
-document.addEventListener('DOMContentLoaded', () => {
-    window.CardapioAdmin.init();
-});
+

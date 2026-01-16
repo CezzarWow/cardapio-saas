@@ -37,7 +37,7 @@ const PDVState = (() => {
                 status: 'aberto',
                 fechandoConta: false
             };
-},
+        },
 
         // Atualizador Genérico (exceto status)
         set(patch) {
@@ -46,7 +46,7 @@ const PDVState = (() => {
             state = { ...state, ...rest };
 
             // Console Debug (Opcional)
-            // console.log('[PDVState] Updated:', state);
+
         },
 
         // Inicializador de Status (Bypass de validação - apenas no Load)
@@ -66,7 +66,7 @@ const PDVState = (() => {
                 return false;
             }
             state.status = novoStatus;
-return true;
+            return true;
         }
     };
 })();

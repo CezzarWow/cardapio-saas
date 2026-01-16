@@ -34,11 +34,7 @@
 <?php \App\Core\View::renderFromScope('admin/tables/partials/modals/dossie.php', get_defined_vars()); ?>
 <?php \App\Core\View::renderFromScope('admin/tables/partials/modals/pedido_pago.php', get_defined_vars()); ?>
 
-<script>
-    window.TablesConfig = {
-        BASE_URL: '<?= BASE_URL ?>'
-    };
-</script>
+
 
 <!-- Scripts de Mesas -->
 <!-- Carregados sequencialmente via AdminSPA -->

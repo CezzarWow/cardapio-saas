@@ -51,8 +51,9 @@ const DeliveryActions = {
             const data = await response.json();
 
             if (data.success) {
-                // Recarrega a página para mostrar que o pedido foi removido
-                location.reload();
+                // SPA Update
+                if (window.DeliveryPolling) window.DeliveryPolling.poll();
+                else location.reload();
             } else {
                 alert('Erro: ' + (data.message || 'Falha ao enviar para mesa'));
                 if (btn) {
@@ -99,8 +100,9 @@ const DeliveryActions = {
             const data = await response.json();
 
             if (data.success) {
-                // Recarrega a página para mostrar novo estado
-                location.reload();
+                // SPA Update
+                if (window.DeliveryPolling) window.DeliveryPolling.poll();
+                else location.reload();
             } else {
                 alert('Erro: ' + (data.message || 'Falha ao atualizar'));
                 if (btn) {

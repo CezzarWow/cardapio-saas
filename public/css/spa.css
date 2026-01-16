@@ -2,6 +2,8 @@
 .spa-content-container {
     opacity: 1;
     width: 100%;
+    height: 100%;
+    /* Crítico para PDV e Kanban */
     min-height: 600px;
     /* Prevents layout collapse/jumping */
     transform: translateY(0);
@@ -69,12 +71,4 @@
     width: 100%;
     overflow-y: auto;
     box-sizing: border-box;
-}
-
-/* Utilitário para containers Full Width (sem padding) */
-.spa-full-container {
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    overflow-y: auto;
 }

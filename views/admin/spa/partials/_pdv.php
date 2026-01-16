@@ -103,9 +103,4 @@ $pdvConfig = [
 <script data-spa-script="pdv-search" src="<?= BASE_URL ?>/js/pdv/pdv-search.js?v=<?= time() ?>"></script>
 <script data-spa-script="pdv-main" src="<?= BASE_URL ?>/js/pdv.js?v=<?= time() ?>"></script>
 
-<script>
-    // Inicialização manual para o caso de scripts já carregados
-    if (window.PDV && typeof PDV.init === 'function') {
-        PDV.init();
-    }
-</script>
+

@@ -6,6 +6,10 @@
     <meta name="csrf-token" content="<?= \App\Helpers\ViewHelper::csrfToken() ?>">
     <title>Painel PDV - <?= $_SESSION['loja_ativa_nome'] ?? 'Minha Loja' ?></title>
     
+    <script>
+        const BASE_URL = '<?= BASE_URL ?>';
+    </script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- PWA Manifest -->

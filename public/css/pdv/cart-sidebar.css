@@ -33,6 +33,14 @@
     color: var(--text-dark, #1f2937);
 }
 
+/* ========== LISTA DE ITENS ========== */
+.cart-items-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 1.5rem;
+    /* Display controlled by JS (none when empty) */
+}
+
 /* ========== CARRINHO VAZIO ========== */
 .cart-empty {
     /* flex: 1; removido para não empurrar o rodapé lá pra baixo */
