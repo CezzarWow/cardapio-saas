@@ -8,20 +8,20 @@
     background: white;
     border-radius: 12px;
     padding: 1rem;
-    border: 1px solid transparent;
+    border: 1px solid #e5e7eb;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     height: 160px;
     text-align: left;
     transition: all 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .product-card:hover {
     border: 2px solid var(--primary-color, #2563eb);
     transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
 }
 
 /* ========== CARD COMPACTO (SEM ÍCONE) ========== */

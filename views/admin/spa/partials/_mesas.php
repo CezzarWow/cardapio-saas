@@ -11,7 +11,7 @@
  */
 ?>
 
-<div style="padding: 2rem; width: 100%; height: 100%; overflow-y: auto; padding-bottom: 100px;">
+<div class="spa-padded-container" style="padding-bottom: 100px;">
     
     <!-- Header Mesas -->
     <?php \App\Core\View::renderFromScope('admin/tables/partials/header_mesas.php', get_defined_vars()); ?>

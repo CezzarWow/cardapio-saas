@@ -5,7 +5,7 @@
     min-height: 600px;
     /* Prevents layout collapse/jumping */
     transform: translateY(0);
-    padding: 2rem;
+    /* Cada partial controla seu próprio padding */
     box-sizing: border-box;
     transition:
         opacity 0.25s ease-out,
@@ -13,91 +13,68 @@
 }
 
 .spa-content-container.fade-out {
-    opacity: 0.4;
-    /* Don't fade to black, keep context */
+    opacity: 0;
     transform: translateY(10px);
-    /* Subtle drop for exit */
-    pointer-events: none;
 }
 
 .spa-content-container.fade-in {
     opacity: 1;
+    transform: translateY(0);
 }
 
 /* Skeletons */
 .skeleton-container {
-    padding: 20px;
-    animation: fadeIn 0.3s ease-out;
+    padding: 2rem;
+    animation: pulse 1.5s infinite ease-in-out;
 }
 
 .skeleton-header {
-    height: 48px;
+    height: 40px;
     background: #e5e7eb;
+    margin-bottom: 2rem;
     border-radius: 8px;
-    margin-bottom: 24px;
     width: 30%;
 }
 
 .skeleton-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
+    gap: 1.5rem;
 }
 
 .skeleton-card {
-    height: 240px;
-    background: #f3f4f6;
+    height: 160px;
+    background: #e5e7eb;
     border-radius: 12px;
 }
 
-.skeleton-row {
-    height: 64px;
-    background: #f9fafb;
-    border-radius: 8px;
-    margin-bottom: 12px;
-}
-
-.skeleton-chips {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.skeleton-chip {
-    width: 80px;
-    height: 32px;
-    background: #e5e7eb;
-    border-radius: 16px;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(5px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes shimmer {
+@keyframes pulse {
     0% {
-        background-position: -200% 0;
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
     }
 
     100% {
-        background-position: 200% 0;
+        opacity: 0.6;
     }
 }
 
-/* Shimmer Effect for Skeletons */
-.skeleton-header,
-.skeleton-card,
-.skeleton-row,
-.skeleton-chip {
-    background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite linear;
+/* Utilitário para containers com padding padrão do Admin */
+.spa-padded-container {
+    padding: 1.5rem;
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+/* Utilitário para containers Full Width (sem padding) */
+.spa-full-container {
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
 }

@@ -42,7 +42,7 @@ $pdvConfig = [
 
 
     <!-- ÁREA PRINCIPAL (Esquerda) -->
-    <section class="catalog-section" style="flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 20px;">
+    <section class="catalog-section" style="flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
         
         <?php // HEADER (Banners + Título + Busca) ?>
         <?php \App\Core\View::renderFromScope('admin/panel/partials/pdv-header.php', get_defined_vars()); ?>

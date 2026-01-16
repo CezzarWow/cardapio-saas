@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/delivery-tab.css?v=<?= time() ?>">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/responsive.css?v=<?= time() ?>">
 
-<div class="cardapio-admin-container">
+<div class="cardapio-admin-container spa-padded-container">
     
     <!-- Header -->
     <div class="cardapio-admin-header" style="display: flex; justify-content: space-between; align-items: flex-end;">

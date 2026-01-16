@@ -14,7 +14,7 @@
 <!-- Stock Dashboard CSS -->
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/stock/index.css?v=<?= time() ?>">
 
-<div class="stock-dashboard-container" style="padding: 0; width: 100%;">
+<div class="stock-dashboard-container spa-padded-container">
     
     <!-- Header -->
     <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">

@@ -41,7 +41,7 @@
                     title.style.color = "#1d4ed8";
                 }
 
-                modal.style.display = 'flex';
+                modal.classList.add('active');
                 // Focus no input de valor
                 setTimeout(() => {
                     const valInput = document.getElementById('movValue');
@@ -51,7 +51,7 @@
 
             close: function () {
                 const modal = document.getElementById('modalMovimento');
-                if (modal) modal.style.display = 'none';
+                if (modal) modal.classList.remove('active');
             }
         },
 
@@ -71,8 +71,8 @@
                 if (dateEl) dateEl.innerText = 'PEDIDO #' + orderId + ' • ' + date;
                 if (totalEl) totalEl.innerText = 'R$ ' + total;
 
-                modal.style.display = 'flex';
-                list.innerHTML = '<p style="text-align:center; padding: 20px 0;">Impressora conectando...</p>';
+                modal.classList.add('active');
+                list.innerHTML = '<p style="text-align:center; padding: 20px 0;">Carregando...</p>';
 
                 fetch(getBaseUrl() + '/admin/loja/vendas/itens?id=' + orderId)
                     .then(response => response.json())
@@ -85,7 +85,7 @@
 
             close: function () {
                 const modal = document.getElementById('orderDetailsModal');
-                if (modal) modal.style.display = 'none';
+                if (modal) modal.classList.remove('active');
             },
 
             _renderItems: function (data, list) {
