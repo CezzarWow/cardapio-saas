@@ -33,25 +33,31 @@
 <?php endif; ?>
 
 <header class="top-header">
-    <div class="page-title">
-        <?php if ($mesa_numero): ?>
-            <h1 style="color: #b91c1c;">Mesa <?= $mesa_numero ?></h1>
-            <p>Gerenciando Pedido</p>
-        <?php elseif (!empty($contaAberta) && !$mesa_id): ?>
-            <h1 style="color: #ea580c;"><?= htmlspecialchars($contaAberta['client_name'] ?? 'Cliente') ?> #<?= $contaAberta['id'] ?></h1>
-            <p style="color: #9a3412; font-weight: 600;">Comanda em Aberto</p>
-        <?php else: ?>
-            <h1>Balcão de Vendas</h1>
-            <p>Venda Rápida</p>
-        <?php endif; ?>
-    </div>
-    
+    <!-- Barra de Busca (Esquerda) -->
     <div class="search-bar">
         <i data-lucide="search" class="search-icon"></i>
         <input type="text" id="product-search-input" placeholder="Buscar produtos (F2)..." class="search-input" />
     </div>
 
-    <div class="status-badge">
-        <div class="status-dot"></div> Online
+    <!-- Tipo de Pedido - Cards Só Texto -->
+    <div style="display: flex; gap: 10px;">
+        <input type="hidden" id="keep_open_value" value="false">
+        <input type="hidden" id="selected_order_type" value="local">
+        
+        <button type="button" class="order-toggle-btn active" data-type="local" onclick="selectOrderType('local', this)"
+                style="display: flex; align-items: center; justify-content: center; width: 90px; height: 40px; border: 2px solid #2563eb; border-radius: 8px; background: #eff6ff; color: #2563eb; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
+            Local
+        </button>
+        
+        <button type="button" class="order-toggle-btn" data-type="retirada" onclick="selectOrderType('retirada', this)"
+                style="display: flex; align-items: center; justify-content: center; width: 90px; height: 40px; border: 2px solid #cbd5e1; border-radius: 8px; background: white; color: #1e293b; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
+            Retirada
+        </button>
+        
+        <button type="button" class="order-toggle-btn" data-type="entrega" onclick="selectOrderType('entrega', this)"
+                style="display: flex; align-items: center; justify-content: center; width: 90px; height: 40px; border: 2px solid #cbd5e1; border-radius: 8px; background: white; color: #1e293b; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
+            Entrega
+        </button>
     </div>
+
 </header>

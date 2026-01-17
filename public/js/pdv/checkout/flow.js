@@ -118,8 +118,8 @@ const CheckoutFlow = {
 
         document.getElementById('checkout-total-display').innerText = CheckoutHelpers.formatCurrency(CheckoutState.cachedTotal);
 
-        const cards = document.querySelectorAll('.order-type-card');
-        if (cards.length > 0) CheckoutOrderType.selectOrderType('local', cards[0]);
+        // Seleciona "Local" por padrão
+        CheckoutOrderType.selectOrderType('local');
 
         document.getElementById('checkoutModal').style.display = 'flex';
         CheckoutPayments.setMethod('dinheiro');
@@ -152,15 +152,9 @@ const CheckoutFlow = {
         document.getElementById('checkoutModal').style.display = 'flex';
         CheckoutPayments.setMethod('dinheiro');
 
-        // SEMPRE abre com "Local" selecionado
-        const localCard = document.querySelector('.order-type-card:first-child');
-        if (localCard) {
-            CheckoutOrderType.selectOrderType('local', localCard);
-        } else {
-            document.getElementById('keep_open_value').value = 'false';
-            const alertBox = document.getElementById('retirada-client-alert');
-            if (alertBox) alertBox.style.display = 'none';
-        }
+        // Sincroniza com o tipo de pedido selecionado no header
+        const selectedType = document.getElementById('selected_order_type')?.value || 'local';
+        CheckoutOrderType.selectOrderType(selectedType);
 
         CheckoutUI.updateCheckoutUI();
         if (typeof lucide !== 'undefined') lucide.createIcons();

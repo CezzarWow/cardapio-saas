@@ -44,9 +44,18 @@ FileETag None
 </IfModule>
 
 # Cache-Control genérico para assets (Apache 2.4+)
+# Cache-Control para arquivos versionados (dist)
+# Como usamos hash no nome (cardapio.abcdef.js), podemos cachear "para sempre" (1 ano)
+<FilesMatch "cardapio\.[a-z0-9]+\.(js|css)$">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </IfModule>
+</FilesMatch>
+
+# Cache-Control genérico para assets (Apache 2.4+)
 <FilesMatch "\.(css|js|jpg|jpeg|png|gif|svg|webp|woff|woff2|ttf|ico)$">
     <IfModule mod_headers.c>
-        Header set Cache-Control "public, max-age=604800"
+        Header set Cache-Control "public, max-age=2592000"
     </IfModule>
     Require all granted
 </FilesMatch>

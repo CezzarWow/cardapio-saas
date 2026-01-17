@@ -13,14 +13,19 @@ const CheckoutOrderType = {
      * @param {HTMLElement} element - Card clicado (pode ser null)
      */
     selectOrderType: function (type, element) {
-        // 1. Ativa o card visual
-        element = this._activateCard(type, element);
-
-        // 2. Esconde alertas e fecha painel de entrega se necessário
-        this._hideAllAlerts();
+        // 1. Se mudando de entrega para outro, limpa dados primeiro
         if (type !== 'entrega') {
+            if (typeof CheckoutEntrega !== 'undefined' && CheckoutEntrega.isDataFilled()) {
+                CheckoutEntrega.clearData();
+            }
             this._closeDeliveryIfOpen();
         }
+
+        // 2. Ativa o card visual
+        element = this._activateCard(type, element);
+
+        // 3. Esconde alertas
+        this._hideAllAlerts();
 
         // 3. Processa tipo específico
         const keepOpenInput = document.getElementById('keep_open_value');
@@ -49,33 +54,41 @@ const CheckoutOrderType = {
     // ==========================================
 
     /**
-     * Ativa visualmente o card do tipo selecionado
+     * Ativa visualmente o botão do tipo selecionado (com estilos inline)
      */
     _activateCard: function (type, element) {
-        // Reset todos os cards
-        document.querySelectorAll('.order-type-card').forEach(el => {
-            if (!el.classList.contains('disabled')) {
-                el.classList.remove('active');
-                el.style.border = '2px solid #cbd5e1';
-                el.style.background = 'white';
-            }
+        // Atualiza hidden input com o tipo selecionado
+        const selectedTypeInput = document.getElementById('selected_order_type');
+        if (selectedTypeInput) selectedTypeInput.value = type;
+
+        // Cores por tipo - Azul quando selecionado
+        const colors = {
+            local: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' },
+            retirada: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' },
+            entrega: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' }
+        };
+        const inactive = { border: '#cbd5e1', bg: 'white', text: '#1e293b' };
+
+        // Reset todos os toggle buttons para inativo
+        document.querySelectorAll('.order-toggle-btn').forEach(btn => {
+            btn.classList.remove('active');
+            btn.style.borderColor = inactive.border;
+            btn.style.background = inactive.bg;
+            btn.style.color = inactive.text;
         });
 
-        // Se element não foi passado, busca pelo tipo
+        // Se element não foi passado, busca pelo data-type
         if (!element) {
-            document.querySelectorAll('.order-type-card').forEach(card => {
-                const label = card.innerText.toLowerCase().trim();
-                if (type === 'local' && label.includes('local')) element = card;
-                else if (type === 'retirada' && label.includes('retirada')) element = card;
-                else if (type === 'entrega' && label.includes('entrega')) element = card;
-            });
+            element = document.querySelector(`.order-toggle-btn[data-type="${type}"]`);
         }
 
-        // Ativa o selecionado
-        if (element && !element.classList.contains('disabled')) {
+        // Ativa o selecionado com cores específicas
+        if (element) {
             element.classList.add('active');
-            element.style.border = '2px solid #2563eb';
-            element.style.background = '#eff6ff';
+            const c = colors[type] || colors.local;
+            element.style.borderColor = c.border;
+            element.style.background = c.bg;
+            element.style.color = c.text;
         }
 
         return element;
@@ -129,22 +142,19 @@ const CheckoutOrderType = {
 
     /**
      * Processa lógica específica de Entrega
+     * Abre modal de entrega automaticamente se dados não preenchidos
      */
     _handleEntrega: function () {
-        const alertBox = document.getElementById('entrega-alert');
-        const dadosOk = document.getElementById('entrega-dados-ok');
-        const dadosPendente = document.getElementById('entrega-dados-pendente');
-
-        if (alertBox) alertBox.style.display = 'block';
-
         // Verifica se dados já foram preenchidos
-        const isFilled = typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled;
-        if (isFilled) {
-            if (dadosOk) dadosOk.style.display = 'block';
-            if (dadosPendente) dadosPendente.style.display = 'none';
-        } else {
-            if (dadosOk) dadosOk.style.display = 'none';
-            if (dadosPendente) dadosPendente.style.display = 'block';
+        const isFilled = typeof CheckoutEntrega !== 'undefined' && CheckoutEntrega.isDataFilled();
+
+        if (!isFilled) {
+            // Abre modal de entrega automaticamente
+            if (typeof CheckoutEntrega !== 'undefined') {
+                CheckoutEntrega.openPanel();
+            } else if (typeof openDeliveryPanel === 'function') {
+                openDeliveryPanel();
+            }
         }
     },
 

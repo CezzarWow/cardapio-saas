@@ -42,6 +42,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    box-sizing: border-box;
 }
 
 .alert-box.success {
@@ -65,10 +66,19 @@
     gap: 8px;
 }
 
+.alert-info-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 100%;
+    /* Garante altura total */
+}
+
 .alert-text {
     font-weight: 700;
     color: #065f46;
     font-size: 0.9rem;
+    line-height: 46px;
 }
 
 .alert-box.warning .alert-text {

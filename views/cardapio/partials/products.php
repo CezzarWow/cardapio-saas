@@ -106,47 +106,68 @@
             </div>
 
         <?php
-                        // RENDERIZAÇÃO: CATEGORIAS PADRÃO
-                        elseif ($catType === 'default' && !empty($productsByCategory[$catName])):
-                            ?>
-            <div class="cardapio-category-section" data-category-id="<?= $catId ?>">
-                <h2 class="cardapio-category-title" style="display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(90deg, #ea580c, #c2410c); color: white; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; font-size: 0.95rem;">
-                    <i data-lucide="package" size="16"></i>
-                    <?= htmlspecialchars($catName) ?>
-                </h2>
-                
-                <?php foreach ($productsByCategory[$catName] as $product): ?>
-                    <div 
-                        class="cardapio-product-card" 
-                        data-product-id="<?= $product['id'] ?>"
-                        data-product-name="<?= htmlspecialchars($product['name']) ?>"
-                        data-product-price="<?= number_format($product['price'], 2, '.', '') ?>"
-                        onclick="openProductModal(<?= $product['id'] ?>)" style="cursor: pointer;"
-                    >
-                        <div class="cardapio-product-image-wrapper">
-                            <?php if (!empty($product['image'])): ?>
-                                <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($product['image']) ?>" class="cardapio-product-image" loading="lazy">
-                            <?php elseif (!empty($product['icon_as_photo']) && !empty($product['icon'])): ?>
-                                <!-- Emoji colorido como fallback -->
-                                <div class="cardapio-product-icon-placeholder" style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 8px;">
-                                    <span style="font-size: 3rem;"><?= $product['icon'] ?></span>
-                                </div>
-                            <?php else: ?>
-                                <div class="cardapio-product-image-placeholder"><i data-lucide="image" size="24"></i></div>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <div class="cardapio-product-info">
-                            <h3 class="cardapio-product-name"><?= htmlspecialchars($product['name']) ?></h3>
-                            <p class="cardapio-product-description"><?= htmlspecialchars($product['description'] ?? '') ?></p>
-                            <div class="cardapio-product-footer">
-                                <span class="cardapio-product-price">R$ <?= number_format($product['price'], 2, ',', '.') ?></span>
+                // RENDERIZAÇÃO: CATEGORIAS PADRÃO
+                elseif ($catType === 'default' && !empty($productsByCategory[$catName])):
+                     // Verifica se é a primeira categoria padrão (mantém renderizada para SEO/LCP)
+                     static $renderedDefaultCats = 0;
+                     $isFirstDefault = ($renderedDefaultCats === 0);
+                     $renderedDefaultCats++;
+                    ?>
+            
+            <?php if ($isFirstDefault): ?>
+                <!-- Renderização Normal (SSR) para a primeira categoria -->
+                <div class="cardapio-category-section" data-category-id="<?= $catId ?>">
+                    <h2 class="cardapio-category-title" style="display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(90deg, #ea580c, #c2410c); color: white; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; font-size: 0.95rem;">
+                        <i data-lucide="package" size="16"></i>
+                        <?= htmlspecialchars($catName) ?>
+                    </h2>
+                    
+                    <?php foreach ($productsByCategory[$catName] as $product): ?>
+                        <div 
+                            class="cardapio-product-card" 
+                            data-product-id="<?= $product['id'] ?>"
+                            data-product-name="<?= htmlspecialchars($product['name']) ?>"
+                            data-product-price="<?= number_format($product['price'], 2, '.', '') ?>"
+                            onclick="openProductModal(<?= $product['id'] ?>)" style="cursor: pointer;"
+                        >
+                            <div class="cardapio-product-image-wrapper">
+                                <?php if (!empty($product['image'])): ?>
+                                    <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($product['image']) ?>" class="cardapio-product-image" loading="lazy">
+                                <?php elseif (!empty($product['icon_as_photo']) && !empty($product['icon'])): ?>
+                                    <!-- Emoji colorido como fallback -->
+                                    <div class="cardapio-product-icon-placeholder" style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 8px;">
+                                        <span style="font-size: 3rem;"><?= $product['icon'] ?></span>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="cardapio-product-image-placeholder"><i data-lucide="image" size="24"></i></div>
+                                <?php endif; ?>
                             </div>
+                            
+                            <div class="cardapio-product-info">
+                                <h3 class="cardapio-product-name"><?= htmlspecialchars($product['name']) ?></h3>
+                                <p class="cardapio-product-description"><?= htmlspecialchars($product['description'] ?? '') ?></p>
+                                <div class="cardapio-product-footer">
+                                    <span class="cardapio-product-price">R$ <?= number_format($product['price'], 2, ',', '.') ?></span>
+                                </div>
+                            </div>
+                            <button class="cardapio-add-btn"><i data-lucide="plus" size="16"></i></button>
                         </div>
-                        <button class="cardapio-add-btn"><i data-lucide="plus" size="16"></i></button>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <!-- Renderização Lazy (CSR) para demais categorias -->
+                <div class="cardapio-category-section" data-category-id="<?= $catId ?>" data-lazy-category="<?= htmlspecialchars($catName) ?>" style="min-height: 100px;">
+                    <h2 class="cardapio-category-title" style="display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(90deg, #ea580c, #c2410c); color: white; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; font-size: 0.95rem;">
+                        <i data-lucide="package" size="16"></i>
+                        <?= htmlspecialchars($catName) ?>
+                    </h2>
+                    <!-- Produtos serão injetados via JS -->
+                    <div class="cardapio-lazy-placeholder" style="padding: 20px; text-align: center; color: #999;">
+                        <i data-lucide="loader-2" class="animate-spin"></i>
                     </div>
-                <?php endforeach; ?>
-            </div>
+                </div>
+            <?php endif; ?>
+
         <?php endif; ?>
     <?php endforeach; ?>
 </div>

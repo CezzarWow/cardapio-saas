@@ -143,4 +143,11 @@ class DeliveryService
             'message' => 'Pedido enviado para Mesas com sucesso'
         ];
     }
+    /**
+     * Retorna hash de estado dos pedidos (para Polling Otimizado)
+     */
+    public function checkOrdersState(int $restaurantId): string
+    {
+        return $this->repository->getLastUpdateHash($restaurantId);
+    }
 }

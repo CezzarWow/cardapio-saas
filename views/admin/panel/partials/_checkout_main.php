@@ -181,8 +181,7 @@
         </div>
     </div>
 
-    <?php // Tipo de Pedido?>
-    <?php \App\Core\View::renderFromScope('admin/panel/partials/_checkout_order_type.php', get_defined_vars()); ?>
+    <?php // Tipo de Pedido - MOVIDO PARA O HEADER DO PDV ?>
 
     <?php // Footer com Botões?>
     <?php \App\Core\View::renderFromScope('admin/panel/partials/_checkout_footer.php', get_defined_vars()); ?>

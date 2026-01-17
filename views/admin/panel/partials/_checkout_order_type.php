@@ -70,10 +70,10 @@
             </div>
             
             <!-- Dados de entrega NÃO preenchidos -->
-            <div id="entrega-dados-pendente" style="display: none;" class="alert-box info">
+            <div id="entrega-dados-pendente" style="display: none;" class="alert-box warning">
                 <div class="alert-content" style="justify-content: space-between; width: 100%;">
                     <div class="alert-content">
-                        <i data-lucide="map-pin" size="18" style="color: #2563eb;"></i>
+                        <i data-lucide="alert-triangle" size="18" style="color: #d97706;"></i>
                         <span class="alert-text">Preencha os dados da entrega</span>
                     </div>
                     <button type="button" onclick="openDeliveryPanel()" class="alert-btn action">Preencher</button>

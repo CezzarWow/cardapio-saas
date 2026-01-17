@@ -19,6 +19,8 @@ $jsEntries = [
     'public/js/cardapio/checkout-fields.js',
     'public/js/cardapio/checkout-modals.js',
     'public/js/cardapio/checkout.js',
+    'public/js/cardapio/modules/catalog-renderer.js',
+    'public/js/cardapio/modules/catalog-virtualizer.js',
     'public/js/cardapio.js'
 ];
 

@@ -115,9 +115,7 @@ const PDVEvents = {
                 if (window.PDVCart) PDVCart.undoClear();
                 break;
             case 'cart-clear':
-                if (confirm('Limpar carrinho?')) {
-                    if (window.PDVCart) PDVCart.clear();
-                }
+                if (window.PDVCart) PDVCart.clear();
                 break;
             case 'cart-remove-item':
                 if (window.PDVCart) PDVCart.remove(el.dataset.id);

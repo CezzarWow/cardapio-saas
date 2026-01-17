@@ -106,6 +106,14 @@ const DeliveryPolling = {
     /**
      * Executa uma atualização
      */
+    // Estado do último hash
+    lastHash: '',
+
+    /**
+     * Executa uma atualização (Polling Otimizado)
+     * 1. Consulta JSON leve (/check)
+     * 2. Se hash mudou -> Baixa HTML (/list)
+     */
     poll: async function () {
         // Não atualiza se:
         // - Polling está pausado
@@ -119,11 +127,32 @@ const DeliveryPolling = {
         if (cancelModal && cancelModal.style.display === 'flex') return;
 
         try {
+            // 1. Check (Leve)
+            const checkUrl = DeliveryHelpers.getBaseUrl() + '/admin/loja/delivery/check';
+            const checkRes = await fetch(checkUrl);
+
+            if (!checkRes.ok) return; // Silencioso
+
+            const checkData = await checkRes.json();
+
+            // Se o hash for igual ao último, não faz nada
+            if (checkData.success && checkData.hash === this.lastHash) {
+                // console.log('[Delivery] Polling: Sem mudanças');
+                return;
+            }
+
+            // Se mudou, atualiza o hash
+            if (checkData.success) {
+                this.lastHash = checkData.hash;
+            }
+
+            // 2. Fetch HTML (Pesado)
+            // console.log('[Delivery] Polling: Mudança detectada! Baixando HTML...');
             const url = DeliveryHelpers.getBaseUrl() + '/admin/loja/delivery/list';
             const response = await fetch(url);
 
             if (!response.ok) {
-                console.warn('[Delivery] Polling falhou:', response.status);
+                console.warn('[Delivery] Polling HTML falhou:', response.status);
                 return;
             }
 

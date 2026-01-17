@@ -150,21 +150,23 @@ const AdminSPA = {
             return;
         }
 
-        // Start Transition (only for network fetch)
+        // Start Transition
+        const MIN_TRANSITION_TIME = 300; // ms - Tempo mínimo para evitar "pisca"
+        const startTime = Date.now();
+
         container.classList.add('fade-out');
 
-        // Skeleton
         this.isLoading = true;
 
-        // Delay skeleton just a bit to avoid flashing on super fast connections
+        // Skeleton Delay
         const skeletonTimeout = setTimeout(() => {
             if (this.isLoading) {
                 SpaUI.showSkeleton(container, config.skeleton);
                 container.classList.remove('fade-out');
             }
-        }, 100);
+        }, 150);
 
-        // Monta URL com query params se existir
+        // Monta URL
         let partialUrl = `${BASE_URL}${config.partial}`;
         if (queryParams) {
             const params = new URLSearchParams(queryParams);
@@ -185,15 +187,29 @@ const AdminSPA = {
 
             clearTimeout(skeletonTimeout);
 
-            // Render with smooth entry
-            if (this.isLoading) { // Ensure we haven't navigated away
-                container.classList.add('fade-out');
-                requestAnimationFrame(() => {
-                    this.renderSection(html);
+            // [FIX FOUC UI JITTER]
+            // Preload CSS antes de renderizar
+            await this.preloadStyles(html);
+
+            // Calcula tempo restante para completar o mínimo
+            const elapsed = Date.now() - startTime;
+            const remaining = Math.max(0, MIN_TRANSITION_TIME - elapsed);
+
+            // Render
+            if (this.isLoading) {
+                // Garante fade-out ativo
+                if (!container.classList.contains('fade-out')) {
+                    container.classList.add('fade-out');
+                }
+
+                setTimeout(() => {
                     requestAnimationFrame(() => {
-                        container.classList.remove('fade-out');
+                        this.renderSection(html);
+                        requestAnimationFrame(() => {
+                            container.classList.remove('fade-out');
+                        });
                     });
-                });
+                }, remaining);
             }
 
         } catch (error) {
@@ -202,7 +218,58 @@ const AdminSPA = {
             console.error('[AdminSPA]', error);
             container.classList.remove('fade-out');
         } finally {
-            this.isLoading = false;
+            // Só libera o loading após o tempo total (para evitar cliques duplos)
+            const finalElapsed = Date.now() - startTime;
+            const finalRemaining = Math.max(0, MIN_TRANSITION_TIME - finalElapsed);
+            setTimeout(() => {
+                this.isLoading = false;
+            }, finalRemaining);
+        }
+    },
+
+    /**
+     * Preload CSS encontrado no HTML da partial
+     * Evita Flash of Unstyled Content (FOUC)
+     */
+    async preloadStyles(html) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const links = doc.querySelectorAll('link[rel="stylesheet"]');
+
+        if (links.length === 0) return;
+
+        const promises = [];
+
+        links.forEach(link => {
+            const href = link.getAttribute('href');
+            if (!href) return;
+
+            // Se já estiver no head, ignora (já carregado)
+            if (document.querySelector(`link[href^="${href}"]`)) return;
+
+            const promise = new Promise((resolve) => {
+                const newLink = document.createElement('link');
+                newLink.rel = 'stylesheet';
+                newLink.href = href;
+                // Importante: Adicionar ao head AGORA para começar o download
+                // Mas com um atributo temporário para não quebrar estilos globais se houver conflito? 
+                // Não, o comportamento das partials atuais é "adicionar CSS globalmente" anyway.
+                // Melhor estratégia: Preloader "Headless"
+
+                const img = new Image();
+                img.onload = () => resolve();
+                img.onerror = () => resolve(); // Não trava se falhar
+                img.src = href;
+
+                // Fallback de timeout para não travar a UI
+                setTimeout(resolve, 500);
+            });
+            promises.push(promise);
+        });
+
+        if (promises.length > 0) {
+            // console.log(`[AdminSPA] Preloading ${promises.length} stylesheets...`);
+            await Promise.all(promises);
         }
     },
 

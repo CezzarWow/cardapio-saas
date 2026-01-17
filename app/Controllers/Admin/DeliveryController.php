@@ -45,6 +45,17 @@ class DeliveryController extends BaseController
         $orders = $this->service->getOrders($rid, $statusFilter);
 
         View::renderFromScope('admin/delivery/partials/order_list_kanban', get_defined_vars());
+        View::renderFromScope('admin/delivery/partials/order_list_kanban', get_defined_vars());
+    }
+
+    public function check()
+    {
+        // Polling Otimizado (Option A)
+        // Retorna apenas um hash do estado atual. O front só baixa o HTML se o hash mudar.
+        $rid = $this->getRestaurantId();
+        $hash = $this->service->checkOrdersState($rid);
+        
+        $this->json(['success' => true, 'hash' => $hash]);
     }
 
     public function history()

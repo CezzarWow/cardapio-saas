@@ -16,7 +16,8 @@
 
 /* ========== HEADER ========== */
 .cart-header {
-    padding: 1.5rem;
+    height: 60px;
+    padding: 0 1.5rem;
     border-bottom: 1px solid var(--border-color, #e5e7eb);
     display: flex;
     justify-content: space-between;

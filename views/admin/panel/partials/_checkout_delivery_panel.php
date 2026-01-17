@@ -13,7 +13,7 @@
             <i data-lucide="map-pin" size="18" style="display: inline-block; vertical-align: middle; margin-right: 6px; color: #2563eb;"></i>
             Informações de Entrega
         </h3>
-        <button type="button" onclick="closeDeliveryPanel()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #64748b;">&times;</button>
+        <button type="button" onclick="CheckoutEntrega.clearData(); closeDeliveryPanel(); selectOrderType('local');" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #64748b;">&times;</button>
     </div>
     
     <!-- Campos -->
@@ -64,7 +64,7 @@
     
     <!-- Footer com botões -->
     <div class="delivery-footer">
-        <button type="button" onclick="closeDeliveryPanel()" 
+        <button type="button" onclick="CheckoutEntrega.clearData(); closeDeliveryPanel(); selectOrderType('local');" 
                 class="btn-delivery-cancel">
             Cancelar
         </button>

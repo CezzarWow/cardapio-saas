@@ -193,4 +193,28 @@ class DeliveryOrderRepository
         $stmt = $conn->prepare('UPDATE orders SET status = :status WHERE id = :oid');
         $stmt->execute(['status' => $status, 'oid' => $id]);
     }
+
+    /**
+     * Gera um hash leve representando o estado atual dos pedidos (Checagem rápida)
+     */
+    public function getLastUpdateHash(int $restaurantId): string
+    {
+        $conn = Database::connect();
+        
+        // Hash baseado em ID + Status + Pagamento (se mudar qualquer um, o hash muda)
+        // Usamos status IN (...) para corresponder ao filtro padrão do Kanban
+        $sql = "
+            SELECT MD5(GROUP_CONCAT(CONCAT(id, status, IFNULL(is_paid, 0)) ORDER BY id)) as state_hash
+            FROM orders 
+            WHERE restaurant_id = :rid 
+              AND order_type IN ('delivery', 'pickup')
+              AND status IN ('novo', 'preparo', 'rota', 'entregue', 'cancelado')
+        ";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['rid' => $restaurantId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result['state_hash'] ?? '';
+    }
 }
