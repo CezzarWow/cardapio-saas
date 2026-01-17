@@ -5,24 +5,20 @@
     height: 100%;
     /* Crítico para PDV e Kanban */
     min-height: 600px;
-    /* Prevents layout collapse/jumping */
-    transform: translateY(0);
     /* Cada partial controla seu próprio padding */
     box-sizing: border-box;
-    will-change: opacity, transform;
-    transition:
-        opacity 0.3s ease-in-out,
-        transform 0.3s cubic-bezier(0.2, 0.0, 0.2, 1);
+    /* Otimização GPU */
+    will-change: opacity;
+    /* Transição rápida e suave - sincronizada com admin-spa.js MIN_TRANSITION_TIME */
+    transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .spa-content-container.fade-out {
     opacity: 0;
-    transform: translateY(10px);
 }
 
 .spa-content-container.fade-in {
     opacity: 1;
-    transform: translateY(0);
 }
 
 /* Skeletons */

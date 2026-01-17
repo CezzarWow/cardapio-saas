@@ -11,7 +11,7 @@
 ?>
 
 <!-- Cashier CSS -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/admin/cashier.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/admin/cashier.css?v=<?= APP_VERSION ?>">
 
 <?php if (!$caixa): ?>
 <!-- ========================================== -->
@@ -240,4 +240,4 @@
 ]) ?>'></div>
 
 <!-- Script do Caixa SPA -->
-<script data-spa-script src="<?= BASE_URL ?>/js/admin/cashier.js?v=<?= time() ?>"></script>
+<script data-spa-script src="<?= BASE_URL ?>/js/admin/cashier.js?v=<?= APP_VERSION ?>"></script>

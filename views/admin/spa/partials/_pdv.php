@@ -64,45 +64,37 @@ $pdvConfig = [
 <?php \App\Core\View::renderFromScope('admin/panel/partials/extras-modal.php', get_defined_vars()); ?>
 
 
-<!-- SCRIPTS do PDV -->
-<!-- Carregados sequencialmente via AdminSPA -->
+<!-- PDV Bundle (26 scripts combinados) -->
+<script data-spa-script="pdv-bundle" src="<?= BASE_URL ?>/js/bundles/pdv-bundle.js?v=<?= APP_VERSION ?>"></script>
 
-<!-- Core: State e Carrinho -->
-<script data-spa-script="pdv-state" src="<?= BASE_URL ?>/js/pdv/state.js?v=<?= time() ?>"></script>
-<script data-spa-script="pdv-extras" src="<?= BASE_URL ?>/js/pdv/pdv-extras.js?v=<?= time() ?>"></script>
-<script data-spa-script="pdv-cart" src="<?= BASE_URL ?>/js/pdv/pdv-cart.js?v=<?= time() ?>"></script>
+<!-- 
+    [BACKUP] Scripts originais para rollback:
+    Se o bundle causar problemas, descomente abaixo e comente a linha acima.
 
-<!-- Tables: Mesas e Clientes -->
-<script data-spa-script="pdv-tables" src="<?= BASE_URL ?>/js/pdv/tables.js?v=<?= time() ?>"></script>
-<script data-spa-script="pdv-tables-mesa" src="<?= BASE_URL ?>/js/pdv/tables-mesa.js?v=<?= time() ?>"></script>
-<script data-spa-script="pdv-tables-cliente" src="<?= BASE_URL ?>/js/pdv/tables-cliente.js?v=<?= time() ?>"></script>
-<script data-spa-script="pdv-tables-client-modal" src="<?= BASE_URL ?>/js/pdv/tables-client-modal.js?v=<?= time() ?>"></script>
-
-<!-- Ações e Ficha -->
-<script data-spa-script="pdv-order-actions" src="<?= BASE_URL ?>/js/pdv/order-actions.js?v=<?= time() ?>"></script>
-<script data-spa-script="pdv-ficha" src="<?= BASE_URL ?>/js/pdv/ficha.js?v=<?= time() ?>"></script>
-
-<!-- Checkout: Módulos de Pagamento -->
-<script data-spa-script="checkout-helpers" src="<?= BASE_URL ?>/js/pdv/checkout/helpers.js?v=<?= time() ?>"></script>
-<script data-spa-script="checkout-state" src="<?= BASE_URL ?>/js/pdv/checkout/state.js?v=<?= time() ?>"></script>
-<script data-spa-script="checkout-totals" src="<?= BASE_URL ?>/js/pdv/checkout/totals.js?v=<?= time() ?>"></script>
-<script data-spa-script="checkout-ui" src="<?= BASE_URL ?>/js/pdv/checkout/ui.js?v=<?= time() ?>"></script>
-<script data-spa-script="checkout-payments" src="<?= BASE_URL ?>/js/pdv/checkout/payments.js?v=<?= time() ?>"></script>
-<script data-spa-script="checkout-service" src="<?= BASE_URL ?>/js/pdv/checkout/services/checkout-service.js?v=<?= time() ?>"></script>
-<script data-spa-script="checkout-validator" src="<?= BASE_URL ?>/js/pdv/checkout/services/checkout-validator.js?v=<?= time() ?>"></script>
-<script data-spa-script="checkout-adjust" src="<?= BASE_URL ?>/js/pdv/checkout/adjust.js?v=<?= time() ?>"></script>
-<script data-spa-script="checkout-submit" src="<?= BASE_URL ?>/js/pdv/checkout/submit.js?v=<?= time() ?>"></script>
-<script data-spa-script="checkout-orderType" src="<?= BASE_URL ?>/js/pdv/checkout/orderType.js?v=<?= time() ?>"></script>
-<script data-spa-script="checkout-retirada" src="<?= BASE_URL ?>/js/pdv/checkout/retirada.js?v=<?= time() ?>"></script>
-<script data-spa-script="checkout-entrega" src="<?= BASE_URL ?>/js/pdv/checkout/entrega.js?v=<?= time() ?>"></script>
-<script data-spa-script="checkout-flow" src="<?= BASE_URL ?>/js/pdv/checkout/flow.js?v=<?= time() ?>"></script>
-<script data-spa-script="checkout-index" src="<?= BASE_URL ?>/js/pdv/checkout/index.js?v=<?= time() ?>"></script>
-
-<!-- Orquestrador Principal -->
-<script data-spa-script="pdv-events" src="<?= BASE_URL ?>/js/pdv/pdv-events.js?v=<?= time() ?>"></script>
-<script data-spa-script="pdv-search" src="<?= BASE_URL ?>/js/pdv/pdv-search.js?v=<?= time() ?>"></script>
-<script data-spa-script="pdv-main" src="<?= BASE_URL ?>/js/pdv.js?v=<?= time() ?>"></script>
-
-
-
-
+<script data-spa-script="pdv-state" src="<?= BASE_URL ?>/js/pdv/state.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="pdv-extras" src="<?= BASE_URL ?>/js/pdv/pdv-extras.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="pdv-cart" src="<?= BASE_URL ?>/js/pdv/pdv-cart.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="pdv-tables" src="<?= BASE_URL ?>/js/pdv/tables.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="pdv-tables-mesa" src="<?= BASE_URL ?>/js/pdv/tables-mesa.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="pdv-tables-cliente" src="<?= BASE_URL ?>/js/pdv/tables-cliente.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="pdv-tables-client-modal" src="<?= BASE_URL ?>/js/pdv/tables-client-modal.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="pdv-order-actions" src="<?= BASE_URL ?>/js/pdv/order-actions.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="pdv-ficha" src="<?= BASE_URL ?>/js/pdv/ficha.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-helpers" src="<?= BASE_URL ?>/js/pdv/checkout/helpers.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-state" src="<?= BASE_URL ?>/js/pdv/checkout/state.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-totals" src="<?= BASE_URL ?>/js/pdv/checkout/totals.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-ui" src="<?= BASE_URL ?>/js/pdv/checkout/ui.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-payments" src="<?= BASE_URL ?>/js/pdv/checkout/payments.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-service" src="<?= BASE_URL ?>/js/pdv/checkout/services/checkout-service.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-validator" src="<?= BASE_URL ?>/js/pdv/checkout/services/checkout-validator.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-adjust" src="<?= BASE_URL ?>/js/pdv/checkout/adjust.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-submit" src="<?= BASE_URL ?>/js/pdv/checkout/submit.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-orderType" src="<?= BASE_URL ?>/js/pdv/checkout/orderType.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-retirada" src="<?= BASE_URL ?>/js/pdv/checkout/retirada.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-entrega" src="<?= BASE_URL ?>/js/pdv/checkout/entrega.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-flow" src="<?= BASE_URL ?>/js/pdv/checkout/flow.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="checkout-index" src="<?= BASE_URL ?>/js/pdv/checkout/index.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="pdv-events" src="<?= BASE_URL ?>/js/pdv/pdv-events.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="pdv-search" src="<?= BASE_URL ?>/js/pdv/pdv-search.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="pdv-main" src="<?= BASE_URL ?>/js/pdv.js?v=<?= APP_VERSION ?>"></script>
+-->

@@ -9,11 +9,22 @@ const AdminSPA = {
     currentSection: null,
     currentQueryParams: null,
     isLoading: false,
+    isPrefetching: false,
     cache: {},
     state: {},
     modules: {},
     loadedScripts: new Set(),
     spaContentContainer: null,
+
+    // Mapa de prefetch: seção atual → seções para pré-carregar
+    prefetchMap: {
+        'balcao': ['mesas', 'delivery'],
+        'mesas': ['balcao', 'delivery'],
+        'delivery': ['mesas', 'caixa'],
+        'caixa': ['delivery', 'estoque'],
+        'estoque': ['caixa', 'cardapio'],
+        'cardapio': ['estoque', 'caixa']
+    },
 
     // =========================================================================
     // INICIALIZAÇÃO
@@ -144,34 +155,25 @@ const AdminSPA = {
         const container = this.spaContentContainer;
         if (!container) return;
 
-        // Cache Hit (Instant Load) - só usa cache se não tiver queryParams
+        // Cache Hit (Instant Load com transição suave)
         if (this.cache[sectionName] && !forceReload && !queryParams) {
-            this.renderSection(this.cache[sectionName]);
+            container.classList.add('fade-out');
+            // Espera transição CSS completar (150ms definido no spa.css)
+            await new Promise(r => setTimeout(r, 150));
+            this.renderSectionSync(this.cache[sectionName]);
+            container.classList.remove('fade-out');
             return;
         }
 
         // Start Transition
-        const MIN_TRANSITION_TIME = 300; // ms - Tempo mínimo para evitar "pisca"
-        const startTime = Date.now();
-
         container.classList.add('fade-out');
-
         this.isLoading = true;
-
-        // Skeleton Delay
-        const skeletonTimeout = setTimeout(() => {
-            if (this.isLoading) {
-                SpaUI.showSkeleton(container, config.skeleton);
-                container.classList.remove('fade-out');
-            }
-        }, 150);
 
         // Monta URL
         let partialUrl = `${BASE_URL}${config.partial}`;
         if (queryParams) {
             const params = new URLSearchParams(queryParams);
             partialUrl += '?' + params.toString();
-            console.log('[AdminSPA] Loading with params:', queryParams);
         }
 
         // Fetch
@@ -185,51 +187,28 @@ const AdminSPA = {
             const html = await response.text();
             this.cache[sectionName] = html;
 
-            clearTimeout(skeletonTimeout);
-
-            // [FIX FOUC UI JITTER]
             // Preload CSS antes de renderizar
             await this.preloadStyles(html);
 
-            // Calcula tempo restante para completar o mínimo
-            const elapsed = Date.now() - startTime;
-            const remaining = Math.max(0, MIN_TRANSITION_TIME - elapsed);
-
-            // Render
+            // Render (espera fade-out completar)
             if (this.isLoading) {
-                // Garante fade-out ativo
-                if (!container.classList.contains('fade-out')) {
-                    container.classList.add('fade-out');
-                }
-
-                setTimeout(() => {
-                    requestAnimationFrame(() => {
-                        this.renderSection(html);
-                        requestAnimationFrame(() => {
-                            container.classList.remove('fade-out');
-                        });
-                    });
-                }, remaining);
+                await new Promise(r => setTimeout(r, 150));
+                this.renderSectionSync(html);
+                container.classList.remove('fade-out');
             }
 
         } catch (error) {
-            clearTimeout(skeletonTimeout);
             container.innerHTML = SpaUI.getErrorHtml(sectionName);
             console.error('[AdminSPA]', error);
             container.classList.remove('fade-out');
         } finally {
-            // Só libera o loading após o tempo total (para evitar cliques duplos)
-            const finalElapsed = Date.now() - startTime;
-            const finalRemaining = Math.max(0, MIN_TRANSITION_TIME - finalElapsed);
-            setTimeout(() => {
-                this.isLoading = false;
-            }, finalRemaining);
+            this.isLoading = false;
         }
     },
 
     /**
      * Preload CSS encontrado no HTML da partial
-     * Evita Flash of Unstyled Content (FOUC)
+     * Usa método nativo do browser para melhor performance
      */
     async preloadStyles(html) {
         const parser = new DOMParser();
@@ -244,42 +223,45 @@ const AdminSPA = {
             const href = link.getAttribute('href');
             if (!href) return;
 
-            // Se já estiver no head, ignora (já carregado)
-            if (document.querySelector(`link[href^="${href}"]`)) return;
+            // Se já estiver no head, ignora
+            if (document.querySelector(`link[href^="${href.split('?')[0]}"]`)) return;
 
             const promise = new Promise((resolve) => {
-                const newLink = document.createElement('link');
-                newLink.rel = 'stylesheet';
-                newLink.href = href;
-                // Importante: Adicionar ao head AGORA para começar o download
-                // Mas com um atributo temporário para não quebrar estilos globais se houver conflito? 
-                // Não, o comportamento das partials atuais é "adicionar CSS globalmente" anyway.
-                // Melhor estratégia: Preloader "Headless"
+                // Usa <link rel="preload"> nativo para melhor performance
+                const preload = document.createElement('link');
+                preload.rel = 'preload';
+                preload.as = 'style';
+                preload.href = href;
+                preload.onload = resolve;
+                preload.onerror = resolve;
+                document.head.appendChild(preload);
 
-                const img = new Image();
-                img.onload = () => resolve();
-                img.onerror = () => resolve(); // Não trava se falhar
-                img.src = href;
-
-                // Fallback de timeout para não travar a UI
-                setTimeout(resolve, 500);
+                // Timeout curto para não bloquear
+                setTimeout(resolve, 200);
             });
             promises.push(promise);
         });
 
         if (promises.length > 0) {
-            // console.log(`[AdminSPA] Preloading ${promises.length} stylesheets...`);
             await Promise.all(promises);
         }
     },
 
+    /**
+     * Renderiza seção de forma síncrona (sem requestAnimationFrame extra)
+     */
+    renderSectionSync(htmlContent) {
+        if (this.spaContentContainer) {
+            this.spaContentContainer.innerHTML = htmlContent;
+            this.executeScripts(this.spaContentContainer);
+        }
+    },
+
+    /**
+     * Alias para compatibilidade
+     */
     renderSection(htmlContent) {
-        requestAnimationFrame(() => {
-            if (this.spaContentContainer) {
-                this.spaContentContainer.innerHTML = htmlContent;
-                this.executeScripts(this.spaContentContainer);
-            }
-        });
+        this.renderSectionSync(htmlContent);
     },
 
     // =========================================================================
@@ -343,6 +325,62 @@ const AdminSPA = {
 
         // Chama onEnter do módulo atual (agora os scripts estão carregados)
         this.enterSection(this.currentSection);
+
+        // Prefetch seções adjacentes em idle time
+        this.prefetchAdjacentSections(this.currentSection);
+    },
+
+    /**
+     * Prefetch silencioso de seções adjacentes
+     * Usa requestIdleCallback para não bloquear interação
+     */
+    prefetchAdjacentSections(currentSection) {
+        const adjacentSections = this.prefetchMap[currentSection];
+        if (!adjacentSections || adjacentSections.length === 0) return;
+
+        // Filtra seções que já estão em cache
+        const sectionsToFetch = adjacentSections.filter(s => !this.cache[s]);
+        if (sectionsToFetch.length === 0) return;
+
+        // Usa requestIdleCallback ou setTimeout como fallback
+        const scheduleIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 300));
+
+        scheduleIdle(() => {
+            if (this.isLoading || this.isPrefetching) return;
+            this.isPrefetching = true;
+
+            // Prefetch uma seção por vez para não sobrecarregar
+            this.prefetchSection(sectionsToFetch[0]).finally(() => {
+                this.isPrefetching = false;
+                // Agenda próxima se houver
+                if (sectionsToFetch.length > 1) {
+                    scheduleIdle(() => {
+                        if (!this.isLoading && !this.cache[sectionsToFetch[1]]) {
+                            this.prefetchSection(sectionsToFetch[1]);
+                        }
+                    }, { timeout: 2000 });
+                }
+            });
+        }, { timeout: 1000 });
+    },
+
+    /**
+     * Faz fetch silencioso de uma partial (só HTML, sem executar scripts)
+     */
+    async prefetchSection(sectionName) {
+        const config = this.sections[sectionName];
+        if (!config || this.cache[sectionName]) return;
+
+        try {
+            const response = await fetch(`${BASE_URL}${config.partial}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (response.ok) {
+                this.cache[sectionName] = await response.text();
+            }
+        } catch (e) {
+            // Silencioso - prefetch falhou, não é crítico
+        }
     },
 
     // Alias para compatibilidade

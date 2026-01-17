@@ -12,7 +12,7 @@
 ?>
 
 <!-- Stock Dashboard CSS -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/stock/index.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/stock/index.css?v=<?= APP_VERSION ?>">
 
 <div class="stock-dashboard-container spa-padded-container">
     
@@ -62,4 +62,4 @@
 </div>
 
 <!-- Script marker for AdminSPA to execute -->
-<script data-spa-script="stock-spa" src="<?= BASE_URL ?>/js/admin/stock-spa.js?v=<?= time() ?>"></script>
+<script data-spa-script="stock-spa" src="<?= BASE_URL ?>/js/admin/stock-spa.js?v=<?= APP_VERSION ?>"></script>

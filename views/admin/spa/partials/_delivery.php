@@ -14,9 +14,9 @@
 
 <!-- CSS do Delivery -->
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/base.css">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/kanban.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/cards-compact.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/modals.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/kanban.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/cards-compact.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/modals.css?v=<?= APP_VERSION ?>">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/states.css">
 
 <div class="delivery-container">
@@ -54,18 +54,20 @@
     };
 </script>
 
-<!-- Scripts do Delivery -->
-<!-- Carregados sequencialmente via AdminSPA -->
-<script data-spa-script="delivery-helpers" src="<?= BASE_URL ?>/js/delivery/helpers.js?v=<?= time() ?>"></script>
-<script data-spa-script="delivery-constants" src="<?= BASE_URL ?>/js/delivery/constants.js?v=<?= time() ?>"></script>
-<script data-spa-script="delivery-tabs" src="<?= BASE_URL ?>/js/delivery/tabs.js?v=<?= time() ?>"></script>
-<script data-spa-script="delivery-actions" src="<?= BASE_URL ?>/js/delivery/actions.js?v=<?= time() ?>"></script>
-<script data-spa-script="delivery-ui" src="<?= BASE_URL ?>/js/delivery/ui.js?v=<?= time() ?>"></script>
-<script data-spa-script="delivery-polling" src="<?= BASE_URL ?>/js/delivery/polling.js?v=<?= time() ?>"></script>
+<!-- Delivery Bundle (11 scripts combinados) -->
+<script data-spa-script="delivery-bundle" src="<?= BASE_URL ?>/js/bundles/delivery-bundle.js?v=<?= APP_VERSION ?>"></script>
 
-<!-- Módulos de Impressão -->
-<script data-spa-script="delivery-print-helpers" src="<?= BASE_URL ?>/js/delivery/print-helpers.js?v=<?= time() ?>"></script>
-<script data-spa-script="delivery-print-generators" src="<?= BASE_URL ?>/js/delivery/print-generators.js?v=<?= time() ?>"></script>
-<script data-spa-script="delivery-print-modal" src="<?= BASE_URL ?>/js/delivery/print-modal.js?v=<?= time() ?>"></script>
-<script data-spa-script="delivery-print-actions" src="<?= BASE_URL ?>/js/delivery/print-actions.js?v=<?= time() ?>"></script>
-<script data-spa-script="delivery-print-main" src="<?= BASE_URL ?>/js/delivery/print.js?v=<?= time() ?>"></script>
+<!-- 
+    [BACKUP] Scripts originais para rollback:
+<script data-spa-script="delivery-helpers" src="<?= BASE_URL ?>/js/delivery/helpers.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="delivery-constants" src="<?= BASE_URL ?>/js/delivery/constants.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="delivery-tabs" src="<?= BASE_URL ?>/js/delivery/tabs.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="delivery-actions" src="<?= BASE_URL ?>/js/delivery/actions.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="delivery-ui" src="<?= BASE_URL ?>/js/delivery/ui.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="delivery-polling" src="<?= BASE_URL ?>/js/delivery/polling.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="delivery-print-helpers" src="<?= BASE_URL ?>/js/delivery/print-helpers.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="delivery-print-generators" src="<?= BASE_URL ?>/js/delivery/print-generators.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="delivery-print-modal" src="<?= BASE_URL ?>/js/delivery/print-modal.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="delivery-print-actions" src="<?= BASE_URL ?>/js/delivery/print-actions.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="delivery-print-main" src="<?= BASE_URL ?>/js/delivery/print.js?v=<?= APP_VERSION ?>"></script>
+-->

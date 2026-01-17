@@ -12,15 +12,15 @@
 ?>
 
 <!-- Cardápio Admin CSS -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/base.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/tabs.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/cards.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/forms.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/toggles.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/utilities.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/featured/index.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/delivery-tab.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/responsive.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/base.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/tabs.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/cards.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/forms.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/toggles.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/utilities.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/featured/index.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/delivery-tab.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/cardapio-admin/responsive.css?v=<?= APP_VERSION ?>">
 
 <div class="cardapio-admin-container spa-padded-container">
     
@@ -105,24 +105,29 @@
 
 </div>
 
-<!-- Cardapio Admin Scripts -->
-<script data-spa-script="cardapio-admin" src="<?= BASE_URL ?>/js/cardapio-admin/utils.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/pix.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/whatsapp.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/forms.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-tabs.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-toggles.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-validation.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-delivery.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-cards.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/combos.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/combos-save.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/combos-edit.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/combos-helpers.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/combos-ui.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/featured.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/featured-edit.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/featured-dragdrop.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/featured-tabs.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/featured-categories.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/cardapio-admin/index.js?v=<?= time() ?>"></script>
+<!-- Cardápio Bundle (20 scripts combinados) -->
+<script data-spa-script="cardapio-bundle" src="<?= BASE_URL ?>/js/bundles/cardapio-bundle.js?v=<?= APP_VERSION ?>"></script>
+
+<!-- 
+    [BACKUP] Scripts originais para rollback:
+<script data-spa-script="cardapio-admin" src="<?= BASE_URL ?>/js/cardapio-admin/utils.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/pix.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/whatsapp.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/forms.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-tabs.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-toggles.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-validation.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-delivery.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/forms-cards.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/combos.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/combos-save.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/combos-edit.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/combos-helpers.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/combos-ui.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/featured.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/featured-edit.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/featured-dragdrop.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/featured-tabs.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/featured-categories.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/index.js?v=<?= APP_VERSION ?>"></script>
+-->
