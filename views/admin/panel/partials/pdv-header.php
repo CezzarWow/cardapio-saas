@@ -39,7 +39,8 @@
         <input type="text" id="product-search-input" placeholder="Buscar produtos (F2)..." class="search-input" />
     </div>
 
-    <!-- Tipo de Pedido - Cards Só Texto -->
+    <!-- Tipo de Pedido - Apenas no Balcão (sem mesa e sem comanda aberta) -->
+    <?php if (!$mesa_id && empty($contaAberta['id'])): ?>
     <div style="display: flex; gap: 10px;">
         <input type="hidden" id="keep_open_value" value="false">
         <input type="hidden" id="selected_order_type" value="local">
@@ -59,5 +60,10 @@
             Entrega
         </button>
     </div>
+    <?php else: ?>
+    <!-- Em Mesa/Comanda: hidden inputs com valor fixo 'local' -->
+    <input type="hidden" id="keep_open_value" value="false">
+    <input type="hidden" id="selected_order_type" value="local">
+    <?php endif; ?>
 
 </header>

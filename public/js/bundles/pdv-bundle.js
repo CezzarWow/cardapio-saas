@@ -1,4 +1,4 @@
-/* pdv-bundle - Generated 2026-01-17T19:33:17.448Z */
+/* pdv-bundle - Generated 2026-01-19T11:50:12.689Z */
 
 
 /* ========== pdv/state.js ========== */
@@ -715,25 +715,9 @@ window.openClientModal = () => document.getElementById('clientModal').style.disp
     // SELECIONAR MESA
     // ==========================================
     PDVTables.selectTable = function (table) {
-        // Se mesa está ocupada e tem order_id, carrega via SPA navigation
-        if (table.status === 'ocupada' && table.current_order_id) {
-            // [MIGRATION] Salva carrinho atual antes de navegar
-            if (typeof PDVCart !== 'undefined') PDVCart.saveForMigration();
-
-            // Usa navegação SPA com query params
-            // AdminSPA automaticamente destaca 'mesas' quando há mesa_id/order_id
-            if (typeof AdminSPA !== 'undefined') {
-                AdminSPA.navigateTo('balcao', true, true, {
-                    order_id: table.current_order_id,
-                    mesa_id: table.id,
-                    mesa_numero: table.number
-                });
-            } else {
-                // Fallback para redirect (fora do SPA)
-                window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + table.current_order_id;
-            }
-            return;
-        }
+        // [ALTERADO] Não navega mais automaticamente para comanda
+        // A navegação para comanda só ocorre via grid na aba Mesas
+        // Aqui apenas vinculamos a mesa ao pedido atual (para Balcão)
 
         // Atualiza Estado
         PDVState.set({ modo: 'mesa', mesaId: table.id, clienteId: null });
@@ -752,9 +736,38 @@ window.openClientModal = () => document.getElementById('clientModal').style.disp
         }
         tableNameInput.value = `Mesa ${table.number}`;
 
-        // Visual
-        document.getElementById('selected-client-name').innerHTML = `🔹 Mesa ${table.number} <small>(${table.status})</small>`;
-        document.getElementById('selected-client-area').style.display = 'flex';
+        // Visual - com indicador de ocupada e link para ver comanda dentro do card
+        const isOccupied = table.status === 'ocupada' && table.current_order_id;
+        const occupiedTag = isOccupied ? '<span style="color:#ef4444; font-size:0.8rem; margin-left:5px;">(OCUPADA)</span>' : '';
+
+        // Link "Ver Comanda" dentro do card (se ocupada)
+        const verComandaLink = isOccupied
+            ? `<a href="#" id="table-ver-comanda" style="color:#2563eb; font-size:0.75rem; margin-left:8px; text-decoration:underline;">Ver Comanda</a>`
+            : '';
+
+        document.getElementById('selected-client-name').innerHTML = `🔹 Mesa ${table.number} ${occupiedTag} ${verComandaLink}`;
+
+        // Bind evento no link (se existir)
+        if (isOccupied) {
+            const linkEl = document.getElementById('table-ver-comanda');
+            if (linkEl) {
+                linkEl.onclick = (e) => {
+                    e.preventDefault();
+                    if (typeof AdminSPA !== 'undefined') {
+                        AdminSPA.navigateTo('balcao', true, true, {
+                            order_id: table.current_order_id,
+                            mesa_id: table.id,
+                            mesa_numero: table.number
+                        });
+                    } else {
+                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + table.current_order_id;
+                    }
+                };
+            }
+        }
+
+        const selectedArea = document.getElementById('selected-client-area');
+        selectedArea.style.display = 'flex';
         document.getElementById('client-search-area').style.display = 'none';
         document.getElementById('client-results').style.display = 'none';
 
@@ -854,21 +867,9 @@ window.openClientModal = () => document.getElementById('clientModal').style.disp
     // SELECIONAR CLIENTE
     // ==========================================
     PDVTables.selectClient = function (id, name, openOrderId = null, creditLimit = 0) {
-        // Se cliente tem comanda aberta, carregar via SPA navigation
-        if (openOrderId) {
-            // [MIGRATION] Salva carrinho atual antes de navegar
-            if (typeof PDVCart !== 'undefined') PDVCart.saveForMigration();
-
-            // Usa navegação SPA com query params
-            // AdminSPA automaticamente destaca 'mesas' quando há order_id
-            if (typeof AdminSPA !== 'undefined') {
-                AdminSPA.navigateTo('balcao', true, true, { order_id: openOrderId });
-            } else {
-                // Fallback para redirect (fora do SPA)
-                window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
-            }
-            return;
-        }
+        // [ALTERADO] Não navega mais automaticamente para comanda
+        // A navegação para comanda só ocorre via grid na aba Mesas
+        // Aqui apenas vinculamos o cliente ao pedido atual (para Balcão)
 
         // Atualiza Estado
         PDVState.set({ modo: 'balcao', clienteId: id, mesaId: null });
@@ -899,43 +900,30 @@ window.openClientModal = () => document.getElementById('clientModal').style.disp
         const hasCrediario = creditLimit && parseFloat(creditLimit) > 0;
         const badge = hasCrediario ? '<span style="background: #ea580c; color: white; font-size: 0.65rem; padding: 2px 4px; border-radius: 4px; font-weight: 800; margin-left: 6px;">CREDIÁRIO</span>' : '';
 
-        document.getElementById('selected-client-name').innerHTML = `
-            ${name} ${badge}
-            ${openOrderId ? '<span style="color:#ef4444; font-size:0.8rem; margin-left:5px;">(COMANDA ABERTA)</span>' : ''}
-        `;
+        // Tag de comanda aberta e link "Ver Comanda" dentro do card
+        const openTag = openOrderId ? '<span style="color:#ef4444; font-size:0.8rem; margin-left:5px;">(COMANDA ABERTA)</span>' : '';
+        const verComandaLink = openOrderId
+            ? `<a href="#" id="client-ver-comanda" style="color:#2563eb; font-size:0.75rem; margin-left:8px; text-decoration:underline;">Ver Comanda</a>`
+            : '';
 
-        // Se tiver comanda aberta, mostra botão extra ou link
-        const selectedArea = document.getElementById('selected-client-area');
+        document.getElementById('selected-client-name').innerHTML = `${name} ${badge} ${openTag} ${verComandaLink}`;
+
+        // Bind evento no link (se existir)
         if (openOrderId) {
-            // Adiciona ou atualiza aviso
-            let openWarning = document.getElementById('client-open-warning');
-            const navigateToComanda = () => {
-                if (typeof AdminSPA !== 'undefined') {
-                    AdminSPA.navigateTo('balcao', true, true, { order_id: openOrderId });
-                } else {
-                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
-                }
-            };
-
-            if (!openWarning) {
-                openWarning = document.createElement('div');
-                openWarning.id = 'client-open-warning';
-                openWarning.style.cssText = 'width:100%; text-align:center; margin-top:5px; font-size:0.8rem; color:#b91c1c; background:#fecaca; padding:4px; border-radius:4px; cursor:pointer;';
-                openWarning.innerText = 'Clique aqui para ver a comanda';
-                openWarning.onclick = navigateToComanda;
-
-                // Insere APÓS o selectedArea
-                selectedArea.insertAdjacentElement('afterend', openWarning);
-            } else {
-                openWarning.style.display = 'block';
-                openWarning.onclick = navigateToComanda;
+            const linkEl = document.getElementById('client-ver-comanda');
+            if (linkEl) {
+                linkEl.onclick = (e) => {
+                    e.preventDefault();
+                    if (typeof AdminSPA !== 'undefined') {
+                        AdminSPA.navigateTo('balcao', true, true, { order_id: openOrderId });
+                    } else {
+                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
+                    }
+                };
             }
-        } else {
-            // Esconde aviso se existir
-            const openWarning = document.getElementById('client-open-warning');
-            if (openWarning) openWarning.style.display = 'none';
         }
 
+        const selectedArea = document.getElementById('selected-client-area');
         const searchArea = document.getElementById('client-search-area');
         const resultsArea = document.getElementById('client-results');
 
@@ -2366,6 +2354,9 @@ const CheckoutSubmit = {
         if (!CheckoutValidator.validateCart(PDVCart.items)) return;
         if (!CheckoutValidator.validateClientOrTable(ctx.clientId, ctx.tableId)) return;
 
+        // Determina o tipo de pedido selecionado pelo usuário
+        const selectedOrderType = this._determineOrderType(ctx.hasClient || ctx.hasTable);
+
         // Atualiza Estado
         PDVState.set({
             modo: ctx.hasTable ? 'mesa' : 'comanda',
@@ -2380,8 +2371,14 @@ const CheckoutSubmit = {
             table_id: ctx.tableId,
             order_id: ctx.orderId,
             save_account: true,
-            order_type: ctx.hasTable ? 'mesa' : 'comanda'
+            order_type: selectedOrderType  // Usa o tipo selecionado (pickup, delivery, local, etc)
         };
+
+        // Se for entrega, adiciona dados de entrega
+        if (selectedOrderType === 'delivery' && typeof getDeliveryData === 'function') {
+            payload.delivery_data = getDeliveryData();
+            payload.delivery_fee = (typeof PDV_DELIVERY_FEE !== 'undefined') ? PDV_DELIVERY_FEE : 0;
+        }
 
         try {
             const data = await CheckoutService.saveTabOrder(payload);
@@ -2485,7 +2482,17 @@ const CheckoutSubmit = {
     },
 
     _determineOrderType: function (hasClientOrTable) {
-        const cards = document.querySelectorAll('.order-type-card.active');
+        // 1. Primeiro verifica o hidden input (fonte principal)
+        const selectedInput = document.getElementById('selected_order_type');
+        if (selectedInput && selectedInput.value) {
+            const val = selectedInput.value.toLowerCase();
+            if (val === 'retirada') return 'pickup';
+            if (val === 'entrega') return 'delivery';
+            if (val === 'local') return hasClientOrTable ? 'local' : 'balcao';
+        }
+
+        // 2. Fallback: verifica os cards ativos
+        const cards = document.querySelectorAll('.order-toggle-btn.active');
         let type = 'balcao';
 
         cards.forEach(card => {
@@ -2494,6 +2501,7 @@ const CheckoutSubmit = {
             else if (label.includes('entrega')) type = 'delivery';
             else if (label.includes('local') && hasClientOrTable) type = 'local';
         });
+
         return type;
     },
 
@@ -2527,7 +2535,7 @@ const CheckoutSubmit = {
     },
 
     /**
-     * Handler de sucesso para SALVAR comanda (mantém na mesa)
+     * Handler de sucesso para SALVAR comanda (permanece no Balcão)
      */
     _handleSaveSuccess: function (data, tableId, orderId) {
         if (data.success) {
@@ -2537,28 +2545,11 @@ const CheckoutSubmit = {
             setTimeout(() => {
                 document.getElementById('checkoutModal').style.display = 'none';
 
-                // Se foi salvo com mesa, navega de volta para a mesa
-                const newOrderId = data.order_id || orderId;
-
+                // [ALTERADO] Permanece no Balcão após salvar (não navega para mesa/comanda)
                 if (typeof AdminSPA !== 'undefined') {
-                    if (tableId) {
-                        AdminSPA.navigateTo('balcao', true, true, { mesa_id: tableId });
-                    } else if (newOrderId) {
-                        AdminSPA.navigateTo('balcao', true, true, { order_id: newOrderId });
-                    } else {
-                        AdminSPA.reloadCurrentSection();
-                    }
+                    AdminSPA.navigateTo('balcao', true, true); // Recarrega balcão limpo
                 } else {
-                    // Fallback para full page redirect
-                    if (tableId) {
-                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') +
-                            '/admin/loja/pdv?mesa_id=' + tableId;
-                    } else if (newOrderId) {
-                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') +
-                            '/admin/loja/pdv?order_id=' + newOrderId;
-                    } else {
-                        window.location.reload();
-                    }
+                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv';
                 }
             }, 1000);
         } else {

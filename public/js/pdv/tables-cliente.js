@@ -62,21 +62,9 @@
     // SELECIONAR CLIENTE
     // ==========================================
     PDVTables.selectClient = function (id, name, openOrderId = null, creditLimit = 0) {
-        // Se cliente tem comanda aberta, carregar via SPA navigation
-        if (openOrderId) {
-            // [MIGRATION] Salva carrinho atual antes de navegar
-            if (typeof PDVCart !== 'undefined') PDVCart.saveForMigration();
-
-            // Usa navegação SPA com query params
-            // AdminSPA automaticamente destaca 'mesas' quando há order_id
-            if (typeof AdminSPA !== 'undefined') {
-                AdminSPA.navigateTo('balcao', true, true, { order_id: openOrderId });
-            } else {
-                // Fallback para redirect (fora do SPA)
-                window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
-            }
-            return;
-        }
+        // [ALTERADO] Não navega mais automaticamente para comanda
+        // A navegação para comanda só ocorre via grid na aba Mesas
+        // Aqui apenas vinculamos o cliente ao pedido atual (para Balcão)
 
         // Atualiza Estado
         PDVState.set({ modo: 'balcao', clienteId: id, mesaId: null });
@@ -107,43 +95,30 @@
         const hasCrediario = creditLimit && parseFloat(creditLimit) > 0;
         const badge = hasCrediario ? '<span style="background: #ea580c; color: white; font-size: 0.65rem; padding: 2px 4px; border-radius: 4px; font-weight: 800; margin-left: 6px;">CREDIÁRIO</span>' : '';
 
-        document.getElementById('selected-client-name').innerHTML = `
-            ${name} ${badge}
-            ${openOrderId ? '<span style="color:#ef4444; font-size:0.8rem; margin-left:5px;">(COMANDA ABERTA)</span>' : ''}
-        `;
+        // Tag de comanda aberta e link "Ver Comanda" dentro do card
+        const openTag = openOrderId ? '<span style="color:#ef4444; font-size:0.8rem; margin-left:5px;">(COMANDA ABERTA)</span>' : '';
+        const verComandaLink = openOrderId
+            ? `<a href="#" id="client-ver-comanda" style="color:#2563eb; font-size:0.75rem; margin-left:8px; text-decoration:underline;">Ver Comanda</a>`
+            : '';
 
-        // Se tiver comanda aberta, mostra botão extra ou link
-        const selectedArea = document.getElementById('selected-client-area');
+        document.getElementById('selected-client-name').innerHTML = `${name} ${badge} ${openTag} ${verComandaLink}`;
+
+        // Bind evento no link (se existir)
         if (openOrderId) {
-            // Adiciona ou atualiza aviso
-            let openWarning = document.getElementById('client-open-warning');
-            const navigateToComanda = () => {
-                if (typeof AdminSPA !== 'undefined') {
-                    AdminSPA.navigateTo('balcao', true, true, { order_id: openOrderId });
-                } else {
-                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
-                }
-            };
-
-            if (!openWarning) {
-                openWarning = document.createElement('div');
-                openWarning.id = 'client-open-warning';
-                openWarning.style.cssText = 'width:100%; text-align:center; margin-top:5px; font-size:0.8rem; color:#b91c1c; background:#fecaca; padding:4px; border-radius:4px; cursor:pointer;';
-                openWarning.innerText = 'Clique aqui para ver a comanda';
-                openWarning.onclick = navigateToComanda;
-
-                // Insere APÓS o selectedArea
-                selectedArea.insertAdjacentElement('afterend', openWarning);
-            } else {
-                openWarning.style.display = 'block';
-                openWarning.onclick = navigateToComanda;
+            const linkEl = document.getElementById('client-ver-comanda');
+            if (linkEl) {
+                linkEl.onclick = (e) => {
+                    e.preventDefault();
+                    if (typeof AdminSPA !== 'undefined') {
+                        AdminSPA.navigateTo('balcao', true, true, { order_id: openOrderId });
+                    } else {
+                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
+                    }
+                };
             }
-        } else {
-            // Esconde aviso se existir
-            const openWarning = document.getElementById('client-open-warning');
-            if (openWarning) openWarning.style.display = 'none';
         }
 
+        const selectedArea = document.getElementById('selected-client-area');
         const searchArea = document.getElementById('client-search-area');
         const resultsArea = document.getElementById('client-results');
 

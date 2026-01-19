@@ -85,25 +85,9 @@
     // SELECIONAR MESA
     // ==========================================
     PDVTables.selectTable = function (table) {
-        // Se mesa está ocupada e tem order_id, carrega via SPA navigation
-        if (table.status === 'ocupada' && table.current_order_id) {
-            // [MIGRATION] Salva carrinho atual antes de navegar
-            if (typeof PDVCart !== 'undefined') PDVCart.saveForMigration();
-
-            // Usa navegação SPA com query params
-            // AdminSPA automaticamente destaca 'mesas' quando há mesa_id/order_id
-            if (typeof AdminSPA !== 'undefined') {
-                AdminSPA.navigateTo('balcao', true, true, {
-                    order_id: table.current_order_id,
-                    mesa_id: table.id,
-                    mesa_numero: table.number
-                });
-            } else {
-                // Fallback para redirect (fora do SPA)
-                window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + table.current_order_id;
-            }
-            return;
-        }
+        // [ALTERADO] Não navega mais automaticamente para comanda
+        // A navegação para comanda só ocorre via grid na aba Mesas
+        // Aqui apenas vinculamos a mesa ao pedido atual (para Balcão)
 
         // Atualiza Estado
         PDVState.set({ modo: 'mesa', mesaId: table.id, clienteId: null });
@@ -122,9 +106,38 @@
         }
         tableNameInput.value = `Mesa ${table.number}`;
 
-        // Visual
-        document.getElementById('selected-client-name').innerHTML = `🔹 Mesa ${table.number} <small>(${table.status})</small>`;
-        document.getElementById('selected-client-area').style.display = 'flex';
+        // Visual - com indicador de ocupada e link para ver comanda dentro do card
+        const isOccupied = table.status === 'ocupada' && table.current_order_id;
+        const occupiedTag = isOccupied ? '<span style="color:#ef4444; font-size:0.8rem; margin-left:5px;">(OCUPADA)</span>' : '';
+
+        // Link "Ver Comanda" dentro do card (se ocupada)
+        const verComandaLink = isOccupied
+            ? `<a href="#" id="table-ver-comanda" style="color:#2563eb; font-size:0.75rem; margin-left:8px; text-decoration:underline;">Ver Comanda</a>`
+            : '';
+
+        document.getElementById('selected-client-name').innerHTML = `🔹 Mesa ${table.number} ${occupiedTag} ${verComandaLink}`;
+
+        // Bind evento no link (se existir)
+        if (isOccupied) {
+            const linkEl = document.getElementById('table-ver-comanda');
+            if (linkEl) {
+                linkEl.onclick = (e) => {
+                    e.preventDefault();
+                    if (typeof AdminSPA !== 'undefined') {
+                        AdminSPA.navigateTo('balcao', true, true, {
+                            order_id: table.current_order_id,
+                            mesa_id: table.id,
+                            mesa_numero: table.number
+                        });
+                    } else {
+                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + table.current_order_id;
+                    }
+                };
+            }
+        }
+
+        const selectedArea = document.getElementById('selected-client-area');
+        selectedArea.style.display = 'flex';
         document.getElementById('client-search-area').style.display = 'none';
         document.getElementById('client-results').style.display = 'none';
 

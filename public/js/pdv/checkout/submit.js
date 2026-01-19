@@ -123,6 +123,9 @@ const CheckoutSubmit = {
         if (!CheckoutValidator.validateCart(PDVCart.items)) return;
         if (!CheckoutValidator.validateClientOrTable(ctx.clientId, ctx.tableId)) return;
 
+        // Determina o tipo de pedido selecionado pelo usuário
+        const selectedOrderType = this._determineOrderType(ctx.hasClient || ctx.hasTable);
+
         // Atualiza Estado
         PDVState.set({
             modo: ctx.hasTable ? 'mesa' : 'comanda',
@@ -137,8 +140,14 @@ const CheckoutSubmit = {
             table_id: ctx.tableId,
             order_id: ctx.orderId,
             save_account: true,
-            order_type: ctx.hasTable ? 'mesa' : 'comanda'
+            order_type: selectedOrderType  // Usa o tipo selecionado (pickup, delivery, local, etc)
         };
+
+        // Se for entrega, adiciona dados de entrega
+        if (selectedOrderType === 'delivery' && typeof getDeliveryData === 'function') {
+            payload.delivery_data = getDeliveryData();
+            payload.delivery_fee = (typeof PDV_DELIVERY_FEE !== 'undefined') ? PDV_DELIVERY_FEE : 0;
+        }
 
         try {
             const data = await CheckoutService.saveTabOrder(payload);
@@ -242,7 +251,17 @@ const CheckoutSubmit = {
     },
 
     _determineOrderType: function (hasClientOrTable) {
-        const cards = document.querySelectorAll('.order-type-card.active');
+        // 1. Primeiro verifica o hidden input (fonte principal)
+        const selectedInput = document.getElementById('selected_order_type');
+        if (selectedInput && selectedInput.value) {
+            const val = selectedInput.value.toLowerCase();
+            if (val === 'retirada') return 'pickup';
+            if (val === 'entrega') return 'delivery';
+            if (val === 'local') return hasClientOrTable ? 'local' : 'balcao';
+        }
+
+        // 2. Fallback: verifica os cards ativos
+        const cards = document.querySelectorAll('.order-toggle-btn.active');
         let type = 'balcao';
 
         cards.forEach(card => {
@@ -251,6 +270,7 @@ const CheckoutSubmit = {
             else if (label.includes('entrega')) type = 'delivery';
             else if (label.includes('local') && hasClientOrTable) type = 'local';
         });
+
         return type;
     },
 
@@ -284,7 +304,7 @@ const CheckoutSubmit = {
     },
 
     /**
-     * Handler de sucesso para SALVAR comanda (mantém na mesa)
+     * Handler de sucesso para SALVAR comanda (permanece no Balcão)
      */
     _handleSaveSuccess: function (data, tableId, orderId) {
         if (data.success) {
@@ -294,28 +314,11 @@ const CheckoutSubmit = {
             setTimeout(() => {
                 document.getElementById('checkoutModal').style.display = 'none';
 
-                // Se foi salvo com mesa, navega de volta para a mesa
-                const newOrderId = data.order_id || orderId;
-
+                // [ALTERADO] Permanece no Balcão após salvar (não navega para mesa/comanda)
                 if (typeof AdminSPA !== 'undefined') {
-                    if (tableId) {
-                        AdminSPA.navigateTo('balcao', true, true, { mesa_id: tableId });
-                    } else if (newOrderId) {
-                        AdminSPA.navigateTo('balcao', true, true, { order_id: newOrderId });
-                    } else {
-                        AdminSPA.reloadCurrentSection();
-                    }
+                    AdminSPA.navigateTo('balcao', true, true); // Recarrega balcão limpo
                 } else {
-                    // Fallback para full page redirect
-                    if (tableId) {
-                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') +
-                            '/admin/loja/pdv?mesa_id=' + tableId;
-                    } else if (newOrderId) {
-                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') +
-                            '/admin/loja/pdv?order_id=' + newOrderId;
-                    } else {
-                        window.location.reload();
-                    }
+                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv';
                 }
             }, 1000);
         } else {
