@@ -13,6 +13,23 @@ const CheckoutOrderType = {
      * @param {HTMLElement} element - Card clicado (pode ser null)
      */
     selectOrderType: function (type, element) {
+        // Remove toast se existir (dismiss ao clicar em qualquer opção)
+        const existingToast = document.getElementById('pdv-toast');
+        if (existingToast) existingToast.remove();
+
+        // 0. Validação imediata: Retirada requer cliente ou mesa
+        if (type === 'retirada') {
+            const ctx = typeof CheckoutHelpers !== 'undefined'
+                ? CheckoutHelpers.getContextIds()
+                : this._getBasicContext();
+
+            if (!ctx.hasClient && !ctx.hasTable) {
+                // Mostra toast sutil
+                this._showToast('⚠️ Vincule um cliente ou mesa primeiro');
+                return; // Não prossegue
+            }
+        }
+
         // 1. Se mudando de entrega para outro, limpa dados primeiro
         if (type !== 'entrega') {
             if (typeof CheckoutEntrega !== 'undefined' && CheckoutEntrega.isDataFilled()) {
@@ -49,6 +66,53 @@ const CheckoutOrderType = {
         CheckoutUI.updateCheckoutUI();
     },
 
+    /**
+     * Fallback para obter contexto básico se CheckoutHelpers não disponível
+     */
+    _getBasicContext: function () {
+        return {
+            hasClient: !!document.getElementById('current_client_id')?.value,
+            hasTable: !!document.getElementById('current_table_id')?.value
+        };
+    },
+
+    /**
+     * Mostra um toast sutil que desaparece automaticamente
+     */
+    _showToast: function (message, duration = 2500) {
+        // Remove toast anterior se existir
+        const existing = document.getElementById('pdv-toast');
+        if (existing) existing.remove();
+
+        // Cria toast
+        const toast = document.createElement('div');
+        toast.id = 'pdv-toast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fef3c7;
+            color: #92400e;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 99999;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        `;
+        toast.innerText = message;
+        document.body.appendChild(toast);
+
+        // Auto-dismiss com fade
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    },
+
     // ==========================================
     // SUB-FUNÇÕES PRIVADAS
     // ==========================================
@@ -61,20 +125,25 @@ const CheckoutOrderType = {
         const selectedTypeInput = document.getElementById('selected_order_type');
         if (selectedTypeInput) selectedTypeInput.value = type;
 
-        // Cores por tipo - Azul quando selecionado
+        // Cores por tipo - Azul padrão, Verde para confirmados
         const colors = {
             local: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' },
             retirada: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' },
-            entrega: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' }
+            retirada_ok: { border: '#16a34a', bg: '#dcfce7', text: '#16a34a' }, // Verde quando válido
+            entrega: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' },
+            entrega_ok: { border: '#16a34a', bg: '#dcfce7', text: '#16a34a' }  // Verde quando preenchido
         };
         const inactive = { border: '#cbd5e1', bg: 'white', text: '#1e293b' };
 
-        // Reset todos os toggle buttons para inativo
+        // Reset todos os toggle buttons para inativo e remove checkmarks
         document.querySelectorAll('.order-toggle-btn').forEach(btn => {
             btn.classList.remove('active');
             btn.style.borderColor = inactive.border;
             btn.style.background = inactive.bg;
             btn.style.color = inactive.text;
+            // Remove checkmark se existir
+            const check = btn.querySelector('.btn-checkmark');
+            if (check) check.remove();
         });
 
         // Se element não foi passado, busca pelo data-type
@@ -82,13 +151,33 @@ const CheckoutOrderType = {
             element = document.querySelector(`.order-toggle-btn[data-type="${type}"]`);
         }
 
+        // Determina se Retirada deve ficar verde (tem cliente/mesa)
+        let useGreen = false;
+        if (type === 'retirada') {
+            const ctx = typeof CheckoutHelpers !== 'undefined'
+                ? CheckoutHelpers.getContextIds()
+                : this._getBasicContext();
+            useGreen = ctx.hasClient || ctx.hasTable;
+        }
+
         // Ativa o selecionado com cores específicas
         if (element) {
             element.classList.add('active');
-            const c = colors[type] || colors.local;
+            const colorKey = useGreen ? 'retirada_ok' : type;
+            const c = colors[colorKey] || colors.local;
             element.style.borderColor = c.border;
             element.style.background = c.bg;
             element.style.color = c.text;
+
+            // Adiciona checkmark se verde
+            if (useGreen) {
+                const checkmark = document.createElement('span');
+                checkmark.className = 'btn-checkmark';
+                checkmark.innerHTML = '✓';
+                checkmark.style.cssText = 'position:absolute; top:-6px; right:-6px; background:#16a34a; color:white; width:18px; height:18px; border-radius:50%; font-size:11px; display:flex; align-items:center; justify-content:center; font-weight:bold;';
+                element.style.position = 'relative';
+                element.appendChild(checkmark);
+            }
         }
 
         return element;

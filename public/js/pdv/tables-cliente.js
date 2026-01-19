@@ -192,6 +192,17 @@
         // Botões
         this._updateButtons(false);
 
+        // Se estava em Retirada, volta automaticamente para Local
+        const selectedType = document.getElementById('selected_order_type')?.value;
+        if (selectedType === 'retirada') {
+            // Volta para Local automaticamente
+            if (typeof selectOrderType === 'function') {
+                selectOrderType('local', null);
+            } else if (typeof CheckoutOrderType !== 'undefined') {
+                CheckoutOrderType.selectOrderType('local', null);
+            }
+        }
+
         // Lógica Específica de Retirada (função global em retirada.js)
         if (typeof handleRetiradaValidation === 'function') {
             handleRetiradaValidation();

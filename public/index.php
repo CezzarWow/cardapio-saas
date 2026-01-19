@@ -25,7 +25,7 @@ date_default_timezone_set('America/Sao_Paulo');
 $scriptName = dirname($_SERVER['SCRIPT_NAME']);
 $baseUrl = str_replace('\\', '/', $scriptName);
 define('BASE_URL', rtrim($baseUrl, '/'));
-define('APP_VERSION', '1.0.6'); // Cache-buster: incremente ao atualizar JS/CSS
+define('APP_VERSION', '1.1.2'); // Cache-buster: incremente ao atualizar JS/CSS
 
 require '../vendor/autoload.php';
 
