@@ -38,7 +38,7 @@ $isHistory = strpos($_SERVER['REQUEST_URI'] ?? '', '/delivery/history') !== fals
 .delivery-filter-btn[data-status="cancelado"].active { background: #dc2626; border-color: #dc2626; }
 </style>
 
-<div class="delivery-filters" style="display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap;">
+<div class="delivery-filters" style="display: flex; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap;">
     
     <!-- Botão TODOS -->
     <?php if ($isHistory): ?>

@@ -7,27 +7,43 @@
 
 /* Container Principal */
 .delivery-container {
-    padding: 1.5rem;
+    padding: 15px !important;
+    /* Forçado para alinhar com .history-container */
+    padding-bottom: 80px !important;
+    /* Espaço para o rodapé */
     width: 100%;
-    min-height: 100vh;
     background: #f8fafc;
 }
 
-/* Header */
+/* Reset SPA Context - Alta especificidade para garantir override */
+#spa-content .delivery-container,
+.spa-content-container .delivery-container,
+.main-content .delivery-container {
+    padding: 15px !important;
+    padding-bottom: 80px !important;
+}
+
+/* Header - Compacto como .history-header */
 .delivery-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 15px !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+    /* Remove qualquer padding extra */
 }
 
 .delivery-title {
-    font-size: 1.5rem;
+    font-size: 1.3rem !important;
+    /* Alinhado com .history-title */
     font-weight: 800;
     color: #1e293b;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .delivery-title i {
@@ -45,4 +61,26 @@
     display: flex;
     align-items: center;
     gap: 6px;
+}
+
+/* Rodapé Fixo */
+.delivery-footer {
+    position: fixed;
+    bottom: 0;
+    left: 260px;
+    /* Largura do sidebar */
+    right: 0;
+    height: 60px;
+    background: linear-gradient(to top, #f1f5f9 0%, transparent 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.delivery-footer-text {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 500;
 }

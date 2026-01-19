@@ -12,12 +12,29 @@
  */
 ?>
 
-<!-- CSS do Delivery -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/base.css">
+<!-- CSS do Delivery (cache bust) -->
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/base.css?v=<?= time() ?>">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/kanban.css?v=<?= APP_VERSION ?>">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/cards-compact.css?v=<?= APP_VERSION ?>">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/modals.css?v=<?= APP_VERSION ?>">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/states.css">
+
+<!-- Forçar alinhamento igual ao Histórico -->
+<style>
+    .delivery-container {
+        padding: 8px 20px 80px 20px !important;
+    }
+    .delivery-header {
+        margin-bottom: 20px !important;
+        margin-top: 0 !important;
+        padding: 0 !important;
+    }
+    .delivery-title {
+        font-size: 1.3rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+</style>
 
 <div class="delivery-container">
     
@@ -39,6 +56,11 @@
     <!-- Lista Kanban -->
     <?php \App\Core\View::renderFromScope('admin/delivery/partials/order_list_kanban.php', get_defined_vars()); ?>
 
+</div>
+
+<!-- Rodapé Sutil Fixo -->
+<div class="delivery-footer">
+    <span class="delivery-footer-text">🛵 Área de Delivery</span>
 </div>
 
 <!-- Modais -->

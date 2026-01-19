@@ -11,7 +11,9 @@
     gap: 24px;
     min-height: calc(100vh - 220px);
     align-items: flex-start;
-    padding: 10px;
+    padding: 0;
+    /* Removido padding para alinhar com aba Histórico */
+    margin-top: 0;
 }
 
 /* Coluna individual */
