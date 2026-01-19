@@ -22,17 +22,26 @@
 <!-- Forçar alinhamento igual ao Histórico -->
 <style>
     .delivery-container {
-        padding: 8px 20px 80px 20px !important;
+        padding: 15px 20px 80px 20px !important;
     }
     .delivery-header {
-        margin-bottom: 20px !important;
+        margin-bottom: 15px !important;
         margin-top: 0 !important;
         padding: 0 !important;
+        border-bottom: none !important;
+        height: 31px !important;
+        min-height: 31px !important;
+        max-height: 31px !important;
     }
     .delivery-title {
         font-size: 1.3rem !important;
         margin: 0 !important;
         padding: 0 !important;
+        line-height: 31px !important;
+    }
+    .delivery-counter {
+        padding: 4px 12px !important;
+        font-size: 0.8rem !important;
     }
 </style>
 

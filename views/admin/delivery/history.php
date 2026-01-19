@@ -12,9 +12,9 @@
 // Variáveis disponíveis: $displayDate, $dayName, $orders (com formatted_* e status_*), $total*Formatted
 ?>
 
-<!-- CSS do Delivery -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/base.css">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/history.css">
+<!-- CSS do Delivery (cache bust) -->
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/base.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/history.css?v=<?= time() ?>">
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/modals.css?v=<?= time() ?>">
 
 <main class="main-content">

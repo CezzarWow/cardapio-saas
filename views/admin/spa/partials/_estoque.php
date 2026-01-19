@@ -11,10 +11,48 @@
  */
 ?>
 
-<!-- Stock Dashboard CSS -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/stock/index.css?v=<?= APP_VERSION ?>">
+<!-- Stock Dashboard CSS (cache bust) -->
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/stock/index.css?v=<?= time() ?>">
 
-<div class="stock-dashboard-container spa-padded-container">
+<!-- Ajuste de alinhamento igual ao Delivery -->
+<style>
+    .stock-dashboard-container {
+        padding: 15px 20px 80px 20px !important;
+        width: 100%;
+        background: #f8fafc;
+    }
+    .stock-dashboard-container > div:first-child {
+        margin-bottom: 15px !important;
+        height: 31px !important;
+    }
+    .stock-dashboard-container h1 {
+        font-size: 1.3rem !important;
+        line-height: 31px !important;
+    }
+    /* Rodapé fixo */
+    .delivery-footer {
+        position: fixed;
+        bottom: 0;
+        left: 160px;
+        right: 0;
+        height: 50px;
+        background: white;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        z-index: 100;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    .delivery-footer-text {
+        color: #64748b;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+</style>
+
+<div class="stock-dashboard-container">
     
     <!-- Header -->
     <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
@@ -59,6 +97,11 @@
         </div>
     </div>
 
+</div>
+
+<!-- Rodapé Sutil Fixo -->
+<div class="delivery-footer">
+    <span class="delivery-footer-text">📦 Área de Estoque</span>
 </div>
 
 <!-- Script marker for AdminSPA to execute -->
