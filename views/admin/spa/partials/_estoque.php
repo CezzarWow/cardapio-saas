@@ -29,6 +29,16 @@
         font-size: 1.3rem !important;
         line-height: 31px !important;
     }
+    /* Container de conteúdo com scroll */
+    .stock-content-container {
+        overflow-y: auto;
+        max-height: calc(100vh - 200px);
+        padding-bottom: 80px;
+    }
+    /* Padding inferior no grid para compensar rodapé fixo */
+    .stock-products-grid {
+        padding-bottom: 100px !important;
+    }
     /* Rodapé fixo */
     .delivery-footer {
         position: fixed;
