@@ -13,7 +13,6 @@ const PDVEvents = {
     keydownHandler: null,
 
     init: function () {
-        console.log('[PDV-EVENTS] Initializing...');
         this.bindGlobalClicks();
         this.bindKeyboardShortcuts();
     },
@@ -29,7 +28,6 @@ const PDVEvents = {
 
         // 3. Adiciona
         document.addEventListener('click', this.clickHandler);
-        console.log('[PDV-EVENTS] Click listener bound.');
     },
 
     bindKeyboardShortcuts: function () {
@@ -107,8 +105,6 @@ const PDVEvents = {
     },
 
     handleAction: function (action, el) {
-        console.log('[PDV-EVENTS] Action:', action);
-
         switch (action) {
             // CART ACTIONS
             case 'cart-undo':

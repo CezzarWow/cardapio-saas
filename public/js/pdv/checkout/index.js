@@ -140,7 +140,6 @@ window.PDVCheckout = PDVCheckout;
 // ==========================================
 
 window.finalizeSale = () => {
-    console.log('[DEBUG] window.finalizeSale called');
     PDVCheckout.finalizeSale();
 };
 window.fecharContaMesa = (id) => PDVCheckout.fecharContaMesa(id);

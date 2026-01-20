@@ -9,8 +9,6 @@
 
     Object.assign(window.PDV, {
         init: function () {
-            console.log('[PDV] Initializing...');
-
             // 1. LER CONFIGURAÇÃO (SPA)
             const configEl = document.getElementById('pdv-config');
             let config = {};
@@ -112,8 +110,6 @@
 
             // 7. ÍCONES (Lucide)
             if (typeof lucide !== 'undefined') lucide.createIcons();
-
-            console.log('[PDV] Ready');
         }
     });
 

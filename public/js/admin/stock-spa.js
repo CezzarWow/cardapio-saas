@@ -133,8 +133,6 @@ window.StockSPA = {
                 this.reinitComponents();
             });
 
-            console.log('[StockSPA] Tab loaded and cached:', tabName);
-
         } catch (error) {
             console.error('[StockSPA] Error loading tab:', error);
             contentContainer.innerHTML = `
@@ -355,13 +353,9 @@ window.StockSPA = {
      * Atualiza visualmente o estoque de um produto no card
      */
     updateProductStockDisplay(productId, newStock) {
-        console.log(`[StockSPA] updateProductStockDisplay - ProdID: ${productId}, NewStock: ${newStock}`);
-
         // Busca o card do produto diretamente pelo data-product-id
         const selector = `.stock-product-card[data-product-id="${productId}"]`;
         const card = document.querySelector(selector);
-
-        console.log(`[StockSPA] Selector: ${selector}, Card found:`, !!card);
 
         if (card) {
             const btn = card.querySelector('.btn-reposition');
@@ -408,8 +402,6 @@ window.StockSPA = {
         const productId = document.getElementById('adjustProductId').value;
         const amount = parseInt(document.getElementById('adjustAmount').value);
 
-        console.log(`[StockSPA] Submitting adjust - ProdID: ${productId}, Amount: ${amount}`);
-
         if (!productId || amount === 0) {
             alert('Informe uma quantidade válida');
             return;
@@ -429,7 +421,6 @@ window.StockSPA = {
             });
 
             const result = await response.json();
-            console.log('[StockSPA] API Result:', result);
 
             if (result.success) {
                 this.closeAdjustModal();
@@ -466,8 +457,7 @@ window.StockSPA = {
             // Requer que o script tenha data-spa-script definido para identificação
             if (oldScript.dataset.spaOnce === 'true' && oldScript.dataset.spaScript) {
                 if (document.querySelector(`script[data-spa-script="${oldScript.dataset.spaScript}"]`)) {
-                    console.log('[StockSPA] Skipping once-only script:', oldScript.dataset.spaScript);
-                    return;
+                    return; // Skip already loaded once-only scripts
                 }
             }
 
