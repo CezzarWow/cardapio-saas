@@ -58,6 +58,7 @@
     <?php else: ?>
         <?php foreach ($products as $prod): ?>
         <div class="stock-product-card product-row" 
+             data-product-id="<?= $prod['id'] ?>"
              data-name="<?= strtolower($prod['name']) ?>" 
              data-category="<?= htmlspecialchars($prod['category_name']) ?>">
             

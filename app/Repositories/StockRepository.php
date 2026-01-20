@@ -62,8 +62,8 @@ class StockRepository
     {
         $conn = Database::connect();
         $conn->prepare('INSERT INTO stock_movements 
-                        (restaurant_id, product_id, type, quantity, old_stock, new_stock, reason, created_at) 
-                        VALUES (:rid, :pid, :type, :qty, :old, :new, :reason, NOW())')
+                        (restaurant_id, product_id, type, quantity, stock_before, stock_after, source, created_at) 
+                        VALUES (:rid, :pid, :type, :qty, :old, :new, :source, NOW())')
              ->execute([
                  'rid' => $restaurantId,
                  'pid' => $productId,
@@ -71,7 +71,7 @@ class StockRepository
                  'qty' => $amount, // Quantidade movimentada
                  'old' => $qtyBefore,
                  'new' => $qtyAfter,
-                 'reason' => $reason
+                 'source' => $reason
              ]);
     }
 

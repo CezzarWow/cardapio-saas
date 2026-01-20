@@ -137,6 +137,7 @@
 <script src="<?= BASE_URL ?>/js/cardapio-admin/featured-dragdrop.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio-admin/featured-tabs.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio-admin/featured-categories.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/cardapio-admin/promo-products.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/cardapio-admin/index.js?v=<?= time() ?>"></script>
 
 <script>

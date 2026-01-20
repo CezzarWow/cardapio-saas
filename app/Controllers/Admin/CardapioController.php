@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Core\Logger;
+use App\Repositories\ProductRepository;
 use App\Services\Admin\ComboService;
 use App\Services\Cardapio\CardapioQueryService;
 use App\Services\Cardapio\UpdateCardapioConfigService;
@@ -20,17 +21,20 @@ class CardapioController extends BaseController
     private UpdateCardapioConfigService $configService;
     private ComboService $comboService;
     private CardapioValidator $validator;
+    private ProductRepository $productRepo;
 
     public function __construct(
         CardapioQueryService $queryService,
         UpdateCardapioConfigService $configService,
         ComboService $comboService,
-        CardapioValidator $validator
+        CardapioValidator $validator,
+        ProductRepository $productRepo
     ) {
         $this->queryService = $queryService;
         $this->configService = $configService;
         $this->comboService = $comboService;
         $this->validator = $validator;
+        $this->productRepo = $productRepo;
     }
 
     /**
@@ -101,10 +105,10 @@ class CardapioController extends BaseController
 
         try {
             $this->comboService->store($_POST, $restaurantId);
-            $this->redirect('/admin/loja/cardapio?success=combo_criado');
+            $this->redirect('/admin/loja/cardapio?success=combo_criado#promocoes');
         } catch (Exception $e) {
             error_log('Combo::store Error: ' . $e->getMessage());
-            $this->redirect('/admin/loja/cardapio?error=falha_criar_combo');
+            $this->redirect('/admin/loja/cardapio?error=falha_criar_combo#promocoes');
         }
     }
 
@@ -173,7 +177,7 @@ class CardapioController extends BaseController
 
         try {
             $this->comboService->update($id, $_POST, $restaurantId);
-            $this->redirect('/admin/loja/cardapio?success=combo_atualizado');
+            $this->redirect('/admin/loja/cardapio?success=combo_atualizado#promocoes');
         } catch (Exception $e) {
             error_log('Combo::update Error: ' . $e->getMessage());
             $this->redirect('/admin/loja/cardapio/combo/editar?id=' . $id . '&error=falha_atualizar_combo');
@@ -195,10 +199,10 @@ class CardapioController extends BaseController
 
         try {
             $this->comboService->delete($id, $restaurantId);
-            $this->redirect('/admin/loja/cardapio?success=combo_deletado');
+            $this->redirect('/admin/loja/cardapio?success=combo_deletado#promocoes');
         } catch (Exception $e) {
             error_log('Combo::delete Error: ' . $e->getMessage());
-            $this->redirect('/admin/loja/cardapio?error=falha_deletar_combo');
+            $this->redirect('/admin/loja/cardapio?error=falha_deletar_combo#promocoes');
         }
     }
 
@@ -223,4 +227,88 @@ class CardapioController extends BaseController
             $this->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Definir promoção de produto (AJAX)
+     */
+    public function setProductPromotion()
+    {
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        
+        $restaurantId = $this->getRestaurantId();
+
+        if (empty($data['product_id']) || empty($data['promotional_price'])) {
+            $this->json(['success' => false, 'error' => 'Produto e preço promocional são obrigatórios'], 400);
+            return;
+        }
+
+        try {
+            $promoData = [
+                'promotional_price' => floatval(str_replace(',', '.', str_replace('.', '', $data['promotional_price']))),
+                'promo_expires_at' => $data['promo_expires_at'] ?? null
+            ];
+
+            $this->productRepo->setPromotion((int)$data['product_id'], $restaurantId, $promoData);
+            $this->json(['success' => true, 'message' => 'Promoção configurada com sucesso']);
+        } catch (\Throwable $e) {
+            $this->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Alternar promoção de produto (AJAX)
+     */
+    public function toggleProductPromotion()
+    {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = $data['id'] ?? null;
+
+
+        $active = $data['active'] ?? false;
+        $restaurantId = $this->getRestaurantId();
+
+        if (empty($id)) {
+            $this->json(['success' => false, 'error' => 'ID do produto é obrigatório'], 400);
+            return;
+        }
+
+        try {
+            $this->productRepo->togglePromotion((int)$id, $active, $restaurantId);
+            $this->json(['success' => true]);
+        } catch (\Throwable $e) {
+            $this->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Remover promoção de produto (AJAX)
+     */
+    public function removeProductPromotion()
+    {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = $data['id'] ?? null;
+        
+        $id = $data['id'] ?? null;
+
+        
+        $restaurantId = $this->getRestaurantId();
+        
+        if (empty($id)) {
+            $this->json(['success' => false, 'error' => 'ID do produto é obrigatório'], 400);
+            return;
+        }
+
+        $repo = new \App\Repositories\ProductRepository();
+        
+        try {
+            $repo->removePromotion((int)$id, $restaurantId);
+            $this->json(['success' => true, 'message' => 'Promoção removida com sucesso']);
+        } catch (\Throwable $e) { 
+             $this->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
 }
+
+
+

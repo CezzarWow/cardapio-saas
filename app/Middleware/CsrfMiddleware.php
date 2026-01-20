@@ -35,6 +35,8 @@ class CsrfMiddleware
         $exceptions = [
             '/admin/loja/venda/finalizar', // Exceção adicionada para contornar bloqueio de ambiente
             '/admin/loja/venda/fechar-comanda',
+            '/admin/loja/reposicao/ajustar', // Ajuste de estoque via SPA
+            'reposicao/ajustar', // Variação sem prefixo completo
             '/api/order/create'
         ];
 

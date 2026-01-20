@@ -10,6 +10,7 @@ class ProductRepository
 {
     /**
      * Lista produtos ativos com flag de adicionais (para PDV)
+     * Inclui cálculo de preço efetivo considerando promoções ativas
      */
     public function findActiveWithExtras(int $restaurantId): array
     {
@@ -24,9 +25,28 @@ class ProductRepository
         $stmt->execute(['rid' => $restaurantId]);
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Cast has_extras to bool
+        $today = date('Y-m-d');
+
         foreach ($products as &$p) {
             $p['has_extras'] = (bool) $p['has_extras'];
+            
+            // Calcular preço efetivo considerando promoção
+            $isPromoValid = false;
+            if (!empty($p['is_on_promotion']) && !empty($p['promotional_price'])) {
+                // Promoção ativa: verificar validade
+                if (empty($p['promo_expires_at'])) {
+                    // Sem data limite = sempre válido
+                    $isPromoValid = true;
+                } else {
+                    // Com data limite = verificar se não expirou
+                    $isPromoValid = ($p['promo_expires_at'] >= $today);
+                }
+            }
+            
+            // Preço efetivo: promocional se válido, senão normal
+            $p['is_promo_valid'] = $isPromoValid;
+            $p['effective_price'] = $isPromoValid ? floatval($p['promotional_price']) : floatval($p['price']);
+            $p['original_price'] = floatval($p['price']); // Sempre manter referência ao original
         }
 
         return $products;
@@ -193,4 +213,118 @@ class ProductRepository
         $stmt->execute(['pid' => $productId]);
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
+
+    /**
+     * Lista produtos que possuem configuração de promoção (ativa ou inativa)
+     */
+    public function findOnPromotion(int $restaurantId): array
+    {
+        $conn = Database::connect();
+        $sql = '
+            SELECT p.*, c.name as category_name 
+            FROM products p 
+            LEFT JOIN categories c ON p.category_id = c.id 
+            WHERE p.restaurant_id = :rid 
+              AND p.promotional_price IS NOT NULL 
+              AND p.promotional_price > 0
+            ORDER BY p.name
+        ';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['rid' => $restaurantId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Define promoção para um produto
+     */
+    public function setPromotion(int $id, int $restaurantId, array $data): void
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare('
+            UPDATE products SET 
+                promotional_price = :promo_price,
+                promo_expires_at = :expires,
+                is_on_promotion = 1
+            WHERE id = :id AND restaurant_id = :rid
+        ');
+        $stmt->execute([
+            'promo_price' => $data['promotional_price'],
+            'expires' => $data['promo_expires_at'] ?: null,
+            'id' => $id,
+            'rid' => $restaurantId
+        ]);
+
+        $this->invalidatePromoCache($restaurantId);
+    }
+
+    /**
+     * Alterna status de promoção
+     */
+    public function togglePromotion(int $id, bool $active, int $restaurantId): void
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare('UPDATE products SET is_on_promotion = :active WHERE id = :id AND restaurant_id = :rid');
+        $stmt->execute([
+            'active' => $active ? 1 : 0,
+            'id' => $id,
+            'rid' => $restaurantId
+        ]);
+
+        $this->invalidatePromoCache($restaurantId);
+    }
+
+    /**
+     * Remove promoção de um produto
+     */
+    public function removePromotion(int $id, int $restaurantId): void
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare('
+            UPDATE products SET 
+                promotional_price = NULL,
+                promo_expires_at = NULL,
+                is_on_promotion = 0
+            WHERE id = :id AND restaurant_id = :rid
+        ');
+        $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
+
+        $this->invalidatePromoCache($restaurantId);
+    }
+
+    /**
+     * Lista produtos disponíveis para promoção (que não possuem configuração de promoção)
+     */
+    public function findAvailableForPromotion(int $restaurantId): array
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare('
+            SELECT p.id, p.name, p.price, c.name as category_name 
+            FROM products p 
+            LEFT JOIN categories c ON p.category_id = c.id 
+            WHERE p.restaurant_id = :rid 
+              AND p.is_active = 1
+              AND (p.promotional_price IS NULL OR p.promotional_price = 0)
+            ORDER BY c.name, p.name
+        ');
+        $stmt->execute(['rid' => $restaurantId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Invalida cache de promoções
+     */
+    private function invalidatePromoCache(int $restaurantId): void
+    {
+        try {
+            // Usar SimpleCache diretamente para alinhar com CardapioQueryService
+            require_once __DIR__ . '/../Core/SimpleCache.php';
+            $cache = new \App\Core\SimpleCache(); 
+            $cache->forget('products_' . $restaurantId);
+            $cache->forget('cardapio_index_' . $restaurantId . '_v2');
+        } catch (\Throwable $e) {
+            // Logar erro de cache mas não quebrar aplicação
+            file_put_contents('C:/xampp/htdocs/cardapio-saas/debug_log.txt', date('Y-m-d H:i:s') . " - CACHE ERROR: " . $e->getMessage() . "\n", FILE_APPEND);
+        }
+    }
 }
+

@@ -155,7 +155,8 @@ class ControllerProvider implements Provider
                 $c->get(\App\Services\Cardapio\CardapioQueryService::class),
                 $c->get(\App\Services\Cardapio\UpdateCardapioConfigService::class),
                 $c->get(\App\Services\Admin\ComboService::class),
-                $c->get(\App\Validators\CardapioValidator::class)
+                $c->get(\App\Validators\CardapioValidator::class),
+                $c->get(\App\Repositories\ProductRepository::class)
             );
         });
 

@@ -150,3 +150,30 @@
     font-weight: 700;
     color: var(--primary-color, #2563eb);
 }
+
+/* ========== PRODUTOS EM PROMOÇÃO ========== */
+.product-on-promo {
+    border: 2px solid #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+}
+
+.product-on-promo:hover {
+    border-color: #dc2626;
+}
+
+/* Preço promocional: flexbox com preço à esquerda e % à direita */
+.product-price.promo-price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #dc2626;
+}
+
+.product-price.promo-price span {
+    color: #dc2626;
+}
+
+.discount-percent {
+    font-size: 0.75rem;
+    font-weight: 700;
+}

@@ -49,7 +49,7 @@ class CardapioQueryService
      */
     public function getIndexData(int $restaurantId): array
     {
-        $cacheKey = "cardapio_index_{$restaurantId}";
+        $cacheKey = "cardapio_index_{$restaurantId}_v2";
         $cached = $this->cache->get($cacheKey);
 
         if ($cached) {
@@ -64,6 +64,8 @@ class CardapioQueryService
         $allProducts = $this->productRepository->findAllWithCategory($restaurantId);
         $productsByCategory = $this->productRepository->groupByCategory($allProducts);
         $rawCombos = $this->comboRepository->findAllWithItems($restaurantId);
+        $productPromotions = $this->productRepository->findOnPromotion($restaurantId);
+        $availableForPromotion = $this->productRepository->findAvailableForPromotion($restaurantId);
         $restaurant = $this->restaurantRepository->find($restaurantId);
         $restaurantSlug = $restaurant['slug'] ?? (string) $restaurantId;
 
@@ -82,7 +84,9 @@ class CardapioQueryService
             'restaurantSlug' => $restaurantSlug,
             'beforeList' => $whatsappData['before'],
             'afterList' => $whatsappData['after'],
-            'businessHoursList' => $formattedHours
+            'businessHoursList' => $formattedHours,
+            'productPromotions' => $productPromotions,
+            'availableForPromotion' => $availableForPromotion
         ];
 
         // Cache por 5 minutos

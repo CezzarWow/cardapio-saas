@@ -17,7 +17,7 @@
 <!-- Ajuste de alinhamento igual ao Delivery -->
 <style>
     .stock-dashboard-container {
-        padding: 15px 20px 80px 20px !important;
+        padding: 15px 20px 120px 20px !important;
         width: 100%;
         background: #f8fafc;
     }
@@ -105,4 +105,4 @@
 </div>
 
 <!-- Script marker for AdminSPA to execute -->
-<script data-spa-script="stock-spa" src="<?= BASE_URL ?>/js/admin/stock-spa.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="stock-spa" src="<?= BASE_URL ?>/js/admin/stock-spa.js?v=<?= time() ?>"></script>

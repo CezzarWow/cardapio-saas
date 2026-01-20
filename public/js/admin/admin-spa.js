@@ -92,6 +92,8 @@ const AdminSPA = {
             const link = e.target.closest('.nav-item');
             if (!link || link.classList.contains('center-exit')) return;
 
+            e.preventDefault(); // Impede navegação tradicional do link
+
             const section = link.dataset.section;
             if (section && section !== this.currentSection) {
                 this.navigateTo(section);
@@ -141,7 +143,13 @@ const AdminSPA = {
         SpaUI.updateActiveNav(navSection);
 
         if (updateHistory) {
-            history.pushState({ section: sectionName }, '', `#${sectionName}`);
+            // Preserva sub-rota do hash para seções com navegação interna (ex: estoque/reposicao)
+            let hashValue = `#${sectionName}`;
+            const currentHash = window.location.hash.replace('#', '');
+            if (currentHash.startsWith(sectionName + '/')) {
+                hashValue = '#' + currentHash; // Mantém sub-rota existente
+            }
+            history.pushState({ section: sectionName }, '', hashValue);
         }
 
         // 3. Load Content (sempre forceReload se tiver params)
@@ -269,7 +277,19 @@ const AdminSPA = {
     // =========================================================================
     getSectionFromHash() {
         const hash = window.location.hash.replace('#', '');
-        return this.sections[hash] ? hash : null;
+        const mainSection = hash.split('/')[0];
+
+        // Seção válida direta
+        if (this.sections[mainSection]) return mainSection;
+
+        // Fallback: Mapeia sub-abas órfãs de estoque para 'estoque'
+        // Útil se o usuário acessar #reposicao diretamente ou se o hash perder o prefixo
+        const stockTabs = ['reposicao', 'produtos', 'categorias', 'adicionais', 'movimentacoes'];
+        if (stockTabs.includes(mainSection)) {
+            return 'estoque';
+        }
+
+        return null;
     },
 
     async leaveCurrentSection() {

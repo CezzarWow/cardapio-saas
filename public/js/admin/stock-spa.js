@@ -50,7 +50,15 @@ window.StockSPA = {
         const hash = window.location.hash.replace('#', '');
         const validTabs = ['produtos', 'categorias', 'adicionais', 'reposicao', 'movimentacoes'];
 
-        const initialTab = validTabs.includes(hash) ? hash : 'produtos';
+        // Suporta hash aninhado: #estoque/reposicao -> extrai 'reposicao'
+        let tabFromHash = hash;
+        if (hash.includes('/')) {
+            tabFromHash = hash.split('/')[1] || 'produtos';
+        } else if (hash === 'estoque') {
+            tabFromHash = 'produtos';
+        }
+
+        const initialTab = validTabs.includes(tabFromHash) ? tabFromHash : 'produtos';
         this.loadTab(initialTab);
     },
 
@@ -58,7 +66,11 @@ window.StockSPA = {
      * Carrega a aba a partir do hash da URL
      */
     loadFromHash() {
-        const hash = window.location.hash.replace('#', '');
+        let hash = window.location.hash.replace('#', '');
+        // Suporta hash aninhado
+        if (hash.includes('/')) {
+            hash = hash.split('/')[1] || '';
+        }
         if (hash && hash !== this.currentTab) {
             this.loadTab(hash);
         }
@@ -67,7 +79,7 @@ window.StockSPA = {
     /**
      * Carrega uma aba via AJAX (com cache, skeleton loader e requestAnimationFrame)
      */
-    async loadTab(tabName) {
+    async loadTab(tabName, forceReload = false) {
         if (this.isLoading) return;
 
         const contentContainer = document.getElementById('stock-content');
@@ -79,10 +91,11 @@ window.StockSPA = {
 
         this.currentTab = tabName;
         this.updateActiveTab(tabName);
-        history.replaceState(null, null, `#${tabName}`);
+        // Usa hash com prefixo para manter compatibilidade com AdminSPA
+        history.replaceState(null, null, `#estoque/${tabName}`);
 
-        // Se existe no cache, usa direto (instantâneo!) com requestAnimationFrame
-        if (this.tabCache[tabName]) {
+        // Se existe no cache E não é forceReload, usa direto
+        if (this.tabCache[tabName] && !forceReload) {
             requestAnimationFrame(() => {
                 contentContainer.innerHTML = this.tabCache[tabName];
                 this.executeScripts(contentContainer);
@@ -338,9 +351,64 @@ window.StockSPA = {
         input.value = parseInt(input.value || 0) + delta;
     },
 
+    /**
+     * Atualiza visualmente o estoque de um produto no card
+     */
+    updateProductStockDisplay(productId, newStock) {
+        console.log(`[StockSPA] updateProductStockDisplay - ProdID: ${productId}, NewStock: ${newStock}`);
+
+        // Busca o card do produto diretamente pelo data-product-id
+        const selector = `.stock-product-card[data-product-id="${productId}"]`;
+        const card = document.querySelector(selector);
+
+        console.log(`[StockSPA] Selector: ${selector}, Card found:`, !!card);
+
+        if (card) {
+            const btn = card.querySelector('.btn-reposition');
+            const stockSpan = card.querySelector('.stock-product-card-stock');
+
+            if (stockSpan) {
+                stockSpan.textContent = `${newStock} un`;
+
+                // Atualiza classe de cor
+                stockSpan.classList.remove('stock-product-card-stock--ok', 'stock-product-card-stock--warning', 'stock-product-card-stock--danger');
+                if (newStock < 0) {
+                    stockSpan.classList.add('stock-product-card-stock--danger');
+                } else if (newStock <= 5) {
+                    stockSpan.classList.add('stock-product-card-stock--warning');
+                } else {
+                    stockSpan.classList.add('stock-product-card-stock--ok');
+                }
+
+                // Atualiza o onclick do botão para usar o novo estoque (para próxima abertura do modal)
+                if (btn) {
+                    const currentOnclick = btn.getAttribute('onclick');
+                    const updatedOnclick = currentOnclick.replace(/,\s*-?\d+\)$/, `, ${newStock})`);
+                    btn.setAttribute('onclick', updatedOnclick);
+                }
+
+                // Animação de feedback
+                stockSpan.style.transition = 'transform 0.2s, background 0.2s';
+                stockSpan.style.transform = 'scale(1.2)';
+                stockSpan.style.filter = 'brightness(1.1)';
+
+                setTimeout(() => {
+                    stockSpan.style.transform = 'scale(1)';
+                    stockSpan.style.filter = 'none';
+                }, 300);
+            } else {
+                console.error('[StockSPA] Elemento .stock-product-card-stock não encontrado dentro do card');
+            }
+        } else {
+            console.error('[StockSPA] Card do produto não encontrado no DOM');
+        }
+    },
+
     async submitAdjust() {
         const productId = document.getElementById('adjustProductId').value;
         const amount = parseInt(document.getElementById('adjustAmount').value);
+
+        console.log(`[StockSPA] Submitting adjust - ProdID: ${productId}, Amount: ${amount}`);
 
         if (!productId || amount === 0) {
             alert('Informe uma quantidade válida');
@@ -348,20 +416,36 @@ window.StockSPA = {
         }
 
         try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
             const response = await fetch(`${BASE_URL}/admin/loja/reposicao/ajustar`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
                 },
                 body: JSON.stringify({ product_id: productId, amount: amount })
             });
 
             const result = await response.json();
+            console.log('[StockSPA] API Result:', result);
 
             if (result.success) {
                 this.closeAdjustModal();
-                this.loadTab('reposicao'); // Recarrega a aba
+
+                // Atualiza UI inline para feedback imediato
+                this.updateProductStockDisplay(productId, result.new_stock);
+
+                // Limpa cache de todas as abas relacionadas
+                this.clearCache('reposicao');
+                this.clearCache('produtos');
+                this.clearCache('movimentacoes');
+
+                // Limpa cache do AdminSPA também para manter consistência
+                if (window.AdminSPA && AdminSPA.cache) {
+                    delete AdminSPA.cache['estoque'];
+                }
             } else {
                 alert(result.message || 'Erro ao ajustar estoque');
             }

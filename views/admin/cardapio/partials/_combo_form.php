@@ -7,9 +7,9 @@
 
 <!-- Container Principal: Criar/Editar Combo -->
 <div class="cardapio-admin-card" id="comboFormContainer" style="border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-    <div class="cardapio-admin-card-header" style="background: linear-gradient(to right, #f8fafc, #fff);">
+    <div class="cardapio-admin-card-header" style="background: transparent; border-bottom: none; padding-bottom: 0;">
         <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="background: #eff6ff; pading: 8px; border-radius: 6px; color: #3b82f6;">
+            <div style="background: #eff6ff; padding: 8px; border-radius: 6px; color: #3b82f6;">
                 <i data-lucide="package-plus" size="24"></i>
             </div>
             <div>

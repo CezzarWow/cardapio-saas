@@ -2,6 +2,12 @@
  * SPA Configuration
  * Definições estáticas de rotas e seções.
  */
+
+// Garantir que window.BASE_URL está definido para uso em outros scripts
+if (typeof BASE_URL !== 'undefined' && typeof window.BASE_URL === 'undefined') {
+    window.BASE_URL = BASE_URL;
+}
+
 const SpaConfig = {
     sections: {
         'balcao': {

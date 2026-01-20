@@ -4,16 +4,26 @@
  * PARTIAL: Aba Promoções (Orquestrador)
  *
  * Arquivo refatorado que inclui:
- * - _combo_form.php (Formulário de combo)
- * - _combo_list.php (Lista de combos ativos)
+ * - Promoções de Itens Individuais (novo)
+ * - Combos Promocionais (existente)
  *
  * O JavaScript foi extraído para:
  * - combos-ui.js
+ * - promo-products.js
  * ============================================
  */
 ?>
 
-<?php // Formulário de Criação/Edição?>
+<?php // Formulário para Adicionar Item em Promoção (novo)?>
+<?php \App\Core\View::renderFromScope('admin/cardapio/partials/_promo_product_form.php', get_defined_vars()); ?>
+
+<?php // Lista de Itens em Promoção (novo)?>
+<?php \App\Core\View::renderFromScope('admin/cardapio/partials/_promo_product_list.php', get_defined_vars()); ?>
+
+
+<?php // Seção de Combos (título e separador removidos a pedido) ?>
+
+<?php // Formulário de Criação/Edição de Combo?>
 <?php \App\Core\View::renderFromScope('admin/cardapio/partials/_combo_form.php', get_defined_vars()); ?>
 
 <?php // Lista de Combos Ativos?>

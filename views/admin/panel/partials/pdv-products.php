@@ -36,20 +36,35 @@
             <?php foreach ($categories as $category): ?>
                 <?php if (!empty($category['products'])): ?>
                     <?php foreach ($category['products'] as $product): ?>
-                        
-                        <div class="product-card product-card-compact" 
-                             onclick="PDV.clickProduct(<?= $product['id'] ?>, '<?= htmlspecialchars(addslashes($product['name'])) ?>', '<?= $product['price'] ?>', '<?= $product['has_extras'] ? 'true' : 'false' ?>')"
+                        <?php 
+                        // Usa preço efetivo (promocional se válido)
+                        $displayPrice = $product['effective_price'] ?? $product['price'];
+                        $originalPrice = $product['original_price'] ?? $product['price'];
+                        $isPromo = !empty($product['is_promo_valid']);
+                        // Calcula percentual de desconto
+                        $discountPercent = 0;
+                        if ($isPromo && $originalPrice > 0) {
+                            $discountPercent = round((1 - ($displayPrice / $originalPrice)) * 100);
+                        }
+                        ?>
+                        <div class="product-card product-card-compact<?= $isPromo ? ' product-on-promo' : '' ?>" 
+                             onclick="PDV.clickProduct(<?= $product['id'] ?>, '<?= htmlspecialchars(addslashes($product['name'])) ?>', '<?= $displayPrice ?>', '<?= $product['has_extras'] ? 'true' : 'false' ?>')"
                              data-category="<?= htmlspecialchars($category['name']) ?>"
                              data-id="<?= $product['id'] ?>"
                              data-name="<?= htmlspecialchars($product['name']) ?>"
-                             data-price="<?= $product['price'] ?>"
+                             data-price="<?= $displayPrice ?>"
+                             data-original-price="<?= $originalPrice ?>"
+                             data-is-promo="<?= $isPromo ? 'true' : 'false' ?>"
                              data-has-extras="<?= $product['has_extras'] ? 'true' : 'false' ?>">
                             
                             <div class="product-info">
                                 <h3><?= htmlspecialchars($product['name']) ?></h3>
                             </div>
-                            <div class="product-price">
-                                R$ <?= number_format($product['price'], 2, ',', '.') ?>
+                            <div class="product-price"<?= $isPromo ? ' style="display:flex;justify-content:space-between;align-items:center;color:#dc2626"' : '' ?>>
+                                <span<?= $isPromo ? ' style="color:#dc2626"' : '' ?>>R$ <?= number_format($displayPrice, 2, ',', '.') ?></span>
+                                <?php if ($isPromo && $discountPercent > 0): ?>
+                                <span style="color:#dc2626;font-weight:700">-<?= $discountPercent ?>%</span>
+                                <?php endif; ?>
                             </div>
                         </div>
 

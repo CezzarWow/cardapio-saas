@@ -79,6 +79,7 @@
             }
         ?>
         <div class="stock-product-card product-row" 
+             data-product-id="<?= $prod['id'] ?>"
              data-name="<?= strtolower($prod['name']) ?>" 
              data-category="<?= htmlspecialchars($prod['category_name'] ?? '') ?>">
             
@@ -102,9 +103,9 @@
             
             <div class="stock-product-card-actions">
                 <button onclick="StockSPA.openAdjustModal(<?= $prod['id'] ?>, '<?= htmlspecialchars(addslashes($prod['name'])) ?>', <?= $stock ?>)" 
-                        class="btn-edit" style="flex: 1; justify-content: center;">
+                        class="btn-reposition">
                     <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
-                    Ajustar
+                    Repor Estoque
                 </button>
             </div>
         </div>

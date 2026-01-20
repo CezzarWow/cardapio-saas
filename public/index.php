@@ -112,6 +112,9 @@ Router::add('/admin/loja/cardapio/combo/editar', \App\Controllers\Admin\Cardapio
 Router::add('/admin/loja/cardapio/combo/atualizar', \App\Controllers\Admin\CardapioController::class, 'updateCombo');
 Router::add('/admin/loja/cardapio/combo/deletar', \App\Controllers\Admin\CardapioController::class, 'deleteCombo');
 Router::add('/admin/loja/cardapio/combo/status', \App\Controllers\Admin\CardapioController::class, 'toggleComboStatus');
+Router::add('/admin/loja/cardapio/produto/promocao', \App\Controllers\Admin\CardapioController::class, 'setProductPromotion');
+Router::add('/admin/loja/cardapio/produto/promocao/toggle', \App\Controllers\Admin\CardapioController::class, 'toggleProductPromotion');
+Router::add('/admin/loja/cardapio/produto/promocao/remover', \App\Controllers\Admin\CardapioController::class, 'removeProductPromotion');
 
 // ============================================================
 // GRUPO 6: Estoque/Produtos (migradas para Router)

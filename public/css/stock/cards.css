@@ -156,3 +156,26 @@
 .stock-product-card-actions .btn-delete:hover {
     background: #fecaca;
 }
+
+/* Botão de Reposição de Estoque */
+.stock-product-card-actions .btn-reposition {
+    flex: 1;
+    padding: 10px 12px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+
+.stock-product-card-actions .btn-reposition:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}

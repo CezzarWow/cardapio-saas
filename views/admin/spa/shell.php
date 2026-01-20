@@ -29,32 +29,32 @@ use App\Core\ViewHelper;
     </div>
     
     <nav class="sidebar-nav">
-        <a href="<?= BASE_URL ?>/admin/loja/pdv" class="nav-item" data-section="balcao">
+        <a href="#balcao" class="nav-item" data-section="balcao">
             <i data-lucide="layout-dashboard" size="36"></i>
             <span class="nav-label">Balcão</span>
         </a>
 
-        <a href="<?= BASE_URL ?>/admin/loja/mesas" class="nav-item" data-section="mesas">
+        <a href="#mesas" class="nav-item" data-section="mesas">
             <i data-lucide="utensils-crossed" size="36"></i>
             <span class="nav-label">Mesas</span>
         </a>
 
-        <a href="<?= BASE_URL ?>/admin/loja/delivery" class="nav-item" data-section="delivery">
+        <a href="#delivery" class="nav-item" data-section="delivery">
             <i data-lucide="bike" size="36"></i>
             <span class="nav-label">Delivery</span>
         </a>
 
-        <a href="<?= BASE_URL ?>/admin/loja/cardapio" class="nav-item" data-section="cardapio">
+        <a href="#cardapio" class="nav-item" data-section="cardapio">
             <i data-lucide="book-open" size="36"></i>
             <span class="nav-label">Cardápio</span>
         </a>
 
-        <a href="<?= BASE_URL ?>/admin/loja/catalogo" class="nav-item" data-section="estoque">
+        <a href="#estoque" class="nav-item" data-section="estoque">
             <i data-lucide="package" size="36"></i>
             <span class="nav-label">Estoque</span>
         </a>
 
-        <a href="<?= BASE_URL ?>/admin/loja/caixa" class="nav-item" data-section="caixa">
+        <a href="#caixa" class="nav-item" data-section="caixa">
             <i data-lucide="wallet" size="36"></i>
             <span class="nav-label">Caixa</span>
         </a>
@@ -82,7 +82,7 @@ use App\Core\ViewHelper;
 </main>
 
 <?php // Scripts do SPA ?>
-<script>const BASE_URL = '<?= BASE_URL ?>';</script>
+<script>if(typeof BASE_URL === 'undefined') { const BASE_URL = '<?= BASE_URL ?>'; window.BASE_URL = BASE_URL; }</script>
 <script src="<?= BASE_URL ?>/js/admin/spa-config.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/admin/spa-ui.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/admin/admin-spa.js?v=<?= time() ?>"></script>

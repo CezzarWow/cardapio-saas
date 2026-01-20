@@ -108,6 +108,9 @@
 <!-- Cardápio Bundle (20 scripts combinados) -->
 <script data-spa-script="cardapio-bundle" src="<?= BASE_URL ?>/js/bundles/cardapio-bundle.js?v=<?= APP_VERSION ?>"></script>
 
+<!-- Promo Products (novo módulo - não está no bundle ainda) -->
+<script data-spa-script="promo-products" src="<?= BASE_URL ?>/js/cardapio-admin/promo-products.js?v=<?= APP_VERSION ?>"></script>
+
 <!-- 
     [BACKUP] Scripts originais para rollback:
 <script data-spa-script="cardapio-admin" src="<?= BASE_URL ?>/js/cardapio-admin/utils.js?v=<?= APP_VERSION ?>"></script>

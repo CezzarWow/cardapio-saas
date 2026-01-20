@@ -98,4 +98,43 @@ class ProductRepository
         }
         return $grouped;
     }
+
+    /**
+     * Lista produtos em promoção ativa
+     */
+    public function findOnPromotion(int $restaurantId): array
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare('
+            SELECT p.*, c.name as category_name 
+            FROM products p 
+            LEFT JOIN categories c ON p.category_id = c.id 
+            WHERE p.restaurant_id = :rid 
+              AND p.promotional_price IS NOT NULL 
+              AND p.promotional_price > 0
+            ORDER BY p.name
+        ');
+        $stmt->execute(['rid' => $restaurantId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Lista produtos disponíveis para promoção (ativos e não em promoção)
+     */
+    public function findAvailableForPromotion(int $restaurantId): array
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare('
+            SELECT p.id, p.name, p.price, c.name as category_name 
+            FROM products p 
+            LEFT JOIN categories c ON p.category_id = c.id 
+            WHERE p.restaurant_id = :rid 
+              AND p.is_active = 1
+              AND (p.promotional_price IS NULL OR p.promotional_price = 0)
+            ORDER BY c.name, p.name
+        ');
+        $stmt->execute(['rid' => $restaurantId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
+
