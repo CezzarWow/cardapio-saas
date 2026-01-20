@@ -175,3 +175,11 @@
     justify-content: center;
     gap: 6px;
 }
+
+/* Espaçador semântico para garantir que o conteúdo não fique sob o rodapé fixo */
+.stock-spacer-bottom {
+    height: 120px;
+    width: 100%;
+    clear: both;
+    display: block;
+}

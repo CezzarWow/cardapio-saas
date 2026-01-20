@@ -17,7 +17,7 @@
 <!-- Ajuste de alinhamento igual ao Delivery -->
 <style>
     .stock-dashboard-container {
-        padding: 15px 20px 120px 20px !important;
+        padding: 15px 20px 20px 20px !important;
         width: 100%;
         background: #f8fafc;
     }
@@ -96,6 +96,9 @@
             <!-- Conteúdo carregado pelo StockSPA.js -->
         </div>
     </div>
+
+    <!-- Espaçador Estrutural -->
+    <div class="stock-spacer-bottom"></div>
 
 </div>
 
