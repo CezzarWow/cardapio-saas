@@ -16,7 +16,8 @@
  */
 
 const PDVTables = {
-    searchTimeout: null,
+    // Armazena referência para limpeza
+    documentClickHandler: null,
 
     // ==========================================
     // INICIALIZAÇÃO
@@ -32,13 +33,25 @@ const PDVTables = {
         const input = document.getElementById('client-search');
         if (!input) return;
 
-        // 0. Click Outside: Fecha dropdown ao clicar fora
-        document.addEventListener('click', (e) => {
+        // 0. Click Outside: Limpa listener antigo e cria novo
+        if (this.documentClickHandler) {
+            document.removeEventListener('click', this.documentClickHandler);
+        }
+
+        this.documentClickHandler = (e) => {
             const results = document.getElementById('client-results');
-            if (input && results && !input.contains(e.target) && !results.contains(e.target)) {
+            // Verifica se elementos ainda existem no DOM
+            const currentInput = document.getElementById('client-search');
+
+            // Se o input mudou (SPA reload), este listener pode ser antigo.
+            // Mas como removemos no init(), teoricamente está ok.
+            // Proteção extra: se currentInput !== input, este listener é fantasma (mas não deveria existir)
+
+            if (currentInput && results && !currentInput.contains(e.target) && !results.contains(e.target)) {
                 results.style.display = 'none';
             }
-        });
+        };
+        document.addEventListener('click', this.documentClickHandler);
 
         // 1. Focus: Mostra mesas (sem digitar)
         input.addEventListener('focus', () => {
@@ -47,7 +60,17 @@ const PDVTables = {
             }
         });
 
-        // 2. Input: Busca Clientes
+        // 2. Click no Input: Também dispara a busca se já estiver focado
+        // Isso resolve o caso onde o usuário clica, fecha (clicando fora) e clica de novo no input focado
+        input.addEventListener('click', () => {
+            const results = document.getElementById('client-results');
+            // Se estiver vazio e fechado, abre
+            if (input.value.trim() === '' && (!results || results.style.display === 'none')) {
+                this.fetchTables();
+            }
+        });
+
+        // 3. Input: Busca Clientes
         input.addEventListener('input', (e) => {
             clearTimeout(this.searchTimeout);
             const term = e.target.value;

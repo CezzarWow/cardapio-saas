@@ -17,7 +17,7 @@
     let currentItemsData = null;
     let slipType = 'delivery';
 
-    DeliveryPrint.Modal = {
+    window.DeliveryPrint.Modal = {
 
         // Getters para estado
         getCurrentOrderId: () => currentOrderId,
@@ -74,11 +74,11 @@
         _renderSlip: function (type, order, items) {
             switch (type) {
                 case 'kitchen':
-                    return DeliveryPrint.Generators.generateKitchenSlipHTML(order, items);
+                    return window.DeliveryPrint.Generators.generateKitchenSlipHTML(order, items);
                 case 'complete':
-                    return DeliveryPrint.Generators.generateSlipHTML(order, items, '📋 FICHA DO PEDIDO');
+                    return window.DeliveryPrint.Generators.generateSlipHTML(order, items, 'FICHA DO PEDIDO');
                 default:
-                    return DeliveryPrint.Generators.generateSlipHTML(order, items, '🛵 FICHA DE ENTREGA');
+                    return window.DeliveryPrint.Generators.generateSlipHTML(order, items, 'FICHA DE ENTREGA');
             }
         },
 
@@ -89,7 +89,7 @@
             slipType = 'delivery';
             const content = document.getElementById('print-slip-content');
             if (content && currentOrderData) {
-                content.innerHTML = DeliveryPrint.Generators.generateSlipHTML(currentOrderData, currentItemsData, '🛵 FICHA DE ENTREGA');
+                content.innerHTML = window.DeliveryPrint.Generators.generateSlipHTML(currentOrderData, currentItemsData, 'FICHA DE ENTREGA');
             }
         },
 
@@ -100,7 +100,7 @@
             slipType = 'kitchen';
             const content = document.getElementById('print-slip-content');
             if (content && currentOrderData) {
-                content.innerHTML = DeliveryPrint.Generators.generateKitchenSlipHTML(currentOrderData, currentItemsData);
+                content.innerHTML = window.DeliveryPrint.Generators.generateKitchenSlipHTML(currentOrderData, currentItemsData);
             }
         },
 

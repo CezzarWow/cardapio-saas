@@ -12,7 +12,13 @@ const CheckoutOrderType = {
      * @param {string} type - 'local' | 'retirada' | 'entrega'
      * @param {HTMLElement} element - Card clicado (pode ser null)
      */
-    selectOrderType: function (type, element) {
+    /**
+     * Seleciona tipo de pedido e atualiza visual/alertas
+     * @param {string} type - 'local' | 'retirada' | 'entrega'
+     * @param {HTMLElement} element - Card clicado (pode ser null)
+     * @param {boolean} skipModal - Se true, não força abertura de modal (usado no sync)
+     */
+    selectOrderType: function (type, element, skipModal = false) {
         // Remove toast se existir (dismiss ao clicar em qualquer opção)
         const existingToast = document.getElementById('pdv-toast');
         if (existingToast) existingToast.remove();
@@ -29,6 +35,13 @@ const CheckoutOrderType = {
                 return; // Não prossegue
             }
         }
+
+        // [NOVO] Verifica se JÁ está ativo ANTES de alterar classes
+        // Se element não foi passado (programático), busca pelo seletor
+        let targetEl = element;
+        if (!targetEl) targetEl = document.querySelector(`.order-toggle-btn[data-type="${type}"]`);
+
+        const isAlreadyActive = targetEl && targetEl.classList.contains('active');
 
         // 1. Se mudando de entrega para outro, limpa dados primeiro
         if (type !== 'entrega') {
@@ -52,7 +65,9 @@ const CheckoutOrderType = {
             this._handleRetirada();
         } else if (type === 'entrega') {
             if (keepOpenInput) keepOpenInput.value = 'false';
-            this._handleEntrega();
+            // Se for re-clique (já estava ativo), força abertura do modal, exceto se skipModal=true
+            const forceOpen = isAlreadyActive && !skipModal;
+            this._handleEntrega(forceOpen);
         } else {
             // Local
             if (keepOpenInput) keepOpenInput.value = 'false';
@@ -232,12 +247,14 @@ const CheckoutOrderType = {
     /**
      * Processa lógica específica de Entrega
      * Abre modal de entrega automaticamente se dados não preenchidos
+     * @param {boolean} forceOpen - Se true, abre o modal incondicionalmente (ex: click do usuário)
      */
-    _handleEntrega: function () {
+    _handleEntrega: function (forceOpen = false) {
         // Verifica se dados já foram preenchidos
         const isFilled = typeof CheckoutEntrega !== 'undefined' && CheckoutEntrega.isDataFilled();
 
-        if (!isFilled) {
+        // Abre se NÃO estiver preenchido, OU se forçado (usuário clicou para editar)
+        if (!isFilled || forceOpen) {
             // Abre modal de entrega automaticamente
             if (typeof CheckoutEntrega !== 'undefined') {
                 CheckoutEntrega.openPanel();
@@ -306,4 +323,3 @@ const CheckoutOrderType = {
 
 // Expõe globalmente para uso pelos outros módulos
 window.CheckoutOrderType = CheckoutOrderType;
-

@@ -61,7 +61,7 @@
                     aria-label="Cancelar impressão">
                 Cancelar
             </button>
-            <button onclick="DeliveryPrint.print()" 
+            <button onclick="DeliveryPrint.printFromModal()" 
                     class="delivery-modal__btn delivery-modal__btn--primary"
                     style="flex: 2;"
                     aria-label="Imprimir ficha">

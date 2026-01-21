@@ -54,14 +54,20 @@ class CsrfMiddleware
         // 4. Validate Token for Unsafe Methods (POST, PUT, DELETE, etc)
         $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
 
-        // [NOVO] Tenta ler do JSON Input se não encontrou
+        // [FIX] Read from JSON Input if not found in headers, AND stash it for Controllers
         if (!$token && strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false) {
-            $input = json_decode(file_get_contents('php://input'), true);
+            $rawInput = file_get_contents('php://input');
+            $input = json_decode($rawInput, true);
             $token = $input['csrf_token'] ?? null;
+            
+            // Stash for controllers since php://input is now consumed
+            if ($input) {
+                $_REQUEST['JSON_BODY'] = $input;
+            }
         }
 
         if (!$token || !hash_equals($_SESSION[self::TOKEN_KEY], $token)) {
-            // CSRF inválido
+            // CSRF inválido check
             http_response_code(403);
 
             // Detecta se é requisição AJAX/JSON

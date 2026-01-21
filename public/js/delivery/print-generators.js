@@ -11,53 +11,55 @@
     // Garante namespace
     window.DeliveryPrint = window.DeliveryPrint || {};
 
-    DeliveryPrint.Generators = {
+    window.DeliveryPrint.Generators = {
 
         /**
          * Gera HTML da ficha UNIFICADA (Entrega ou Completa)
          */
-        generateSlipHTML: function (order, items, title = '🛵 FICHA DE ENTREGA') {
+        generateSlipHTML: function (order, items, title = 'FICHA DE ENTREGA') {
             const orderItems = items || order.items || [];
-            const data = DeliveryPrint.Helpers.extractOrderData(order);
-            const itemsHTML = DeliveryPrint.Helpers.generateItemsHTML(orderItems, true);
-            const changeHTML = DeliveryPrint.Helpers.generateChangeHTML(data.paymentMethod, data.changeFor);
+            const data = window.DeliveryPrint.Helpers.extractOrderData(order);
+            const itemsHTML = window.DeliveryPrint.Helpers.generateItemsHTML(orderItems, true);
+            const changeHTML = window.DeliveryPrint.Helpers.generateChangeHTML(data.paymentMethod, data.changeFor);
 
             return `
                 <div class="print-slip">
                     <div class="print-slip-header">
+                        <h2>================================</h2>
                         <h2>${title}</h2>
                         <div>Pedido #${data.orderId}</div>
-                        <div style="font-size: 10px; color: #666;">${data.date}</div>
+                        <div style="font-size: 10px;">${data.date}</div>
+                        <h2>================================</h2>
                     </div>
 
                     <div class="print-slip-section">
-                        <h4>👤 Dados do Cliente:</h4>
+                        <h4>CLIENTE:</h4>
                         <div><strong>Nome:</strong> ${data.clientName}</div>
-                        <div><strong>Telefone:</strong> ${data.clientPhone}</div>
+                        <div><strong>Fone:</strong> ${data.clientPhone}</div>
                     </div>
 
                     <div class="print-slip-section">
-                        <h4>📍 Endereço de Entrega:</h4>
-                        <div style="padding: 8px; background: #f5f5f5; border-radius: 4px;">
-                            ${data.clientAddress}
-                            ${data.neighborhood ? '<br><strong>Bairro:</strong> ' + data.neighborhood : ''}
-                        </div>
-                        ${data.observations ? '<div style="margin-top: 8px; font-weight: bold; color: #000;">📝 ' + data.observations + '</div>' : ''}
+                        <h4>ENDERECO:</h4>
+                        <div>${data.clientAddress}</div>
+                        ${data.neighborhood ? '<div><strong>Bairro:</strong> ' + data.neighborhood + '</div>' : ''}
+                        ${data.observations ? '<div style="margin-top: 5px;"><strong>OBS:</strong> ' + data.observations + '</div>' : ''}
                     </div>
 
                     <div class="print-slip-section">
-                        <h4>📦 Itens:</h4>
+                        <h4>ITENS:</h4>
                         ${itemsHTML}
                     </div>
 
                     <div class="print-slip-section">
-                        <h4>💳 Pagamento:</h4>
-                        <div style="font-weight: bold; font-size: 14px;">${(data.paymentMethod || 'Não informado').toUpperCase()}</div>
+                        <h4>PAGAMENTO:</h4>
+                        <div style="font-weight: bold;">${(data.paymentMethod || 'Nao informado').toUpperCase()}</div>
                         ${changeHTML}
                     </div>
 
                     <div class="print-slip-total">
-                        TOTAL: R$ ${data.total}
+                        ================================
+                        <br>TOTAL: R$ ${data.total}
+                        <br>================================
                     </div>
                 </div>
             `;
@@ -71,29 +73,33 @@
             const orderType = order.order_type || 'local';
 
             const typeLabels = {
-                'delivery': '🛵 ENTREGA',
-                'pickup': '🏃 RETIRADA',
-                'local': '🍽️ CONSUMO LOCAL'
+                'delivery': '*** ENTREGA ***',
+                'pickup': '*** RETIRADA ***',
+                'local': '*** CONSUMO LOCAL ***'
             };
-            const typeLabel = typeLabels[orderType] || '🍽️ CONSUMO LOCAL';
+            const typeLabel = typeLabels[orderType] || '*** CONSUMO LOCAL ***';
 
-            const itemsHTML = DeliveryPrint.Helpers.generateItemsHTML(items, false);
+            const itemsHTML = window.DeliveryPrint.Helpers.generateItemsHTML(items, false);
 
             return `
                 <div class="print-slip" style="font-size: 14px;">
-                    <div class="print-slip-header" style="text-align: center; padding: 15px 0; border-bottom: 3px solid #333;">
-                        <h2 style="margin: 0; font-size: 24px;">🍳 COZINHA</h2>
-                        <div style="font-size: 12px; margin-top: 5px;">${date}</div>
+                    <div class="print-slip-header" style="text-align: center; padding: 10px 0; border-bottom: 2px dashed #000;">
+                        <h2 style="margin: 0; font-size: 20px;">** COZINHA **</h2>
+                        <div style="font-size: 11px; margin-top: 5px;">${date}</div>
                     </div>
 
-                    <div style="text-align: center; padding: 15px; background: #f0f0f0; margin: 10px 0; border-radius: 8px;">
-                        <div style="font-size: 22px; font-weight: bold;">${typeLabel}</div>
+                    <div style="text-align: center; padding: 10px; margin: 8px 0; border: 1px dashed #000;">
+                        <div style="font-size: 18px; font-weight: bold;">${typeLabel}</div>
                         <div style="margin-top: 5px;">Pedido #${order.id}</div>
                     </div>
 
-                    <div style="padding: 10px 0;">
-                        <h4 style="margin: 0 0 10px 0; font-size: 16px; text-transform: uppercase; border-bottom: 2px solid #333; padding-bottom: 5px;">Itens do Pedido:</h4>
+                    <div style="padding: 8px 0;">
+                        <h4 style="margin: 0 0 8px 0; font-size: 14px; text-transform: uppercase; border-bottom: 1px dashed #000; padding-bottom: 5px;">ITENS:</h4>
                         ${itemsHTML}
+                    </div>
+                    
+                    <div style="text-align: center; padding-top: 10px; border-top: 2px dashed #000;">
+                        --------------------------------
                     </div>
                 </div>
             `;

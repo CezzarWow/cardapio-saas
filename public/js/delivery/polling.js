@@ -27,10 +27,11 @@ const DeliveryPolling = {
      * Inicializa o som
      */
     initSound: function () {
+        if (this.audio) return; // Mantém instância única se possível
+
         try {
             this.audio = new Audio(DeliveryHelpers.getBaseUrl() + '/sounds/new-order.mp3');
-            this.audio.volume = 1.0; // Volume máximo
-            // this.audio.playbackRate = 1.5; // Desativado - velocidade normal
+            this.audio.volume = 1.0;
         } catch (e) {
             console.warn('[Delivery] Audio não suportado');
         }
@@ -40,13 +41,19 @@ const DeliveryPolling = {
      * Toca som de notificação
      */
     playSound: function () {
+        if (!this.audio) this.initSound();
         if (!this.audio) return;
 
-        try {
-            this.audio.currentTime = 0;
-            this.audio.play();
-        } catch (e) {
-            console.warn('[Delivery] Erro ao tocar som:', e);
+        const playPromise = this.audio.play();
+
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    // Play success
+                })
+                .catch(error => {
+                    console.warn('[Delivery] Auto-play bloqueado pelo navegador. Interaja com a página.', error);
+                });
         }
     },
 
@@ -58,21 +65,28 @@ const DeliveryPolling = {
 
         this.initSound();
 
+        // [FIX] Unlock Audio Context: Tenta tocar (muted) no primeiro clique
+        // Isso "desbloqueia" o audio para tocar sozinho depois
+        const unlockAudio = () => {
+            if (this.audio) {
+                this.audio.play().then(() => {
+                    this.audio.pause();
+                    this.audio.currentTime = 0;
+                }).catch(() => { });
+                document.removeEventListener('click', unlockAudio);
+                document.removeEventListener('touchstart', unlockAudio);
+                // console.log('[Delivery] Audio Context Unlocked');
+            }
+        };
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('touchstart', unlockAudio);
+
         // Conta pedidos novos atuais
         const currentNew = document.querySelectorAll('.delivery-column--novo .delivery-card-compact').length;
         this.lastNewCount = currentNew;
 
         this.isActive = true;
         this.timerId = setInterval(() => this.poll(), this.interval);
-
-        // DESATIVADO: Continua polling mesmo em segundo plano (para tocar som)
-        // document.addEventListener('visibilitychange', () => {
-        //     if (document.hidden) {
-        //         this.pause();
-        //     } else {
-        //         this.resume();
-        //     }
-        // });
     },
 
     /**

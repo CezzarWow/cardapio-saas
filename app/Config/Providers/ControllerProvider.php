@@ -55,11 +55,7 @@ class ControllerProvider implements Provider
         });
 
         // Admin Controllers (Batch 2)
-        $container->bind(\App\Controllers\Admin\StockController::class, function ($c) {
-            return new \App\Controllers\Admin\StockController(
-                $c->get(\App\Services\Stock\StockService::class)
-            );
-        });
+
 
         $container->bind(\App\Controllers\Admin\StockRepositionController::class, function ($c) {
             return new \App\Controllers\Admin\StockRepositionController(

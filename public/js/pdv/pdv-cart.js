@@ -113,6 +113,44 @@ const PDVCart = {
             if (typeof PDVState !== 'undefined') {
                 PDVState.set({ modo: 'balcao', mesaId: null, clienteId: null });
             }
+
+            // [FIX] Resetar tipo de pedido para 'local' - Abordagem Híbrida (Lógica + Visual Forçado)
+
+            // 1. Tenta via lógica oficial
+            if (typeof CheckoutOrderType !== 'undefined') {
+                CheckoutOrderType.selectOrderType('local', null);
+            } else if (typeof selectOrderType === 'function') {
+                selectOrderType('local', null);
+            }
+
+            // 2. FORÇA O RESET VISUAL (Garante que a UI atualize mesmo se a lógica falhar)
+            try {
+                const allBtns = document.querySelectorAll('.order-toggle-btn');
+                allBtns.forEach(btn => {
+                    btn.classList.remove('active');
+                    // Reset estilos inline para inativo
+                    btn.style.borderColor = '#cbd5e1';
+                    btn.style.background = 'white';
+                    btn.style.color = '#1e293b';
+                    // Remove checkmark
+                    const check = btn.querySelector('.btn-checkmark');
+                    if (check) check.remove();
+                });
+
+                const btnLocal = document.querySelector('.order-toggle-btn[data-type="local"]');
+                if (btnLocal) {
+                    btnLocal.classList.add('active');
+                    // Estilos ativo (local)
+                    btnLocal.style.borderColor = '#2563eb';
+                    btnLocal.style.background = '#eff6ff';
+                    btnLocal.style.color = '#2563eb';
+                }
+
+                const inputType = document.getElementById('selected_order_type');
+                if (inputType) inputType.value = 'local';
+            } catch (e) {
+                console.error('Erro no reset visual forçado:', e);
+            }
         }
 
         const btn = document.getElementById('btn-finalizar');

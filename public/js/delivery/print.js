@@ -22,8 +22,10 @@ DeliveryPrint.showDeliverySlip = () => DeliveryPrint.Modal.showDeliverySlip();
 DeliveryPrint.showKitchenSlip = () => DeliveryPrint.Modal.showKitchenSlip();
 
 // Actions
-DeliveryPrint.print = () => DeliveryPrint.Actions.print();
-DeliveryPrint.printComplete = (orderData) => DeliveryPrint.Actions.printComplete(orderData);
+DeliveryPrint.print = () => window.DeliveryPrint.Actions.print();
+DeliveryPrint.printComplete = (orderData) => window.DeliveryPrint.Actions.printComplete(orderData);
+DeliveryPrint.printDirect = (orderId, type) => window.DeliveryPrint.Actions.printDirect(orderId, type);
+DeliveryPrint.printFromModal = () => window.DeliveryPrint.Actions.printFromModal();
 
 // Generators (acesso direto para uso externo)
 DeliveryPrint.generateSlipHTML = (order, items, title) =>

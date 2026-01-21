@@ -10,7 +10,8 @@
         const BASE_URL = '<?= BASE_URL ?>';
     </script>
     
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (Local Build) -->
+    <link rel="stylesheet" href="<?= BASE_URL ?>/dist/tailwind.css?v=<?= time() ?>">
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="<?= BASE_URL ?>/manifest.json">

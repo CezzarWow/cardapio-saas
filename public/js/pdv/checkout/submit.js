@@ -279,6 +279,13 @@ const CheckoutSubmit = {
             CheckoutUI.showSuccessModal();
             PDVCart.clear();
 
+            // [FIX] Invalidar cache do SPA para garantir que Balcão e Mesas recarreguem zerados
+            if (typeof AdminSPA !== 'undefined') {
+                AdminSPA.invalidateCache('mesas');
+                AdminSPA.invalidateCache('balcao');
+                AdminSPA.invalidateCache('pdv');
+            }
+
             setTimeout(() => {
                 document.getElementById('checkoutModal').style.display = 'none';
 
@@ -292,6 +299,7 @@ const CheckoutSubmit = {
                 } else {
                     // Recarrega seção atual via SPA
                     if (typeof AdminSPA !== 'undefined') {
+                        // Se estamos no balcão, navigateTo ('balcao', true, true) forçará reload
                         AdminSPA.reloadCurrentSection();
                     } else {
                         window.location.reload();

@@ -12,7 +12,8 @@ use App\Core\View;
  */
 class AdditionalController extends BaseController
 {
-    private const BASE = '/admin/loja/adicionais';
+    // Redirecionar para SPA ao invés de página legada
+    private const BASE = '/admin/loja/spa#estoque/adicionais';
 
     private AdditionalService $service;
     private AdditionalValidator $v;

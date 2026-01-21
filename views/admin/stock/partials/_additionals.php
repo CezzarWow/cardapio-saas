@@ -71,6 +71,7 @@
                     <button type="button" class="btn-action-link" 
                             data-group-id="<?= $group['id'] ?>" 
                             data-group-name="<?= htmlspecialchars($group['name']) ?>"
+                            data-item-ids="<?= htmlspecialchars(json_encode(array_column($group['items'] ?? [], 'id'))) ?>"
                             style="padding: 6px 10px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;"
                             title="Vincular Itens">
                         <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
@@ -118,8 +119,8 @@
 <?php \App\Core\View::renderFromScope('admin/additionals/partials/item-modal.php', get_defined_vars()); ?>
 
 <!-- Scripts de Adicionais -->
-<!-- MultiSelect é lib global, pode ter spa-once -->
-<script data-spa-script="shared-multi-select" data-spa-once="true" src="<?= BASE_URL ?>/js/components/multi-select.js?v=<?= time() ?>"></script>
+<!-- MultiSelect precisa ser executado toda vez para garantir disponibilidade no contexto SPA -->
+<script src="<?= BASE_URL ?>/js/components/multi-select.js?v=<?= time() ?>"></script>
 
 <!-- Scripts de adicionais unificados (Bundle) -->
 <script src="<?= BASE_URL ?>/js/admin/additionals-bundle.js?v=<?= time() ?>"></script>

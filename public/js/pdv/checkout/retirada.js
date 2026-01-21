@@ -88,9 +88,7 @@ window.clearRetiradaClient = function () {
  * pelo orderType.js através do selectOrderType('retirada')
  */
 window.handleRetiradaValidation = function () {
-    // Função desativada - a UI é gerenciada pelo orderType.js
-    // Apenas chama o select novamente para atualizar o estado
-    if (typeof CheckoutOrderType !== 'undefined') {
-        CheckoutOrderType.selectOrderType('retirada');
-    }
+    // Função desativada - a UI é gerenciada pelo tables-cliente.js
+    // Não devemos forçar 'retirada' aqui pois isso impede o reset para 'local'
+    // console.log('Retirada validation skipped to allow reset');
 };

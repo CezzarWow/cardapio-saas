@@ -73,6 +73,7 @@ const deliveryScripts = [
     'delivery/print-generators.js',
     'delivery/print-modal.js',
     'delivery/print-actions.js',
+    'delivery/print-qz.js', // QZ Integration
     'delivery/print.js'
 ];
 

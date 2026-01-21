@@ -40,7 +40,8 @@ class ClientController extends BaseController
     public function store()
     {
         $rid = $this->getRestaurantId();
-        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        // Use stashed body from middleware or read from input
+        $data = $_REQUEST['JSON_BODY'] ?? json_decode(file_get_contents('php://input'), true) ?? [];
 
         // Validar
         $errors = $this->v->validateStore($data);

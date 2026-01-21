@@ -9,7 +9,7 @@
     // Garante namespace
     window.DeliveryPrint = window.DeliveryPrint || {};
 
-    DeliveryPrint.Helpers = {
+    window.DeliveryPrint.Helpers = {
 
         /**
          * Extrai e normaliza dados do pedido

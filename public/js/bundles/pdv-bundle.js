@@ -1,4 +1,4 @@
-/* pdv-bundle - Generated 2026-01-19T12:16:54.863Z */
+/* pdv-bundle - Generated 2026-01-21T21:33:27.150Z */
 
 
 /* ========== pdv/state.js ========== */
@@ -344,6 +344,44 @@ const PDVCart = {
             if (typeof PDVState !== 'undefined') {
                 PDVState.set({ modo: 'balcao', mesaId: null, clienteId: null });
             }
+
+            // [FIX] Resetar tipo de pedido para 'local' - Abordagem Híbrida (Lógica + Visual Forçado)
+
+            // 1. Tenta via lógica oficial
+            if (typeof CheckoutOrderType !== 'undefined') {
+                CheckoutOrderType.selectOrderType('local', null);
+            } else if (typeof selectOrderType === 'function') {
+                selectOrderType('local', null);
+            }
+
+            // 2. FORÇA O RESET VISUAL (Garante que a UI atualize mesmo se a lógica falhar)
+            try {
+                const allBtns = document.querySelectorAll('.order-toggle-btn');
+                allBtns.forEach(btn => {
+                    btn.classList.remove('active');
+                    // Reset estilos inline para inativo
+                    btn.style.borderColor = '#cbd5e1';
+                    btn.style.background = 'white';
+                    btn.style.color = '#1e293b';
+                    // Remove checkmark
+                    const check = btn.querySelector('.btn-checkmark');
+                    if (check) check.remove();
+                });
+
+                const btnLocal = document.querySelector('.order-toggle-btn[data-type="local"]');
+                if (btnLocal) {
+                    btnLocal.classList.add('active');
+                    // Estilos ativo (local)
+                    btnLocal.style.borderColor = '#2563eb';
+                    btnLocal.style.background = '#eff6ff';
+                    btnLocal.style.color = '#2563eb';
+                }
+
+                const inputType = document.getElementById('selected_order_type');
+                if (inputType) inputType.value = 'local';
+            } catch (e) {
+                console.error('Erro no reset visual forçado:', e);
+            }
         }
 
         const btn = document.getElementById('btn-finalizar');
@@ -558,7 +596,8 @@ window.clearCart = () => PDVCart.clear();
  */
 
 const PDVTables = {
-    searchTimeout: null,
+    // Armazena referência para limpeza
+    documentClickHandler: null,
 
     // ==========================================
     // INICIALIZAÇÃO
@@ -574,13 +613,25 @@ const PDVTables = {
         const input = document.getElementById('client-search');
         if (!input) return;
 
-        // 0. Click Outside: Fecha dropdown ao clicar fora
-        document.addEventListener('click', (e) => {
+        // 0. Click Outside: Limpa listener antigo e cria novo
+        if (this.documentClickHandler) {
+            document.removeEventListener('click', this.documentClickHandler);
+        }
+
+        this.documentClickHandler = (e) => {
             const results = document.getElementById('client-results');
-            if (input && results && !input.contains(e.target) && !results.contains(e.target)) {
+            // Verifica se elementos ainda existem no DOM
+            const currentInput = document.getElementById('client-search');
+
+            // Se o input mudou (SPA reload), este listener pode ser antigo.
+            // Mas como removemos no init(), teoricamente está ok.
+            // Proteção extra: se currentInput !== input, este listener é fantasma (mas não deveria existir)
+
+            if (currentInput && results && !currentInput.contains(e.target) && !results.contains(e.target)) {
                 results.style.display = 'none';
             }
-        });
+        };
+        document.addEventListener('click', this.documentClickHandler);
 
         // 1. Focus: Mostra mesas (sem digitar)
         input.addEventListener('focus', () => {
@@ -589,7 +640,17 @@ const PDVTables = {
             }
         });
 
-        // 2. Input: Busca Clientes
+        // 2. Click no Input: Também dispara a busca se já estiver focado
+        // Isso resolve o caso onde o usuário clica, fecha (clicando fora) e clica de novo no input focado
+        input.addEventListener('click', () => {
+            const results = document.getElementById('client-results');
+            // Se estiver vazio e fechado, abre
+            if (input.value.trim() === '' && (!results || results.style.display === 'none')) {
+                this.fetchTables();
+            }
+        });
+
+        // 3. Input: Busca Clientes
         input.addEventListener('input', (e) => {
             clearTimeout(this.searchTimeout);
             const term = e.target.value;
@@ -642,7 +703,7 @@ window.openClientModal = () => document.getElementById('clientModal').style.disp
     // BUSCAR MESAS
     // ==========================================
     PDVTables.fetchTables = function () {
-        fetch('mesas/buscar')
+        fetch('mesas/buscar?nocache=' + new Date().getTime())
             .then(r => r.json())
             .then(data => this.renderTableResults(data));
     };
@@ -1163,8 +1224,16 @@ window.openClientModal = () => document.getElementById('clientModal').style.disp
 
         fetch('clientes/salvar', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, phone })
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                name,
+                phone,
+                csrf_token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }),
+            credentials: 'include'
         })
             .then(r => r.json())
             .then(data => {
@@ -2521,6 +2590,13 @@ const CheckoutSubmit = {
             CheckoutUI.showSuccessModal();
             PDVCart.clear();
 
+            // [FIX] Invalidar cache do SPA para garantir que Balcão e Mesas recarreguem zerados
+            if (typeof AdminSPA !== 'undefined') {
+                AdminSPA.invalidateCache('mesas');
+                AdminSPA.invalidateCache('balcao');
+                AdminSPA.invalidateCache('pdv');
+            }
+
             setTimeout(() => {
                 document.getElementById('checkoutModal').style.display = 'none';
 
@@ -2534,6 +2610,7 @@ const CheckoutSubmit = {
                 } else {
                     // Recarrega seção atual via SPA
                     if (typeof AdminSPA !== 'undefined') {
+                        // Se estamos no balcão, navigateTo ('balcao', true, true) forçará reload
                         AdminSPA.reloadCurrentSection();
                     } else {
                         window.location.reload();
@@ -2589,7 +2666,13 @@ const CheckoutOrderType = {
      * @param {string} type - 'local' | 'retirada' | 'entrega'
      * @param {HTMLElement} element - Card clicado (pode ser null)
      */
-    selectOrderType: function (type, element) {
+    /**
+     * Seleciona tipo de pedido e atualiza visual/alertas
+     * @param {string} type - 'local' | 'retirada' | 'entrega'
+     * @param {HTMLElement} element - Card clicado (pode ser null)
+     * @param {boolean} skipModal - Se true, não força abertura de modal (usado no sync)
+     */
+    selectOrderType: function (type, element, skipModal = false) {
         // Remove toast se existir (dismiss ao clicar em qualquer opção)
         const existingToast = document.getElementById('pdv-toast');
         if (existingToast) existingToast.remove();
@@ -2606,6 +2689,13 @@ const CheckoutOrderType = {
                 return; // Não prossegue
             }
         }
+
+        // [NOVO] Verifica se JÁ está ativo ANTES de alterar classes
+        // Se element não foi passado (programático), busca pelo seletor
+        let targetEl = element;
+        if (!targetEl) targetEl = document.querySelector(`.order-toggle-btn[data-type="${type}"]`);
+
+        const isAlreadyActive = targetEl && targetEl.classList.contains('active');
 
         // 1. Se mudando de entrega para outro, limpa dados primeiro
         if (type !== 'entrega') {
@@ -2629,7 +2719,9 @@ const CheckoutOrderType = {
             this._handleRetirada();
         } else if (type === 'entrega') {
             if (keepOpenInput) keepOpenInput.value = 'false';
-            this._handleEntrega();
+            // Se for re-clique (já estava ativo), força abertura do modal, exceto se skipModal=true
+            const forceOpen = isAlreadyActive && !skipModal;
+            this._handleEntrega(forceOpen);
         } else {
             // Local
             if (keepOpenInput) keepOpenInput.value = 'false';
@@ -2809,12 +2901,14 @@ const CheckoutOrderType = {
     /**
      * Processa lógica específica de Entrega
      * Abre modal de entrega automaticamente se dados não preenchidos
+     * @param {boolean} forceOpen - Se true, abre o modal incondicionalmente (ex: click do usuário)
      */
-    _handleEntrega: function () {
+    _handleEntrega: function (forceOpen = false) {
         // Verifica se dados já foram preenchidos
         const isFilled = typeof CheckoutEntrega !== 'undefined' && CheckoutEntrega.isDataFilled();
 
-        if (!isFilled) {
+        // Abre se NÃO estiver preenchido, OU se forçado (usuário clicou para editar)
+        if (!isFilled || forceOpen) {
             // Abre modal de entrega automaticamente
             if (typeof CheckoutEntrega !== 'undefined') {
                 CheckoutEntrega.openPanel();
@@ -2883,7 +2977,6 @@ const CheckoutOrderType = {
 
 // Expõe globalmente para uso pelos outros módulos
 window.CheckoutOrderType = CheckoutOrderType;
-
 
 
 /* ========== pdv/checkout/retirada.js ========== */
@@ -2977,11 +3070,9 @@ window.clearRetiradaClient = function () {
  * pelo orderType.js através do selectOrderType('retirada')
  */
 window.handleRetiradaValidation = function () {
-    // Função desativada - a UI é gerenciada pelo orderType.js
-    // Apenas chama o select novamente para atualizar o estado
-    if (typeof CheckoutOrderType !== 'undefined') {
-        CheckoutOrderType.selectOrderType('retirada');
-    }
+    // Função desativada - a UI é gerenciada pelo tables-cliente.js
+    // Não devemos forçar 'retirada' aqui pois isso impede o reset para 'local'
+    // console.log('Retirada validation skipped to allow reset');
 };
 
 
@@ -3483,7 +3574,8 @@ const CheckoutFlow = {
 
         // Sincroniza com o tipo de pedido selecionado no header
         const selectedType = document.getElementById('selected_order_type')?.value || 'local';
-        CheckoutOrderType.selectOrderType(selectedType);
+        // [FIX] Passa true para não reabrir modals (sync apenas)
+        CheckoutOrderType.selectOrderType(selectedType, null, true);
 
         CheckoutUI.updateCheckoutUI();
         if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -3663,7 +3755,6 @@ window.PDVCheckout = PDVCheckout;
 // ==========================================
 
 window.finalizeSale = () => {
-    console.log('[DEBUG] window.finalizeSale called');
     PDVCheckout.finalizeSale();
 };
 window.fecharContaMesa = (id) => PDVCheckout.fecharContaMesa(id);
@@ -3695,7 +3786,6 @@ const PDVEvents = {
     keydownHandler: null,
 
     init: function () {
-        console.log('[PDV-EVENTS] Initializing...');
         this.bindGlobalClicks();
         this.bindKeyboardShortcuts();
     },
@@ -3711,7 +3801,6 @@ const PDVEvents = {
 
         // 3. Adiciona
         document.addEventListener('click', this.clickHandler);
-        console.log('[PDV-EVENTS] Click listener bound.');
     },
 
     bindKeyboardShortcuts: function () {
@@ -3789,8 +3878,6 @@ const PDVEvents = {
     },
 
     handleAction: function (action, el) {
-        console.log('[PDV-EVENTS] Action:', action);
-
         switch (action) {
             // CART ACTIONS
             case 'cart-undo':
@@ -3901,17 +3988,22 @@ const PDVSearch = {
         this.cards = document.querySelectorAll('.product-card');
     },
 
+    keydownHandler: null,
+
     bindEvents: function () {
         // Eventos de Chips (Categorias)
-        this.chips.forEach(chip => {
-            chip.addEventListener('click', (e) => {
-                this.chips.forEach(c => c.classList.remove('active'));
-                e.currentTarget.classList.add('active');
+        if (this.chips) {
+            this.chips.forEach(chip => {
+                // removeEventListener não é necessário pois elementos são substituídos no SPA
+                chip.addEventListener('click', (e) => {
+                    this.chips.forEach(c => c.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
 
-                this.selectedCategory = e.currentTarget.dataset.category;
-                this.filterProducts();
+                    this.selectedCategory = e.currentTarget.dataset.category;
+                    this.filterProducts();
+                });
             });
-        });
+        }
 
         // Eventos de Busca (Input)
         if (this.searchInput) {
@@ -3920,13 +4012,18 @@ const PDVSearch = {
                 this.filterProducts();
             });
 
-            // Atalho F2
-            document.addEventListener('keydown', (e) => {
+            // Atalho F2 (Global)
+            if (this.keydownHandler) {
+                document.removeEventListener('keydown', this.keydownHandler);
+            }
+
+            this.keydownHandler = (e) => {
                 if (e.key === 'F2') {
                     e.preventDefault();
-                    this.searchInput.focus();
+                    if (this.searchInput) this.searchInput.focus();
                 }
-            });
+            };
+            document.addEventListener('keydown', this.keydownHandler);
         }
     },
 
@@ -3970,8 +4067,6 @@ window.PDVSearch = PDVSearch;
 
     Object.assign(window.PDV, {
         init: function () {
-            console.log('[PDV] Initializing...');
-
             // 1. LER CONFIGURAÇÃO (SPA)
             const configEl = document.getElementById('pdv-config');
             let config = {};
@@ -4073,8 +4168,6 @@ window.PDVSearch = PDVSearch;
 
             // 7. ÍCONES (Lucide)
             if (typeof lucide !== 'undefined') lucide.createIcons();
-
-            console.log('[PDV] Ready');
         }
     });
 

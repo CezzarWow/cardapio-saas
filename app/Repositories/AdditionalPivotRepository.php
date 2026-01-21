@@ -56,49 +56,24 @@ class AdditionalPivotRepository
     }
 
     /**
-     * Vincula múltiplos itens a um grupo de uma vez (INSERT IGNORE)
+     * Sincroniza os itens de um grupo (remove todos e reinsere apenas os selecionados)
+     * Usado quando o modal de vincular itens é submetido
      */
-    public function linkMultiple(int $groupId, array $itemIds): void
-    {
-        if (empty($itemIds)) {
-            return;
-        }
-
-        $conn = Database::connect();
-        $stmt = $conn->prepare('INSERT IGNORE INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)');
-
-        foreach ($itemIds as $itemId) {
-            $itemId = intval($itemId);
-            if ($itemId > 0) {
-                $stmt->execute(['gid' => $groupId, 'iid' => $itemId]);
-            }
-        }
-        try {
-            $cache = new Cache();
-            $cache->forget('product_additional_relations');
-        } catch (\Exception $e) {
-        }
-    }
-
-    /**
-     * Sincroniza os grupos de um item (remove e reinsere)
-     * Usado ao atualizar um item para alterar seus vínculos
-     */
-    public function syncGroupsForItem(int $itemId, array $groupIds): void
+    public function syncItemsForGroup(int $groupId, array $itemIds): void
     {
         $conn = Database::connect();
 
-        // Remove todos os vínculos atuais
-        $stmt = $conn->prepare('DELETE FROM additional_group_items WHERE item_id = :iid');
-        $stmt->execute(['iid' => $itemId]);
+        // Remove todos os vínculos atuais do grupo
+        $stmt = $conn->prepare('DELETE FROM additional_group_items WHERE group_id = :gid');
+        $stmt->execute(['gid' => $groupId]);
 
         // Insere os novos vínculos
-        if (!empty($groupIds)) {
+        if (!empty($itemIds)) {
             $stmtLink = $conn->prepare('INSERT INTO additional_group_items (group_id, item_id) VALUES (:gid, :iid)');
-            foreach ($groupIds as $gid) {
-                $gid = intval($gid);
-                if ($gid > 0) {
-                    $stmtLink->execute(['gid' => $gid, 'iid' => $itemId]);
+            foreach ($itemIds as $iid) {
+                $iid = intval($iid);
+                if ($iid > 0) {
+                    $stmtLink->execute(['gid' => $groupId, 'iid' => $iid]);
                 }
             }
         }

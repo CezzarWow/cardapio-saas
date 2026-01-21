@@ -14,7 +14,9 @@ window.StockSPA = {
      * Inicializa o módulo SPA
      */
     init() {
-        // [StockSPA] Initializing...
+        // Limpar cache ao inicializar (após page reload, dados podem ter mudado)
+        this.tabCache = {};
+
         this.bindTabs();
         this.loadInitialTab();
         this.bindCategoryChips();
@@ -56,6 +58,11 @@ window.StockSPA = {
             tabFromHash = hash.split('/')[1] || 'produtos';
         } else if (hash === 'estoque') {
             tabFromHash = 'produtos';
+        }
+
+        // Remove query strings (ex: adicionais?success=ok -> adicionais)
+        if (tabFromHash.includes('?')) {
+            tabFromHash = tabFromHash.split('?')[0];
         }
 
         const initialTab = validTabs.includes(tabFromHash) ? tabFromHash : 'produtos';
@@ -211,6 +218,13 @@ window.StockSPA = {
         tabs.forEach(tab => {
             tab.classList.toggle('active', tab.dataset.tab === tabName);
         });
+
+        // Controla visibilidade do botão "Novo Produto"
+        const newProductBtn = document.getElementById('btn-new-product-header');
+        if (newProductBtn) {
+            // Mostra apenas na aba 'produtos'
+            newProductBtn.style.display = tabName === 'produtos' ? 'flex' : 'none';
+        }
     },
 
     /**

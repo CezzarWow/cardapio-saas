@@ -1,4 +1,4 @@
-/* delivery-bundle - Generated 2026-01-19T12:16:54.871Z */
+/* delivery-bundle - Generated 2026-01-21T21:33:27.157Z */
 
 
 /* ========== delivery/helpers.js ========== */
@@ -534,10 +534,11 @@ const DeliveryPolling = {
      * Inicializa o som
      */
     initSound: function () {
+        if (this.audio) return; // Mantém instância única se possível
+
         try {
             this.audio = new Audio(DeliveryHelpers.getBaseUrl() + '/sounds/new-order.mp3');
-            this.audio.volume = 1.0; // Volume máximo
-            // this.audio.playbackRate = 1.5; // Desativado - velocidade normal
+            this.audio.volume = 1.0;
         } catch (e) {
             console.warn('[Delivery] Audio não suportado');
         }
@@ -547,13 +548,19 @@ const DeliveryPolling = {
      * Toca som de notificação
      */
     playSound: function () {
+        if (!this.audio) this.initSound();
         if (!this.audio) return;
 
-        try {
-            this.audio.currentTime = 0;
-            this.audio.play();
-        } catch (e) {
-            console.warn('[Delivery] Erro ao tocar som:', e);
+        const playPromise = this.audio.play();
+
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    // Play success
+                })
+                .catch(error => {
+                    console.warn('[Delivery] Auto-play bloqueado pelo navegador. Interaja com a página.', error);
+                });
         }
     },
 
@@ -565,21 +572,28 @@ const DeliveryPolling = {
 
         this.initSound();
 
+        // [FIX] Unlock Audio Context: Tenta tocar (muted) no primeiro clique
+        // Isso "desbloqueia" o audio para tocar sozinho depois
+        const unlockAudio = () => {
+            if (this.audio) {
+                this.audio.play().then(() => {
+                    this.audio.pause();
+                    this.audio.currentTime = 0;
+                }).catch(() => { });
+                document.removeEventListener('click', unlockAudio);
+                document.removeEventListener('touchstart', unlockAudio);
+                // console.log('[Delivery] Audio Context Unlocked');
+            }
+        };
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('touchstart', unlockAudio);
+
         // Conta pedidos novos atuais
         const currentNew = document.querySelectorAll('.delivery-column--novo .delivery-card-compact').length;
         this.lastNewCount = currentNew;
 
         this.isActive = true;
         this.timerId = setInterval(() => this.poll(), this.interval);
-
-        // DESATIVADO: Continua polling mesmo em segundo plano (para tocar som)
-        // document.addEventListener('visibilitychange', () => {
-        //     if (document.hidden) {
-        //         this.pause();
-        //     } else {
-        //         this.resume();
-        //     }
-        // });
     },
 
     /**
@@ -729,7 +743,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Garante namespace
     window.DeliveryPrint = window.DeliveryPrint || {};
 
-    DeliveryPrint.Helpers = {
+    window.DeliveryPrint.Helpers = {
 
         /**
          * Extrai e normaliza dados do pedido
@@ -810,53 +824,55 @@ document.addEventListener('DOMContentLoaded', () => {
     // Garante namespace
     window.DeliveryPrint = window.DeliveryPrint || {};
 
-    DeliveryPrint.Generators = {
+    window.DeliveryPrint.Generators = {
 
         /**
          * Gera HTML da ficha UNIFICADA (Entrega ou Completa)
          */
-        generateSlipHTML: function (order, items, title = '🛵 FICHA DE ENTREGA') {
+        generateSlipHTML: function (order, items, title = 'FICHA DE ENTREGA') {
             const orderItems = items || order.items || [];
-            const data = DeliveryPrint.Helpers.extractOrderData(order);
-            const itemsHTML = DeliveryPrint.Helpers.generateItemsHTML(orderItems, true);
-            const changeHTML = DeliveryPrint.Helpers.generateChangeHTML(data.paymentMethod, data.changeFor);
+            const data = window.DeliveryPrint.Helpers.extractOrderData(order);
+            const itemsHTML = window.DeliveryPrint.Helpers.generateItemsHTML(orderItems, true);
+            const changeHTML = window.DeliveryPrint.Helpers.generateChangeHTML(data.paymentMethod, data.changeFor);
 
             return `
                 <div class="print-slip">
                     <div class="print-slip-header">
+                        <h2>================================</h2>
                         <h2>${title}</h2>
                         <div>Pedido #${data.orderId}</div>
-                        <div style="font-size: 10px; color: #666;">${data.date}</div>
+                        <div style="font-size: 10px;">${data.date}</div>
+                        <h2>================================</h2>
                     </div>
 
                     <div class="print-slip-section">
-                        <h4>👤 Dados do Cliente:</h4>
+                        <h4>CLIENTE:</h4>
                         <div><strong>Nome:</strong> ${data.clientName}</div>
-                        <div><strong>Telefone:</strong> ${data.clientPhone}</div>
+                        <div><strong>Fone:</strong> ${data.clientPhone}</div>
                     </div>
 
                     <div class="print-slip-section">
-                        <h4>📍 Endereço de Entrega:</h4>
-                        <div style="padding: 8px; background: #f5f5f5; border-radius: 4px;">
-                            ${data.clientAddress}
-                            ${data.neighborhood ? '<br><strong>Bairro:</strong> ' + data.neighborhood : ''}
-                        </div>
-                        ${data.observations ? '<div style="margin-top: 8px; font-weight: bold; color: #000;">📝 ' + data.observations + '</div>' : ''}
+                        <h4>ENDERECO:</h4>
+                        <div>${data.clientAddress}</div>
+                        ${data.neighborhood ? '<div><strong>Bairro:</strong> ' + data.neighborhood + '</div>' : ''}
+                        ${data.observations ? '<div style="margin-top: 5px;"><strong>OBS:</strong> ' + data.observations + '</div>' : ''}
                     </div>
 
                     <div class="print-slip-section">
-                        <h4>📦 Itens:</h4>
+                        <h4>ITENS:</h4>
                         ${itemsHTML}
                     </div>
 
                     <div class="print-slip-section">
-                        <h4>💳 Pagamento:</h4>
-                        <div style="font-weight: bold; font-size: 14px;">${(data.paymentMethod || 'Não informado').toUpperCase()}</div>
+                        <h4>PAGAMENTO:</h4>
+                        <div style="font-weight: bold;">${(data.paymentMethod || 'Nao informado').toUpperCase()}</div>
                         ${changeHTML}
                     </div>
 
                     <div class="print-slip-total">
-                        TOTAL: R$ ${data.total}
+                        ================================
+                        <br>TOTAL: R$ ${data.total}
+                        <br>================================
                     </div>
                 </div>
             `;
@@ -870,29 +886,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const orderType = order.order_type || 'local';
 
             const typeLabels = {
-                'delivery': '🛵 ENTREGA',
-                'pickup': '🏃 RETIRADA',
-                'local': '🍽️ CONSUMO LOCAL'
+                'delivery': '*** ENTREGA ***',
+                'pickup': '*** RETIRADA ***',
+                'local': '*** CONSUMO LOCAL ***'
             };
-            const typeLabel = typeLabels[orderType] || '🍽️ CONSUMO LOCAL';
+            const typeLabel = typeLabels[orderType] || '*** CONSUMO LOCAL ***';
 
-            const itemsHTML = DeliveryPrint.Helpers.generateItemsHTML(items, false);
+            const itemsHTML = window.DeliveryPrint.Helpers.generateItemsHTML(items, false);
 
             return `
                 <div class="print-slip" style="font-size: 14px;">
-                    <div class="print-slip-header" style="text-align: center; padding: 15px 0; border-bottom: 3px solid #333;">
-                        <h2 style="margin: 0; font-size: 24px;">🍳 COZINHA</h2>
-                        <div style="font-size: 12px; margin-top: 5px;">${date}</div>
+                    <div class="print-slip-header" style="text-align: center; padding: 10px 0; border-bottom: 2px dashed #000;">
+                        <h2 style="margin: 0; font-size: 20px;">** COZINHA **</h2>
+                        <div style="font-size: 11px; margin-top: 5px;">${date}</div>
                     </div>
 
-                    <div style="text-align: center; padding: 15px; background: #f0f0f0; margin: 10px 0; border-radius: 8px;">
-                        <div style="font-size: 22px; font-weight: bold;">${typeLabel}</div>
+                    <div style="text-align: center; padding: 10px; margin: 8px 0; border: 1px dashed #000;">
+                        <div style="font-size: 18px; font-weight: bold;">${typeLabel}</div>
                         <div style="margin-top: 5px;">Pedido #${order.id}</div>
                     </div>
 
-                    <div style="padding: 10px 0;">
-                        <h4 style="margin: 0 0 10px 0; font-size: 16px; text-transform: uppercase; border-bottom: 2px solid #333; padding-bottom: 5px;">Itens do Pedido:</h4>
+                    <div style="padding: 8px 0;">
+                        <h4 style="margin: 0 0 8px 0; font-size: 14px; text-transform: uppercase; border-bottom: 1px dashed #000; padding-bottom: 5px;">ITENS:</h4>
                         ${itemsHTML}
+                    </div>
+                    
+                    <div style="text-align: center; padding-top: 10px; border-top: 2px dashed #000;">
+                        --------------------------------
                     </div>
                 </div>
             `;
@@ -923,7 +943,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentItemsData = null;
     let slipType = 'delivery';
 
-    DeliveryPrint.Modal = {
+    window.DeliveryPrint.Modal = {
 
         // Getters para estado
         getCurrentOrderId: () => currentOrderId,
@@ -980,11 +1000,11 @@ document.addEventListener('DOMContentLoaded', () => {
         _renderSlip: function (type, order, items) {
             switch (type) {
                 case 'kitchen':
-                    return DeliveryPrint.Generators.generateKitchenSlipHTML(order, items);
+                    return window.DeliveryPrint.Generators.generateKitchenSlipHTML(order, items);
                 case 'complete':
-                    return DeliveryPrint.Generators.generateSlipHTML(order, items, '📋 FICHA DO PEDIDO');
+                    return window.DeliveryPrint.Generators.generateSlipHTML(order, items, 'FICHA DO PEDIDO');
                 default:
-                    return DeliveryPrint.Generators.generateSlipHTML(order, items, '🛵 FICHA DE ENTREGA');
+                    return window.DeliveryPrint.Generators.generateSlipHTML(order, items, 'FICHA DE ENTREGA');
             }
         },
 
@@ -995,7 +1015,7 @@ document.addEventListener('DOMContentLoaded', () => {
             slipType = 'delivery';
             const content = document.getElementById('print-slip-content');
             if (content && currentOrderData) {
-                content.innerHTML = DeliveryPrint.Generators.generateSlipHTML(currentOrderData, currentItemsData, '🛵 FICHA DE ENTREGA');
+                content.innerHTML = window.DeliveryPrint.Generators.generateSlipHTML(currentOrderData, currentItemsData, 'FICHA DE ENTREGA');
             }
         },
 
@@ -1006,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
             slipType = 'kitchen';
             const content = document.getElementById('print-slip-content');
             if (content && currentOrderData) {
-                content.innerHTML = DeliveryPrint.Generators.generateKitchenSlipHTML(currentOrderData, currentItemsData);
+                content.innerHTML = window.DeliveryPrint.Generators.generateKitchenSlipHTML(currentOrderData, currentItemsData);
             }
         },
 
@@ -1041,7 +1061,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Garante namespace
     window.DeliveryPrint = window.DeliveryPrint || {};
 
-    DeliveryPrint.Actions = {
+    window.DeliveryPrint.Actions = {
 
         /**
          * Imprime a ficha atual
@@ -1055,7 +1075,7 @@ document.addEventListener('DOMContentLoaded', () => {
             printArea.innerHTML = content.innerHTML;
             window.print();
 
-            DeliveryPrint.Modal.close();
+            window.DeliveryPrint.Modal.close();
         },
 
         /**
@@ -1073,12 +1093,261 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const html = DeliveryPrint.Generators.generateSlipHTML(orderData, orderData.items, '📋 FICHA DO PEDIDO');
+            const html = window.DeliveryPrint.Generators.generateSlipHTML(orderData, orderData.items, '📋 FICHA DO PEDIDO');
             printArea.innerHTML = html;
             window.print();
+        },
+
+        /**
+         * Imprime diretamente pelo ID e Tipo (Pula prévia)
+         */
+        printDirect: async function (orderId, type) {
+            let orderData = null;
+            let itemsData = null;
+
+            // Tenta usar dados já carregados no UI Principal para ser instantâneo
+            if (window.DeliveryUI && window.DeliveryUI.currentOrder && window.DeliveryUI.currentOrder.id == orderId) {
+                orderData = window.DeliveryUI.currentOrder;
+                itemsData = orderData.items || [];
+            } else {
+                // Fetch silencioso se necessário
+                try {
+                    const baseUrl = window.DeliveryHelpers ? window.DeliveryHelpers.getBaseUrl() : '';
+                    const response = await fetch(baseUrl + '/admin/loja/delivery/details?id=' + orderId);
+                    const data = await response.json();
+                    if (data.success) {
+                        orderData = data.order;
+                        itemsData = data.items;
+                    }
+                } catch (e) {
+                    console.error('Erro ao buscar dados para impressão direta', e);
+                    return;
+                }
+            }
+
+            if (!orderData) return;
+
+            const printArea = document.getElementById('print-area');
+            if (!printArea) return;
+
+            let html = '';
+            // Gera o HTML correspondente
+            if (type === 'kitchen') {
+                html = window.DeliveryPrint.Generators.generateKitchenSlipHTML(orderData, itemsData);
+            } else {
+                html = window.DeliveryPrint.Generators.generateSlipHTML(orderData, itemsData, 'FICHA DE ENTREGA');
+            }
+
+            printArea.innerHTML = html;
+
+            // [QZ Tray] Tentativa de impressão silenciosa
+            if (window.DeliveryPrint.QZ) {
+                // Tenta init se não estiver conectado
+                await window.DeliveryPrint.QZ.init();
+                // Envia para impressora
+                // printHTML cuida de achar a printer default
+                const qzSuccess = await window.DeliveryPrint.QZ.printHTML(html);
+
+                // Se o script QZ rodou sem erro (retornou promise resolved), consideramos impresso
+                // Mas printHTML retorna void ou undefined em sucesso, e alerta em erro.
+                // Vamos assumir que se não lançou exceção global, foi.
+                // Mas para garantir o fallback, vamos fazer o seguinte:
+                // Se o usuário cancelou o certificado ou QZ não está rodando, init retorna false.
+                return;
+            }
+
+            // Fallback para navegador
+            setTimeout(() => {
+                window.print();
+            }, 50);
+        },
+
+        /**
+         * Imprime usando o conteúdo já renderizado no modal de prévia
+         */
+        printFromModal: async function () {
+            const content = document.getElementById('print-slip-content');
+            if (!content) {
+                alert('Conteúdo de impressão não encontrado');
+                return;
+            }
+
+            const html = content.innerHTML;
+
+            // Usa QZ Tray se disponível
+            if (window.DeliveryPrint.QZ) {
+                await window.DeliveryPrint.QZ.printHTML(html);
+            } else {
+                // Fallback: impressão pelo navegador
+                const printArea = document.getElementById('print-area');
+                if (printArea) {
+                    printArea.innerHTML = html;
+                    window.print();
+                }
+            }
         }
     };
 
+
+})();
+
+
+/* ========== delivery/print-qz.js ========== */
+/**
+ * PRINT-QZ.JS - Integração QZ Tray
+ * Módulo: DeliveryPrint.QZ
+ * 
+ * Dependências: qz-tray.js (CDN)
+ */
+
+(function () {
+    'use strict';
+
+    window.DeliveryPrint = window.DeliveryPrint || {};
+
+    let isConnected = false;
+    let printerName = null; // Guardar nome da impressora
+
+    window.DeliveryPrint.QZ = {
+
+        /**
+         * Inicializa conexão
+         */
+        init: async function () {
+            if (typeof qz === 'undefined') {
+                console.error('[QZ] Biblioteca qz-tray.js não carregada!');
+                alert('QZ Tray não está disponível. Verifique se o programa está rodando.');
+                return false;
+            }
+
+            if (isConnected) return true;
+
+            // Verifica se já está conectado
+            if (qz.websocket.isActive()) {
+                isConnected = true;
+                console.log('[QZ] Já estava conectado!');
+                return true;
+            }
+
+            try {
+                console.log('[QZ] Tentando conectar ao QZ Tray...');
+
+                // Para localhost, não precisa de certificado
+                // O QZ vai abrir um popup pedindo permissão
+                await qz.websocket.connect();
+
+                isConnected = true;
+                console.log('[QZ] Conectado com sucesso!');
+                return true;
+            } catch (e) {
+                console.error('[QZ] Falha na conexão:', e);
+                alert('Não foi possível conectar ao QZ Tray.\n\nVerifique:\n1. O QZ Tray está rodando (ícone verde)?\n2. Aceite a permissão quando aparecer.');
+                return false;
+            }
+        },
+
+        /**
+         * Encontra impressora (padrão ou nome específico)
+         */
+        findPrinter: async function (name = null) {
+            if (!isConnected) await this.init();
+
+            try {
+                if (name) {
+                    printerName = await qz.printers.find(name);
+                } else {
+                    printerName = await qz.printers.getDefault();
+                }
+                console.log('[QZ] Impressora selecionada:', printerName);
+                return printerName;
+            } catch (e) {
+                console.error('[QZ] Impressora não encontrada:', e);
+                alert('Impressora não encontrada! Verifique o QZ Tray.');
+                return null;
+            }
+        },
+
+        /**
+         * Imprime usando texto RAW (melhor para térmicas)
+         */
+        printHTML: async function (htmlContent) {
+            if (!isConnected) {
+                const ok = await this.init();
+                if (!ok) return;
+            }
+
+            if (!printerName) {
+                await this.findPrinter(); // Pega default
+            }
+
+            if (!printerName) return;
+
+            // Converte HTML para texto puro
+            const rawText = this._htmlToRaw(htmlContent);
+            console.log('[QZ] Texto RAW:', rawText);
+
+            // Configuração para impressora RAW
+            const config = qz.configs.create(printerName, {
+                altPrinting: true  // Usa modo alternativo
+            });
+
+            // Comandos ESC/POS para impressora térmica
+            const ESC = '\x1B';
+            const GS = '\x1D';
+
+            // Inicializa + Texto + Corte
+            const data = [
+                ESC + '@',           // Reset impressora
+                ESC + 'a' + '\x00',  // Alinhar à ESQUERDA
+                rawText,
+                '\n\n\n',            // Espaço antes do corte
+                GS + 'V' + '\x00'    // Corte parcial
+            ];
+
+            try {
+                await qz.print(config, data);
+                console.log('[QZ] Enviado para impressão RAW!');
+
+                // Fecha o modal de impressão
+                if (window.DeliveryPrint.Modal) {
+                    window.DeliveryPrint.Modal.close();
+                }
+            } catch (e) {
+                console.error('[QZ] Erro ao imprimir:', e);
+                alert('Erro ao enviar para impressora: ' + e);
+            }
+        },
+
+        /**
+         * Converte HTML para texto puro formatado
+         */
+        _htmlToRaw: function (html) {
+            // Cria elemento temporário
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+
+            // Pega texto e limpa
+            let text = temp.textContent || temp.innerText || '';
+
+            // Remove espaços extras e linhas vazias múltiplas
+            text = text.replace(/[ \t]+/g, ' ');
+            text = text.replace(/\n\s*\n\s*\n/g, '\n\n');
+            text = text.trim();
+
+            // Formata para 32 caracteres de largura (58mm)
+            const lines = text.split('\n');
+            const formatted = lines.map(line => {
+                line = line.trim();
+                // Se a linha tem === ou ---, centraliza
+                if (line.match(/^[=\-]{5,}$/)) {
+                    return '================================';
+                }
+                return line;
+            }).join('\n');
+
+            return formatted;
+        }
+    };
 
 })();
 
@@ -1108,8 +1377,10 @@ DeliveryPrint.showDeliverySlip = () => DeliveryPrint.Modal.showDeliverySlip();
 DeliveryPrint.showKitchenSlip = () => DeliveryPrint.Modal.showKitchenSlip();
 
 // Actions
-DeliveryPrint.print = () => DeliveryPrint.Actions.print();
-DeliveryPrint.printComplete = (orderData) => DeliveryPrint.Actions.printComplete(orderData);
+DeliveryPrint.print = () => window.DeliveryPrint.Actions.print();
+DeliveryPrint.printComplete = (orderData) => window.DeliveryPrint.Actions.printComplete(orderData);
+DeliveryPrint.printDirect = (orderId, type) => window.DeliveryPrint.Actions.printDirect(orderId, type);
+DeliveryPrint.printFromModal = () => window.DeliveryPrint.Actions.printFromModal();
 
 // Generators (acesso direto para uso externo)
 DeliveryPrint.generateSlipHTML = (order, items, title) =>

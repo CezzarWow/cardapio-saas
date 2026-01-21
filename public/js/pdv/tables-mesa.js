@@ -12,7 +12,7 @@
     // BUSCAR MESAS
     // ==========================================
     PDVTables.fetchTables = function () {
-        fetch('mesas/buscar')
+        fetch('mesas/buscar?nocache=' + new Date().getTime())
             .then(r => r.json())
             .then(data => this.renderTableResults(data));
     };

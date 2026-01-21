@@ -17,17 +17,22 @@ const PDVSearch = {
         this.cards = document.querySelectorAll('.product-card');
     },
 
+    keydownHandler: null,
+
     bindEvents: function () {
         // Eventos de Chips (Categorias)
-        this.chips.forEach(chip => {
-            chip.addEventListener('click', (e) => {
-                this.chips.forEach(c => c.classList.remove('active'));
-                e.currentTarget.classList.add('active');
+        if (this.chips) {
+            this.chips.forEach(chip => {
+                // removeEventListener não é necessário pois elementos são substituídos no SPA
+                chip.addEventListener('click', (e) => {
+                    this.chips.forEach(c => c.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
 
-                this.selectedCategory = e.currentTarget.dataset.category;
-                this.filterProducts();
+                    this.selectedCategory = e.currentTarget.dataset.category;
+                    this.filterProducts();
+                });
             });
-        });
+        }
 
         // Eventos de Busca (Input)
         if (this.searchInput) {
@@ -36,13 +41,18 @@ const PDVSearch = {
                 this.filterProducts();
             });
 
-            // Atalho F2
-            document.addEventListener('keydown', (e) => {
+            // Atalho F2 (Global)
+            if (this.keydownHandler) {
+                document.removeEventListener('keydown', this.keydownHandler);
+            }
+
+            this.keydownHandler = (e) => {
                 if (e.key === 'F2') {
                     e.preventDefault();
-                    this.searchInput.focus();
+                    if (this.searchInput) this.searchInput.focus();
                 }
-            });
+            };
+            document.addEventListener('keydown', this.keydownHandler);
         }
     },
 

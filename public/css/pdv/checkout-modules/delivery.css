@@ -1,34 +1,53 @@
 /* ==========================================
  * DELIVERY PANEL (Modal Independente)
  * ========================================== */
-.delivery-panel {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    width: 420px;
-    max-width: 95vw;
-    border-radius: 16px;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-    display: none;
-    flex-direction: column;
-    max-height: 90vh;
-    overflow: hidden;
-    z-index: 1000;
-}
 
-/* Overlay de fundo - Branco/Cinza claro */
-.delivery-panel::before {
-    content: '';
+/* Wrapper Overlay (Ocupa a tela toda) */
+.delivery-panel {
+    /* Mantemos o nome da classe/ID para compatibilidade com JS */
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(255, 255, 255, 0.95);
-    z-index: -1;
+    background: rgba(0, 0, 0, 0.6);
+    /* Fundo escuro */
+    z-index: 99999;
+    /* Muito alto */
+    display: none;
+    /* Controlado via JS (Flex) */
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
 }
+
+/* A caixa branca dentro do overlay */
+.delivery-box {
+    background: white;
+    width: 420px;
+    max-width: 95vw;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* REMOVIDO ::before pois agora usamos flex container */
 
 .delivery-header {
     padding: 20px;

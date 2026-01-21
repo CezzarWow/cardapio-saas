@@ -85,7 +85,10 @@
     };
 </script>
 
-<!-- Delivery Bundle (11 scripts combinados) -->
+<!-- QZ Tray Library (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.min.js"></script>
+
+<!-- Delivery Bundle (12 scripts combinados) -->
 <script data-spa-script="delivery-bundle" src="<?= BASE_URL ?>/js/bundles/delivery-bundle.js?v=<?= APP_VERSION ?>"></script>
 
 <!-- 

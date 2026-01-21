@@ -23,8 +23,8 @@
         </div>
 
         <div style="display: flex; gap: 10px;">
-            <button onclick="document.body.removeChild(document.getElementById('clientModal'));" style="flex: 1; padding: 10px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer; color: #475569; font-weight: 600;">Cancelar</button>
-            <button id="btn-save-new-client" onclick="saveClient()" style="flex: 1; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Salvar</button>
+            <button onclick="document.getElementById('clientModal').style.display = 'none';" style="flex: 1; padding: 10px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer; color: #475569; font-weight: 600;">Cancelar</button>
+            <button id="btn-save-new-client" onclick="PDVTables.saveClient()" style="flex: 1; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Salvar</button>
         </div>
     </div>
 </div>

@@ -99,8 +99,16 @@
 
         fetch('clientes/salvar', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, phone })
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                name,
+                phone,
+                csrf_token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }),
+            credentials: 'include'
         })
             .then(r => r.json())
             .then(data => {

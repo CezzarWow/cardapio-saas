@@ -68,7 +68,17 @@ class AdditionalService
 
     public function createGroup(int $rid, array $data): int
     {
-        return $this->groupRepo->save($rid, $data);
+        $groupId = $this->groupRepo->save(
+            $rid,
+            $data['name'],
+            isset($data['required']) ? (int)$data['required'] : 0
+        );
+
+        if (!empty($data['item_ids'])) {
+            $this->pivotRepo->syncItemsForGroup($groupId, $data['item_ids']);
+        }
+
+        return $groupId;
     }
 
     public function deleteGroup(int $id, int $rid): void
@@ -109,7 +119,7 @@ class AdditionalService
             $this->itemRepo->update($data['id'], $rid, $data['name'], $this->parsePrice($data['price'] ?? '0'));
 
             // Sincroniza grupos (limpa e insere)
-            $this->pivotRepo->unlinkAllGroups($data['id']);
+            $this->pivotRepo->unlinkAllByItem($data['id']);
             if (!empty($data['group_ids'])) {
                 $this->linkMultipleGroups($data['id'], $data['group_ids'], $rid);
             }
@@ -150,11 +160,16 @@ class AdditionalService
             return;
         }
 
+        // Filtra apenas itens válidos do restaurante
+        $validItemIds = [];
         foreach ($itemIds as $itemId) {
             if ($this->itemRepo->findById($itemId, $rid)) {
-                $this->pivotRepo->link($groupId, $itemId);
+                $validItemIds[] = $itemId;
             }
         }
+
+        // Sincroniza (remove os não listados, insere os novos)
+        $this->pivotRepo->syncItemsForGroup($groupId, $validItemIds);
     }
 
     public function updateCategoryLinks(int $groupId, array $categoryIds, int $rid): void

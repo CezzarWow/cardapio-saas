@@ -95,7 +95,9 @@ const AdminSPA = {
             e.preventDefault(); // Impede navegação tradicional do link
 
             const section = link.dataset.section;
-            if (section && section !== this.currentSection) {
+            if (section) {
+                // [FIX] Removemos a verificação (section !== currentSection) aqui
+                // Deixamos o navigateTo decidir se deve recarregar (ex: limpar params)
                 this.navigateTo(section);
             }
         });
@@ -117,8 +119,18 @@ const AdminSPA = {
 
     async navigateTo(sectionName, updateHistory = true, forceReload = false, queryParams = null) {
         if (this.isLoading && !forceReload) return;
-        // Permite recarregar mesma seção se tiver params (ex: order_id diferente)
-        if (sectionName === this.currentSection && !forceReload && !queryParams) return;
+
+        // Verifica se devemos recarregar a mesma seção
+        // Permitimos se:
+        // 1. ForceReload = true
+        // 2. Query params diferentes (ex: clicou 'Balcão' limpo estando em 'Balcão?mesa=1')
+        if (sectionName === this.currentSection && !forceReload) {
+            const newParamsStr = queryParams ? JSON.stringify(queryParams) : null;
+            const oldParamsStr = this.currentQueryParams ? JSON.stringify(this.currentQueryParams) : null;
+
+            // Se params forem iguais, não faz nada
+            if (newParamsStr === oldParamsStr) return;
+        }
 
         const config = this.sections[sectionName];
         if (!config) {
@@ -131,6 +143,12 @@ const AdminSPA = {
 
         // 1. Leave Logic
         await this.leaveCurrentSection();
+
+        // [FIX] Se estiver indo para Balcão LIMPO (sem params), limpar o carrinho migrado
+        // Isso evita que itens da mesa anterior (salvos no leaveCurrentSection) apareçam no balcão limpo
+        if (sectionName === 'balcao' && !queryParams) {
+            sessionStorage.removeItem('pdv_migration_cart');
+        }
 
         // 2. State Update
         this.currentSection = sectionName;
@@ -163,8 +181,13 @@ const AdminSPA = {
         const container = this.spaContentContainer;
         if (!container) return;
 
-        // Cache Hit (Instant Load com transição suave)
-        if (this.cache[sectionName] && !forceReload && !queryParams) {
+        // [FIX] Seções dinâmicas não devem usar cache simples, pois o conteúdo varia com params (mesa_id)
+        // Isso força o carregamento fresco para balcao/mesas, evitando o problema de "Zombie Cart"
+        const noCacheSections = ['balcao', 'pdv', 'mesas', 'delivery'];
+        const canUseCache = !noCacheSections.includes(sectionName);
+
+        // Cache Hit (Instant Load com transição suave) - Apenas se permitido
+        if (canUseCache && this.cache[sectionName] && !forceReload && !queryParams) {
             container.classList.add('fade-out');
             // Espera transição CSS completar (150ms definido no spa.css)
             await new Promise(r => setTimeout(r, 150));
@@ -177,11 +200,15 @@ const AdminSPA = {
         container.classList.add('fade-out');
         this.isLoading = true;
 
-        // Monta URL
+        // Monta URL com Timestamp para evitar cache do navegador (browser cache)
         let partialUrl = `${BASE_URL}${config.partial}`;
+        // Detecta se já tem query params
+        const separator = partialUrl.includes('?') ? '&' : '?';
+        partialUrl += `${separator}_t=${Date.now()}`;
+
         if (queryParams) {
             const params = new URLSearchParams(queryParams);
-            partialUrl += '?' + params.toString();
+            partialUrl += '&' + params.toString();
         }
 
         // Fetch
@@ -392,7 +419,9 @@ const AdminSPA = {
         if (!config || this.cache[sectionName]) return;
 
         try {
-            const response = await fetch(`${BASE_URL}${config.partial}`, {
+            // Adiciona timestamp para evitar cache
+            const url = `${BASE_URL}${config.partial}${config.partial.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+            const response = await fetch(url, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             if (response.ok) {
@@ -406,6 +435,16 @@ const AdminSPA = {
     // Alias para compatibilidade
     reloadCurrentSection() {
         if (this.currentSection) this.navigateTo(this.currentSection, false, true);
+    },
+
+    /**
+     * Invalida o cache de uma seção específica
+     * Útil após salvar dados que alteram a visualização (ex: mesas, pedidos)
+     */
+    invalidateCache(sectionName) {
+        if (this.cache[sectionName]) {
+            delete this.cache[sectionName];
+        }
     }
 };
 

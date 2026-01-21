@@ -154,7 +154,8 @@ const CheckoutFlow = {
 
         // Sincroniza com o tipo de pedido selecionado no header
         const selectedType = document.getElementById('selected_order_type')?.value || 'local';
-        CheckoutOrderType.selectOrderType(selectedType);
+        // [FIX] Passa true para não reabrir modals (sync apenas)
+        CheckoutOrderType.selectOrderType(selectedType, null, true);
 
         CheckoutUI.updateCheckoutUI();
         if (typeof lucide !== 'undefined') lucide.createIcons();
