@@ -126,8 +126,11 @@
     // ==========================================
     // FECHAR MODAL AO CLICAR FORA
     // ==========================================
-    document.getElementById('itemModal').addEventListener('click', function (e) {
-        if (e.target === this) closeItemModal();
-    });
+    const itemModalEl = document.getElementById('itemModal');
+    if (itemModalEl) {
+        itemModalEl.addEventListener('click', function (e) {
+            if (e.target === this) closeItemModal();
+        });
+    }
 
 })();

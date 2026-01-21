@@ -103,16 +103,25 @@
     // ==========================================
     // FECHAR MODAIS AO CLICAR FORA
     // ==========================================
-    document.getElementById('groupModal').addEventListener('click', function (e) {
-        if (e.target === this) closeGroupModal();
-    });
+    const groupModalEl = document.getElementById('groupModal');
+    if (groupModalEl) {
+        groupModalEl.addEventListener('click', function (e) {
+            if (e.target === this) closeGroupModal();
+        });
+    }
 
-    document.getElementById('linkModal').addEventListener('click', function (e) {
-        if (e.target === this) closeLinkModal();
-    });
+    const linkModalEl = document.getElementById('linkModal');
+    if (linkModalEl) {
+        linkModalEl.addEventListener('click', function (e) {
+            if (e.target === this) closeLinkModal();
+        });
+    }
 
-    document.getElementById('linkCategoryModal').addEventListener('click', function (e) {
-        if (e.target === this) closeLinkCategoryModal();
-    });
+    const linkCategoryModalEl = document.getElementById('linkCategoryModal');
+    if (linkCategoryModalEl) {
+        linkCategoryModalEl.addEventListener('click', function (e) {
+            if (e.target === this) closeLinkCategoryModal();
+        });
+    }
 
 })();

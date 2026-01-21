@@ -66,11 +66,23 @@
                         <?= count($group['items'] ?? []) ?> itens
                     </span>
                 </div>
-                <a href="<?= BASE_URL ?>/admin/loja/adicionais/grupo/deletar?id=<?= $group['id'] ?>"
-                   onclick="return confirm('Excluir o grupo &quot;<?= htmlspecialchars($group['name']) ?>&quot; e todos seus vínculos?')"
-                   style="color: #dc2626; padding: 6px; border-radius: 6px; text-decoration: none;">
-                    <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
-                </a>
+                <!-- Botões de Ação do Grupo -->
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <button type="button" class="btn-action-link" 
+                            data-group-id="<?= $group['id'] ?>" 
+                            data-group-name="<?= htmlspecialchars($group['name']) ?>"
+                            style="padding: 6px 10px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;"
+                            title="Vincular Itens">
+                        <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+                        Itens
+                    </button>
+                    <!-- Botão Categoria Removido -->
+                    <a href="<?= BASE_URL ?>/admin/loja/adicionais/grupo/deletar?id=<?= $group['id'] ?>"
+                       onclick="return confirm('Excluir o grupo &quot;<?= htmlspecialchars($group['name']) ?>&quot; e todos seus vínculos?')"
+                       style="color: #dc2626; padding: 6px; border-radius: 6px; text-decoration: none;">
+                        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                    </a>
+                </div>
             </div>
             <div class="group-card-body">
                 <?php if (empty($group['items'])): ?>
@@ -99,15 +111,15 @@
     </div>
 <?php endif; ?>
 
-<!-- Modais de Adicionais (Legado/Original) -->
+<!-- Modais de Adicionais -->
 <?php \App\Core\View::renderFromScope('admin/additionals/partials/group-modal.php', get_defined_vars()); ?>
-<?php \App\Core\View::renderFromScope('admin/additionals/partials/category-modal.php', get_defined_vars()); ?>
+<!-- Modal de Categoria Removido -->
 <?php \App\Core\View::renderFromScope('admin/additionals/partials/link-modal.php', get_defined_vars()); ?>
 <?php \App\Core\View::renderFromScope('admin/additionals/partials/item-modal.php', get_defined_vars()); ?>
 
 <!-- Scripts de Adicionais -->
-<script data-spa-script="shared-multi-select" data-spa-once="true" src="<?= BASE_URL ?>/js/shared/multi-select.js?v=<?= time() ?>"></script>
-<script data-spa-script="admin-additionals-main" data-spa-once="true" src="<?= BASE_URL ?>/js/admin/additionals.js?v=<?= time() ?>"></script>
-<script data-spa-script="admin-additionals-ui" src="<?= BASE_URL ?>/js/admin/additionals-ui.js?v=<?= time() ?>"></script>
-<script data-spa-script="admin-additionals-group" src="<?= BASE_URL ?>/js/admin/additionals-group-modal.js?v=<?= time() ?>"></script>
-<script data-spa-script="admin-additionals-item" src="<?= BASE_URL ?>/js/admin/additionals-item-modal.js?v=<?= time() ?>"></script>
+<!-- MultiSelect é lib global, pode ter spa-once -->
+<script data-spa-script="shared-multi-select" data-spa-once="true" src="<?= BASE_URL ?>/js/components/multi-select.js?v=<?= time() ?>"></script>
+
+<!-- Scripts de adicionais unificados (Bundle) -->
+<script src="<?= BASE_URL ?>/js/admin/additionals-bundle.js?v=<?= time() ?>"></script>
