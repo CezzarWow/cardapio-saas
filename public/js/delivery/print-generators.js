@@ -83,6 +83,9 @@
 
             return `
                 <div class="print-slip" style="font-size: 14px;">
+                    <!-- Espaco para grampear -->
+                    <div style="height: 15mm;"></div>
+                    
                     <div class="print-slip-header" style="text-align: center; padding: 10px 0; border-bottom: 2px dashed #000;">
                         <h2 style="margin: 0; font-size: 20px;">** COZINHA **</h2>
                         <div style="font-size: 11px; margin-top: 5px;">${date}</div>

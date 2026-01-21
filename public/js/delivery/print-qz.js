@@ -105,7 +105,7 @@
                 ESC + '@',           // Reset impressora
                 ESC + 'a' + '\x00',  // Alinhar à ESQUERDA
                 rawText,
-                '\n\n\n',            // Espaço antes do corte
+                '\n',                // Espaço mínimo antes do corte
                 GS + 'V' + '\x00'    // Corte parcial
             ];
 

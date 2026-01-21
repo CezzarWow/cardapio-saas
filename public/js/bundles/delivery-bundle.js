@@ -1,4 +1,4 @@
-/* delivery-bundle - Generated 2026-01-21T21:33:27.157Z */
+/* delivery-bundle - Generated 2026-01-21T21:38:50.583Z */
 
 
 /* ========== delivery/helpers.js ========== */
@@ -896,6 +896,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return `
                 <div class="print-slip" style="font-size: 14px;">
+                    <!-- Espaco para grampear -->
+                    <div style="height: 15mm;"></div>
+                    
                     <div class="print-slip-header" style="text-align: center; padding: 10px 0; border-bottom: 2px dashed #000;">
                         <h2 style="margin: 0; font-size: 20px;">** COZINHA **</h2>
                         <div style="font-size: 11px; margin-top: 5px;">${date}</div>
@@ -1300,7 +1303,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ESC + '@',           // Reset impressora
                 ESC + 'a' + '\x00',  // Alinhar à ESQUERDA
                 rawText,
-                '\n\n\n',            // Espaço antes do corte
+                '\n',                // Espaço mínimo antes do corte
                 GS + 'V' + '\x00'    // Corte parcial
             ];
 
