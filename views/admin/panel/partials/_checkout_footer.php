@@ -20,13 +20,6 @@
     <div class="footer-buttons">
         <button onclick="closeCheckout()" class="btn-cancel">Cancelar</button>
         
-        <!-- Botão SALVAR (aparece só em Retirada/Entrega) -->
-        <button id="btn-save-pickup" onclick="savePickupOrder()" 
-                class="btn-pay-later" style="display: none;">
-            <i data-lucide="clock" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 5px;"></i>
-            Pagar Depois
-        </button>
-        
         <button id="btn-finish-sale" onclick="submitSale()" disabled 
                 class="btn-finish">
             CONCLUIR VENDA <i data-lucide="check-circle"></i>

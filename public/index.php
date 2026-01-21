@@ -97,6 +97,7 @@ Router::add('/admin/loja/pdv/cancelar-edicao', \App\Controllers\Admin\PdvControl
 Router::add('/admin/loja/delivery', \App\Controllers\Admin\RedirectController::class, 'toSpaDelivery');
 Router::add('/admin/loja/delivery/status', \App\Controllers\Admin\DeliveryController::class, 'updateStatus');
 Router::add('/admin/loja/delivery/list', \App\Controllers\Admin\DeliveryController::class, 'list');
+Router::add('/admin/loja/delivery/check', \App\Controllers\Admin\DeliveryController::class, 'check');
 Router::add('/admin/loja/delivery/details', \App\Controllers\Admin\DeliveryController::class, 'getOrderDetails');
 Router::add('/admin/loja/delivery/history', \App\Controllers\Admin\DeliveryController::class, 'history');
 Router::add('/admin/loja/delivery/send-to-table', \App\Controllers\Admin\DeliveryController::class, 'sendToTable');

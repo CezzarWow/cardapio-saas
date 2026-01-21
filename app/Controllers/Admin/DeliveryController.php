@@ -45,7 +45,6 @@ class DeliveryController extends BaseController
         $orders = $this->service->getOrders($rid, $statusFilter);
 
         View::renderFromScope('admin/delivery/partials/order_list_kanban', get_defined_vars());
-        View::renderFromScope('admin/delivery/partials/order_list_kanban', get_defined_vars());
     }
 
     public function check()
