@@ -1,4 +1,4 @@
-/* delivery-bundle - Generated 2026-01-22T03:56:25.990Z */
+/* delivery-bundle - Generated 2026-01-22T03:59:56.816Z */
 
 
 /* ========== delivery/helpers.js ========== */
@@ -1242,14 +1242,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // 3️⃣ ASSINATURA - Formato oficial QZ Tray
         qz.security.setSignaturePromise(function (toSign) {
             return function (resolve, reject) {
-                console.log('[QZ] Assinando:', toSign);
                 fetch(baseUrl + '/qz/sign.php?request=' + encodeURIComponent(toSign), { cache: 'no-store', headers: { 'Content-Type': 'text/plain' } })
                     .then(function (data) { data.ok ? resolve(data.text()) : reject(data.text()); });
             };
         });
 
         isSecurityConfigured = true;
-        console.log('[QZ] ✅ Segurança configurada (certificado + assinatura) - ANTES de connect');
     }
 
     // Executa imediatamente ao carregar o arquivo
@@ -1280,15 +1278,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Se já está conectado mas não por nós
             if (qz.websocket.isActive()) {
                 isConnected = true;
-                console.log('[QZ] Já estava conectado!');
                 return true;
             }
 
             try {
-                console.log('[QZ] Conectando ao QZ Tray...');
                 await qz.websocket.connect();
                 isConnected = true;
-                console.log('[QZ] ✅ Conectado com sucesso!');
                 return true;
             } catch (e) {
                 console.error('[QZ] Falha na conexão:', e);
@@ -1306,18 +1301,13 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 if (name) {
                     printerName = await qz.printers.find(name);
-                    console.log('[QZ] Impressora encontrada por nome:', printerName);
                 } else {
                     // Tenta pegar a impressora padrão
                     try {
                         printerName = await qz.printers.getDefault();
-                        console.log('[QZ] Impressora padrão:', printerName);
                     } catch (defaultErr) {
-                        console.warn('[QZ] Sem impressora padrão, listando todas...');
-
-                        // Lista todas as impressoras disponíveis
+                        // Sem impressora padrão, lista todas
                         const allPrinters = await qz.printers.find();
-                        console.log('[QZ] Impressoras disponíveis:', allPrinters);
 
                         if (allPrinters && allPrinters.length > 0) {
                             // Tenta encontrar uma térmica (geralmente tem "POS", "58", "80", "Thermal" no nome)
@@ -1327,7 +1317,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             );
 
                             printerName = thermalPrinter || allPrinters[0];
-                            console.log('[QZ] Usando impressora:', printerName);
                         } else {
                             throw new Error('Nenhuma impressora encontrada');
                         }
@@ -1358,7 +1347,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Converte HTML para texto puro
             const rawText = this._htmlToRaw(htmlContent);
-            console.log('[QZ] Texto RAW:', rawText);
 
             // Configuração para impressora RAW
             const config = qz.configs.create(printerName, {
@@ -1379,7 +1367,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 await qz.print(config, data);
-                console.log('[QZ] ✅ Enviado para impressão RAW!');
 
                 // Fecha o modal de impressão
                 if (window.DeliveryPrint.Modal) {
