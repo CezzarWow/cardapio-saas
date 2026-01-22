@@ -1,0 +1,10 @@
+# Proteger arquivos de chaves - negar acesso direto
+<Files "*">
+    Require all denied
+</Files>
+
+# Alternativa para Apache < 2.4
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>

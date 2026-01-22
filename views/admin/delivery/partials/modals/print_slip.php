@@ -12,8 +12,7 @@
      style="z-index: 1100;"
      role="dialog" 
      aria-modal="true" 
-     aria-labelledby="deliveryPrintModalTitle"
-     aria-hidden="true">
+     aria-labelledby="deliveryPrintModalTitle">
     <div class="delivery-modal__content delivery-modal__content--small">
         
         <!-- Header -->

@@ -43,7 +43,6 @@
 
             content.innerHTML = '<div style="padding: 40px; text-align: center; color: #64748b;">Carregando...</div>';
             modal.style.display = 'flex';
-            modal.setAttribute('aria-hidden', 'false');
 
             try {
                 const baseUrl = DeliveryHelpers.getBaseUrl();
@@ -111,7 +110,6 @@
             const modal = document.getElementById('deliveryPrintModal');
             if (modal) {
                 modal.style.display = 'none';
-                modal.setAttribute('aria-hidden', 'true');
             }
             currentOrderId = null;
         }
