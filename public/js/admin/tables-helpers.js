@@ -5,7 +5,7 @@
  * ============================================
  */
 
-const TablesHelpers = {
+window.TablesHelpers = {
 
     /**
      * Retorna a BASE_URL segura

@@ -3,7 +3,7 @@
  * Centraliza o estado da aplicação (Balcão, Mesa, Comanda, Retirada)
  */
 
-const PDVState = (() => {
+window.PDVState = (() => {
     // Estado Privado
     let state = {
         modo: 'balcao',        // balcao | mesa | comanda | retirada

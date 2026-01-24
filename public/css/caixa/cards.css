@@ -1,0 +1,63 @@
+/**
+ * CAIXA MODULE - Summary Cards
+ * Cards de resumo financeiro (Total Bruto, Dinheiro, PIX, etc)
+ */
+
+/* Grid de Cards */
+.cashier-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--caixa-spacing-md);
+    margin-bottom: var(--caixa-spacing-xl);
+}
+
+/* Card Base */
+.cashier-summary-card {
+    background: var(--caixa-card-bg);
+    padding: var(--caixa-spacing-lg);
+    border-radius: var(--caixa-radius-md);
+    border-left: 5px solid var(--card-color, var(--card-blue));
+    box-shadow: var(--caixa-shadow-sm);
+}
+
+.cashier-summary-label {
+    display: block;
+    color: var(--caixa-text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.cashier-summary-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-top: 5px;
+    color: var(--card-color);
+}
+
+.cashier-summary-subtitle {
+    color: var(--caixa-text-muted);
+    font-size: 0.75rem;
+}
+
+/* Cores dos Cards */
+.card-blue {
+    --card-color: var(--caixa-text-primary);
+    border-left-color: var(--card-blue);
+}
+
+.card-green {
+    --card-color: var(--card-green);
+}
+
+.card-indigo {
+    --card-color: var(--card-indigo);
+}
+
+.card-orange {
+    --card-color: var(--card-orange);
+}
+
+.card-purple {
+    --card-color: var(--card-purple);
+}

@@ -58,6 +58,24 @@ const CheckoutUI = {
 
         const remaining = finalTotal - CheckoutState.totalPaid;
         const btnFinish = document.getElementById('btn-finish-sale');
+        const btnPayDelivery = document.getElementById('btn-pay-delivery');
+
+        // [NOVO] Controle do botão Pagar na Entrega
+        if (btnPayDelivery) {
+            const selectedType = document.getElementById('selected_order_type')?.value;
+            const isDelivery = selectedType === 'entrega';
+
+            // Mostra se for Entrega E ainda faltar pagar
+            if (isDelivery && remaining > 0.01) {
+                btnPayDelivery.style.display = 'flex';
+                // Garante que o CSS btn-finish deixa flex-row, ajusta margem
+                btnPayDelivery.style.marginRight = '10px';
+                btnPayDelivery.disabled = false;
+                btnPayDelivery.style.cursor = 'pointer';
+            } else {
+                btnPayDelivery.style.display = 'none';
+            }
+        }
 
         // Feature: Atualiza valor a lançar com o restante atualizado
         const payInput = document.getElementById('pay-amount');

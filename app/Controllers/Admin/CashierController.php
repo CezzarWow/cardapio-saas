@@ -80,17 +80,48 @@ class CashierController extends BaseController
         $this->handleValidatedPost(
             fn () => $this->v->validateOpenCashier($_POST),
             fn () => $this->v->sanitizeOpenCashier($_POST),
-            fn ($data, $rid) => $this->dashboard->openCashier($rid, $data['opening_balance']),
+            fn ($data, $rid) => $this->dashboard->openRegister($rid, $data['opening_balance']),
             self::BASE,
             'aberto'
         );
+    }
+
+    // === VERIFICAR PENDÊNCIAS (AJAX) ===
+    public function checkPending()
+    {
+        header('Content-Type: application/json');
+        $rid = $this->getRestaurantId();
+        $pendencias = $this->dashboard->checkPendingItems($rid);
+        
+        if (!empty($pendencias)) {
+            echo json_encode([
+                'success' => false,
+                'pendencias' => $pendencias
+            ]);
+        } else {
+            echo json_encode([
+                'success' => true,
+                'pendencias' => []
+            ]);
+        }
+        exit;
     }
 
     // === FECHAR CAIXA ===
     public function close()
     {
         $rid = $this->getRestaurantId();
-        $this->dashboard->closeCashier($rid);
+        $result = $this->dashboard->closeRegister($rid);
+        
+        if (!$result['success']) {
+            // Construir mensagem de erro detalhada
+            $mensagens = array_column($result['pendencias'], 'mensagem');
+            $erroMsg = implode(' | ', $mensagens);
+            $_SESSION['flash_error'] = $erroMsg;
+            $this->redirect(self::BASE . '?error=pendencias');
+            return;
+        }
+        
         $this->redirect(self::BASE);
     }
 

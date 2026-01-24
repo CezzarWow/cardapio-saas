@@ -44,8 +44,9 @@ class CloseCommandAction
      * @param array $payments Lista de pagamentos [{method, amount}, ...]
      * @throws Exception Se validação falhar
      * @throws RuntimeException Se updateStatus não afetar linhas
+     * @return int ID do pedido fechado (para impressão)
      */
-    public function execute(int $restaurantId, int $orderId, array $payments): void
+    public function execute(int $restaurantId, int $orderId, array $payments): int
     {
         $conn = Database::connect();
 
@@ -109,6 +110,8 @@ class CloseCommandAction
 
             // Log de sucesso
             error_log("[CLOSE_COMMAND] Comanda #{$orderId} fechada com sucesso. Status: concluido");
+
+            return $orderId;
 
         } catch (\Throwable $e) {
             $conn->rollBack();

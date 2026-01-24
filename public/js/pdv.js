@@ -17,8 +17,10 @@
                     config = JSON.parse(configEl.dataset.config);
                     // Define globais legado se necessário para compatibilidade
                     if (config.baseUrl) window.BASE_URL = config.baseUrl;
-                    if (config.deliveryFee) window.PDV_DELIVERY_FEE = config.deliveryFee;
+                    if (config.deliveryFee) window.PDV_DELIVERY_FEE = parseFloat(config.deliveryFee);
                     if (config.tableId) window.PDV_TABLE_ID = config.tableId;
+
+                    // DEBUG IPU - REMOVED
                 } catch (e) {
                     console.error('[PDV] Invalid config JSON', e);
                 }
@@ -120,11 +122,23 @@
         return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     };
 
-    // Auto-init apenas se não estiver no SPA (fallback legado)
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!document.getElementById('spa-content')) {
+    // Auto-init inteligente (Funciona em SPA e Refresh normal)
+    const runInit = () => {
+        // Evita múltipla inicialização no mesmo ciclo se já rodou recentemente
+        if (window.PDV_INITIALIZED_TIMESTAMP && (Date.now() - window.PDV_INITIALIZED_TIMESTAMP < 1000)) return;
+
+        if (document.getElementById('pdv-config')) {
+            // console.log('[PDV] Auto Init');
             PDV.init();
+            window.PDV_INITIALIZED_TIMESTAMP = Date.now();
         }
-    });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runInit);
+    } else {
+        // Se já carregou (cenário SPA), roda direto
+        runInit();
+    }
 
 })();

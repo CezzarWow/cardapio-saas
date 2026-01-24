@@ -103,10 +103,93 @@ class CashierDashboardService
     }
 
     /**
-     * Fecha o caixa atual
+     * Verifica se há pendências que impedem o fechamento do caixa
+     * @return array Lista de pendências encontradas
+     */
+    public function checkPendingItems(int $restaurantId): array
+    {
+        $pendencias = [];
+        $conn = \App\Core\Database::connect();
+
+        // Buscar data de abertura do caixa atual
+        $caixaAberto = $this->repo->findOpen($restaurantId);
+        $openedAt = $caixaAberto ? $caixaAberto['opened_at'] : date('Y-m-d 00:00:00');
+
+        // 1. Verificar mesas ocupadas
+        $stmtMesas = $conn->prepare("
+            SELECT COUNT(*) as total FROM tables 
+            WHERE restaurant_id = :rid AND current_order_id IS NOT NULL
+        ");
+        $stmtMesas->execute(['rid' => $restaurantId]);
+        $mesasOcupadas = (int) $stmtMesas->fetch(\PDO::FETCH_ASSOC)['total'];
+        
+        if ($mesasOcupadas > 0) {
+            $pendencias[] = [
+                'tipo' => 'mesas',
+                'quantidade' => $mesasOcupadas,
+                'mensagem' => "Existem {$mesasOcupadas} mesa(s) ocupada(s) que precisam ser fechadas"
+            ];
+        }
+
+        // 2. Verificar pedidos delivery/pickup não finalizados (apenas do turno atual)
+        $stmtDelivery = $conn->prepare("
+            SELECT COUNT(*) as total FROM orders 
+            WHERE restaurant_id = :rid 
+              AND order_type IN ('delivery', 'pickup')
+              AND status NOT IN ('entregue', 'cancelado')
+              AND created_at >= :opened_at
+        ");
+        $stmtDelivery->execute(['rid' => $restaurantId, 'opened_at' => $openedAt]);
+        $deliveryPendentes = (int) $stmtDelivery->fetch(\PDO::FETCH_ASSOC)['total'];
+        
+        if ($deliveryPendentes > 0) {
+            $pendencias[] = [
+                'tipo' => 'delivery',
+                'quantidade' => $deliveryPendentes,
+                'mensagem' => "Existem {$deliveryPendentes} pedido(s) de entrega/retirada pendente(s)"
+            ];
+        }
+
+        // 3. Verificar comandas de clientes abertas (sem mesa, status = 'aberto')
+        // Nota: Comandas abertas de QUALQUER data bloqueiam fechamento (cliente não pagou)
+        $stmtClientes = $conn->prepare("
+            SELECT COUNT(*) as total FROM orders 
+            WHERE restaurant_id = :rid 
+              AND table_id IS NULL 
+              AND order_type NOT IN ('delivery', 'pickup')
+              AND status = 'aberto'
+        ");
+        $stmtClientes->execute(['rid' => $restaurantId]);
+        $clientesAbertos = (int) $stmtClientes->fetch(\PDO::FETCH_ASSOC)['total'];
+        
+        if ($clientesAbertos > 0) {
+            $pendencias[] = [
+                'tipo' => 'clientes',
+                'quantidade' => $clientesAbertos,
+                'mensagem' => "Existem {$clientesAbertos} comanda(s) de cliente(s) em aberto"
+            ];
+        }
+
+        return $pendencias;
+    }
+
+    /**
+     * Fecha o caixa atual (com validação de pendências)
      */
     public function closeRegister(int $restaurantId): array
     {
+        // Verificar pendências antes de fechar
+        $pendencias = $this->checkPendingItems($restaurantId);
+        
+        if (!empty($pendencias)) {
+            return [
+                'success' => false,
+                'error' => 'pending_items',
+                'pendencias' => $pendencias,
+                'message' => 'Não é possível fechar o caixa. Existem itens pendentes.'
+            ];
+        }
+
         $this->repo->close($restaurantId);
         return ['success' => true, 'message' => 'Caixa fechado com sucesso!'];
     }

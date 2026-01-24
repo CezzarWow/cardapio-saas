@@ -1,4 +1,4 @@
-/* mesas-bundle - Generated 2026-01-22T03:59:56.823Z */
+/* mesas-bundle - Generated 2026-01-23T21:15:51.447Z */
 
 
 /* ========== shared/masks.js ========== */
@@ -521,7 +521,7 @@
  * ============================================
  */
 
-const TablesHelpers = {
+window.TablesHelpers = {
 
     /**
      * Retorna a BASE_URL segura

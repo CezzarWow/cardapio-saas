@@ -48,11 +48,13 @@ class CloseTableAction
      * @param array $payments Lista de pagamentos
      * @throws Exception Se mesa não encontrada ou sem pedido
      * @throws RuntimeException Se updateStatus não afetar linhas
+     * @return int ID do pedido fechado (para impressão)
      */
-    public function execute(int $restaurantId, int $tableId, array $payments): void
+    public function execute(int $restaurantId, int $tableId, array $payments): int
     {
         $conn = Database::connect();
         $caixa = $this->cashRegisterService->assertOpen($conn, $restaurantId);
+        $orderId = null;
 
         try {
             $conn->beginTransaction();
@@ -63,7 +65,7 @@ class CloseTableAction
                 throw new Exception('Mesa não encontrada ou sem pedido aberto.');
             }
 
-            $orderId = $mesa['current_order_id'];
+            $orderId = (int) $mesa['current_order_id'];
 
             // Validar status atual
             $order = $this->orderRepo->find($orderId, $restaurantId);
@@ -103,6 +105,8 @@ class CloseTableAction
             $conn->commit();
 
             error_log("[CLOSE_TABLE] Mesa #{$mesa['number']} fechada. Pedido #{$orderId} status: concluido");
+
+            return $orderId;
 
         } catch (\Throwable $e) {
             $conn->rollBack();

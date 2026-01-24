@@ -10,8 +10,12 @@
  */
 ?>
 
-<!-- Cashier CSS -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/admin/cashier.css?v=<?= APP_VERSION ?>">
+<!-- Cashier CSS (Modular - cada arquivo com versão para cache) -->
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/caixa/_variables.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/caixa/base.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/caixa/cards.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/caixa/flow.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/caixa/modals.css?v=<?= APP_VERSION ?>">
 
 <?php if (!$caixa): ?>
 <!-- ========================================== -->
@@ -50,6 +54,8 @@
             ● Caixa Aberto
         </div>
     </div>
+
+
 
     <!-- Summary Cards -->
     <div class="cashier-summary-grid">
@@ -168,10 +174,9 @@
                 <h3 class="cashier-close-title">Encerrar Turno</h3>
                 <p class="cashier-close-desc">Finalize o dia para conferência.</p>
                 
-                <a href="<?= BASE_URL ?>/admin/loja/caixa/fechar" onclick="return confirm('Tem certeza que deseja fechar o caixa?')" 
-                   class="cashier-btn-close">
+                <button type="button" onclick="CashierSPA.tryCloseCashier()" class="cashier-btn-close">
                     Fechar Caixa
-                </a>
+                </button>
             </div>
 
         </div>
@@ -227,6 +232,47 @@
             <button onclick="document.getElementById('orderDetailsModal').classList.remove('active')" class="receipt-btn-close">
                 Fechar
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Pendências (Fechamento bloqueado) -->
+<div id="modalPendencias" class="cashier-modal">
+    <div class="pendencias-modal-content">
+        <div class="pendencias-header">
+            <h3 class="pendencias-title">Não é possível fechar o caixa</h3>
+            <p class="pendencias-subtitle">Resolva as pendências abaixo antes de encerrar o turno</p>
+        </div>
+        
+        <div id="pendenciasList" class="pendencias-list">
+            <!-- Preenchido dinamicamente -->
+        </div>
+        
+        <div class="pendencias-footer">
+            <button type="button" onclick="document.getElementById('modalPendencias').classList.remove('active')" class="pendencias-btn-ok">
+                Entendi
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmação Fechamento (Novo) -->
+<div id="modalConfirmarFechamento" class="cashier-modal">
+    <div class="cashier-modal-content" style="text-align: center; width: 380px;">
+        <div style="margin-bottom: 20px;">
+            <div style="background: #fee2e2; color: #dc2626; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                <i data-lucide="alert-triangle" style="width: 28px; height: 28px;"></i>
+            </div>
+            <h3 class="cashier-modal-title" style="margin-bottom: 10px; font-size: 1.25rem;">Encerrar Turno?</h3>
+            <p style="color: #666; font-size: 0.95rem; line-height: 1.5;">
+                Confirma o fechamento do caixa?<br>
+                Esta ação <strong style="color: #dc2626;">finaliza o dia</strong> para conferência.
+            </p>
+        </div>
+
+        <div class="cashier-form-actions" style="justify-content: center;">
+            <button type="button" onclick="CashierSPA.closeConfirmModal()" class="cashier-btn-cancel" style="max-width: 120px;">Cancelar</button>
+            <button type="button" onclick="CashierSPA.finalizeClose()" class="cashier-btn-save" style="background: #dc2626; max-width: 140px;">Fechar Caixa</button>
         </div>
     </div>
 </div>

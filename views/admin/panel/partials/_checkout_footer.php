@@ -20,7 +20,11 @@
     <div class="footer-buttons">
         <button onclick="closeCheckout()" class="btn-cancel">Cancelar</button>
         
-        <button id="btn-finish-sale" onclick="submitSale()" disabled 
+        <button id="btn-pay-delivery" onclick="savePickupOrder()" style="display: none; background: #ea580c; border-color: #c2410c;" class="btn-finish">
+            PAGAR NA ENTREGA <i data-lucide="truck" style="margin-left: 8px; width: 18px;"></i>
+        </button>
+        
+        <button id="btn-finish-sale" onclick="submitSale()" disabled  
                 class="btn-finish">
             CONCLUIR VENDA <i data-lucide="check-circle"></i>
         </button>

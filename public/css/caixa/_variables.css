@@ -1,0 +1,66 @@
+/**
+ * CAIXA MODULE - CSS Variables
+ * Variáveis centralizadas para cores, espaçamentos e tipografia
+ */
+
+:root {
+    /* ===== CORES PRINCIPAIS ===== */
+    --caixa-bg: #f3f4f6;
+    --caixa-card-bg: #fff;
+    --caixa-text-primary: #1f2937;
+    --caixa-text-secondary: #6b7280;
+    --caixa-text-muted: #9ca3af;
+    --caixa-border: #e5e7eb;
+    --caixa-border-light: #f3f4f6;
+
+    /* ===== CORES DE STATUS ===== */
+    --caixa-success: #16a34a;
+    --caixa-success-light: #dcfce7;
+    --caixa-success-dark: #166534;
+    --caixa-success-border: #bbf7d0;
+
+    --caixa-danger: #ef4444;
+    --caixa-danger-dark: #dc2626;
+    --caixa-danger-light: #fef2f2;
+    --caixa-danger-border: #fecaca;
+    --caixa-danger-text: #991b1b;
+
+    --caixa-warning: #f59e0b;
+    --caixa-warning-light: #fffbeb;
+    --caixa-warning-border: #fde68a;
+    --caixa-warning-text: #92400e;
+
+    --caixa-primary: #2563eb;
+    --caixa-primary-dark: #1d4ed8;
+    --caixa-primary-light: #eff6ff;
+    --caixa-primary-border: #bfdbfe;
+
+    /* ===== CORES DOS CARDS ===== */
+    --card-blue: #2563eb;
+    --card-green: #16a34a;
+    --card-indigo: #4f46e5;
+    --card-orange: #f97316;
+    --card-purple: #9333ea;
+
+    /* ===== ESPAÇAMENTOS ===== */
+    --caixa-spacing-xs: 5px;
+    --caixa-spacing-sm: 10px;
+    --caixa-spacing-md: 15px;
+    --caixa-spacing-lg: 20px;
+    --caixa-spacing-xl: 30px;
+
+    /* ===== BORDAS ===== */
+    --caixa-radius-sm: 8px;
+    --caixa-radius-md: 12px;
+    --caixa-radius-lg: 20px;
+    --caixa-radius-full: 50%;
+
+    /* ===== SOMBRAS ===== */
+    --caixa-shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.05);
+    --caixa-shadow-md: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --caixa-shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+    /* ===== Z-INDEX ===== */
+    --caixa-z-modal: 100;
+    --caixa-z-modal-receipt: 200;
+}

@@ -1,0 +1,247 @@
+/**
+ * CAIXA MODULE - Base Styles
+ * Layout principal, header, estado fechado, sidebar e grid
+ */
+
+/* ========================================
+   ESTADO: CAIXA FECHADO (Tela de Abertura)
+   ======================================== */
+.cashier-closed-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 80vh;
+    background: var(--caixa-bg);
+}
+
+.cashier-open-card {
+    background: var(--caixa-card-bg);
+    padding: 3rem;
+    border-radius: var(--caixa-radius-lg);
+    text-align: center;
+    box-shadow: var(--caixa-shadow-md);
+    width: 100%;
+    max-width: 450px;
+}
+
+.cashier-icon-circle {
+    background: var(--caixa-success-light);
+    width: 80px;
+    height: 80px;
+    border-radius: var(--caixa-radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+.cashier-icon-circle i {
+    width: 40px;
+    height: 40px;
+    color: var(--caixa-success-dark);
+}
+
+.cashier-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--caixa-text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.cashier-subtitle {
+    color: var(--caixa-text-secondary);
+    margin-bottom: 2rem;
+}
+
+.cashier-input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid var(--caixa-border);
+    border-radius: var(--caixa-radius-md);
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--caixa-primary);
+    margin-bottom: 20px;
+}
+
+.cashier-input:focus {
+    outline: none;
+    border-color: var(--caixa-primary);
+}
+
+.cashier-btn-open {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: var(--caixa-radius-md);
+    cursor: pointer;
+    background: var(--caixa-success);
+    color: #fff;
+    font-weight: 700;
+    transition: background 0.2s ease;
+}
+
+.cashier-btn-open:hover {
+    background: #15803d;
+}
+
+/* ========================================
+   ESTADO: CAIXA ABERTO (Dashboard)
+   ======================================== */
+.cashier-dashboard {
+    padding: 1.5rem;
+    width: 100%;
+    overflow-y: auto;
+}
+
+/* Header */
+.cashier-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--caixa-spacing-lg);
+}
+
+.cashier-header-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--caixa-text-primary);
+}
+
+.cashier-header-subtitle {
+    color: var(--caixa-text-secondary);
+}
+
+.cashier-status-badge {
+    background: var(--caixa-success-light);
+    color: var(--caixa-success-dark);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 700;
+    border: 1px solid var(--caixa-success-border);
+}
+
+/* Layout Grid Principal */
+.cashier-main-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--caixa-spacing-lg);
+}
+
+.cashier-panel {
+    background: var(--caixa-card-bg);
+    border-radius: var(--caixa-radius-md);
+    padding: var(--caixa-spacing-lg);
+    box-shadow: var(--caixa-shadow-sm);
+}
+
+.cashier-panel-title {
+    font-weight: 700;
+    color: var(--caixa-text-primary);
+    margin-bottom: var(--caixa-spacing-md);
+    border-bottom: 1px solid var(--caixa-border-light);
+    padding-bottom: var(--caixa-spacing-sm);
+}
+
+/* ========================================
+   SIDEBAR (Ações Rápidas + Fechar Caixa)
+   ======================================== */
+.cashier-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--caixa-spacing-md);
+}
+
+.cashier-actions-title {
+    font-weight: 700;
+    color: var(--caixa-text-primary);
+    margin-bottom: var(--caixa-spacing-md);
+}
+
+/* Botões de Ação */
+.cashier-btn-supply,
+.cashier-btn-withdraw {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--caixa-radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s ease;
+}
+
+.cashier-btn-supply {
+    background: var(--caixa-primary-light);
+    color: var(--caixa-primary-dark);
+    border: 1px solid var(--caixa-primary-border);
+    margin-bottom: var(--caixa-spacing-sm);
+}
+
+.cashier-btn-supply:hover {
+    background: #dbeafe;
+}
+
+.cashier-btn-withdraw {
+    background: var(--caixa-danger-light);
+    color: #b91c1c;
+    border: 1px solid var(--caixa-danger-border);
+}
+
+.cashier-btn-withdraw:hover {
+    background: #fee2e2;
+}
+
+.cashier-btn-supply i,
+.cashier-btn-withdraw i {
+    width: 18px;
+    height: 18px;
+}
+
+/* Seção Encerrar Turno */
+.cashier-close-section {
+    text-align: center;
+}
+
+.cashier-close-section>i {
+    width: 32px;
+    height: 32px;
+    color: var(--caixa-danger);
+    margin-bottom: var(--caixa-spacing-sm);
+}
+
+.cashier-close-title {
+    font-weight: 700;
+    color: var(--caixa-text-primary);
+    margin-bottom: 5px;
+}
+
+.cashier-close-desc {
+    font-size: 0.8rem;
+    color: var(--caixa-text-secondary);
+    margin-bottom: var(--caixa-spacing-md);
+}
+
+.cashier-btn-close {
+    display: block;
+    width: 100%;
+    background: var(--caixa-danger);
+    color: #fff;
+    padding: 12px;
+    border: none;
+    border-radius: var(--caixa-radius-sm);
+    font-weight: 700;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.cashier-btn-close:hover {
+    background: var(--caixa-danger-dark);
+}

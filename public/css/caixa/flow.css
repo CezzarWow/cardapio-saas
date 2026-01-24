@@ -1,0 +1,108 @@
+/**
+ * CAIXA MODULE - Flow (Extrato de Movimentações)
+ * Lista de movimentações do caixa (vendas, sangrias, suprimentos)
+ */
+
+/* Container da Lista */
+.cashier-flow-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.cashier-flow-empty {
+    color: var(--caixa-text-muted);
+    text-align: center;
+    padding: var(--caixa-spacing-lg);
+}
+
+/* Item de Movimentação */
+.cashier-flow-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--caixa-border-light);
+}
+
+.cashier-flow-left {
+    display: flex;
+    gap: var(--caixa-spacing-sm);
+    align-items: center;
+}
+
+.cashier-flow-icon {
+    padding: 8px;
+    border-radius: var(--caixa-radius-sm);
+}
+
+.cashier-flow-icon i {
+    width: 18px;
+    height: 18px;
+}
+
+.cashier-flow-type {
+    color: #374151;
+    text-transform: capitalize;
+    font-weight: 600;
+}
+
+.cashier-flow-desc {
+    font-size: 0.8rem;
+    color: var(--caixa-text-secondary);
+}
+
+/* Ações do Item */
+.cashier-flow-actions {
+    margin-top: 5px;
+    display: flex;
+    gap: var(--caixa-spacing-sm);
+}
+
+.cashier-flow-link {
+    font-size: 0.75rem;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    transition: opacity 0.2s ease;
+}
+
+.cashier-flow-link:hover {
+    opacity: 0.8;
+}
+
+.cashier-flow-link i {
+    width: 12px;
+    height: 12px;
+}
+
+.link-edit {
+    color: var(--caixa-primary);
+}
+
+.link-reopen {
+    color: #d97706;
+}
+
+.link-view {
+    color: var(--caixa-text-secondary);
+}
+
+.link-delete {
+    color: var(--caixa-danger-dark);
+}
+
+/* Lado Direito (Valor + Hora) */
+.cashier-flow-right {
+    text-align: right;
+}
+
+.cashier-flow-amount {
+    font-weight: 700;
+}
+
+.cashier-flow-time {
+    font-size: 0.75rem;
+    color: var(--caixa-text-muted);
+}

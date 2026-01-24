@@ -178,12 +178,10 @@ const CheckoutFlow = {
         const alertBox = document.getElementById('retirada-client-alert');
         if (alertBox) alertBox.style.display = 'none';
 
-        // Reset dados de entrega
-        if (typeof CheckoutEntrega !== 'undefined') {
-            CheckoutEntrega.resetOnClose();
-        } else if (typeof _resetDeliveryOnClose === 'function') {
-            _resetDeliveryOnClose();
-        }
+        // Reset dados de entrega (REMOVIDO: Mantém dados se apenas fechar modal)
+        // if (typeof CheckoutEntrega !== 'undefined') {
+        //    CheckoutEntrega.resetOnClose();
+        // }
     }
 
 };

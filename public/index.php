@@ -25,7 +25,7 @@ date_default_timezone_set('America/Sao_Paulo');
 $scriptName = dirname($_SERVER['SCRIPT_NAME']);
 $baseUrl = str_replace('\\', '/', $scriptName);
 define('BASE_URL', rtrim($baseUrl, '/'));
-define('APP_VERSION', '1.1.51'); // Cache-buster: incremente ao atualizar JS/CSS
+define('APP_VERSION', '1.1.90'); // Cache-buster: incremente ao atualizar JS/CSS
 
 require '../vendor/autoload.php';
 
@@ -173,6 +173,7 @@ Router::add('/admin/loja/adicionais/get-linked-categories', \App\Controllers\Adm
 // ============================================================
 Router::add('/admin/loja/caixa', \App\Controllers\Admin\RedirectController::class, 'toSpaCaixa');
 Router::add('/admin/loja/caixa/abrir', \App\Controllers\Admin\CashierController::class, 'open');
+Router::add('/admin/loja/caixa/verificar-pendencias', \App\Controllers\Admin\CashierController::class, 'checkPending');
 Router::add('/admin/loja/caixa/fechar', \App\Controllers\Admin\CashierController::class, 'close');
 Router::add('/admin/loja/caixa/movimentar', \App\Controllers\Admin\CashierController::class, 'addMovement');
 Router::add('/admin/loja/caixa/estornar-pdv', \App\Controllers\Admin\CashierController::class, 'reverseToPdv');

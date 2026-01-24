@@ -5,7 +5,7 @@
  * ============================================
  */
 
-const DeliveryHelpers = {
+window.DeliveryHelpers = {
 
     /**
      * Retorna a BASE_URL segura

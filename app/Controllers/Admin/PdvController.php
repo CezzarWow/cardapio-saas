@@ -6,6 +6,7 @@ use App\Services\Pdv\PdvService;
 use App\Services\RestaurantService;
 use App\Repositories\TableRepository;
 use App\Repositories\Order\OrderRepository;
+use App\Repositories\Cardapio\CardapioConfigRepository;
 use App\Core\View;
 
 /**
@@ -18,17 +19,20 @@ class PdvController extends BaseController
     private TableRepository $tableRepo;
     private RestaurantService $restaurantService;
     private OrderRepository $orderRepo;
+    private CardapioConfigRepository $configRepo;
 
     public function __construct(
         PdvService $service, 
         TableRepository $tableRepo,
         RestaurantService $restaurantService,
-        OrderRepository $orderRepo
+        OrderRepository $orderRepo,
+        CardapioConfigRepository $configRepo
     ) {
         $this->service = $service;
         $this->tableRepo = $tableRepo;
         $this->restaurantService = $restaurantService;
         $this->orderRepo = $orderRepo;
+        $this->configRepo = $configRepo;
     }
 
     public function index()
@@ -80,9 +84,10 @@ class PdvController extends BaseController
             }
         }
 
-        // 2. Carrega Configurações (Taxa de Entrega)
-        $settings = $this->restaurantService->getSettings($rid);
-        $deliveryFee = floatval($settings['delivery_fee'] ?? 5.0);
+        // 2. Carrega Configurações (Taxa de Entrega do Banco)
+        // [FIX] Ler do repositório correto
+        $cardapioConfig = $this->configRepo->findOrCreate($rid);
+        $deliveryFee = floatval($cardapioConfig['delivery_fee'] ?? 0);
 
         // 3. Lógica de Exibição de Botões (TableViewFlags)
         $showQuickSale = false;   // Botão "Finalizar" (Venda Rápida)

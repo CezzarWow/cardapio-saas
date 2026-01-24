@@ -84,14 +84,14 @@ class OrderOrchestratorService
         return $this->createOrderAction->execute($restaurantId, $userId, $data);
     }
 
-    public function closeTable(int $restaurantId, int $tableId, array $payments): void
+    public function closeTable(int $restaurantId, int $tableId, array $payments): int
     {
-        $this->closeTableAction->execute($restaurantId, $tableId, $payments);
+        return $this->closeTableAction->execute($restaurantId, $tableId, $payments);
     }
 
-    public function closeCommand(int $restaurantId, int $orderId, array $payments): void
+    public function closeCommand(int $restaurantId, int $orderId, array $payments): int
     {
-        $this->closeCommandAction->execute($restaurantId, $orderId, $payments);
+        return $this->closeCommandAction->execute($restaurantId, $orderId, $payments);
     }
 
     public function removeItem(int $itemId, int $orderId): void

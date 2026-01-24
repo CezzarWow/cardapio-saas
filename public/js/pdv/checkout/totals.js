@@ -52,14 +52,15 @@ const CheckoutTotals = {
         total = total - CheckoutState.discountValue;
 
         // Adiciona taxa de entrega se for Entrega com dados preenchidos
-        const orderTypeCards = document.querySelectorAll('.order-type-card.active');
+        // Adiciona taxa de entrega se for Entrega
+        // [FIX] Verifica input hidden em vez de classes CSS (mais robusto)
+        const typeInput = document.getElementById('selected_order_type');
         let isDelivery = false;
-        orderTypeCards.forEach(card => {
-            const label = card.innerText.toLowerCase().trim();
-            if (label.includes('entrega')) isDelivery = true;
-        });
+        if (typeInput && typeInput.value === 'entrega') {
+            isDelivery = true;
+        }
 
-        if (isDelivery && typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled) {
+        if (isDelivery) {
             if (typeof PDV_DELIVERY_FEE !== 'undefined') {
                 total += PDV_DELIVERY_FEE;
             }

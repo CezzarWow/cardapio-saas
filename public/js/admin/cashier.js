@@ -129,7 +129,87 @@
     window.CashierSPA = {
         init: () => CashierAdmin.init(),
         openModal: (type) => CashierAdmin.Movimento.open(type),
-        openOrderDetails: (id, total, date) => CashierAdmin.OrderDetails.open(id, total, date)
+        openOrderDetails: (id, total, date) => CashierAdmin.OrderDetails.open(id, total, date),
+
+        // Verifica pendências antes de fechar o caixa
+        tryCloseCashier: async function () {
+            try {
+                const response = await fetch(getBaseUrl() + '/admin/loja/caixa/verificar-pendencias');
+                const data = await response.json();
+
+                if (!data.success && data.pendencias && data.pendencias.length > 0) {
+                    // Mostrar modal de pendências
+                    this._showPendenciasModal(data.pendencias);
+                } else {
+                    // Nenhuma pendência, mostrar modal de confirmação
+                    this._showConfirmModal();
+                }
+            } catch (err) {
+                console.error('Erro ao verificar pendências:', err);
+                alert('Erro ao verificar pendências. Tente novamente.');
+            }
+        },
+
+        _showConfirmModal: function () {
+            const modal = document.getElementById('modalConfirmarFechamento');
+            if (modal) {
+                modal.classList.add('active');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        },
+
+        closeConfirmModal: function () {
+            const modal = document.getElementById('modalConfirmarFechamento');
+            if (modal) modal.classList.remove('active');
+        },
+
+        finalizeClose: function () {
+            window.location.href = getBaseUrl() + '/admin/loja/caixa/fechar';
+        },
+
+        _showPendenciasModal: function (pendencias) {
+            const modal = document.getElementById('modalPendencias');
+            const list = document.getElementById('pendenciasList');
+            if (!modal || !list) return;
+
+            // Mapear ícones por tipo
+            const icones = {
+                'mesas': 'utensils',
+                'delivery': 'truck',
+                'clientes': 'users'
+            };
+
+            const cores = {
+                'mesas': { bg: '#fef3c7', icon: '#d97706', text: '#92400e' },
+                'delivery': { bg: '#dbeafe', icon: '#2563eb', text: '#1e40af' },
+                'clientes': { bg: '#f3e8ff', icon: '#9333ea', text: '#6b21a8' }
+            };
+
+            let html = '';
+            pendencias.forEach(p => {
+                const icone = icones[p.tipo] || 'alert-circle';
+
+                html += `
+                    <div class="pendencia-item">
+                        <div class="pendencia-icon">
+                            <i data-lucide="${icone}"></i>
+                        </div>
+                        <div class="pendencia-info">
+                            <span class="pendencia-count">${p.quantidade}</span>
+                            <span class="pendencia-msg">${p.mensagem}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            list.innerHTML = html;
+            modal.classList.add('active');
+
+            // Recria ícones Lucide no conteúdo novo
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
     };
 
     // Aliases (legado)

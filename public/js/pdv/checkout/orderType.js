@@ -24,7 +24,7 @@ const CheckoutOrderType = {
         if (existingToast) existingToast.remove();
 
         // 0. Validação imediata: Retirada requer cliente ou mesa
-        if (type === 'retirada') {
+        if (type === 'retirada' || type === 'retirada_pdv') {
             const ctx = typeof CheckoutHelpers !== 'undefined'
                 ? CheckoutHelpers.getContextIds()
                 : this._getBasicContext();
@@ -60,7 +60,7 @@ const CheckoutOrderType = {
         // 3. Processa tipo específico
         const keepOpenInput = document.getElementById('keep_open_value');
 
-        if (type === 'retirada') {
+        if (type === 'retirada' || type === 'retirada_pdv') {
             if (keepOpenInput) keepOpenInput.value = 'true';
             this._handleRetirada();
         } else if (type === 'entrega') {
@@ -145,6 +145,8 @@ const CheckoutOrderType = {
             local: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' },
             retirada: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' },
             retirada_ok: { border: '#16a34a', bg: '#dcfce7', text: '#16a34a' }, // Verde quando válido
+            retirada_pdv: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' },
+            retirada_pdv_ok: { border: '#16a34a', bg: '#dcfce7', text: '#16a34a' },
             entrega: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' },
             entrega_ok: { border: '#16a34a', bg: '#dcfce7', text: '#16a34a' }  // Verde quando preenchido
         };
@@ -166,19 +168,28 @@ const CheckoutOrderType = {
             element = document.querySelector(`.order-toggle-btn[data-type="${type}"]`);
         }
 
-        // Determina se Retirada deve ficar verde (tem cliente/mesa)
+        // Determina se deve ficar verde (Confirmado)
         let useGreen = false;
-        if (type === 'retirada') {
+        if (type === 'retirada' || type === 'retirada_pdv') {
             const ctx = typeof CheckoutHelpers !== 'undefined'
                 ? CheckoutHelpers.getContextIds()
                 : this._getBasicContext();
             useGreen = ctx.hasClient || ctx.hasTable;
+        } else if (type === 'entrega') {
+            useGreen = typeof CheckoutEntrega !== 'undefined' && CheckoutEntrega.isDataFilled();
         }
 
         // Ativa o selecionado com cores específicas
         if (element) {
             element.classList.add('active');
-            const colorKey = useGreen ? 'retirada_ok' : type;
+
+            // Define a chave de cor (ex: 'retirada_ok', 'entrega_ok' ou apenas 'local')
+            let colorKey = type;
+            if (useGreen) {
+                if (type === 'retirada' || type === 'retirada_pdv') colorKey = 'retirada_ok';
+                else if (type === 'entrega') colorKey = 'entrega_ok';
+            }
+
             const c = colors[colorKey] || colors.local;
             element.style.borderColor = c.border;
             element.style.background = c.bg;
@@ -271,13 +282,13 @@ const CheckoutOrderType = {
         const btnSavePickup = document.getElementById('btn-save-pickup');
         if (!btnSavePickup) return;
 
-        if (type === 'retirada' || type === 'entrega') {
+        if (type === 'retirada' || type === 'retirada_pdv' || type === 'entrega') {
             btnSavePickup.style.display = 'flex';
 
             const ctx = CheckoutHelpers.getContextIds();
             let canEnable = false;
 
-            if (type === 'retirada') {
+            if (type === 'retirada' || type === 'retirada_pdv') {
                 canEnable = ctx.hasClient || ctx.hasTable;
             } else if (type === 'entrega') {
                 const isFilled = typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled;

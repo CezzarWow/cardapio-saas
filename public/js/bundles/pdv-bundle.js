@@ -1,4 +1,4 @@
-/* pdv-bundle - Generated 2026-01-22T03:59:56.806Z */
+/* pdv-bundle - Generated 2026-01-23T21:15:51.434Z */
 
 
 /* ========== pdv/state.js ========== */
@@ -7,7 +7,7 @@
  * Centraliza o estado da aplicação (Balcão, Mesa, Comanda, Retirada)
  */
 
-const PDVState = (() => {
+window.PDVState = (() => {
     // Estado Privado
     let state = {
         modo: 'balcao',        // balcao | mesa | comanda | retirada
@@ -1645,14 +1645,15 @@ const CheckoutTotals = {
         total = total - CheckoutState.discountValue;
 
         // Adiciona taxa de entrega se for Entrega com dados preenchidos
-        const orderTypeCards = document.querySelectorAll('.order-type-card.active');
+        // Adiciona taxa de entrega se for Entrega
+        // [FIX] Verifica input hidden em vez de classes CSS (mais robusto)
+        const typeInput = document.getElementById('selected_order_type');
         let isDelivery = false;
-        orderTypeCards.forEach(card => {
-            const label = card.innerText.toLowerCase().trim();
-            if (label.includes('entrega')) isDelivery = true;
-        });
+        if (typeInput && typeInput.value === 'entrega') {
+            isDelivery = true;
+        }
 
-        if (isDelivery && typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled) {
+        if (isDelivery) {
             if (typeof PDV_DELIVERY_FEE !== 'undefined') {
                 total += PDV_DELIVERY_FEE;
             }
@@ -1744,6 +1745,24 @@ const CheckoutUI = {
 
         const remaining = finalTotal - CheckoutState.totalPaid;
         const btnFinish = document.getElementById('btn-finish-sale');
+        const btnPayDelivery = document.getElementById('btn-pay-delivery');
+
+        // [NOVO] Controle do botão Pagar na Entrega
+        if (btnPayDelivery) {
+            const selectedType = document.getElementById('selected_order_type')?.value;
+            const isDelivery = selectedType === 'entrega';
+
+            // Mostra se for Entrega E ainda faltar pagar
+            if (isDelivery && remaining > 0.01) {
+                btnPayDelivery.style.display = 'flex';
+                // Garante que o CSS btn-finish deixa flex-row, ajusta margem
+                btnPayDelivery.style.marginRight = '10px';
+                btnPayDelivery.disabled = false;
+                btnPayDelivery.style.cursor = 'pointer';
+            } else {
+                btnPayDelivery.style.display = 'none';
+            }
+        }
 
         // Feature: Atualiza valor a lançar com o restante atualizado
         const payInput = document.getElementById('pay-amount');
@@ -2329,6 +2348,10 @@ const CheckoutSubmit = {
         // 2. Obter Carrinho
         const cartItems = this._getCartItems();
 
+        // IMPORTANTE: Guarda cópia dos itens do carrinho ANTES de enviar/limpar
+        // para poder imprimir após finalizar
+        const cartItemsCopy = JSON.parse(JSON.stringify(cartItems));
+
         // 3. Preparar Payload Base
         let endpoint = '/admin/loja/venda/finalizar';
         const hasClientOrTable = ctx.hasClient || ctx.hasTable;
@@ -2386,7 +2409,8 @@ const CheckoutSubmit = {
         // 6. Enviar via Service
         try {
             const data = await CheckoutService.sendSaleRequest(endpoint, payload);
-            this._handleSuccess(data, isPaidLoop, isMesaClose);
+            // Passa itens e tipo para exibir modal de impressão
+            this._handleSuccess(data, isPaidLoop, isMesaClose, cartItemsCopy, selectedOrderType);
         } catch (err) {
             alert(err.message);
         }
@@ -2437,6 +2461,10 @@ const CheckoutSubmit = {
         // Determina o tipo de pedido selecionado pelo usuário
         const selectedOrderType = this._determineOrderType(ctx.hasClient || ctx.hasTable);
 
+        // IMPORTANTE: Guarda cópia dos itens do carrinho ANTES de enviar/limpar
+        // Isso permite imprimir apenas os itens novos, não a comanda completa
+        const cartItemsCopy = JSON.parse(JSON.stringify(PDVCart.items));
+
         // Atualiza Estado
         PDVState.set({
             modo: ctx.hasTable ? 'mesa' : 'comanda',
@@ -2463,7 +2491,8 @@ const CheckoutSubmit = {
         try {
             const data = await CheckoutService.saveTabOrder(payload);
             // Após salvar, volta para a mesma mesa (não perde contexto)
-            this._handleSaveSuccess(data, ctx.tableId, ctx.orderId);
+            // Passa os itens do carrinho (cópia) para imprimir
+            this._handleSaveSuccess(data, ctx.tableId, ctx.orderId, cartItemsCopy, selectedOrderType);
         } catch (err) {
             alert(err.message);
         }
@@ -2473,9 +2502,8 @@ const CheckoutSubmit = {
      * 4. SALVAR PEDIDO (Retirada/Delivery) - Pagar Depois
      */
     savePickupOrder: async function () {
-        // Determina tipo baseado no card ATIVO (não no deliveryDataFilled)
-        const rawType = this._determineOrderType(false);
-        const selectedOrderType = rawType === 'delivery' ? 'delivery' : 'pickup';
+        // Determina tipo baseado no card ATIVO
+        const selectedOrderType = this._determineOrderType(false);
 
         // Validações
         if (!CheckoutValidator.validateDeliveryData(selectedOrderType)) return;
@@ -2562,30 +2590,47 @@ const CheckoutSubmit = {
     },
 
     _determineOrderType: function (hasClientOrTable) {
-        // 1. Primeiro verifica o hidden input (fonte principal)
+        // 1. Verificar input hidden (prioridade máxima se setado pelo user)
         const selectedInput = document.getElementById('selected_order_type');
         if (selectedInput && selectedInput.value) {
             const val = selectedInput.value.toLowerCase();
             if (val === 'retirada') return 'pickup';
             if (val === 'entrega') return 'delivery';
+            // Se for local e tiver mesa, vira local
             if (val === 'local') return hasClientOrTable ? 'local' : 'balcao';
         }
 
-        // 2. Fallback: verifica os cards ativos
+        // 2. Fallback: Se tiver Mesa, FORÇA 'mesa' (backend espera 'mesa' ou 'local')
+        if (hasClientOrTable) {
+            const ctx = CheckoutHelpers.getContextIds();
+            if (ctx.tableId) return 'mesa'; // Garante que vá para Mesas
+            if (ctx.clientId) return 'comanda';
+        }
+
+        // 3. Fallback dos botões visuais
         const cards = document.querySelectorAll('.order-toggle-btn.active');
         let type = 'balcao';
 
         cards.forEach(card => {
             const label = card.innerText.toLowerCase().trim();
+            // [CORREÇÃO] Retirada deve ser 'pickup' para sair correto na impressão e no Kanban
             if (label.includes('retirada')) type = 'pickup';
             else if (label.includes('entrega')) type = 'delivery';
-            else if (label.includes('local') && hasClientOrTable) type = 'local';
+            else if (label.includes('local')) type = 'balcao';
         });
 
         return type;
     },
 
-    _handleSuccess: function (data, isPaidLoop = false, isMesaClose = false) {
+    /**
+     * Handler de sucesso para FINALIZAR venda
+     * @param {object} data - Resposta do backend
+     * @param {boolean} isPaidLoop - Se é inclusão em pedido pago
+     * @param {boolean} isMesaClose - Se está fechando mesa
+     * @param {array} cartItems - Itens do carrinho para impressão
+     * @param {string} orderType - Tipo do pedido
+     */
+    _handleSuccess: function (data, isPaidLoop = false, isMesaClose = false, cartItems = [], orderType = 'local') {
         if (data.success) {
             CheckoutUI.showSuccessModal();
             PDVCart.clear();
@@ -2597,26 +2642,34 @@ const CheckoutSubmit = {
                 AdminSPA.invalidateCache('pdv');
             }
 
-            setTimeout(() => {
-                document.getElementById('checkoutModal').style.display = 'none';
+            // Fecha modal de checkout
+            document.getElementById('checkoutModal').style.display = 'none';
 
-                if (isPaidLoop || isMesaClose) {
-                    // Navega para mesas via SPA
-                    if (typeof AdminSPA !== 'undefined') {
-                        AdminSPA.navigateTo('mesas', true, true);
-                    } else {
-                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
-                    }
+            // Abre modal de impressão após breve delay
+            setTimeout(() => {
+                const savedOrderId = data.order_id;
+
+                if (savedOrderId && typeof PDVPrint !== 'undefined') {
+                    // [MODIFICADO] Sempre busca do backend para garantir dados completos (pagamento, endereço, etc)
+                    // Evita o problema de "Pagamento Não Informado" causado pelo openWithItems mockado
+                    PDVPrint.open(savedOrderId);
                 } else {
-                    // Recarrega seção atual via SPA
-                    if (typeof AdminSPA !== 'undefined') {
-                        // Se estamos no balcão, navigateTo ('balcao', true, true) forçará reload
-                        AdminSPA.reloadCurrentSection();
+                    // Fallback se não tiver orderId ou PDVPrint não carregou
+                    if (isPaidLoop || isMesaClose) {
+                        if (typeof AdminSPA !== 'undefined') {
+                            AdminSPA.navigateTo('mesas', true, true);
+                        } else {
+                            window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
+                        }
                     } else {
-                        window.location.reload();
+                        if (typeof AdminSPA !== 'undefined') {
+                            AdminSPA.reloadCurrentSection();
+                        } else {
+                            window.location.reload();
+                        }
                     }
                 }
-            }, 1000);
+            }, 800);
         } else {
             alert('Erro: ' + data.message);
         }
@@ -2624,24 +2677,53 @@ const CheckoutSubmit = {
 
     /**
      * Handler de sucesso para SALVAR comanda (permanece no Balcão)
+     * @param {object} data - Resposta do backend
+     * @param {number} tableId - ID da mesa (se houver)
+     * @param {number} orderId - ID do pedido existente
+     * @param {array} cartItems - Itens do carrinho (para imprimir apenas o que foi adicionado)
+     * @param {string} orderType - Tipo do pedido (local, delivery, etc)
      */
-    _handleSaveSuccess: function (data, tableId, orderId) {
+    _handleSaveSuccess: function (data, tableId, orderId, cartItems = [], orderType = 'local') {
         if (data.success) {
             CheckoutUI.showSuccessModal();
             PDVCart.clear();
 
-            setTimeout(() => {
-                document.getElementById('checkoutModal').style.display = 'none';
+            // Fecha checkout modal
+            document.getElementById('checkoutModal').style.display = 'none';
 
-                // [ALTERADO] Permanece no Balcão após salvar (não navega para mesa/comanda)
-                if (typeof AdminSPA !== 'undefined') {
-                    AdminSPA.navigateTo('balcao', true, true); // Recarrega balcão limpo
+            // Aguarda um pouco e abre o modal de impressão
+            setTimeout(() => {
+                // Usa o order_id retornado pelo backend (prioridade) ou o que já existia
+                const savedOrderId = data.order_id || orderId;
+
+                // Abre modal de impressão se tiver um pedido salvo
+                if (savedOrderId && typeof PDVPrint !== 'undefined') {
+                    // Se tem itens do carrinho, passa para imprimir apenas eles (não busca da API)
+                    if (cartItems && cartItems.length > 0) {
+                        PDVPrint.openWithItems(savedOrderId, cartItems, orderType);
+                    } else {
+                        // Fallback: busca do backend (comportamento original)
+                        PDVPrint.open(savedOrderId);
+                    }
                 } else {
-                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv';
+                    // Fallback: vai direto pro balcão se não tiver order_id
+                    this._navigateToBalcao();
                 }
-            }, 1000);
+            }, 800);
         } else {
             alert('Erro: ' + data.message);
+        }
+    },
+
+
+    /**
+     * Navega para o Balcão (utilizado pelo modal de impressão após fechar)
+     */
+    _navigateToBalcao: function () {
+        if (typeof AdminSPA !== 'undefined') {
+            AdminSPA.navigateTo('balcao', true, true);
+        } else {
+            window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv';
         }
     }
 };
@@ -2678,7 +2760,7 @@ const CheckoutOrderType = {
         if (existingToast) existingToast.remove();
 
         // 0. Validação imediata: Retirada requer cliente ou mesa
-        if (type === 'retirada') {
+        if (type === 'retirada' || type === 'retirada_pdv') {
             const ctx = typeof CheckoutHelpers !== 'undefined'
                 ? CheckoutHelpers.getContextIds()
                 : this._getBasicContext();
@@ -2714,7 +2796,7 @@ const CheckoutOrderType = {
         // 3. Processa tipo específico
         const keepOpenInput = document.getElementById('keep_open_value');
 
-        if (type === 'retirada') {
+        if (type === 'retirada' || type === 'retirada_pdv') {
             if (keepOpenInput) keepOpenInput.value = 'true';
             this._handleRetirada();
         } else if (type === 'entrega') {
@@ -2799,6 +2881,8 @@ const CheckoutOrderType = {
             local: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' },
             retirada: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' },
             retirada_ok: { border: '#16a34a', bg: '#dcfce7', text: '#16a34a' }, // Verde quando válido
+            retirada_pdv: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' },
+            retirada_pdv_ok: { border: '#16a34a', bg: '#dcfce7', text: '#16a34a' },
             entrega: { border: '#2563eb', bg: '#eff6ff', text: '#2563eb' },
             entrega_ok: { border: '#16a34a', bg: '#dcfce7', text: '#16a34a' }  // Verde quando preenchido
         };
@@ -2820,19 +2904,28 @@ const CheckoutOrderType = {
             element = document.querySelector(`.order-toggle-btn[data-type="${type}"]`);
         }
 
-        // Determina se Retirada deve ficar verde (tem cliente/mesa)
+        // Determina se deve ficar verde (Confirmado)
         let useGreen = false;
-        if (type === 'retirada') {
+        if (type === 'retirada' || type === 'retirada_pdv') {
             const ctx = typeof CheckoutHelpers !== 'undefined'
                 ? CheckoutHelpers.getContextIds()
                 : this._getBasicContext();
             useGreen = ctx.hasClient || ctx.hasTable;
+        } else if (type === 'entrega') {
+            useGreen = typeof CheckoutEntrega !== 'undefined' && CheckoutEntrega.isDataFilled();
         }
 
         // Ativa o selecionado com cores específicas
         if (element) {
             element.classList.add('active');
-            const colorKey = useGreen ? 'retirada_ok' : type;
+
+            // Define a chave de cor (ex: 'retirada_ok', 'entrega_ok' ou apenas 'local')
+            let colorKey = type;
+            if (useGreen) {
+                if (type === 'retirada' || type === 'retirada_pdv') colorKey = 'retirada_ok';
+                else if (type === 'entrega') colorKey = 'entrega_ok';
+            }
+
             const c = colors[colorKey] || colors.local;
             element.style.borderColor = c.border;
             element.style.background = c.bg;
@@ -2925,13 +3018,13 @@ const CheckoutOrderType = {
         const btnSavePickup = document.getElementById('btn-save-pickup');
         if (!btnSavePickup) return;
 
-        if (type === 'retirada' || type === 'entrega') {
+        if (type === 'retirada' || type === 'retirada_pdv' || type === 'entrega') {
             btnSavePickup.style.display = 'flex';
 
             const ctx = CheckoutHelpers.getContextIds();
             let canEnable = false;
 
-            if (type === 'retirada') {
+            if (type === 'retirada' || type === 'retirada_pdv') {
                 canEnable = ctx.hasClient || ctx.hasTable;
             } else if (type === 'entrega') {
                 const isFilled = typeof deliveryDataFilled !== 'undefined' && deliveryDataFilled;
@@ -3598,12 +3691,10 @@ const CheckoutFlow = {
         const alertBox = document.getElementById('retirada-client-alert');
         if (alertBox) alertBox.style.display = 'none';
 
-        // Reset dados de entrega
-        if (typeof CheckoutEntrega !== 'undefined') {
-            CheckoutEntrega.resetOnClose();
-        } else if (typeof _resetDeliveryOnClose === 'function') {
-            _resetDeliveryOnClose();
-        }
+        // Reset dados de entrega (REMOVIDO: Mantém dados se apenas fechar modal)
+        // if (typeof CheckoutEntrega !== 'undefined') {
+        //    CheckoutEntrega.resetOnClose();
+        // }
     }
 
 };
@@ -4075,8 +4166,10 @@ window.PDVSearch = PDVSearch;
                     config = JSON.parse(configEl.dataset.config);
                     // Define globais legado se necessário para compatibilidade
                     if (config.baseUrl) window.BASE_URL = config.baseUrl;
-                    if (config.deliveryFee) window.PDV_DELIVERY_FEE = config.deliveryFee;
+                    if (config.deliveryFee) window.PDV_DELIVERY_FEE = parseFloat(config.deliveryFee);
                     if (config.tableId) window.PDV_TABLE_ID = config.tableId;
+
+                    // DEBUG IPU - REMOVED
                 } catch (e) {
                     console.error('[PDV] Invalid config JSON', e);
                 }
@@ -4178,12 +4271,24 @@ window.PDVSearch = PDVSearch;
         return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     };
 
-    // Auto-init apenas se não estiver no SPA (fallback legado)
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!document.getElementById('spa-content')) {
+    // Auto-init inteligente (Funciona em SPA e Refresh normal)
+    const runInit = () => {
+        // Evita múltipla inicialização no mesmo ciclo se já rodou recentemente
+        if (window.PDV_INITIALIZED_TIMESTAMP && (Date.now() - window.PDV_INITIALIZED_TIMESTAMP < 1000)) return;
+
+        if (document.getElementById('pdv-config')) {
+            // console.log('[PDV] Auto Init');
             PDV.init();
+            window.PDV_INITIALIZED_TIMESTAMP = Date.now();
         }
-    });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runInit);
+    } else {
+        // Se já carregou (cenário SPA), roda direto
+        runInit();
+    }
 
 })();
 

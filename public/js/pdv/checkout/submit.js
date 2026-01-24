@@ -18,6 +18,10 @@ const CheckoutSubmit = {
         // 2. Obter Carrinho
         const cartItems = this._getCartItems();
 
+        // IMPORTANTE: Guarda cópia dos itens do carrinho ANTES de enviar/limpar
+        // para poder imprimir após finalizar
+        const cartItemsCopy = JSON.parse(JSON.stringify(cartItems));
+
         // 3. Preparar Payload Base
         let endpoint = '/admin/loja/venda/finalizar';
         const hasClientOrTable = ctx.hasClient || ctx.hasTable;
@@ -75,7 +79,8 @@ const CheckoutSubmit = {
         // 6. Enviar via Service
         try {
             const data = await CheckoutService.sendSaleRequest(endpoint, payload);
-            this._handleSuccess(data, isPaidLoop, isMesaClose);
+            // Passa itens e tipo para exibir modal de impressão
+            this._handleSuccess(data, isPaidLoop, isMesaClose, cartItemsCopy, selectedOrderType);
         } catch (err) {
             alert(err.message);
         }
@@ -126,6 +131,10 @@ const CheckoutSubmit = {
         // Determina o tipo de pedido selecionado pelo usuário
         const selectedOrderType = this._determineOrderType(ctx.hasClient || ctx.hasTable);
 
+        // IMPORTANTE: Guarda cópia dos itens do carrinho ANTES de enviar/limpar
+        // Isso permite imprimir apenas os itens novos, não a comanda completa
+        const cartItemsCopy = JSON.parse(JSON.stringify(PDVCart.items));
+
         // Atualiza Estado
         PDVState.set({
             modo: ctx.hasTable ? 'mesa' : 'comanda',
@@ -152,7 +161,8 @@ const CheckoutSubmit = {
         try {
             const data = await CheckoutService.saveTabOrder(payload);
             // Após salvar, volta para a mesma mesa (não perde contexto)
-            this._handleSaveSuccess(data, ctx.tableId, ctx.orderId);
+            // Passa os itens do carrinho (cópia) para imprimir
+            this._handleSaveSuccess(data, ctx.tableId, ctx.orderId, cartItemsCopy, selectedOrderType);
         } catch (err) {
             alert(err.message);
         }
@@ -162,9 +172,8 @@ const CheckoutSubmit = {
      * 4. SALVAR PEDIDO (Retirada/Delivery) - Pagar Depois
      */
     savePickupOrder: async function () {
-        // Determina tipo baseado no card ATIVO (não no deliveryDataFilled)
-        const rawType = this._determineOrderType(false);
-        const selectedOrderType = rawType === 'delivery' ? 'delivery' : 'pickup';
+        // Determina tipo baseado no card ATIVO
+        const selectedOrderType = this._determineOrderType(false);
 
         // Validações
         if (!CheckoutValidator.validateDeliveryData(selectedOrderType)) return;
@@ -251,30 +260,47 @@ const CheckoutSubmit = {
     },
 
     _determineOrderType: function (hasClientOrTable) {
-        // 1. Primeiro verifica o hidden input (fonte principal)
+        // 1. Verificar input hidden (prioridade máxima se setado pelo user)
         const selectedInput = document.getElementById('selected_order_type');
         if (selectedInput && selectedInput.value) {
             const val = selectedInput.value.toLowerCase();
             if (val === 'retirada') return 'pickup';
             if (val === 'entrega') return 'delivery';
+            // Se for local e tiver mesa, vira local
             if (val === 'local') return hasClientOrTable ? 'local' : 'balcao';
         }
 
-        // 2. Fallback: verifica os cards ativos
+        // 2. Fallback: Se tiver Mesa, FORÇA 'mesa' (backend espera 'mesa' ou 'local')
+        if (hasClientOrTable) {
+            const ctx = CheckoutHelpers.getContextIds();
+            if (ctx.tableId) return 'mesa'; // Garante que vá para Mesas
+            if (ctx.clientId) return 'comanda';
+        }
+
+        // 3. Fallback dos botões visuais
         const cards = document.querySelectorAll('.order-toggle-btn.active');
         let type = 'balcao';
 
         cards.forEach(card => {
             const label = card.innerText.toLowerCase().trim();
+            // [CORREÇÃO] Retirada deve ser 'pickup' para sair correto na impressão e no Kanban
             if (label.includes('retirada')) type = 'pickup';
             else if (label.includes('entrega')) type = 'delivery';
-            else if (label.includes('local') && hasClientOrTable) type = 'local';
+            else if (label.includes('local')) type = 'balcao';
         });
 
         return type;
     },
 
-    _handleSuccess: function (data, isPaidLoop = false, isMesaClose = false) {
+    /**
+     * Handler de sucesso para FINALIZAR venda
+     * @param {object} data - Resposta do backend
+     * @param {boolean} isPaidLoop - Se é inclusão em pedido pago
+     * @param {boolean} isMesaClose - Se está fechando mesa
+     * @param {array} cartItems - Itens do carrinho para impressão
+     * @param {string} orderType - Tipo do pedido
+     */
+    _handleSuccess: function (data, isPaidLoop = false, isMesaClose = false, cartItems = [], orderType = 'local') {
         if (data.success) {
             CheckoutUI.showSuccessModal();
             PDVCart.clear();
@@ -286,26 +312,34 @@ const CheckoutSubmit = {
                 AdminSPA.invalidateCache('pdv');
             }
 
-            setTimeout(() => {
-                document.getElementById('checkoutModal').style.display = 'none';
+            // Fecha modal de checkout
+            document.getElementById('checkoutModal').style.display = 'none';
 
-                if (isPaidLoop || isMesaClose) {
-                    // Navega para mesas via SPA
-                    if (typeof AdminSPA !== 'undefined') {
-                        AdminSPA.navigateTo('mesas', true, true);
-                    } else {
-                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
-                    }
+            // Abre modal de impressão após breve delay
+            setTimeout(() => {
+                const savedOrderId = data.order_id;
+
+                if (savedOrderId && typeof PDVPrint !== 'undefined') {
+                    // [MODIFICADO] Sempre busca do backend para garantir dados completos (pagamento, endereço, etc)
+                    // Evita o problema de "Pagamento Não Informado" causado pelo openWithItems mockado
+                    PDVPrint.open(savedOrderId);
                 } else {
-                    // Recarrega seção atual via SPA
-                    if (typeof AdminSPA !== 'undefined') {
-                        // Se estamos no balcão, navigateTo ('balcao', true, true) forçará reload
-                        AdminSPA.reloadCurrentSection();
+                    // Fallback se não tiver orderId ou PDVPrint não carregou
+                    if (isPaidLoop || isMesaClose) {
+                        if (typeof AdminSPA !== 'undefined') {
+                            AdminSPA.navigateTo('mesas', true, true);
+                        } else {
+                            window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/mesas';
+                        }
                     } else {
-                        window.location.reload();
+                        if (typeof AdminSPA !== 'undefined') {
+                            AdminSPA.reloadCurrentSection();
+                        } else {
+                            window.location.reload();
+                        }
                     }
                 }
-            }, 1000);
+            }, 800);
         } else {
             alert('Erro: ' + data.message);
         }
@@ -313,24 +347,53 @@ const CheckoutSubmit = {
 
     /**
      * Handler de sucesso para SALVAR comanda (permanece no Balcão)
+     * @param {object} data - Resposta do backend
+     * @param {number} tableId - ID da mesa (se houver)
+     * @param {number} orderId - ID do pedido existente
+     * @param {array} cartItems - Itens do carrinho (para imprimir apenas o que foi adicionado)
+     * @param {string} orderType - Tipo do pedido (local, delivery, etc)
      */
-    _handleSaveSuccess: function (data, tableId, orderId) {
+    _handleSaveSuccess: function (data, tableId, orderId, cartItems = [], orderType = 'local') {
         if (data.success) {
             CheckoutUI.showSuccessModal();
             PDVCart.clear();
 
-            setTimeout(() => {
-                document.getElementById('checkoutModal').style.display = 'none';
+            // Fecha checkout modal
+            document.getElementById('checkoutModal').style.display = 'none';
 
-                // [ALTERADO] Permanece no Balcão após salvar (não navega para mesa/comanda)
-                if (typeof AdminSPA !== 'undefined') {
-                    AdminSPA.navigateTo('balcao', true, true); // Recarrega balcão limpo
+            // Aguarda um pouco e abre o modal de impressão
+            setTimeout(() => {
+                // Usa o order_id retornado pelo backend (prioridade) ou o que já existia
+                const savedOrderId = data.order_id || orderId;
+
+                // Abre modal de impressão se tiver um pedido salvo
+                if (savedOrderId && typeof PDVPrint !== 'undefined') {
+                    // Se tem itens do carrinho, passa para imprimir apenas eles (não busca da API)
+                    if (cartItems && cartItems.length > 0) {
+                        PDVPrint.openWithItems(savedOrderId, cartItems, orderType);
+                    } else {
+                        // Fallback: busca do backend (comportamento original)
+                        PDVPrint.open(savedOrderId);
+                    }
                 } else {
-                    window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv';
+                    // Fallback: vai direto pro balcão se não tiver order_id
+                    this._navigateToBalcao();
                 }
-            }, 1000);
+            }, 800);
         } else {
             alert('Erro: ' + data.message);
+        }
+    },
+
+
+    /**
+     * Navega para o Balcão (utilizado pelo modal de impressão após fechar)
+     */
+    _navigateToBalcao: function () {
+        if (typeof AdminSPA !== 'undefined') {
+            AdminSPA.navigateTo('balcao', true, true);
+        } else {
+            window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv';
         }
     }
 };

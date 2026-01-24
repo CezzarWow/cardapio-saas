@@ -60,8 +60,8 @@ class OrderController extends BaseController
         }
 
         try {
-            $this->service->closeTable($rid, (int)$data['table_id'], $data['payments'] ?? []);
-            $this->json(['success' => true]);
+            $orderId = $this->service->closeTable($rid, (int)$data['table_id'], $data['payments'] ?? []);
+            $this->json(['success' => true, 'order_id' => $orderId]);
         } catch (\Throwable $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
@@ -81,8 +81,8 @@ class OrderController extends BaseController
         }
 
         try {
-            $this->service->closeCommand($rid, (int)$data['order_id'], $data['payments'] ?? []);
-            $this->json(['success' => true]);
+            $orderId = $this->service->closeCommand($rid, (int)$data['order_id'], $data['payments'] ?? []);
+            $this->json(['success' => true, 'order_id' => $orderId]);
         } catch (\Throwable $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }

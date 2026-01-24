@@ -96,8 +96,16 @@ class CreateOrderAction
             $finalTotal = max(0, $totalVenda + $deliveryFee - $discount);
 
             $isPaid = isset($data['is_paid']) && $data['is_paid'] == 1 ? 1 : 0;
-            $paymentMethod = $data['payment_method'] ?? 'dinheiro';
             $payments = $data['payments'] ?? [];
+            
+            // Tenta obter o método do array de pagamentos, senão usa o do payload, senão 'dinheiro'
+            $extractedMethod = !empty($payments[0]['method']) ? $payments[0]['method'] : null;
+            $paymentMethod = $extractedMethod ?? ($data['payment_method'] ?? 'dinheiro');
+            
+            // Se houver múltiplos pagamentos, marca como 'multiplo'
+            if (count($payments) > 1) {
+                $paymentMethod = 'multiplo';
+            }
 
 
             // SAVE_ACCOUNT: Cria como comanda aberta
@@ -221,6 +229,18 @@ class CreateOrderAction
             // Baixa Estoque via Repository
             foreach ($cart as $item) {
                 $this->stockRepo->decrement($item['id'], $item['quantity']);
+            }
+
+            // [FIX] Inserir Taxa de Entrega como Item para aparecer na impressão
+            if ($deliveryFee > 0) {
+                $this->itemRepo->insert($orderId, [[
+                    'product_id' => 0, // 0 pois banco não aceita NULL
+                    'name' => 'Taxa de Entrega',
+                    'price' => $deliveryFee,
+                    'quantity' => 1,
+                    'extras' => null,
+                    'observation' => null
+                ]]);
             }
 
             $this->paymentService->registerPayments($conn, $orderId, $payments);

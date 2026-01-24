@@ -15,17 +15,17 @@
          * Extrai e normaliza dados do pedido
          */
         extractOrderData: function (order) {
-            let clientAddress = order.client_address || 'Endereço não informado';
-            if (order.client_number) clientAddress += ', ' + order.client_number;
+            let clientAddress = order.client_address || null;
+            if (clientAddress && order.client_number) clientAddress += ', ' + order.client_number;
 
             return {
-                clientName: order.client_name || 'Não identificado',
-                clientPhone: order.client_phone || '--',
-                clientAddress: clientAddress,
-                neighborhood: order.client_neighborhood || order.neighborhood || '',
-                observations: order.observation || order.observations || '',
-                paymentMethod: order.payment_method || 'Não informado',
-                changeFor: order.change_for || '',
+                clientName: order.client_name || null,
+                clientPhone: order.client_phone || null,
+                clientAddress: clientAddress || null,
+                neighborhood: order.client_neighborhood || order.neighborhood || null,
+                observations: order.observation || order.observations || null,
+                paymentMethod: order.payment_method || null,
+                changeFor: order.change_for || null,
                 total: parseFloat(order.total || 0).toFixed(2).replace('.', ','),
                 date: order.created_at ? new Date(order.created_at).toLocaleString('pt-BR') : '--',
                 orderId: order.id

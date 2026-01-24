@@ -260,7 +260,7 @@ class OrderRepository
             LEFT JOIN clients c ON o.client_id = c.id
             WHERE o.restaurant_id = :rid 
             AND o.status NOT IN ('concluido', 'cancelado')
-            AND o.order_type IN ('balcao', 'comanda')
+            AND o.order_type IN ('balcao', 'comanda', 'local')
             AND (o.is_paid = 0 OR o.is_paid IS NULL)
             ORDER BY o.created_at DESC
         ";
@@ -283,7 +283,7 @@ class OrderRepository
             WHERE client_id = :cid 
             AND restaurant_id = :rid 
             AND status = 'aberto'
-            AND order_type = 'comanda'
+            AND order_type IN ('comanda', 'balcao', 'local')
             ORDER BY created_at DESC 
             LIMIT 1
         ");

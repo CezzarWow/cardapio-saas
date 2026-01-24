@@ -1,0 +1,48 @@
+/**
+ * CAIXA MODULE - Main Entry Point
+ * Importa todos os arquivos CSS do módulo + regras responsivas
+ */
+
+/* ===== IMPORTS ===== */
+@import '_variables.css';
+@import 'base.css';
+@import 'cards.css';
+@import 'flow.css';
+@import 'modals.css';
+
+/* ========================================
+   REGRAS RESPONSIVAS
+   ======================================== */
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .cashier-main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+    .cashier-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--caixa-spacing-sm);
+    }
+
+    .cashier-summary-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .cashier-open-card {
+        padding: 2rem;
+        margin: 1rem;
+    }
+
+    .cashier-title {
+        font-size: 1.5rem;
+    }
+
+    .cashier-input {
+        font-size: 1.2rem;
+    }
+}
