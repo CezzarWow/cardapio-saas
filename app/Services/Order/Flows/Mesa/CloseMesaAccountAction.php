@@ -3,6 +3,7 @@
 namespace App\Services\Order\Flows\Mesa;
 
 use App\Core\Database;
+use App\Core\Logger;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\TableRepository;
 use App\Services\CashRegisterService;
@@ -138,7 +139,13 @@ class CloseMesaAccountAction
 
             $conn->commit();
 
-            error_log("[MESA] Conta fechada: Mesa #{$mesa['number']}, Pedido #{$orderId}, Total: R$ " . number_format($total, 2, ',', '.'));
+            Logger::info("[MESA] Conta fechada: Mesa #{$mesa['number']}, Pedido #{$orderId}", [
+                'restaurant_id' => $restaurantId,
+                'order_id' => $orderId,
+                'table_id' => $tableId,
+                'table_number' => $mesa['number'],
+                'total' => $total
+            ]);
 
             return [
                 'order_id' => $orderId,
@@ -150,7 +157,12 @@ class CloseMesaAccountAction
 
         } catch (\Throwable $e) {
             $conn->rollBack();
-            error_log('[MESA] ERRO ao fechar: ' . $e->getMessage());
+            Logger::error('[MESA] ERRO ao fechar', [
+                'restaurant_id' => $restaurantId,
+                'order_id' => $orderId,
+                'table_id' => $tableId,
+                'error' => $e->getMessage()
+            ]);
             throw new RuntimeException('Erro ao fechar mesa: ' . $e->getMessage());
         }
     }

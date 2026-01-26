@@ -2,6 +2,7 @@
 
 namespace App\Services\Order\Flows\Delivery;
 
+use App\Core\Logger;
 use App\Repositories\Order\OrderRepository;
 use Exception;
 use RuntimeException;
@@ -50,7 +51,12 @@ class UpdateDeliveryStatusAction
         $oldStatus = $order['status'];
 
         // 3. Validar transição (OrderRepository já faz isso, mas log extra)
-        error_log("[DELIVERY_STATUS] Tentando: #{$orderId} {$oldStatus} → {$newStatus}");
+        Logger::debug("[DELIVERY_STATUS] Tentando transição", [
+            'restaurant_id' => $restaurantId,
+            'order_id' => $orderId,
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus
+        ]);
 
         try {
             // 4. Atualizar status (OrderRepository valida transições)
@@ -62,7 +68,12 @@ class UpdateDeliveryStatusAction
                 );
             }
 
-            error_log("[DELIVERY_STATUS] OK: #{$orderId} {$oldStatus} → {$newStatus}");
+            Logger::info("[DELIVERY_STATUS] Status atualizado", [
+                'restaurant_id' => $restaurantId,
+                'order_id' => $orderId,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus
+            ]);
 
             return [
                 'order_id' => $orderId,
@@ -72,7 +83,13 @@ class UpdateDeliveryStatusAction
             ];
 
         } catch (\Throwable $e) {
-            error_log('[DELIVERY_STATUS] ERRO: ' . $e->getMessage());
+            Logger::error('[DELIVERY_STATUS] ERRO ao atualizar status', [
+                'restaurant_id' => $restaurantId,
+                'order_id' => $orderId,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'error' => $e->getMessage()
+            ]);
             throw new RuntimeException('Erro ao atualizar status: ' . $e->getMessage());
         }
     }

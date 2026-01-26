@@ -3,6 +3,7 @@
 namespace App\Services\Order\Flows\Balcao;
 
 use App\Core\Database;
+use App\Core\Logger;
 use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\StockRepository;
@@ -10,6 +11,7 @@ use App\Services\CashRegisterService;
 use App\Services\Order\OrderStatus;
 use App\Services\Order\TotalCalculator;
 use App\Services\PaymentService;
+use App\Traits\OrderCreationTrait;
 use RuntimeException;
 
 /**
@@ -31,6 +33,8 @@ use RuntimeException;
  */
 class CreateBalcaoSaleAction
 {
+    use OrderCreationTrait;
+
     private PaymentService $paymentService;
     private CashRegisterService $cashRegisterService;
     private OrderRepository $orderRepo;
@@ -93,16 +97,11 @@ class CreateBalcaoSaleAction
             // NOTA: Passamos o primeiro método como referência, mas fonte da verdade é order_payments
             $this->orderRepo->updatePayment($orderId, true, $mainMethod);
 
-            // 5. Inserir itens
-            $this->itemRepo->insert($orderId, $data['cart']);
+            // 5. Inserir itens e baixar estoque
+            $this->insertItemsAndDecrementStock($orderId, $data['cart'], $this->itemRepo, $this->stockRepo);
 
             // 6. Registrar pagamentos na tabela order_payments
             $this->paymentService->registerPayments($conn, $orderId, $data['payments']);
-
-            // 7. Baixar estoque
-            foreach ($data['cart'] as $item) {
-                $this->stockRepo->decrement($item['id'], $item['quantity']);
-            }
 
             // 8. Registrar movimento de caixa
             $this->cashRegisterService->registerMovement(
@@ -115,7 +114,11 @@ class CreateBalcaoSaleAction
 
             $conn->commit();
 
-            error_log("[BALCAO] Venda #{$orderId} concluída. Total: R$ " . number_format($total, 2, ',', '.'));
+            $this->logOrderCreated('BALCAO', $orderId, [
+                'restaurant_id' => $restaurantId,
+                'total' => $total,
+                'payment_method' => $mainMethod
+            ]);
 
             return [
                 'order_id' => $orderId,
@@ -124,7 +127,9 @@ class CreateBalcaoSaleAction
 
         } catch (\Throwable $e) {
             $conn->rollBack();
-            error_log('[BALCAO] ERRO: ' . $e->getMessage());
+            $this->logOrderError('BALCAO', 'criar venda', $e, [
+                'restaurant_id' => $restaurantId
+            ]);
             throw new RuntimeException('Erro ao processar venda: ' . $e->getMessage());
         }
     }

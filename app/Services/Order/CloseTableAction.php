@@ -3,6 +3,7 @@
 namespace App\Services\Order;
 
 use App\Core\Database;
+use App\Core\Logger;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\TableRepository;
 use App\Services\CashRegisterService;
@@ -104,13 +105,24 @@ class CloseTableAction
 
             $conn->commit();
 
-            error_log("[CLOSE_TABLE] Mesa #{$mesa['number']} fechada. Pedido #{$orderId} status: concluido");
+            Logger::info("[CLOSE_TABLE] Mesa fechada", [
+                'restaurant_id' => $restaurantId,
+                'order_id' => $orderId,
+                'table_id' => $tableId,
+                'table_number' => $mesa['number'],
+                'total' => $mesa['order_total']
+            ]);
 
             return $orderId;
 
         } catch (\Throwable $e) {
             $conn->rollBack();
-            error_log("[CLOSE_TABLE] ERRO mesa #{$tableId}: " . $e->getMessage());
+            Logger::error("[CLOSE_TABLE] ERRO ao fechar mesa", [
+                'restaurant_id' => $restaurantId,
+                'table_id' => $tableId,
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
             throw $e;
         }
     }

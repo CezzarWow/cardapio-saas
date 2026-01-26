@@ -3,6 +3,7 @@
 namespace App\Services\Order\Flows\Delivery;
 
 use App\Core\Database;
+use App\Core\Logger;
 use App\Repositories\ClientRepository;
 use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\Order\OrderRepository;
@@ -10,6 +11,7 @@ use App\Repositories\StockRepository;
 use App\Services\Order\OrderStatus;
 use App\Services\Order\TotalCalculator;
 use App\Services\PaymentService;
+use App\Traits\OrderCreationTrait;
 use RuntimeException;
 
 /**
@@ -31,6 +33,8 @@ use RuntimeException;
  */
 class CreateDeliveryStandaloneAction
 {
+    use OrderCreationTrait;
+
     private PaymentService $paymentService;
     private OrderRepository $orderRepo;
     private OrderItemRepository $itemRepo;
@@ -89,8 +93,8 @@ class CreateDeliveryStandaloneAction
                 'change_for' => $data['change_for'] ?? null
             ], $initialStatus);
 
-            // 5. Inserir itens
-            $this->itemRepo->insert($orderId, $data['cart']);
+            // 5. Inserir itens e baixar estoque
+            $this->insertItemsAndDecrementStock($orderId, $data['cart'], $this->itemRepo, $this->stockRepo);
 
             // 6. Registrar pagamento (se informado)
             if ($isPaid) {
@@ -102,14 +106,15 @@ class CreateDeliveryStandaloneAction
                 $this->orderRepo->updatePayment($orderId, true, $mainMethod);
             }
 
-            // 7. Baixar estoque
-            foreach ($data['cart'] as $item) {
-                $this->stockRepo->decrement($item['id'], $item['quantity']);
-            }
-
             $conn->commit();
 
-            error_log("[DELIVERY] Pedido #{$orderId} criado. Status: {$initialStatus}, Total: R$ " . number_format($total, 2, ',', '.'));
+            $this->logOrderCreated('DELIVERY', $orderId, [
+                'restaurant_id' => $restaurantId,
+                'client_id' => $clientId,
+                'status' => $initialStatus,
+                'total' => $total,
+                'is_paid' => $isPaid
+            ]);
 
             return [
                 'order_id' => $orderId,
@@ -121,7 +126,9 @@ class CreateDeliveryStandaloneAction
 
         } catch (\Throwable $e) {
             $conn->rollBack();
-            error_log('[DELIVERY] ERRO ao criar: ' . $e->getMessage());
+            $this->logOrderError('DELIVERY', 'criar', $e, [
+                'restaurant_id' => $restaurantId
+            ]);
             throw new RuntimeException('Erro ao criar delivery: ' . $e->getMessage());
         }
     }

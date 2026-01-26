@@ -113,7 +113,12 @@ class CloseComandaAction
 
             $conn->commit();
 
-            error_log("[COMANDA] Comanda #{$orderId} fechada. Total: R$ " . number_format($total, 2, ',', '.'));
+            Logger::info("[COMANDA] Comanda #{$orderId} fechada", [
+                'restaurant_id' => $restaurantId,
+                'order_id' => $orderId,
+                'client_id' => $order['client_id'] ?? null,
+                'total' => $total
+            ]);
 
             return [
                 'order_id' => $orderId,
@@ -124,7 +129,11 @@ class CloseComandaAction
 
         } catch (\Throwable $e) {
             $conn->rollBack();
-            error_log('[COMANDA] ERRO ao fechar: ' . $e->getMessage());
+            Logger::error('[COMANDA] ERRO ao fechar', [
+                'restaurant_id' => $restaurantId,
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
             throw new RuntimeException('Erro ao fechar comanda: ' . $e->getMessage());
         }
     }

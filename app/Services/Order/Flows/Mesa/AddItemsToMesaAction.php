@@ -3,11 +3,13 @@
 namespace App\Services\Order\Flows\Mesa;
 
 use App\Core\Database;
+use App\Core\Logger;
 use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\StockRepository;
 use App\Services\Order\OrderStatus;
 use App\Services\Order\TotalCalculator;
+use App\Traits\OrderCreationTrait;
 use Exception;
 use RuntimeException;
 
@@ -29,6 +31,8 @@ use RuntimeException;
  */
 class AddItemsToMesaAction
 {
+    use OrderCreationTrait;
+
     private OrderRepository $orderRepo;
     private OrderItemRepository $itemRepo;
     private StockRepository $stockRepo;
@@ -77,20 +81,21 @@ class AddItemsToMesaAction
         try {
             $conn->beginTransaction();
 
-            // 4. Inserir novos itens
-            $this->itemRepo->insert($orderId, $data['cart']);
+            // 4. Inserir novos itens e baixar estoque
+            $this->insertItemsAndDecrementStock($orderId, $data['cart'], $this->itemRepo, $this->stockRepo);
 
             // 5. Atualizar total do pedido
             $this->orderRepo->updateTotal($orderId, $newTotal);
 
-            // 6. Baixar estoque
-            foreach ($data['cart'] as $item) {
-                $this->stockRepo->decrement($item['id'], $item['quantity']);
-            }
-
             $conn->commit();
 
-            error_log("[MESA] Itens adicionados: Pedido #{$orderId}, +R$ " . number_format($addedValue, 2, ',', '.') . ', Novo Total: R$ ' . number_format($newTotal, 2, ',', '.'));
+            Logger::info("[MESA] Itens adicionados: Pedido #{$orderId}", [
+                'restaurant_id' => $restaurantId,
+                'order_id' => $orderId,
+                'items_added' => count($data['cart']),
+                'added_value' => $addedValue,
+                'new_total' => $newTotal
+            ]);
 
             return [
                 'order_id' => $orderId,
@@ -101,7 +106,10 @@ class AddItemsToMesaAction
 
         } catch (\Throwable $e) {
             $conn->rollBack();
-            error_log('[MESA] ERRO ao adicionar itens: ' . $e->getMessage());
+            $this->logOrderError('MESA', 'adicionar itens', $e, [
+                'restaurant_id' => $restaurantId,
+                'order_id' => $orderId
+            ]);
             throw new RuntimeException('Erro ao adicionar itens: ' . $e->getMessage());
         }
     }

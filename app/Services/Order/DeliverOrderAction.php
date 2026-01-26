@@ -2,6 +2,7 @@
 
 namespace App\Services\Order;
 
+use App\Core\Logger;
 use App\Repositories\Order\OrderRepository;
 use Exception;
 use RuntimeException;
@@ -44,6 +45,10 @@ class DeliverOrderAction
             );
         }
 
-        error_log("[DELIVER_ORDER] Pedido #{$orderId} status: concluido");
+        Logger::info("[DELIVER_ORDER] Pedido entregue", [
+            'restaurant_id' => $restaurantId,
+            'order_id' => $orderId,
+            'status' => 'concluido'
+        ]);
     }
 }

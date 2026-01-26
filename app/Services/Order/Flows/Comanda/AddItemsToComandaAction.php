@@ -3,11 +3,13 @@
 namespace App\Services\Order\Flows\Comanda;
 
 use App\Core\Database;
+use App\Core\Logger;
 use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\StockRepository;
 use App\Services\Order\OrderStatus;
 use App\Services\Order\TotalCalculator;
+use App\Traits\OrderCreationTrait;
 use Exception;
 use RuntimeException;
 
@@ -24,6 +26,8 @@ use RuntimeException;
  */
 class AddItemsToComandaAction
 {
+    use OrderCreationTrait;
+
     private OrderRepository $orderRepo;
     private OrderItemRepository $itemRepo;
     private StockRepository $stockRepo;
@@ -74,20 +78,21 @@ class AddItemsToComandaAction
         try {
             $conn->beginTransaction();
 
-            // 5. Inserir novos itens
-            $this->itemRepo->insert($orderId, $data['cart']);
+            // 5. Inserir novos itens e baixar estoque
+            $this->insertItemsAndDecrementStock($orderId, $data['cart'], $this->itemRepo, $this->stockRepo);
 
             // 6. Atualizar total
             $this->orderRepo->updateTotal($orderId, $newTotal);
 
-            // 7. Baixar estoque
-            foreach ($data['cart'] as $item) {
-                $this->stockRepo->decrement($item['id'], $item['quantity']);
-            }
-
             $conn->commit();
 
-            error_log("[COMANDA] Itens adicionados: Pedido #{$orderId}, +R$ " . number_format($addedValue, 2, ',', '.'));
+            Logger::info("[COMANDA] Itens adicionados: Pedido #{$orderId}", [
+                'restaurant_id' => $restaurantId,
+                'order_id' => $orderId,
+                'items_added' => count($data['cart']),
+                'added_value' => $addedValue,
+                'new_total' => $newTotal
+            ]);
 
             return [
                 'order_id' => $orderId,
@@ -98,7 +103,10 @@ class AddItemsToComandaAction
 
         } catch (\Throwable $e) {
             $conn->rollBack();
-            error_log('[COMANDA] ERRO ao adicionar itens: ' . $e->getMessage());
+            $this->logOrderError('COMANDA', 'adicionar itens', $e, [
+                'restaurant_id' => $restaurantId,
+                'order_id' => $orderId
+            ]);
             throw new RuntimeException('Erro ao adicionar itens: ' . $e->getMessage());
         }
     }

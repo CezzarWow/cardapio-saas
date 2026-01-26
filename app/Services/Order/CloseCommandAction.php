@@ -3,6 +3,7 @@
 namespace App\Services\Order;
 
 use App\Core\Database;
+use App\Core\Logger;
 use App\Repositories\Order\OrderRepository;
 use App\Services\CashRegisterService;
 use App\Services\PaymentService;
@@ -109,13 +110,21 @@ class CloseCommandAction
             $conn->commit();
 
             // Log de sucesso
-            error_log("[CLOSE_COMMAND] Comanda #{$orderId} fechada com sucesso. Status: concluido");
+            Logger::info("[CLOSE_COMMAND] Comanda fechada com sucesso", [
+                'restaurant_id' => $restaurantId,
+                'order_id' => $orderId,
+                'status' => 'concluido'
+            ]);
 
             return $orderId;
 
         } catch (\Throwable $e) {
             $conn->rollBack();
-            error_log("[CLOSE_COMMAND] ERRO ao fechar comanda #{$orderId}: " . $e->getMessage());
+            Logger::error("[CLOSE_COMMAND] ERRO ao fechar comanda", [
+                'restaurant_id' => $restaurantId,
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
             throw $e;
         }
     }
