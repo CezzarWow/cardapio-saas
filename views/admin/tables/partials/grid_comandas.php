@@ -26,12 +26,19 @@
                 // Se for RETIRADA/PICKUP, o cliente quer tratar no balcão (PDV), então vai para balcao
                 $isDelivery = in_array($order['order_type'] ?? '', ['delivery', 'entrega']); 
                 
+                // [FIX] Se for DELIVERY mas estiver 'novo' ou 'aberto', permite abrir no PDV para edição
+                // Apenas redireciona para DeliveryUI se já estiver em fluxo logístico (aguardando, em_preparo, etc)
+                $status = $order['status'] ?? 'novo';
+                if ($isDelivery && in_array($status, ['novo', 'aberto'])) {
+                    $isDelivery = false; // Trata como comum para abrir no PDV
+                }
+
                 $clickAction = "";
                 if ($isDelivery) {
-                    // Fluxo Delivery: Tenta abrir modal de detalhes ou vai para aba delivery
+                    // Fluxo Delivery (Logística): Tenta abrir modal de detalhes ou vai para aba delivery
                     $clickAction = "if(window.DeliveryUI) { DeliveryUI.openDetailsModal({$order['id']}); } else { if(typeof AdminSPA!=='undefined') AdminSPA.navigateTo('delivery'); else window.location.href='".BASE_URL."/admin/loja/delivery'; }";
                 } else {
-                    // Fluxo Balcão/Retirada/Local: Abre no PDV com o ID do pedido
+                    // Fluxo Balcão/Retirada/Local/Edição: Abre no PDV com o ID do pedido
                     $clickAction = "if(typeof AdminSPA!=='undefined') AdminSPA.navigateTo('balcao',true,true,{order_id:{$order['id']}}); else window.location.href='".BASE_URL."/admin/loja/pdv?order_id={$order['id']}'";
                 }
             ?>

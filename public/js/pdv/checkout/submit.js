@@ -400,4 +400,6 @@ window.CheckoutSubmit = {
 
 // Exports
 // window.CheckoutSubmit = CheckoutSubmit; // Já definido acima
+// [FIX] Retorna promise para permitir lock (PDVEvents)
 window.savePickupOrder = () => window.CheckoutSubmit.savePickupOrder();
+window.saveClientOrder = () => window.CheckoutSubmit.saveClientOrder();

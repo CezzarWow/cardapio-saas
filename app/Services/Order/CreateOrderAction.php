@@ -63,6 +63,21 @@ class CreateOrderAction
             $tableId = $data['table_id'] ?? null;
             $commandId = $data['command_id'] ?? null;
 
+            // [DEBUG] Log para depuração de duplicação
+            $logData = [
+                'timestamp' => date('Y-m-d H:i:s'),
+                'order_id_input' => $existingOrderId,
+                'save_account' => $saveAccount ?? false,
+                'finalize_now' => $finalizeNow ?? false,
+                'order_type' => $orderType,
+                'cart_count' => count($cart),
+                'client_id' => $data['client_id'] ?? 'null',
+                'delivery_data_present' => !empty($data['delivery_data'])
+            ];
+            file_put_contents(__DIR__ . '/../../../../debug_orders.log', json_encode($logData) . PHP_EOL, FILE_APPEND);
+
+
+
 
 
             if ($orderType === 'mesa') {
@@ -128,6 +143,8 @@ class CreateOrderAction
                 // Exceto delivery/pickup que devem ir pro Kanban
                 $orderStatus = 'aberto';
             }
+
+
 
             // VERIFICAR SE É INCREMENTO OU FINALIZAÇÃO DE PEDIDO EXISTENTE
             if ($existingOrderId && ($saveAccount || $finalizeNow)) {

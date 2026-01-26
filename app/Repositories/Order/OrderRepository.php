@@ -285,7 +285,7 @@ class OrderRepository
             FROM orders 
             WHERE client_id = :cid 
             AND restaurant_id = :rid 
-            AND status = 'aberto'
+            AND status IN ('aberto', 'novo')
             AND order_type IN ('comanda', 'balcao', 'local', 'delivery', 'pickup', 'entrega', 'retirada')
             ORDER BY created_at DESC 
             LIMIT 1

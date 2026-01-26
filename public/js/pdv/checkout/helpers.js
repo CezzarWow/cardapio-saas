@@ -51,10 +51,21 @@ window.CheckoutHelpers = {
         const hasTable = !!(tableIdRaw && tableIdRaw !== '' && tableIdRaw !== '0');
         const hasClient = !!(clientIdRaw && clientIdRaw !== '' && clientIdRaw !== '0');
 
+        // Tenta obter ID do pedido de múltiplas fontes para evitar duplicação
+        let orderId = orderIdRaw ? parseInt(orderIdRaw) : null;
+        if (!orderId && typeof PDVState !== 'undefined' && PDVState.state && PDVState.state.pedidoId) {
+            orderId = parseInt(PDVState.state.pedidoId);
+        }
+        if (!orderId) {
+            // Fallback para URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('order_id')) orderId = parseInt(urlParams.get('order_id'));
+        }
+
         return {
             tableId: hasTable ? parseInt(tableIdRaw) : null,
             clientId: hasClient ? parseInt(clientIdRaw) : null,
-            orderId: orderIdRaw ? parseInt(orderIdRaw) : null,
+            orderId: orderId,
             hasTable: hasTable,
             hasClient: hasClient
         };

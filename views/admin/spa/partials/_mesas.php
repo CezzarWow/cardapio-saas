@@ -39,15 +39,4 @@
 <!-- Mesas Bundle (9 scripts combinados) -->
 <script data-spa-script="mesas-bundle" src="<?= BASE_URL ?>/js/bundles/mesas-bundle.js?v=<?= APP_VERSION ?>"></script>
 
-<!-- 
-    [BACKUP] Scripts originais para rollback:
-<script data-spa-script="shared-masks" src="<?= BASE_URL ?>/js/shared/masks.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="admin-client-validator" src="<?= BASE_URL ?>/js/admin/client-validator.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="admin-clientes" src="<?= BASE_URL ?>/js/admin/clientes.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="tables-helpers" src="<?= BASE_URL ?>/js/admin/tables-helpers.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="tables-crud" src="<?= BASE_URL ?>/js/admin/tables-crud.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="tables-clients" src="<?= BASE_URL ?>/js/admin/tables-clients.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="tables-paid-orders" src="<?= BASE_URL ?>/js/admin/tables-paid-orders.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="tables-dossier" src="<?= BASE_URL ?>/js/admin/tables-dossier.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="tables-main" src="<?= BASE_URL ?>/js/admin/tables.js?v=<?= APP_VERSION ?>"></script>
--->
+

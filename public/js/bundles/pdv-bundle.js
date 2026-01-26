@@ -1,4 +1,4 @@
-/* pdv-bundle - Generated 2026-01-26T18:21:17.577Z */
+/* pdv-bundle - Generated 2026-01-26T19:52:14.633Z */
 
 
 /* ========== pdv/state.js ========== */
@@ -1545,10 +1545,21 @@ window.CheckoutHelpers = {
         const hasTable = !!(tableIdRaw && tableIdRaw !== '' && tableIdRaw !== '0');
         const hasClient = !!(clientIdRaw && clientIdRaw !== '' && clientIdRaw !== '0');
 
+        // Tenta obter ID do pedido de múltiplas fontes para evitar duplicação
+        let orderId = orderIdRaw ? parseInt(orderIdRaw) : null;
+        if (!orderId && typeof PDVState !== 'undefined' && PDVState.state && PDVState.state.pedidoId) {
+            orderId = parseInt(PDVState.state.pedidoId);
+        }
+        if (!orderId) {
+            // Fallback para URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('order_id')) orderId = parseInt(urlParams.get('order_id'));
+        }
+
         return {
             tableId: hasTable ? parseInt(tableIdRaw) : null,
             clientId: hasClient ? parseInt(clientIdRaw) : null,
-            orderId: orderIdRaw ? parseInt(orderIdRaw) : null,
+            orderId: orderId,
             hasTable: hasTable,
             hasClient: hasClient
         };
@@ -2763,7 +2774,9 @@ window.CheckoutSubmit = {
 
 // Exports
 // window.CheckoutSubmit = CheckoutSubmit; // Já definido acima
+// [FIX] Retorna promise para permitir lock (PDVEvents)
 window.savePickupOrder = () => window.CheckoutSubmit.savePickupOrder();
+window.saveClientOrder = () => window.CheckoutSubmit.saveClientOrder();
 
 
 /* ========== pdv/checkout/orderType.js ========== */
@@ -4056,6 +4069,8 @@ window.PDVEvents = {
                 break;
 
             // ITEM SAVED ACTIONS (Tables)
+            // TABLE/CLIENT ACTIONS
+            case 'item-saved-delete':
             case 'saved-item-delete':
                 if (window.deleteSavedItem) window.deleteSavedItem(el.dataset.id, el.dataset.orderId);
                 break;
@@ -4065,8 +4080,18 @@ window.PDVEvents = {
 
             // ORDER FLOW
             case 'order-save': // Salvar Comanda
-                if (window.saveClientOrder) window.saveClientOrder();
-                else console.error('saveClientOrder not found');
+                if (this.isProcessing) return; // Lock check
+                this.isProcessing = true;
+                setTimeout(() => this.isProcessing = false, 2000); // Release lock after 2s or manually
+
+                if (window.saveClientOrder) {
+                    window.saveClientOrder()
+                        .catch(() => this.isProcessing = false) // Unlock on error
+                        .finally(() => setTimeout(() => this.isProcessing = false, 1000));
+                } else {
+                    console.error('saveClientOrder not found');
+                    this.isProcessing = false;
+                }
                 break;
             case 'order-include-paid': // Incluir no Pago
                 if (window.includePaidOrderItems) window.includePaidOrderItems();

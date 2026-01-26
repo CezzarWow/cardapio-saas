@@ -155,6 +155,8 @@ window.PDVEvents = {
                 break;
 
             // ITEM SAVED ACTIONS (Tables)
+            // TABLE/CLIENT ACTIONS
+            case 'item-saved-delete':
             case 'saved-item-delete':
                 if (window.deleteSavedItem) window.deleteSavedItem(el.dataset.id, el.dataset.orderId);
                 break;
@@ -164,8 +166,18 @@ window.PDVEvents = {
 
             // ORDER FLOW
             case 'order-save': // Salvar Comanda
-                if (window.saveClientOrder) window.saveClientOrder();
-                else console.error('saveClientOrder not found');
+                if (this.isProcessing) return; // Lock check
+                this.isProcessing = true;
+                setTimeout(() => this.isProcessing = false, 2000); // Release lock after 2s or manually
+
+                if (window.saveClientOrder) {
+                    window.saveClientOrder()
+                        .catch(() => this.isProcessing = false) // Unlock on error
+                        .finally(() => setTimeout(() => this.isProcessing = false, 1000));
+                } else {
+                    console.error('saveClientOrder not found');
+                    this.isProcessing = false;
+                }
                 break;
             case 'order-include-paid': // Incluir no Pago
                 if (window.includePaidOrderItems) window.includePaidOrderItems();

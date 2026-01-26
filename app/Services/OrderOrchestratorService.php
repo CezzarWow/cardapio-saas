@@ -66,6 +66,8 @@ class OrderOrchestratorService
             return $this->createOrderAction->execute($restaurantId, $userId, $data);
         }
 
+
+
         // LÓGICA DE DELIVERY/PICKUP COM CLIENTE/MESA:
         // - NÃO PAGO + cliente/mesa: Cria comanda (para cobrar depois) e vai pro Kanban
         // - PAGO: Vai direto pro Kanban (não precisa comanda)
@@ -77,13 +79,13 @@ class OrderOrchestratorService
 
         if ($isDeliveryOrPickup && ($hasClient || $hasTable) && !$isPaid) {
             
-            // [FIX] Detecta Balcão Pickup (Retirada com Cliente)
-            // Se for apenas Retirada + Cliente (sem entrega logística), não deve duplicar o pedido.
-            // Deve cair no fluxo padrão de CreateOrderAction.
-            $isBalcaoPickup = ($orderType === 'pickup' && $hasClient && !$hasTable);
+            // [FIX] Detecta Balcão Pickup OU Delivery Simples (Com Cliente)
+            // Se for Retirada OU Entrega com Cliente (sem mesa), não deve duplicar (criar linked).
+            // Deve cair no fluxo padrão de CreateOrderAction para atualizar/criar pedido único.
+            $isSimpleOrder = (($orderType === 'pickup' || $orderType === 'delivery') && $hasClient && !$hasTable);
 
-            if (!$isBalcaoPickup) {
-                // Delivery/Pickup NÃO PAGO com cliente/mesa -> Cria comanda + vai pro Kanban
+            if (!$isSimpleOrder) {
+                // Delivery/Pickup vinculado a MESA -> Mantém lógica de criar comanda separada
                 if ($hasTable) {
                     $data['link_to_table'] = true;
                 } else {
