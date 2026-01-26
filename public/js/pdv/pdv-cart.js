@@ -5,7 +5,7 @@
  * 2. Lógica Core (add, remove, total)
  * 3. Renderização da UI do Carrinho
  */
-const PDVCart = {
+window.PDVCart = {
     items: [],
     backupItems: [],
 
@@ -309,14 +309,17 @@ window.PDV.clickProduct = function (id, name, price, hasExtras, encodedExtras = 
 // ==========================================
 // GLOBALS & ALIASES (Compatibilidade)
 // ==========================================
-window.PDVCart = PDVCart;
+// window.PDVCart = PDVCart; // Já definido acima
 
 // IMPORTANTE: Usar getter para que window.cart sempre aponte para o array atual
 // (evita referência stale quando this.items = [] substitui o array)
-Object.defineProperty(window, 'cart', {
-    get: function () { return PDVCart.items; },
-    configurable: true
-});
+// IMPORTANTE: Usar getter para que window.cart sempre aponte para o array atual
+if (!Object.getOwnPropertyDescriptor(window, 'cart')) {
+    Object.defineProperty(window, 'cart', {
+        get: function () { return window.PDVCart.items; },
+        configurable: true
+    });
+}
 
 window.addToCart = (id, name, price, hasExtras = false) => {
     if (hasExtras) {
@@ -327,16 +330,16 @@ window.addToCart = (id, name, price, hasExtras = false) => {
             alert('Erro: Módulo de adicionais não carregado');
         }
     } else {
-        PDVCart.add(id, name, price);
+        window.PDVCart.add(id, name, price);
     }
 };
 window.removeFromCart = (id) => {
-    const item = PDVCart.items.find(i => i.id === id);
-    if (item) PDVCart.remove(item.cartItemId);
+    const item = window.PDVCart.items.find(i => i.id === id);
+    if (item) window.PDVCart.remove(item.cartItemId);
 };
-window.updateCartUI = () => PDVCart.updateUI();
-window.calculateTotal = () => PDVCart.calculateTotal();
-window.clearCart = () => PDVCart.clear();
+window.updateCartUI = () => window.PDVCart.updateUI();
+window.calculateTotal = () => window.PDVCart.calculateTotal();
+window.clearCart = () => window.PDVCart.clear();
 
 // Init removido. O orquestrador PDV.init() chama setItems().
 // document.addEventListener('DOMContentLoaded', () => {

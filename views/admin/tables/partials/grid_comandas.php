@@ -21,6 +21,15 @@
                 $statusText = $isPaid ? 'PAGO' : 'ABERTO';
             ?>
             
+            <?php
+                $isDelivery = in_array($order['order_type'] ?? '', ['delivery', 'pickup', 'entrega', 'retirada']);
+                $clickAction = "";
+                if ($isDelivery) {
+                    $clickAction = "if(window.DeliveryUI) { DeliveryUI.openDetailsModal({$order['id']}); } else { if(typeof AdminSPA!=='undefined') AdminSPA.navigateTo('delivery'); else window.location.href='".BASE_URL."/admin/loja/delivery'; }";
+                } else {
+                    $clickAction = "if(typeof AdminSPA!=='undefined') AdminSPA.navigateTo('balcao',true,true,{order_id:{$order['id']}}); else window.location.href='".BASE_URL."/admin/loja/pdv?order_id={$order['id']}'";
+                }
+            ?>
             <?php if ($isPaid): ?>
                 <div class="table-card <?= $cardClass ?>"
                      onclick="showPaidOrderOptions(<?= $order['id'] ?>, '<?= addslashes($clientName) ?>', <?= $total ?>, <?= $clientId ?>)"
@@ -30,16 +39,24 @@
                      onkeypress="if(event.key==='Enter') showPaidOrderOptions(<?= $order['id'] ?>, '<?= addslashes($clientName) ?>', <?= $total ?>, <?= $clientId ?>)">
             <?php else: ?>
                 <div class="table-card <?= $cardClass ?>"
-                     onclick="if(typeof AdminSPA!=='undefined') AdminSPA.navigateTo('balcao',true,true,{order_id:<?= $order['id'] ?>}); else window.location.href='<?= BASE_URL ?>/admin/loja/pdv?order_id=<?= $order['id'] ?>'"
+                     onclick="<?= $clickAction ?>"
                      tabindex="0"
                      role="button"
                      aria-label="Comanda de <?= $clientName ?> - <?= $statusText ?> - R$ <?= number_format($total, 2, ',', '.') ?>"
-                     onkeypress="if(event.key==='Enter') { if(typeof AdminSPA!=='undefined') AdminSPA.navigateTo('balcao',true,true,{order_id:<?= $order['id'] ?>}); else window.location.href='<?= BASE_URL ?>/admin/loja/pdv?order_id=<?= $order['id'] ?>'; }">
+                     onkeypress="if(event.key==='Enter') { <?= $clickAction ?> }">
             <?php endif; ?>
                 
                 <span class="comanda-card__name"><?= $clientName ?></span>
                 <span class="comanda-card__status"><?= $statusText ?></span>
                 <span class="comanda-card__total">R$ <?= number_format($total, 2, ',', '.') ?></span>
+
+                <?php if (!empty($order['order_type'])): ?>
+                    <?php if ($order['order_type'] === 'delivery' || $order['order_type'] === 'entrega'): ?>
+                        <span class="table-card__badge" style="background:#059669; font-size:9px; padding:2px 6px; top:5px; right:5px; position:absolute; border-radius:4px;">ENTREGA</span>
+                    <?php elseif ($order['order_type'] === 'pickup' || $order['order_type'] === 'retirada'): ?>
+                        <span class="table-card__badge" style="background:#0284c7; font-size:9px; padding:2px 6px; top:5px; right:5px; position:absolute; border-radius:4px;">RETIRADA</span>
+                    <?php endif; ?>
+                <?php endif; ?>
 
             </div>
         <?php endforeach; ?>

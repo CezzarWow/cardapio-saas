@@ -5,7 +5,7 @@
  * Dependências: CheckoutState, CheckoutHelpers, CheckoutUI
  */
 
-const CheckoutTotals = {
+window.CheckoutTotals = {
 
     /**
      * Aplica desconto e atualiza UI
@@ -88,4 +88,4 @@ const CheckoutTotals = {
 };
 
 // Expõe globalmente para uso pelos outros módulos
-window.CheckoutTotals = CheckoutTotals;
+// window.CheckoutTotals = CheckoutTotals; // Já definido acima

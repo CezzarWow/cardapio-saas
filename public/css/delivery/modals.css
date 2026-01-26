@@ -5,7 +5,7 @@
  * ============================================
  */
 
-/* Overlay do Modal */
+/* Modal oculto por padrão com [hidden] */
 .delivery-modal {
     display: none;
     position: fixed;
@@ -19,8 +19,20 @@
     justify-content: center;
 }
 
-.delivery-modal[aria-hidden="false"] {
-    display: flex;
+/* Modal visível quando NÃO tem hidden */
+/* Exclui o modal do PDV (#pdvPrintModal) pois ele usa controle de visibilidade próprio/legado */
+.delivery-modal:not([hidden]):not(#pdvPrintModal) {
+    display: flex !important;
+}
+
+/* Print modal precisa de z-index maior */
+.delivery-modal--print {
+    z-index: 1100;
+}
+
+/* Cancel modal precisa de z-index para ficar acima do details */
+.delivery-modal--cancel {
+    z-index: 310;
 }
 
 /* Container do Modal */

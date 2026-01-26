@@ -64,13 +64,21 @@ class OrderOrchestratorService
         $isPaid = !empty($data['payments']) || (isset($data['is_paid']) && $data['is_paid'] == 1);
 
         if ($isDeliveryOrPickup && ($hasClient || $hasTable) && !$isPaid) {
-            // Delivery/Pickup NÃO PAGO com cliente/mesa -> Cria comanda + vai pro Kanban
-            if ($hasTable) {
-                $data['link_to_table'] = true;
-            } else {
-                $data['link_to_comanda'] = true;
+            
+            // [FIX] Detecta Balcão Pickup (Retirada com Cliente)
+            // Se for apenas Retirada + Cliente (sem entrega logística), não deve duplicar o pedido.
+            // Deve cair no fluxo padrão de CreateOrderAction.
+            $isBalcaoPickup = ($orderType === 'pickup' && $hasClient && !$hasTable);
+
+            if (!$isBalcaoPickup) {
+                // Delivery/Pickup NÃO PAGO com cliente/mesa -> Cria comanda + vai pro Kanban
+                if ($hasTable) {
+                    $data['link_to_table'] = true;
+                } else {
+                    $data['link_to_comanda'] = true;
+                }
+                return $this->createDeliveryLinkedAction->execute($restaurantId, $userId, $data);
             }
-            return $this->createDeliveryLinkedAction->execute($restaurantId, $userId, $data);
         }
 
         // Delivery/Pickup vinculado a Mesa ou Comanda (apenas se EXPLICITAMENTE solicitado)

@@ -27,7 +27,7 @@ class DeliveryOrderRepository
         $conn = Database::connect();
 
         $sql = "
-            SELECT o.id, o.total, o.status, o.created_at, o.payment_method, o.order_type, o.is_paid,
+            SELECT o.id, o.total, o.status, o.created_at, o.payment_method, o.order_type, o.is_paid, o.source,
                    c.name as client_name, 
                    c.phone as client_phone,
                    c.address as client_address,
@@ -37,7 +37,11 @@ class DeliveryOrderRepository
             LEFT JOIN clients c ON o.client_id = c.id
             LEFT JOIN tables t ON o.table_id = t.id
             WHERE o.restaurant_id = :rid 
-              AND o.order_type IN ('delivery', 'pickup')
+              AND (
+                  o.order_type = 'delivery' 
+                  OR 
+                  (o.order_type = 'pickup' AND o.source = 'web')
+              )
         ";
 
         $params = ['rid' => $restaurantId];

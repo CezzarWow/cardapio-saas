@@ -5,7 +5,7 @@
  * Dependências: CheckoutUI, CheckoutOrderType, CheckoutTotals
  */
 
-const CheckoutEntrega = {
+window.CheckoutEntrega = {
 
     // Constante: IDs dos campos de entrega
     FIELD_IDS: [
@@ -321,7 +321,7 @@ const CheckoutEntrega = {
 };
 
 // Expõe globalmente
-window.CheckoutEntrega = CheckoutEntrega;
+// window.CheckoutEntrega = CheckoutEntrega; // Já definido acima
 
 // Aliases de compatibilidade (HTML usa esses)
 window.openDeliveryPanel = () => CheckoutEntrega.openPanel();
@@ -332,7 +332,11 @@ window.clearDeliveryData = () => CheckoutEntrega.clearData();
 window._resetDeliveryOnClose = () => CheckoutEntrega.resetOnClose();
 
 // Para compatibilidade com código legado que checa deliveryDataFilled
-Object.defineProperty(window, 'deliveryDataFilled', {
-    get: function () { return CheckoutEntrega.dataFilled; },
-    set: function (val) { CheckoutEntrega.dataFilled = val; }
-});
+// Para compatibilidade com código legado que checa deliveryDataFilled
+if (!Object.getOwnPropertyDescriptor(window, 'deliveryDataFilled')) {
+    Object.defineProperty(window, 'deliveryDataFilled', {
+        get: function () { return window.CheckoutEntrega.dataFilled; },
+        set: function (val) { window.CheckoutEntrega.dataFilled = val; },
+        configurable: true
+    });
+}

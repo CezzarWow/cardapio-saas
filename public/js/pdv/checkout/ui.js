@@ -5,7 +5,7 @@
  * Dependências: CheckoutState, CheckoutTotals, CheckoutHelpers
  */
 
-const CheckoutUI = {
+window.CheckoutUI = {
 
     /**
      * Atualiza a lista visual de pagamentos
@@ -191,4 +191,4 @@ const CheckoutUI = {
 };
 
 // Expõe globalmente para uso pelos outros módulos
-window.CheckoutUI = CheckoutUI;
+// window.CheckoutUI = CheckoutUI; // Já definido acima

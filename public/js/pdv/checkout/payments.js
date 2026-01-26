@@ -5,7 +5,7 @@
  * Dependências: CheckoutState, CheckoutTotals, CheckoutUI, CheckoutHelpers
  */
 
-const CheckoutPayments = {
+window.CheckoutPayments = {
 
     /**
      * Seleciona método de pagamento e atualiza visual
@@ -145,4 +145,4 @@ const CheckoutPayments = {
 };
 
 // Expõe globalmente para uso pelos outros módulos
-window.CheckoutPayments = CheckoutPayments;
+// window.CheckoutPayments = CheckoutPayments; // Já definido acima

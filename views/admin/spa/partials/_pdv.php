@@ -28,7 +28,7 @@ $pdvConfig = [
 ?>
 
 <!-- CSS necessário para modal de impressão -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/modals.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/modals.css?v=<?= time() ?>">
 
 <div id="pdv-container" class="pdv-wrapper" style="height: 100%; display: flex; overflow: hidden;">
     
@@ -79,5 +79,5 @@ $pdvConfig = [
 
 
 <!-- PDV Bundle (Reativado após build) -->
-<script data-spa-script="pdv-bundle" src="<?= BASE_URL ?>/js/bundles/pdv-bundle.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="pdv-bundle" src="<?= BASE_URL ?>/js/bundles/pdv-bundle.js?v=<?= time() ?>"></script>
 

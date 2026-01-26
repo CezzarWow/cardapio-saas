@@ -2,7 +2,7 @@
  * CheckoutValidator.js
  * Responsável por validar se a venda pode prosseguir
  */
-const CheckoutValidator = {
+window.CheckoutValidator = {
 
     /**
      * Valida carrinho
@@ -45,4 +45,4 @@ const CheckoutValidator = {
     }
 };
 
-window.CheckoutValidator = CheckoutValidator;
+// window.CheckoutValidator = CheckoutValidator; // Já definido acima

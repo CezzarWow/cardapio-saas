@@ -3,16 +3,17 @@
  * ============================================
  * Modal: Impressão de Ficha (Motoboy ou Cozinha)
  *
- * Refatorado: Usa classes CSS + Acessibilidade
+ * Refatorado: Usa inert + hidden (W3C standard)
  * ============================================
  */
 ?>
 <div id="deliveryPrintModal" 
-     class="delivery-modal" 
-     style="z-index: 1100;"
+     class="delivery-modal delivery-modal--print" 
      role="dialog" 
      aria-modal="true" 
-     aria-labelledby="deliveryPrintModalTitle">
+     aria-labelledby="deliveryPrintModalTitle"
+     inert
+     hidden>
     <div class="delivery-modal__content delivery-modal__content--small">
         
         <!-- Header -->

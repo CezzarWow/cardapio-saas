@@ -1,4 +1,4 @@
-/* pdv-bundle - Generated 2026-01-23T21:15:51.434Z */
+/* pdv-bundle - Generated 2026-01-26T12:06:03.433Z */
 
 
 /* ========== pdv/state.js ========== */
@@ -88,7 +88,7 @@ window.PDVState = PDVState;
  * 3. Renderizar opções
  * 4. Coletar seleção e enviar para o Carrinho
  */
-const PDVExtras = {
+window.PDVExtras = {
     pendingProduct: null,
     qty: 1,
 
@@ -220,12 +220,12 @@ const PDVExtras = {
 };
 
 // Globals (Legacy Support & HTML onclicks)
-window.PDVExtras = PDVExtras;
+// window.PDVExtras = PDVExtras; // Já definido acima
 window.openExtrasModal = (id) => console.warn('Use PDVExtras.open()'); // Deprecated but safe
-window.closeExtrasModal = () => PDVExtras.close();
-window.confirmExtras = () => PDVExtras.confirm();
-window.increaseExtrasQty = () => PDVExtras.increaseQty();
-window.decreaseExtrasQty = () => PDVExtras.decreaseQty();
+window.closeExtrasModal = () => window.PDVExtras.close();
+window.confirmExtras = () => window.PDVExtras.confirm();
+window.increaseExtrasQty = () => window.PDVExtras.increaseQty();
+window.decreaseExtrasQty = () => window.PDVExtras.decreaseQty();
 
 
 /* ========== pdv/pdv-cart.js ========== */
@@ -236,7 +236,7 @@ window.decreaseExtrasQty = () => PDVExtras.decreaseQty();
  * 2. Lógica Core (add, remove, total)
  * 3. Renderização da UI do Carrinho
  */
-const PDVCart = {
+window.PDVCart = {
     items: [],
     backupItems: [],
 
@@ -540,14 +540,17 @@ window.PDV.clickProduct = function (id, name, price, hasExtras, encodedExtras = 
 // ==========================================
 // GLOBALS & ALIASES (Compatibilidade)
 // ==========================================
-window.PDVCart = PDVCart;
+// window.PDVCart = PDVCart; // Já definido acima
 
 // IMPORTANTE: Usar getter para que window.cart sempre aponte para o array atual
 // (evita referência stale quando this.items = [] substitui o array)
-Object.defineProperty(window, 'cart', {
-    get: function () { return PDVCart.items; },
-    configurable: true
-});
+// IMPORTANTE: Usar getter para que window.cart sempre aponte para o array atual
+if (!Object.getOwnPropertyDescriptor(window, 'cart')) {
+    Object.defineProperty(window, 'cart', {
+        get: function () { return window.PDVCart.items; },
+        configurable: true
+    });
+}
 
 window.addToCart = (id, name, price, hasExtras = false) => {
     if (hasExtras) {
@@ -558,16 +561,16 @@ window.addToCart = (id, name, price, hasExtras = false) => {
             alert('Erro: Módulo de adicionais não carregado');
         }
     } else {
-        PDVCart.add(id, name, price);
+        window.PDVCart.add(id, name, price);
     }
 };
 window.removeFromCart = (id) => {
-    const item = PDVCart.items.find(i => i.id === id);
-    if (item) PDVCart.remove(item.cartItemId);
+    const item = window.PDVCart.items.find(i => i.id === id);
+    if (item) window.PDVCart.remove(item.cartItemId);
 };
-window.updateCartUI = () => PDVCart.updateUI();
-window.calculateTotal = () => PDVCart.calculateTotal();
-window.clearCart = () => PDVCart.clear();
+window.updateCartUI = () => window.PDVCart.updateUI();
+window.calculateTotal = () => window.PDVCart.calculateTotal();
+window.clearCart = () => window.PDVCart.clear();
 
 // Init removido. O orquestrador PDV.init() chama setItems().
 // document.addEventListener('DOMContentLoaded', () => {
@@ -595,7 +598,7 @@ window.clearCart = () => PDVCart.clear();
  * 4. tables-client-modal.js - estende com modal de cliente
  */
 
-const PDVTables = {
+window.PDVTables = {
     // Armazena referência para limpeza
     documentClickHandler: null,
 
@@ -673,7 +676,7 @@ const PDVTables = {
 // ==========================================
 // EXPOR GLOBALMENTE
 // ==========================================
-window.PDVTables = PDVTables;
+// window.PDVTables = PDVTables; // Já definido acima
 
 // ==========================================
 // COMPATIBILIDADE (Aliases Globais)
@@ -1282,7 +1285,7 @@ window.openClientModal = () => document.getElementById('clientModal').style.disp
  * Dependências: BASE_URL (global)
  */
 
-const PDVOrderActions = {
+window.PDVOrderActions = {
 
     /**
      * Deleta item já salvo da mesa/comanda
@@ -1359,7 +1362,7 @@ const PDVOrderActions = {
 };
 
 // Expõe globalmente
-window.PDVOrderActions = PDVOrderActions;
+// window.PDVOrderActions = PDVOrderActions; // Já definido acima
 
 // Aliases globais para compatibilidade com onclick no HTML
 window.deleteSavedItem = (itemId, orderId) => PDVOrderActions.deleteSavedItem(itemId, orderId);
@@ -1374,7 +1377,7 @@ window.cancelTableOrder = (tableId, orderId) => PDVOrderActions.cancelTableOrder
  * Dependências: Nenhuma
  */
 
-const PDVFicha = {
+window.PDVFicha = {
 
     /**
      * Abre o modal de ficha do cliente/mesa
@@ -1450,7 +1453,7 @@ const PDVFicha = {
 };
 
 // Expõe globalmente para uso no HTML
-window.PDVFicha = PDVFicha;
+// window.PDVFicha = PDVFicha; // Já definido acima
 
 // Aliases globais para compatibilidade com onclick no HTML
 window.openFichaModal = () => PDVFicha.open();
@@ -1466,7 +1469,7 @@ window.printFicha = () => PDVFicha.print();
  * Dependências: Nenhuma
  */
 
-const CheckoutHelpers = {
+window.CheckoutHelpers = {
 
     /**
      * Formata input de valor monetário (máscara BRL)
@@ -1533,7 +1536,7 @@ const CheckoutHelpers = {
 };
 
 // Expõe globalmente para uso pelos outros módulos
-window.CheckoutHelpers = CheckoutHelpers;
+// window.CheckoutHelpers = CheckoutHelpers; // Já definido acima
 
 
 /* ========== pdv/checkout/state.js ========== */
@@ -1544,7 +1547,7 @@ window.CheckoutHelpers = CheckoutHelpers;
  * Dependências: Nenhuma
  */
 
-const CheckoutState = {
+window.CheckoutState = {
 
     // Lista de pagamentos adicionados
     currentPayments: [],
@@ -1587,7 +1590,7 @@ const CheckoutState = {
 };
 
 // Expõe globalmente para uso pelos outros módulos
-window.CheckoutState = CheckoutState;
+// window.CheckoutState = CheckoutState; // Já definido acima
 
 
 /* ========== pdv/checkout/totals.js ========== */
@@ -1598,7 +1601,7 @@ window.CheckoutState = CheckoutState;
  * Dependências: CheckoutState, CheckoutHelpers, CheckoutUI
  */
 
-const CheckoutTotals = {
+window.CheckoutTotals = {
 
     /**
      * Aplica desconto e atualiza UI
@@ -1681,7 +1684,7 @@ const CheckoutTotals = {
 };
 
 // Expõe globalmente para uso pelos outros módulos
-window.CheckoutTotals = CheckoutTotals;
+// window.CheckoutTotals = CheckoutTotals; // Já definido acima
 
 
 /* ========== pdv/checkout/ui.js ========== */
@@ -1692,7 +1695,7 @@ window.CheckoutTotals = CheckoutTotals;
  * Dependências: CheckoutState, CheckoutTotals, CheckoutHelpers
  */
 
-const CheckoutUI = {
+window.CheckoutUI = {
 
     /**
      * Atualiza a lista visual de pagamentos
@@ -1878,7 +1881,7 @@ const CheckoutUI = {
 };
 
 // Expõe globalmente para uso pelos outros módulos
-window.CheckoutUI = CheckoutUI;
+// window.CheckoutUI = CheckoutUI; // Já definido acima
 
 
 /* ========== pdv/checkout/payments.js ========== */
@@ -1889,7 +1892,7 @@ window.CheckoutUI = CheckoutUI;
  * Dependências: CheckoutState, CheckoutTotals, CheckoutUI, CheckoutHelpers
  */
 
-const CheckoutPayments = {
+window.CheckoutPayments = {
 
     /**
      * Seleciona método de pagamento e atualiza visual
@@ -2029,7 +2032,7 @@ const CheckoutPayments = {
 };
 
 // Expõe globalmente para uso pelos outros módulos
-window.CheckoutPayments = CheckoutPayments;
+// window.CheckoutPayments = CheckoutPayments; // Já definido acima
 
 
 /* ========== pdv/checkout/services/checkout-service.js ========== */
@@ -2037,7 +2040,7 @@ window.CheckoutPayments = CheckoutPayments;
  * CheckoutService.js
  * Responsável APENAS pela comunicação com a API (Fetch calls)
  */
-const CheckoutService = {
+window.CheckoutService = {
 
     _getCsrf: function () {
         return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -2095,7 +2098,7 @@ const CheckoutService = {
     }
 };
 
-window.CheckoutService = CheckoutService;
+// window.CheckoutService = CheckoutService; // Já definido acima
 
 
 /* ========== pdv/checkout/services/checkout-validator.js ========== */
@@ -2103,7 +2106,7 @@ window.CheckoutService = CheckoutService;
  * CheckoutValidator.js
  * Responsável por validar se a venda pode prosseguir
  */
-const CheckoutValidator = {
+window.CheckoutValidator = {
 
     /**
      * Valida carrinho
@@ -2146,7 +2149,7 @@ const CheckoutValidator = {
     }
 };
 
-window.CheckoutValidator = CheckoutValidator;
+// window.CheckoutValidator = CheckoutValidator; // Já definido acima
 
 
 /* ========== pdv/checkout/adjust.js ========== */
@@ -2158,7 +2161,7 @@ window.CheckoutValidator = CheckoutValidator;
  * Dependências: PDVCart, CheckoutTotals, CheckoutUI, CheckoutHelpers
  */
 
-const CheckoutAdjust = {
+window.CheckoutAdjust = {
 
     isEditing: false,
 
@@ -2324,7 +2327,7 @@ const CheckoutAdjust = {
 
 };
 
-window.CheckoutAdjust = CheckoutAdjust;
+// window.CheckoutAdjust = CheckoutAdjust; // Já definido acima
 
 
 /* ========== pdv/checkout/submit.js ========== */
@@ -2335,7 +2338,7 @@ window.CheckoutAdjust = CheckoutAdjust;
  * Dependências: CheckoutService, CheckoutValidator, CheckoutState, PDVState, PDVCart
  */
 
-const CheckoutSubmit = {
+window.CheckoutSubmit = {
 
     /**
      * 1. FINALIZAR VENDA (Pagamento Realizado)
@@ -2590,30 +2593,30 @@ const CheckoutSubmit = {
     },
 
     _determineOrderType: function (hasClientOrTable) {
-        // 1. Verificar input hidden (prioridade máxima se setado pelo user)
+        // 1. Verificar input hidden (prioridade ABSOLUTA para retirada/entrega)
         const selectedInput = document.getElementById('selected_order_type');
-        if (selectedInput && selectedInput.value) {
-            const val = selectedInput.value.toLowerCase();
-            if (val === 'retirada') return 'pickup';
-            if (val === 'entrega') return 'delivery';
-            // Se for local e tiver mesa, vira local
-            if (val === 'local') return hasClientOrTable ? 'local' : 'balcao';
-        }
+        const selectedVal = selectedInput?.value?.toLowerCase() || '';
 
-        // 2. Fallback: Se tiver Mesa, FORÇA 'mesa' (backend espera 'mesa' ou 'local')
+        // [FIX] Retirada e Entrega SEMPRE respeitam a escolha do usuário, mesmo com cliente
+        if (selectedVal === 'retirada') return 'pickup';
+        if (selectedVal === 'entrega') return 'delivery';
+
+        // 2. Se for "local" sem mesa/cliente, vira balcao
+        if (selectedVal === 'local' && !hasClientOrTable) return 'balcao';
+
+        // 3. Fallback: Só aplica mesa/comanda se NÃO foi retirada/entrega
         if (hasClientOrTable) {
             const ctx = CheckoutHelpers.getContextIds();
-            if (ctx.tableId) return 'mesa'; // Garante que vá para Mesas
+            if (ctx.tableId) return 'mesa';
             if (ctx.clientId) return 'comanda';
         }
 
-        // 3. Fallback dos botões visuais
+        // 4. Fallback dos botões visuais
         const cards = document.querySelectorAll('.order-toggle-btn.active');
         let type = 'balcao';
 
         cards.forEach(card => {
             const label = card.innerText.toLowerCase().trim();
-            // [CORREÇÃO] Retirada deve ser 'pickup' para sair correto na impressão e no Kanban
             if (label.includes('retirada')) type = 'pickup';
             else if (label.includes('entrega')) type = 'delivery';
             else if (label.includes('local')) type = 'balcao';
@@ -2729,8 +2732,8 @@ const CheckoutSubmit = {
 };
 
 // Exports
-window.CheckoutSubmit = CheckoutSubmit;
-window.savePickupOrder = () => CheckoutSubmit.savePickupOrder();
+// window.CheckoutSubmit = CheckoutSubmit; // Já definido acima
+window.savePickupOrder = () => window.CheckoutSubmit.savePickupOrder();
 
 
 /* ========== pdv/checkout/orderType.js ========== */
@@ -2741,7 +2744,7 @@ window.savePickupOrder = () => CheckoutSubmit.savePickupOrder();
  * Dependências: CheckoutUI, CheckoutHelpers
  */
 
-const CheckoutOrderType = {
+window.CheckoutOrderType = {
 
     /**
      * Seleciona tipo de pedido e atualiza visual/alertas
@@ -3069,7 +3072,7 @@ const CheckoutOrderType = {
 };
 
 // Expõe globalmente para uso pelos outros módulos
-window.CheckoutOrderType = CheckoutOrderType;
+// window.CheckoutOrderType = CheckoutOrderType; // Já definido acima
 
 
 /* ========== pdv/checkout/retirada.js ========== */
@@ -3177,7 +3180,7 @@ window.handleRetiradaValidation = function () {
  * Dependências: CheckoutUI, CheckoutOrderType, CheckoutTotals
  */
 
-const CheckoutEntrega = {
+window.CheckoutEntrega = {
 
     // Constante: IDs dos campos de entrega
     FIELD_IDS: [
@@ -3493,7 +3496,7 @@ const CheckoutEntrega = {
 };
 
 // Expõe globalmente
-window.CheckoutEntrega = CheckoutEntrega;
+// window.CheckoutEntrega = CheckoutEntrega; // Já definido acima
 
 // Aliases de compatibilidade (HTML usa esses)
 window.openDeliveryPanel = () => CheckoutEntrega.openPanel();
@@ -3504,10 +3507,14 @@ window.clearDeliveryData = () => CheckoutEntrega.clearData();
 window._resetDeliveryOnClose = () => CheckoutEntrega.resetOnClose();
 
 // Para compatibilidade com código legado que checa deliveryDataFilled
-Object.defineProperty(window, 'deliveryDataFilled', {
-    get: function () { return CheckoutEntrega.dataFilled; },
-    set: function (val) { CheckoutEntrega.dataFilled = val; }
-});
+// Para compatibilidade com código legado que checa deliveryDataFilled
+if (!Object.getOwnPropertyDescriptor(window, 'deliveryDataFilled')) {
+    Object.defineProperty(window, 'deliveryDataFilled', {
+        get: function () { return window.CheckoutEntrega.dataFilled; },
+        set: function (val) { window.CheckoutEntrega.dataFilled = val; },
+        configurable: true
+    });
+}
 
 
 /* ========== pdv/checkout/flow.js ========== */
@@ -3518,7 +3525,7 @@ Object.defineProperty(window, 'deliveryDataFilled', {
  * Dependências: CheckoutState, CheckoutHelpers, CheckoutUI, CheckoutPayments, CheckoutOrderType, PDVCart, PDVState
  */
 
-const CheckoutFlow = {
+window.CheckoutFlow = {
 
     /**
      * Ponto de entrada principal para finalizar venda
@@ -3700,7 +3707,7 @@ const CheckoutFlow = {
 };
 
 // Expõe globalmente
-window.CheckoutFlow = CheckoutFlow;
+// window.CheckoutFlow = CheckoutFlow; // Já definido acima
 
 
 /* ========== pdv/checkout/index.js ========== */
@@ -3720,7 +3727,7 @@ window.CheckoutFlow = CheckoutFlow;
  * - CheckoutEntrega
  */
 
-const PDVCheckout = {
+window.PDVCheckout = {
 
     // ==========================================
     // ESTADO (delegado para CheckoutState)
@@ -3846,19 +3853,19 @@ window.PDVCheckout = PDVCheckout;
 // ==========================================
 
 window.finalizeSale = () => {
-    PDVCheckout.finalizeSale();
+    window.PDVCheckout.finalizeSale();
 };
-window.fecharContaMesa = (id) => PDVCheckout.fecharContaMesa(id);
-window.fecharComanda = (mid) => PDVCheckout.fecharComanda(mid);
-window.includePaidOrderItems = () => PDVCheckout.finalizeSale();
-window.saveClientOrder = () => PDVCheckout.saveClientOrder();
-window.submitSale = () => PDVCheckout.submitSale();
-window.setMethod = (m) => PDVCheckout.setMethod(m);
-window.addPayment = (m, a) => PDVCheckout.addPayment(m, a);
-window.addCrediarioPayment = () => PDVCheckout.addCrediarioPayment();
-window.removePayment = (i) => PDVCheckout.removePayment(i);
-window.closeCheckout = () => PDVCheckout.closeCheckout();
-window.selectOrderType = (t, e) => PDVCheckout.selectOrderType(t, e);
+window.fecharContaMesa = (id) => window.PDVCheckout.fecharContaMesa(id);
+window.fecharComanda = (mid) => window.PDVCheckout.fecharComanda(mid);
+window.includePaidOrderItems = () => window.PDVCheckout.finalizeSale();
+window.saveClientOrder = () => window.PDVCheckout.saveClientOrder();
+window.submitSale = () => window.PDVCheckout.submitSale();
+window.setMethod = (m) => window.PDVCheckout.setMethod(m);
+window.addPayment = (m, a) => window.PDVCheckout.addPayment(m, a);
+window.addCrediarioPayment = () => window.PDVCheckout.addCrediarioPayment();
+window.removePayment = (i) => window.PDVCheckout.removePayment(i);
+window.closeCheckout = () => window.PDVCheckout.closeCheckout();
+window.selectOrderType = (t, e) => window.PDVCheckout.selectOrderType(t, e);
 
 
 /* ========== pdv/pdv-events.js ========== */
@@ -3871,7 +3878,19 @@ window.selectOrderType = (t, e) => PDVCheckout.selectOrderType(t, e);
  * [REFACTOR SPA] Agora suporta init() idempotente com removeEventListener.
  */
 
-const PDVEvents = {
+// ==========================================
+// SINGLETON PATTERN - CLEANUP ANTERIOR
+// ==========================================
+// Antes de redefinir window.PDVEvents, verifica se já existe uma instância
+// e remove seus listeners do DOM para evitar acumulação (Memory Leak / Double Submit).
+if (window.PDVEvents && window.PDVEvents.clickHandler) {
+    document.removeEventListener('click', window.PDVEvents.clickHandler);
+}
+if (window.PDVEvents && window.PDVEvents.keydownHandler) {
+    document.removeEventListener('keydown', window.PDVEvents.keydownHandler);
+}
+
+window.PDVEvents = {
     // Armazena referência para desvincular eventos
     clickHandler: null,
     keydownHandler: null,
@@ -3959,7 +3978,7 @@ const PDVEvents = {
                     alert('Erro: Módulo de adicionais não carregado');
                 }
             } else {
-                PDVCart.add(id, name, price);
+                if (window.PDVCart) window.PDVCart.add(id, name, price);
             }
 
             if (window.playBeep) window.playBeep();
@@ -3972,13 +3991,13 @@ const PDVEvents = {
         switch (action) {
             // CART ACTIONS
             case 'cart-undo':
-                if (window.PDVCart) PDVCart.undoClear();
+                if (window.PDVCart) window.PDVCart.undoClear();
                 break;
             case 'cart-clear':
-                if (window.PDVCart) PDVCart.clear();
+                if (window.PDVCart) window.PDVCart.clear();
                 break;
             case 'cart-remove-item':
-                if (window.PDVCart) PDVCart.remove(el.dataset.id);
+                if (window.PDVCart) window.PDVCart.remove(el.dataset.id);
                 break;
 
             // EXTRAS MODAL
@@ -4064,7 +4083,7 @@ window.PDVEvents = PDVEvents;
  * PDV Search Module
  * Gerencia a busca textual e filtros por categoria no PDV.
  */
-const PDVSearch = {
+window.PDVSearch = {
     selectedCategory: '',
     searchTerm: '',
 
@@ -4143,7 +4162,7 @@ const PDVSearch = {
 };
 
 // Expor globalmente
-window.PDVSearch = PDVSearch;
+// window.PDVSearch = PDVSearch; // Já definido acima
 
 
 /* ========== pdv.js ========== */

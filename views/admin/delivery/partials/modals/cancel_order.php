@@ -3,17 +3,17 @@
  * ============================================
  * Modal: Cancelar Pedido com Motivo
  *
- * Refatorado: Usa classes CSS + Acessibilidade
+ * Refatorado: Usa inert + hidden (W3C standard)
  * ============================================
  */
 ?>
 <div id="deliveryCancelModal" 
-     class="delivery-modal" 
-     style="z-index: 310;"
+     class="delivery-modal delivery-modal--cancel" 
      role="dialog" 
      aria-modal="true" 
      aria-labelledby="deliveryCancelModalTitle"
-     aria-hidden="true">
+     inert
+     hidden>
     <div class="delivery-modal__content delivery-modal__content--small">
         
         <!-- Header -->

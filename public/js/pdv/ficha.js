@@ -5,7 +5,7 @@
  * Dependências: Nenhuma
  */
 
-const PDVFicha = {
+window.PDVFicha = {
 
     /**
      * Abre o modal de ficha do cliente/mesa
@@ -81,7 +81,7 @@ const PDVFicha = {
 };
 
 // Expõe globalmente para uso no HTML
-window.PDVFicha = PDVFicha;
+// window.PDVFicha = PDVFicha; // Já definido acima
 
 // Aliases globais para compatibilidade com onclick no HTML
 window.openFichaModal = () => PDVFicha.open();

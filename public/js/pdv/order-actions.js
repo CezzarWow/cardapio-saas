@@ -5,7 +5,7 @@
  * Dependências: BASE_URL (global)
  */
 
-const PDVOrderActions = {
+window.PDVOrderActions = {
 
     /**
      * Deleta item já salvo da mesa/comanda
@@ -82,7 +82,7 @@ const PDVOrderActions = {
 };
 
 // Expõe globalmente
-window.PDVOrderActions = PDVOrderActions;
+// window.PDVOrderActions = PDVOrderActions; // Já definido acima
 
 // Aliases globais para compatibilidade com onclick no HTML
 window.deleteSavedItem = (itemId, orderId) => PDVOrderActions.deleteSavedItem(itemId, orderId);

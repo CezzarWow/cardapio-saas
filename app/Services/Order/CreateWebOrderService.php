@@ -91,7 +91,8 @@ class CreateWebOrderService
                 'order_type' => $orderType,
                 'payment_method' => $input['payment_method'] ?? 'dinheiro',
                 'observation' => $input['observation'] ?? null,
-                'change_for' => $changeAmount
+                'change_for' => $changeAmount,
+                'source' => 'web'
             ]);
 
             // 6. Inserir itens

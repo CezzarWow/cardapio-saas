@@ -2,7 +2,7 @@
  * PDV Search Module
  * Gerencia a busca textual e filtros por categoria no PDV.
  */
-const PDVSearch = {
+window.PDVSearch = {
     selectedCategory: '',
     searchTerm: '',
 
@@ -81,4 +81,4 @@ const PDVSearch = {
 };
 
 // Expor globalmente
-window.PDVSearch = PDVSearch;
+// window.PDVSearch = PDVSearch; // Já definido acima

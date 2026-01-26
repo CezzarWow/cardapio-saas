@@ -4,7 +4,7 @@
  * Modal: Detalhes do Pedido Delivery
  * Com opções de impressão (Motoboy / Cozinha)
  *
- * Refatorado: Usa classes CSS + Acessibilidade
+ * Refatorado: Usa inert + hidden (W3C standard)
  * ============================================
  */
 ?>
@@ -13,7 +13,8 @@
      role="dialog" 
      aria-modal="true" 
      aria-labelledby="deliveryDetailsModalTitle"
-     aria-hidden="true">
+     inert
+     hidden>
     <div class="delivery-modal__content delivery-modal__content--medium">
         
         <!-- Header -->

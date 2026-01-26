@@ -5,7 +5,7 @@
  * Dependências: Nenhuma
  */
 
-const CheckoutState = {
+window.CheckoutState = {
 
     // Lista de pagamentos adicionados
     currentPayments: [],
@@ -48,4 +48,4 @@ const CheckoutState = {
 };
 
 // Expõe globalmente para uso pelos outros módulos
-window.CheckoutState = CheckoutState;
+// window.CheckoutState = CheckoutState; // Já definido acima

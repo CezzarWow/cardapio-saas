@@ -5,7 +5,7 @@
  * Dependências: CheckoutState, CheckoutHelpers, CheckoutUI, CheckoutPayments, CheckoutOrderType, PDVCart, PDVState
  */
 
-const CheckoutFlow = {
+window.CheckoutFlow = {
 
     /**
      * Ponto de entrada principal para finalizar venda
@@ -187,4 +187,4 @@ const CheckoutFlow = {
 };
 
 // Expõe globalmente
-window.CheckoutFlow = CheckoutFlow;
+// window.CheckoutFlow = CheckoutFlow; // Já definido acima

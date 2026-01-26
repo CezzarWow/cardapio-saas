@@ -5,7 +5,7 @@
  * Dependências: CheckoutUI, CheckoutHelpers
  */
 
-const CheckoutOrderType = {
+window.CheckoutOrderType = {
 
     /**
      * Seleciona tipo de pedido e atualiza visual/alertas
@@ -333,4 +333,4 @@ const CheckoutOrderType = {
 };
 
 // Expõe globalmente para uso pelos outros módulos
-window.CheckoutOrderType = CheckoutOrderType;
+// window.CheckoutOrderType = CheckoutOrderType; // Já definido acima

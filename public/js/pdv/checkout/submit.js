@@ -5,7 +5,7 @@
  * Dependências: CheckoutService, CheckoutValidator, CheckoutState, PDVState, PDVCart
  */
 
-const CheckoutSubmit = {
+window.CheckoutSubmit = {
 
     /**
      * 1. FINALIZAR VENDA (Pagamento Realizado)
@@ -260,30 +260,30 @@ const CheckoutSubmit = {
     },
 
     _determineOrderType: function (hasClientOrTable) {
-        // 1. Verificar input hidden (prioridade máxima se setado pelo user)
+        // 1. Verificar input hidden (prioridade ABSOLUTA para retirada/entrega)
         const selectedInput = document.getElementById('selected_order_type');
-        if (selectedInput && selectedInput.value) {
-            const val = selectedInput.value.toLowerCase();
-            if (val === 'retirada') return 'pickup';
-            if (val === 'entrega') return 'delivery';
-            // Se for local e tiver mesa, vira local
-            if (val === 'local') return hasClientOrTable ? 'local' : 'balcao';
-        }
+        const selectedVal = selectedInput?.value?.toLowerCase() || '';
 
-        // 2. Fallback: Se tiver Mesa, FORÇA 'mesa' (backend espera 'mesa' ou 'local')
+        // [FIX] Retirada e Entrega SEMPRE respeitam a escolha do usuário, mesmo com cliente
+        if (selectedVal === 'retirada') return 'pickup';
+        if (selectedVal === 'entrega') return 'delivery';
+
+        // 2. Se for "local" sem mesa/cliente, vira balcao
+        if (selectedVal === 'local' && !hasClientOrTable) return 'balcao';
+
+        // 3. Fallback: Só aplica mesa/comanda se NÃO foi retirada/entrega
         if (hasClientOrTable) {
             const ctx = CheckoutHelpers.getContextIds();
-            if (ctx.tableId) return 'mesa'; // Garante que vá para Mesas
+            if (ctx.tableId) return 'mesa';
             if (ctx.clientId) return 'comanda';
         }
 
-        // 3. Fallback dos botões visuais
+        // 4. Fallback dos botões visuais
         const cards = document.querySelectorAll('.order-toggle-btn.active');
         let type = 'balcao';
 
         cards.forEach(card => {
             const label = card.innerText.toLowerCase().trim();
-            // [CORREÇÃO] Retirada deve ser 'pickup' para sair correto na impressão e no Kanban
             if (label.includes('retirada')) type = 'pickup';
             else if (label.includes('entrega')) type = 'delivery';
             else if (label.includes('local')) type = 'balcao';
@@ -399,5 +399,5 @@ const CheckoutSubmit = {
 };
 
 // Exports
-window.CheckoutSubmit = CheckoutSubmit;
-window.savePickupOrder = () => CheckoutSubmit.savePickupOrder();
+// window.CheckoutSubmit = CheckoutSubmit; // Já definido acima
+window.savePickupOrder = () => window.CheckoutSubmit.savePickupOrder();

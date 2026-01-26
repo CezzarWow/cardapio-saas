@@ -15,7 +15,7 @@
  * 4. tables-client-modal.js - estende com modal de cliente
  */
 
-const PDVTables = {
+window.PDVTables = {
     // Armazena referência para limpeza
     documentClickHandler: null,
 
@@ -93,7 +93,7 @@ const PDVTables = {
 // ==========================================
 // EXPOR GLOBALMENTE
 // ==========================================
-window.PDVTables = PDVTables;
+// window.PDVTables = PDVTables; // Já definido acima
 
 // ==========================================
 // COMPATIBILIDADE (Aliases Globais)

@@ -1,4 +1,4 @@
-/* cardapio-bundle - Generated 2026-01-23T21:15:51.452Z */
+/* cardapio-bundle - Generated 2026-01-26T12:06:03.447Z */
 
 
 /* ========== cardapio-admin/utils.js ========== */

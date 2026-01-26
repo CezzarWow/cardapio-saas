@@ -7,7 +7,19 @@
  * [REFACTOR SPA] Agora suporta init() idempotente com removeEventListener.
  */
 
-const PDVEvents = {
+// ==========================================
+// SINGLETON PATTERN - CLEANUP ANTERIOR
+// ==========================================
+// Antes de redefinir window.PDVEvents, verifica se já existe uma instância
+// e remove seus listeners do DOM para evitar acumulação (Memory Leak / Double Submit).
+if (window.PDVEvents && window.PDVEvents.clickHandler) {
+    document.removeEventListener('click', window.PDVEvents.clickHandler);
+}
+if (window.PDVEvents && window.PDVEvents.keydownHandler) {
+    document.removeEventListener('keydown', window.PDVEvents.keydownHandler);
+}
+
+window.PDVEvents = {
     // Armazena referência para desvincular eventos
     clickHandler: null,
     keydownHandler: null,
@@ -95,7 +107,7 @@ const PDVEvents = {
                     alert('Erro: Módulo de adicionais não carregado');
                 }
             } else {
-                PDVCart.add(id, name, price);
+                if (window.PDVCart) window.PDVCart.add(id, name, price);
             }
 
             if (window.playBeep) window.playBeep();
@@ -108,13 +120,13 @@ const PDVEvents = {
         switch (action) {
             // CART ACTIONS
             case 'cart-undo':
-                if (window.PDVCart) PDVCart.undoClear();
+                if (window.PDVCart) window.PDVCart.undoClear();
                 break;
             case 'cart-clear':
-                if (window.PDVCart) PDVCart.clear();
+                if (window.PDVCart) window.PDVCart.clear();
                 break;
             case 'cart-remove-item':
-                if (window.PDVCart) PDVCart.remove(el.dataset.id);
+                if (window.PDVCart) window.PDVCart.remove(el.dataset.id);
                 break;
 
             // EXTRAS MODAL

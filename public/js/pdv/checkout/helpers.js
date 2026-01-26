@@ -5,7 +5,7 @@
  * Dependências: Nenhuma
  */
 
-const CheckoutHelpers = {
+window.CheckoutHelpers = {
 
     /**
      * Formata input de valor monetário (máscara BRL)
@@ -72,4 +72,4 @@ const CheckoutHelpers = {
 };
 
 // Expõe globalmente para uso pelos outros módulos
-window.CheckoutHelpers = CheckoutHelpers;
+// window.CheckoutHelpers = CheckoutHelpers; // Já definido acima

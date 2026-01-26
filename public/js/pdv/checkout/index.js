@@ -14,7 +14,7 @@
  * - CheckoutEntrega
  */
 
-const PDVCheckout = {
+window.PDVCheckout = {
 
     // ==========================================
     // ESTADO (delegado para CheckoutState)
@@ -140,16 +140,16 @@ window.PDVCheckout = PDVCheckout;
 // ==========================================
 
 window.finalizeSale = () => {
-    PDVCheckout.finalizeSale();
+    window.PDVCheckout.finalizeSale();
 };
-window.fecharContaMesa = (id) => PDVCheckout.fecharContaMesa(id);
-window.fecharComanda = (mid) => PDVCheckout.fecharComanda(mid);
-window.includePaidOrderItems = () => PDVCheckout.finalizeSale();
-window.saveClientOrder = () => PDVCheckout.saveClientOrder();
-window.submitSale = () => PDVCheckout.submitSale();
-window.setMethod = (m) => PDVCheckout.setMethod(m);
-window.addPayment = (m, a) => PDVCheckout.addPayment(m, a);
-window.addCrediarioPayment = () => PDVCheckout.addCrediarioPayment();
-window.removePayment = (i) => PDVCheckout.removePayment(i);
-window.closeCheckout = () => PDVCheckout.closeCheckout();
-window.selectOrderType = (t, e) => PDVCheckout.selectOrderType(t, e);
+window.fecharContaMesa = (id) => window.PDVCheckout.fecharContaMesa(id);
+window.fecharComanda = (mid) => window.PDVCheckout.fecharComanda(mid);
+window.includePaidOrderItems = () => window.PDVCheckout.finalizeSale();
+window.saveClientOrder = () => window.PDVCheckout.saveClientOrder();
+window.submitSale = () => window.PDVCheckout.submitSale();
+window.setMethod = (m) => window.PDVCheckout.setMethod(m);
+window.addPayment = (m, a) => window.PDVCheckout.addPayment(m, a);
+window.addCrediarioPayment = () => window.PDVCheckout.addCrediarioPayment();
+window.removePayment = (i) => window.PDVCheckout.removePayment(i);
+window.closeCheckout = () => window.PDVCheckout.closeCheckout();
+window.selectOrderType = (t, e) => window.PDVCheckout.selectOrderType(t, e);

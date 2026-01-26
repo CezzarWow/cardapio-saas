@@ -6,7 +6,7 @@
  * Dependências: PDVCart, CheckoutTotals, CheckoutUI, CheckoutHelpers
  */
 
-const CheckoutAdjust = {
+window.CheckoutAdjust = {
 
     isEditing: false,
 
@@ -172,4 +172,4 @@ const CheckoutAdjust = {
 
 };
 
-window.CheckoutAdjust = CheckoutAdjust;
+// window.CheckoutAdjust = CheckoutAdjust; // Já definido acima

@@ -1,4 +1,4 @@
-/* delivery-bundle - Generated 2026-01-23T21:15:51.443Z */
+/* delivery-bundle - Generated 2026-01-26T12:06:03.441Z */
 
 
 /* ========== delivery/helpers.js ========== */
@@ -356,6 +356,9 @@ const DeliveryUI = {
         }
     },
 
+    // [FIX] Acessibilidade: Guarda elemento que tinha foco antes de abrir modal
+    previouslyFocused: null,
+
     /**
      * Exibe modal com dados do pedido
      */
@@ -364,6 +367,9 @@ const DeliveryUI = {
 
         const modal = document.getElementById('deliveryDetailsModal');
         if (!modal) return;
+
+        // [FIX] Guarda elemento focado para restaurar depois
+        this.previouslyFocused = document.activeElement;
 
         // Preenche dados
         document.getElementById('modal-order-id').textContent = orderData.id;
@@ -439,10 +445,17 @@ const DeliveryUI = {
             itemsList.innerHTML = '<div style="color: #94a3b8; text-align: center; padding: 10px;">Itens não disponíveis</div>';
         }
 
-        // Exibe modal
+        // ✅ ABRE MODAL (padrão inert + hidden + inline visual force)
+        modal.removeAttribute('hidden');
+        modal.removeAttribute('inert');
         modal.style.display = 'flex';
-        modal.setAttribute('aria-hidden', 'false');
         if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        // Move foco para o botão de fechar
+        const closeBtn = modal.querySelector('.delivery-modal__close');
+        if (closeBtn) {
+            setTimeout(() => closeBtn.focus(), 50);
+        }
     },
 
     /**
@@ -450,10 +463,24 @@ const DeliveryUI = {
      */
     closeDetailsModal: function () {
         const modal = document.getElementById('deliveryDetailsModal');
-        if (modal) {
-            modal.style.display = 'none';
-            modal.setAttribute('aria-hidden', 'true');
+        if (!modal) return;
+
+        // ✅ PASSO 1: INERT IMEDIATO (Mata eventos de foco do Chrome)
+        modal.setAttribute('inert', '');
+
+        // ✅ PASSO 2: Move foco para FORA
+        if (this.previouslyFocused && typeof this.previouslyFocused.focus === 'function') {
+            try { this.previouslyFocused.focus(); } catch (e) { }
+        } else {
+            document.body.focus();
         }
+        this.previouslyFocused = null;
+
+        // ✅ PASSO 3: Oculta visualmente
+        modal.style.display = 'none';
+        modal.setAttribute('hidden', '');
+        // modal.removeAttribute('style'); // Removido para manter display: none
+
         this.currentOrder = null;
     },
 
@@ -464,13 +491,22 @@ const DeliveryUI = {
         const modal = document.getElementById('deliveryCancelModal');
         if (!modal) return;
 
+        // Salva elemento com foco para restaurar depois
+        this.previouslyFocusedCancel = document.activeElement;
+
         document.getElementById('cancel-order-id').textContent = orderId;
         document.getElementById('cancel-order-id-value').value = orderId;
         document.getElementById('cancel-reason').value = '';
 
+        // ✅ ABRE MODAL (inert + hidden)
+        modal.removeAttribute('hidden');
+        modal.removeAttribute('inert');
         modal.style.display = 'flex';
-        modal.setAttribute('aria-hidden', 'false');
         if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        // Move foco para dentro do modal
+        const closeBtn = modal.querySelector('.delivery-modal__close');
+        if (closeBtn) setTimeout(() => closeBtn.focus(), 50);
     },
 
     /**
@@ -478,10 +514,22 @@ const DeliveryUI = {
      */
     closeCancelModal: function () {
         const modal = document.getElementById('deliveryCancelModal');
-        if (modal) {
-            modal.style.display = 'none';
-            modal.setAttribute('aria-hidden', 'true');
+        if (!modal) return;
+
+        // ✅ PASSO 1: INERT IMEDIATO
+        modal.setAttribute('inert', '');
+
+        // ✅ PASSO 2: Move foco para FORA
+        if (this.previouslyFocusedCancel && typeof this.previouslyFocusedCancel.focus === 'function') {
+            try { this.previouslyFocusedCancel.focus(); } catch (e) { }
+        } else {
+            document.body.focus();
         }
+        this.previouslyFocusedCancel = null;
+
+        // ✅ PASSO 3: Oculta
+        modal.style.display = 'none';
+        modal.setAttribute('hidden', '');
     },
 
     /**
@@ -1064,12 +1112,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!modal || !content) return;
 
+            // Salva elemento com foco para restaurar depois
+            this._previouslyFocused = document.activeElement;
+
             if (tabsContainer) {
                 tabsContainer.style.display = 'none';
             }
 
             content.innerHTML = '<div style="padding: 40px; text-align: center; color: #64748b;">Carregando...</div>';
+            content.innerHTML = '<div style="padding: 40px; text-align: center; color: #64748b;">Carregando...</div>';
+
+            // ✅ ABRE MODAL (inert + hidden)
+            modal.removeAttribute('hidden');
+            modal.removeAttribute('inert');
             modal.style.display = 'flex';
+
+            // Move foco para botão de fechar
+            const closeBtn = modal.querySelector('.delivery-modal__close');
+            if (closeBtn) setTimeout(() => closeBtn.focus(), 50);
 
             try {
                 const baseUrl = DeliveryHelpers.getBaseUrl();
@@ -1135,9 +1195,22 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         close: function () {
             const modal = document.getElementById('deliveryPrintModal');
-            if (modal) {
-                modal.style.display = 'none';
+            if (!modal) return;
+
+            // ✅ PASSO 1: INERT IMEDIATO
+            modal.setAttribute('inert', '');
+
+            // ✅ PASSO 2: Move foco para FORA
+            if (this._previouslyFocused && typeof this._previouslyFocused.focus === 'function') {
+                try { this._previouslyFocused.focus(); } catch (e) { }
+            } else {
+                document.body.focus();
             }
+            this._previouslyFocused = null;
+
+            // ✅ PASSO 3: Oculta
+            modal.style.display = 'none';
+            modal.setAttribute('hidden', '');
             currentOrderId = null;
         }
     };

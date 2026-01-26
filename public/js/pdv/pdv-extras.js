@@ -6,7 +6,7 @@
  * 3. Renderizar opções
  * 4. Coletar seleção e enviar para o Carrinho
  */
-const PDVExtras = {
+window.PDVExtras = {
     pendingProduct: null,
     qty: 1,
 
@@ -138,9 +138,9 @@ const PDVExtras = {
 };
 
 // Globals (Legacy Support & HTML onclicks)
-window.PDVExtras = PDVExtras;
+// window.PDVExtras = PDVExtras; // Já definido acima
 window.openExtrasModal = (id) => console.warn('Use PDVExtras.open()'); // Deprecated but safe
-window.closeExtrasModal = () => PDVExtras.close();
-window.confirmExtras = () => PDVExtras.confirm();
-window.increaseExtrasQty = () => PDVExtras.increaseQty();
-window.decreaseExtrasQty = () => PDVExtras.decreaseQty();
+window.closeExtrasModal = () => window.PDVExtras.close();
+window.confirmExtras = () => window.PDVExtras.confirm();
+window.increaseExtrasQty = () => window.PDVExtras.increaseQty();
+window.decreaseExtrasQty = () => window.PDVExtras.decreaseQty();

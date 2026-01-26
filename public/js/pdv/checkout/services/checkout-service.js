@@ -2,7 +2,7 @@
  * CheckoutService.js
  * Responsável APENAS pela comunicação com a API (Fetch calls)
  */
-const CheckoutService = {
+window.CheckoutService = {
 
     _getCsrf: function () {
         return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -60,4 +60,4 @@ const CheckoutService = {
     }
 };
 
-window.CheckoutService = CheckoutService;
+// window.CheckoutService = CheckoutService; // Já definido acima

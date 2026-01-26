@@ -37,12 +37,24 @@
 
             if (!modal || !content) return;
 
+            // Salva elemento com foco para restaurar depois
+            this._previouslyFocused = document.activeElement;
+
             if (tabsContainer) {
                 tabsContainer.style.display = 'none';
             }
 
             content.innerHTML = '<div style="padding: 40px; text-align: center; color: #64748b;">Carregando...</div>';
+            content.innerHTML = '<div style="padding: 40px; text-align: center; color: #64748b;">Carregando...</div>';
+
+            // ✅ ABRE MODAL (inert + hidden)
+            modal.removeAttribute('hidden');
+            modal.removeAttribute('inert');
             modal.style.display = 'flex';
+
+            // Move foco para botão de fechar
+            const closeBtn = modal.querySelector('.delivery-modal__close');
+            if (closeBtn) setTimeout(() => closeBtn.focus(), 50);
 
             try {
                 const baseUrl = DeliveryHelpers.getBaseUrl();
@@ -108,9 +120,22 @@
          */
         close: function () {
             const modal = document.getElementById('deliveryPrintModal');
-            if (modal) {
-                modal.style.display = 'none';
+            if (!modal) return;
+
+            // ✅ PASSO 1: INERT IMEDIATO
+            modal.setAttribute('inert', '');
+
+            // ✅ PASSO 2: Move foco para FORA
+            if (this._previouslyFocused && typeof this._previouslyFocused.focus === 'function') {
+                try { this._previouslyFocused.focus(); } catch (e) { }
+            } else {
+                document.body.focus();
             }
+            this._previouslyFocused = null;
+
+            // ✅ PASSO 3: Oculta
+            modal.style.display = 'none';
+            modal.setAttribute('hidden', '');
             currentOrderId = null;
         }
     };

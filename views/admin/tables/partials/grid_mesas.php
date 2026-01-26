@@ -7,7 +7,7 @@
 <div class="table-grid">
     <?php foreach ($tables as $mesa): ?>
         <?php
-            $isOccupied = ($mesa['status'] == 'ocupada');
+        $isOccupied = ($mesa['status'] == 'ocupada');
         $cardClass = $isOccupied ? 'table-card--ocupada' : 'table-card--livre';
         $statusText = $isOccupied ? 'OCUPADA' : 'LIVRE';
         $valor = $isOccupied ? 'R$ ' . number_format($mesa['order_total'] ?? 0, 2, ',', '.') : '';
@@ -22,6 +22,14 @@
             
             <?php if ($isOccupied && !empty($mesa['credit_limit']) && $mesa['credit_limit'] > 0): ?>
                 <span class="table-card__badge">CREDIÁRIO</span>
+            <?php endif; ?>
+
+            <?php if ($isOccupied && !empty($mesa['order_type'])): ?>
+                <?php if ($mesa['order_type'] === 'delivery' || $mesa['order_type'] === 'entrega'): ?>
+                    <span class="table-card__badge" style="background:#059669; top: 25px;">ENTREGA</span>
+                <?php elseif ($mesa['order_type'] === 'pickup' || $mesa['order_type'] === 'retirada'): ?>
+                    <span class="table-card__badge" style="background:#0284c7; top: 25px;">RETIRADA</span>
+                <?php endif; ?>
             <?php endif; ?>
 
             <span class="table-card__number"><?= $mesa['number'] ?></span>
