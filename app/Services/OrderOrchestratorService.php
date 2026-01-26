@@ -57,6 +57,18 @@ class OrderOrchestratorService
         // LÓGICA DE DELIVERY/PICKUP COM CLIENTE/MESA:
         // - NÃO PAGO + cliente/mesa: Cria comanda (para cobrar depois) e vai pro Kanban
         // - PAGO: Vai direto pro Kanban (não precisa comanda)
+        // [FIX] Prioridade de Atualização
+        // Se já existe um ID de pedido, trata como ATUALIZAÇÃO (Update)
+        // Isso impede que o sistema tente criar um novo pedido vinculado (splitting)
+        // quando estamos apenas mudando o tipo de um pedido existente (ex: Retirada -> Entrega).
+        $existingOrderId = $data['order_id'] ?? null;
+        if ($existingOrderId && $existingOrderId > 0) {
+            return $this->createOrderAction->execute($restaurantId, $userId, $data);
+        }
+
+        // LÓGICA DE DELIVERY/PICKUP COM CLIENTE/MESA:
+        // - NÃO PAGO + cliente/mesa: Cria comanda (para cobrar depois) e vai pro Kanban
+        // - PAGO: Vai direto pro Kanban (não precisa comanda)
         $orderType = $data['order_type'] ?? '';
         $isDeliveryOrPickup = in_array($orderType, ['delivery', 'pickup']);
         $hasClient = !empty($data['client_id']);

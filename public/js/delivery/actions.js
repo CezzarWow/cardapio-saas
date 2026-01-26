@@ -7,7 +7,7 @@
  * ============================================
  */
 
-const DeliveryActions = {
+window.DeliveryActions = window.DeliveryActions || {
 
     /**
      * Avança para o próximo status

@@ -114,7 +114,17 @@ const AdminSPA = {
 
     handleInitialState() {
         const section = this.getSectionFromHash() || 'balcao';
-        this.navigateTo(section, false);
+
+        // [FIX] Captura query params da URL principal na inicialização
+        const searchParams = new URLSearchParams(window.location.search);
+        const queryParams = {};
+        for (const [key, value] of searchParams.entries()) {
+            queryParams[key] = value;
+        }
+
+        // Se tiver params, passa para navigateTo
+        const hasParams = Object.keys(queryParams).length > 0;
+        this.navigateTo(section, false, false, hasParams ? queryParams : null);
     },
 
     async navigateTo(sectionName, updateHistory = true, forceReload = false, queryParams = null) {

@@ -13,7 +13,18 @@ class RedirectController extends BaseController
     private function redirectToSpa(string $section): void
     {
         $baseUrl = BASE_URL;
-        header("Location: {$baseUrl}/admin/loja/spa#{$section}");
+        $queryString = $_SERVER['QUERY_STRING'] ?? '';
+        $hash = $section;
+        
+        // Se houver query string, mantemos na URL principal (antes do hash)
+        // O AdminSPA agora lê params da URL principal na inicialização
+        $url = "{$baseUrl}/admin/loja/spa";
+        if (!empty($queryString)) {
+            $url .= "?{$queryString}";
+        }
+        $url .= "#{$hash}";
+
+        header("Location: {$url}");
         exit;
     }
 

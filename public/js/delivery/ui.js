@@ -7,7 +7,7 @@
  * ============================================
  */
 
-const DeliveryUI = {
+window.DeliveryUI = window.DeliveryUI || {
 
     // Dados do pedido atual (para modais)
     currentOrder: null,

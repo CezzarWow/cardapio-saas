@@ -11,7 +11,7 @@
  * ============================================
  */
 
-const DeliveryPolling = {
+window.DeliveryPolling = window.DeliveryPolling || {
 
     // Configuração
     interval: 10000, // 10 segundos

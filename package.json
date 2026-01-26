@@ -10,7 +10,8 @@
     "tailwindcss": "^4.1.18"
   },
   "scripts": {
-    "build": "node build-assets.js && npm run build:css",
+    "build": "node build-assets.js && node build-bundles.js && npm run build:css",
+    "bundle": "node build-bundles.js",
     "build:css": "tailwindcss -i ./public/css/tailwind-input.css -o ./public/dist/tailwind.css --minify"
   }
 }

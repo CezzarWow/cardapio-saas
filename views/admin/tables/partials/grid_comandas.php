@@ -22,11 +22,16 @@
             ?>
             
             <?php
-                $isDelivery = in_array($order['order_type'] ?? '', ['delivery', 'pickup', 'entrega', 'retirada']);
+                // Se for DELIVERY (Entrega), vai para o fluxo de delivery/modal
+                // Se for RETIRADA/PICKUP, o cliente quer tratar no balcão (PDV), então vai para balcao
+                $isDelivery = in_array($order['order_type'] ?? '', ['delivery', 'entrega']); 
+                
                 $clickAction = "";
                 if ($isDelivery) {
+                    // Fluxo Delivery: Tenta abrir modal de detalhes ou vai para aba delivery
                     $clickAction = "if(window.DeliveryUI) { DeliveryUI.openDetailsModal({$order['id']}); } else { if(typeof AdminSPA!=='undefined') AdminSPA.navigateTo('delivery'); else window.location.href='".BASE_URL."/admin/loja/delivery'; }";
                 } else {
+                    // Fluxo Balcão/Retirada/Local: Abre no PDV com o ID do pedido
                     $clickAction = "if(typeof AdminSPA!=='undefined') AdminSPA.navigateTo('balcao',true,true,{order_id:{$order['id']}}); else window.location.href='".BASE_URL."/admin/loja/pdv?order_id={$order['id']}'";
                 }
             ?>

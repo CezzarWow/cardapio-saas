@@ -5,7 +5,7 @@
  * ============================================
  */
 
-const DeliveryConstants = {
+window.DeliveryConstants = window.DeliveryConstants || {
 
     /**
      * Labels de status para exibição

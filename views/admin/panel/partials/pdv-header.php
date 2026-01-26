@@ -61,9 +61,15 @@
         </button>
     </div>
     <?php else: ?>
-    <!-- Em Mesa/Comanda: hidden inputs com valor fixo 'local' -->
+    <!-- Em Mesa/Comanda: hidden inputs -->
+    <?php
+        // [FIX] Respeita o tipo da comanda existente se houver
+        $currentType = $contaAberta['order_type'] ?? 'local';
+        // Mapeia tipos legados se necessário
+        if ($currentType == 'balcao') $currentType = 'local';
+    ?>
     <input type="hidden" id="keep_open_value" value="false">
-    <input type="hidden" id="selected_order_type" value="local">
+    <input type="hidden" id="selected_order_type" value="<?= $currentType ?>">
     <?php endif; ?>
 
 </header>

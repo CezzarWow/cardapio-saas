@@ -1,4 +1,4 @@
-/* delivery-bundle - Generated 2026-01-26T12:06:03.441Z */
+/* delivery-bundle - Generated 2026-01-26T18:21:17.607Z */
 
 
 /* ========== delivery/helpers.js ========== */
@@ -55,7 +55,7 @@ window.DeliveryHelpers = DeliveryHelpers;
  * ============================================
  */
 
-const DeliveryConstants = {
+window.DeliveryConstants = window.DeliveryConstants || {
 
     /**
      * Labels de status para exibição
@@ -192,7 +192,7 @@ window.DeliveryTabs = DeliveryTabs;
  * ============================================
  */
 
-const DeliveryActions = {
+window.DeliveryActions = window.DeliveryActions || {
 
     /**
      * Avança para o próximo status
@@ -319,7 +319,7 @@ window.DeliveryActions = DeliveryActions;
  * ============================================
  */
 
-const DeliveryUI = {
+window.DeliveryUI = window.DeliveryUI || {
 
     // Dados do pedido atual (para modais)
     currentOrder: null,
@@ -566,7 +566,7 @@ window.DeliveryUI = DeliveryUI;
  * ============================================
  */
 
-const DeliveryPolling = {
+window.DeliveryPolling = window.DeliveryPolling || {
 
     // Configuração
     interval: 10000, // 10 segundos

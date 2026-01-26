@@ -147,6 +147,11 @@ class CreateOrderAction
                     $newTotal = floatval($existingOrder['total']) + $totalVenda - $adjustmentDiscount;
                     $this->orderRepo->updateTotal($existingOrderId, max(0, $newTotal));
 
+                    // [FIX] Se mudou o tipo de pedido (ex: Retirada -> Delivery), atualiza o tipo
+                    if (!empty($orderType) && $existingOrder['order_type'] !== $orderType) {
+                        $this->orderRepo->updateOrderType($existingOrderId, $orderType);
+                    }
+
                     // Baixa Estoque
                     foreach ($cart as $item) {
                         $this->stockRepo->decrement($item['id'], $item['quantity']);

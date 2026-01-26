@@ -53,7 +53,22 @@
                 ${tag}
             `;
 
-            div.onclick = () => this.selectClient(client.id, client.name, client.open_order_id, client.credit_limit);
+            div.onclick = () => {
+                if (hasOpenOrder && client.open_order_id) {
+                    // Se clicar no card de um cliente que JÁ TEM pedido:
+                    // Pergunta se quer abrir o pedido existente
+                    if (confirm(`O cliente ${client.name} possui um pedido aberto (#${client.open_order_id}). Deseja abri-lo?`)) {
+                        if (typeof AdminSPA !== 'undefined') {
+                            AdminSPA.navigateTo('balcao', true, true, { order_id: client.open_order_id });
+                        } else {
+                            window.location.href = `${BASE_URL}/admin/loja/pdv?order_id=${client.open_order_id}`;
+                        }
+                        return;
+                    }
+                }
+                // Se não tem pedido ou cancelou a abertura, seleciona apenas para novo pedido
+                this.selectClient(client.id, client.name, client.open_order_id, client.credit_limit);
+            };
             results.appendChild(div);
         });
     };
@@ -72,6 +87,16 @@
         // Atualiza inputs hidden
         document.getElementById('current_client_id').value = id;
         document.getElementById('current_table_id').value = '';
+
+        // [FIX] Cria/Atualiza order_id hidden se necessário
+        let orderIdInput = document.getElementById('current_order_id');
+        if (!orderIdInput) {
+            orderIdInput = document.createElement('input');
+            orderIdInput.type = 'hidden';
+            orderIdInput.id = 'current_order_id';
+            document.body.appendChild(orderIdInput);
+        }
+        orderIdInput.value = openOrderId || '';
 
         // Armazena o nome e crédito do cliente
         let clientNameInput = document.getElementById('current_client_name');
@@ -110,9 +135,11 @@
                 linkEl.onclick = (e) => {
                     e.preventDefault();
                     if (typeof AdminSPA !== 'undefined') {
+                        // Passa order_id como query params para o Balcão
                         AdminSPA.navigateTo('balcao', true, true, { order_id: openOrderId });
                     } else {
-                        window.location.href = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + '/admin/loja/pdv?order_id=' + openOrderId;
+                        const baseUrl = (typeof BASE_URL !== 'undefined' ? BASE_URL : '');
+                        window.location.href = `${baseUrl}/admin/loja/pdv?order_id=${openOrderId}`;
                     }
                 };
             }
@@ -172,6 +199,9 @@
         // Limpa inputs hidden
         document.getElementById('current_client_id').value = '';
         document.getElementById('current_table_id').value = '';
+
+        const orderIdInp = document.getElementById('current_order_id');
+        if (orderIdInp) orderIdInp.value = '';
         const credInp = document.getElementById('current_client_credit_limit');
         if (credInp) credInp.value = '';
         const debtInp = document.getElementById('current_client_debt');
