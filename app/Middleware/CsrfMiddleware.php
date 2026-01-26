@@ -32,12 +32,13 @@ class CsrfMiddleware
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
 
         // Exceções: Rotas que não exigem verificação CSRF
+        // NOTA: Apenas rotas que realmente não podem usar CSRF devem estar aqui.
+        // Ver documentação em docs/CSRF_EXCEPTIONS.md para justificativas.
         $exceptions = [
-            '/admin/loja/venda/finalizar', // Exceção adicionada para contornar bloqueio de ambiente
-            '/admin/loja/venda/fechar-comanda',
-            '/admin/loja/reposicao/ajustar', // Ajuste de estoque via SPA
+            // '/admin/loja/venda/fechar-comanda', // REMOVIDO: Frontend envia CSRF token no payload
+            '/admin/loja/reposicao/ajustar', // Ajuste de estoque via SPA (verificar se pode receber CSRF)
             'reposicao/ajustar', // Variação sem prefixo completo
-            '/api/order/create'
+            '/api/order/create' // API legada (considerar migrar para /api/v1/ com autenticação adequada)
         ];
 
         // Verifica se a URI atual corresponde a alguma exceção

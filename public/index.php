@@ -1,10 +1,20 @@
 <?php
 // public/index.php
 
-// 1. Configurações de Erro e Sessão
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// 1. Load Environment Variables FIRST
+require '../vendor/autoload.php';
+
+$dotenv = \Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv->safeLoad();
+
+// 2. Configurações de Erro e Sessão baseadas em ambiente
+$appEnv = $_ENV['APP_ENV'] ?? 'production';
+$isDevelopment = ($appEnv === 'development');
+
+// Em produção: ocultar erros. Em desenvolvimento: mostrar todos.
+ini_set('display_errors', $isDevelopment ? 1 : 0);
+ini_set('display_startup_errors', $isDevelopment ? 1 : 0);
+error_reporting($isDevelopment ? E_ALL : 0);
 
 // Security: Session Hardening
 ini_set('session.cookie_httponly', 1); // Prevent JS access
@@ -26,11 +36,7 @@ $scriptName = dirname($_SERVER['SCRIPT_NAME']);
 $baseUrl = str_replace('\\', '/', $scriptName);
 define('BASE_URL', rtrim($baseUrl, '/'));
 define('APP_VERSION', '1.1.92'); // Cache-buster: incremente ao atualizar JS/CSS
-
-require '../vendor/autoload.php';
-
-$dotenv = \Dotenv\Dotenv::createImmutable(dirname(__DIR__));
-$dotenv->safeLoad();
+define('APP_ENV', $appEnv); // Disponibiliza APP_ENV globalmente
 
 use App\Controllers\Admin\DashboardController;
 use App\Controllers\Admin\RestaurantController;
@@ -47,7 +53,9 @@ Router::setContainer($container);
 Router::addGlobalMiddleware(\App\Middleware\ThrottleMiddleware::class);
 // 2. Sanitization (Clean Input)
 Router::addGlobalMiddleware(\App\Middleware\RequestSanitizerMiddleware::class);
-// 2. CSRF (Validate Token)
+// 3. Authorization (Check user access)
+Router::addGlobalMiddleware(\App\Middleware\AuthorizationMiddleware::class);
+// 4. CSRF (Validate Token)
 Router::addGlobalMiddleware(\App\Middleware\CsrfMiddleware::class);
 
 $url = $_SERVER['REQUEST_URI'];
@@ -230,5 +238,81 @@ Router::setDefault(function($path) {
     }
 });
 
+// Handler global de exceções não tratadas
+set_exception_handler(function (\Throwable $e) {
+    $appEnv = defined('APP_ENV') ? APP_ENV : ($_ENV['APP_ENV'] ?? 'production');
+    $isDevelopment = ($appEnv === 'development');
+    
+    // Log do erro
+    \App\Core\Logger::error('Unhandled exception', [
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'trace' => $e->getTraceAsString()
+    ]);
+    
+    // Se for DatabaseConnectionException, mostra mensagem amigável
+    if ($e instanceof \App\Exceptions\DatabaseConnectionException) {
+        http_response_code(503); // Service Unavailable
+        
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+                 strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        $wantsJson = strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false;
+        
+        if ($isAjax || $wantsJson) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getUserMessage()
+            ]);
+        } else {
+            // Página HTML simples de erro
+            echo '<!DOCTYPE html><html><head><title>Erro de Conexão</title></head><body>';
+            echo '<h1>Serviço Temporariamente Indisponível</h1>';
+            echo '<p>' . htmlspecialchars($e->getUserMessage()) . '</p>';
+            if ($isDevelopment) {
+                echo '<pre>' . htmlspecialchars($e->getMessage()) . '</pre>';
+            }
+            echo '</body></html>';
+        }
+        exit;
+    }
+    
+    // Outras exceções: mostra erro detalhado em dev, genérico em prod
+    http_response_code(500);
+    
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+             strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    $wantsJson = strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false;
+    
+    if ($isAjax || $wantsJson) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => $isDevelopment ? $e->getMessage() : 'Erro interno do servidor. Tente novamente mais tarde.'
+        ]);
+    } else {
+        echo '<!DOCTYPE html><html><head><title>Erro</title></head><body>';
+        echo '<h1>Erro Interno</h1>';
+        if ($isDevelopment) {
+            echo '<p><strong>' . htmlspecialchars($e->getMessage()) . '</strong></p>';
+            echo '<p>Arquivo: ' . htmlspecialchars($e->getFile()) . ':' . $e->getLine() . '</p>';
+            echo '<pre>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
+        } else {
+            echo '<p>Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.</p>';
+        }
+        echo '</body></html>';
+    }
+    exit;
+});
+
 // Tenta despachar pelo Router
-Router::dispatch($path);
+try {
+    Router::dispatch($path);
+} catch (\App\Exceptions\DatabaseConnectionException $e) {
+    // Re-lança para o exception handler
+    throw $e;
+} catch (\Throwable $e) {
+    // Outras exceções também vão para o handler
+    throw $e;
+}

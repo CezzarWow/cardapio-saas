@@ -3,12 +3,14 @@
 namespace App\Services\Order\Flows\Mesa;
 
 use App\Core\Database;
+use App\Core\Logger;
 use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\StockRepository;
 use App\Repositories\TableRepository;
 use App\Services\Order\OrderStatus;
 use App\Services\Order\TotalCalculator;
+use App\Traits\OrderCreationTrait;
 use Exception;
 use RuntimeException;
 
@@ -31,6 +33,8 @@ use RuntimeException;
  */
 class OpenMesaAccountAction
 {
+    use OrderCreationTrait;
+
     private OrderRepository $orderRepo;
     private OrderItemRepository $itemRepo;
     private TableRepository $tableRepo;
@@ -91,17 +95,17 @@ class OpenMesaAccountAction
             // 4. Ocupar mesa
             $this->tableRepo->occupy($tableId, $orderId);
 
-            // 5. Inserir itens
-            $this->itemRepo->insert($orderId, $data['cart']);
-
-            // 6. Baixar estoque
-            foreach ($data['cart'] as $item) {
-                $this->stockRepo->decrement($item['id'], $item['quantity']);
-            }
+            // 5. Inserir itens e baixar estoque
+            $this->insertItemsAndDecrementStock($orderId, $data['cart'], $this->itemRepo, $this->stockRepo);
 
             $conn->commit();
 
-            error_log("[MESA] Conta aberta: Mesa #{$mesa['number']}, Pedido #{$orderId}, Total: R$ " . number_format($total, 2, ',', '.'));
+            $this->logOrderCreated('MESA', $orderId, [
+                'restaurant_id' => $restaurantId,
+                'table_id' => $tableId,
+                'table_number' => $mesa['number'],
+                'total' => $total
+            ]);
 
             return [
                 'order_id' => $orderId,
@@ -112,7 +116,10 @@ class OpenMesaAccountAction
 
         } catch (\Throwable $e) {
             $conn->rollBack();
-            error_log('[MESA] ERRO ao abrir: ' . $e->getMessage());
+            $this->logOrderError('MESA', 'abrir', $e, [
+                'restaurant_id' => $restaurantId,
+                'table_id' => $tableId
+            ]);
             throw new RuntimeException('Erro ao abrir mesa: ' . $e->getMessage());
         }
     }

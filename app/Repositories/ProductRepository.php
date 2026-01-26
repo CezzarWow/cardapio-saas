@@ -323,7 +323,10 @@ class ProductRepository
             $cache->forget('cardapio_index_' . $restaurantId . '_v2');
         } catch (\Throwable $e) {
             // Logar erro de cache mas não quebrar aplicação
-            file_put_contents('C:/xampp/htdocs/cardapio-saas/debug_log.txt', date('Y-m-d H:i:s') . " - CACHE ERROR: " . $e->getMessage() . "\n", FILE_APPEND);
+            \App\Core\Logger::warning('Erro ao invalidar cache de promoções', [
+                'restaurant_id' => $restaurantId,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 }

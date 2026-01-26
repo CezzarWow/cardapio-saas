@@ -57,6 +57,20 @@ class Logger
     }
 
     /**
+     * Log de debug (apenas em ambiente de desenvolvimento)
+     * @param string $message Mensagem descritiva
+     * @param array $context Dados adicionais (opcional)
+     */
+    public static function debug($message, $context = [])
+    {
+        // Só loga em desenvolvimento
+        $appEnv = defined('APP_ENV') ? APP_ENV : ($_ENV['APP_ENV'] ?? 'production');
+        if ($appEnv === 'development') {
+            self::write('DEBUG', $message, $context);
+        }
+    }
+
+    /**
      * Escreve a linha no arquivo de log
      * NUNCA lança exceção - falha silenciosamente
      */

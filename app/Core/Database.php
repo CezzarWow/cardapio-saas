@@ -2,6 +2,8 @@
 
 namespace App\Core;
 
+use App\Core\Logger;
+use App\Exceptions\DatabaseConnectionException;
 use PDO;
 use PDOException;
 
@@ -10,7 +12,13 @@ class Database
     // Padrão Singleton: Garante que só existe UMA conexão aberta por vez (economiza memória)
     private static $instance = null;
 
-    public static function connect()
+    /**
+     * Conecta ao banco de dados (Singleton)
+     * 
+     * @return PDO Instância da conexão PDO
+     * @throws DatabaseConnectionException Se a conexão falhar
+     */
+    public static function connect(): PDO
     {
         // Configurações via Environment (.env)
         $host = $_ENV['DB_HOST'] ?? 'localhost';
@@ -28,8 +36,20 @@ class Database
                 self::$instance->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
             } catch (PDOException $e) {
-                // Se der erro, para tudo e mostra a mensagem
-                die('Erro fatal de conexão: ' . $e->getMessage());
+                // Log do erro completo (apenas em logs, não exposto ao usuário)
+                Logger::error('Database connection failed', [
+                    'host' => $host,
+                    'database' => $db,
+                    'error' => $e->getMessage(),
+                    'code' => $e->getCode()
+                ]);
+
+                // Lança exceção customizada (permite tratamento adequado)
+                throw new DatabaseConnectionException(
+                    'Erro ao conectar ao banco de dados',
+                    $e->getCode(),
+                    $e
+                );
             }
         }
 

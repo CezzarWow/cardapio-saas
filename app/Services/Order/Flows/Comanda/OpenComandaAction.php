@@ -3,12 +3,14 @@
 namespace App\Services\Order\Flows\Comanda;
 
 use App\Core\Database;
+use App\Core\Logger;
 use App\Repositories\ClientRepository;
 use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\StockRepository;
 use App\Services\Order\OrderStatus;
 use App\Services\Order\TotalCalculator;
+use App\Traits\OrderCreationTrait;
 use Exception;
 use RuntimeException;
 
@@ -31,6 +33,8 @@ use RuntimeException;
  */
 class OpenComandaAction
 {
+    use OrderCreationTrait;
+
     private OrderRepository $orderRepo;
     private OrderItemRepository $itemRepo;
     private ClientRepository $clientRepo;
@@ -84,18 +88,18 @@ class OpenComandaAction
                 'change_for' => null
             ], OrderStatus::ABERTO);
 
-            // 4. Inserir itens
-            $this->itemRepo->insert($orderId, $data['cart']);
-
-            // 5. Baixar estoque
-            foreach ($data['cart'] as $item) {
-                $this->stockRepo->decrement($item['id'], $item['quantity']);
-            }
+            // 4. Inserir itens e baixar estoque
+            $this->insertItemsAndDecrementStock($orderId, $data['cart'], $this->itemRepo, $this->stockRepo);
 
             $conn->commit();
 
             $clientName = $client['name'] ?? 'Cliente';
-            error_log("[COMANDA] Comanda aberta: Cliente '{$clientName}' (#{$clientId}), Pedido #{$orderId}, Total: R$ " . number_format($total, 2, ',', '.'));
+            $this->logOrderCreated('COMANDA', $orderId, [
+                'restaurant_id' => $restaurantId,
+                'client_id' => $clientId,
+                'client_name' => $clientName,
+                'total' => $total
+            ]);
 
             return [
                 'order_id' => $orderId,
@@ -106,7 +110,10 @@ class OpenComandaAction
 
         } catch (\Throwable $e) {
             $conn->rollBack();
-            error_log('[COMANDA] ERRO ao abrir: ' . $e->getMessage());
+            $this->logOrderError('COMANDA', 'abrir', $e, [
+                'restaurant_id' => $restaurantId,
+                'client_id' => $clientId
+            ]);
             throw new RuntimeException('Erro ao abrir comanda: ' . $e->getMessage());
         }
     }
