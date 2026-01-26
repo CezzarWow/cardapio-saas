@@ -59,7 +59,20 @@ class CreateOrderAction
                 throw new Exception('O carrinho está vazio');
             }
 
-            $orderType = $data['order_type'] ?? 'balcao';
+            $rawOrderType = $data['order_type'] ?? 'balcao';
+            
+            // [FIX] Normalização robusta de tipos (PT -> EN)
+            // Garante que 'entrega' vire 'delivery' para aparecer no Kanban
+            $typeMap = [
+                'entrega' => 'delivery',
+                'retirada' => 'pickup',
+                'retirada_pdv' => 'pickup',
+                'balcao' => 'balcao',
+                'mesa' => 'mesa',
+                'comanda' => 'comanda',
+                'local' => 'balcao'
+            ];
+            $orderType = $typeMap[$rawOrderType] ?? $rawOrderType;
             $tableId = $data['table_id'] ?? null;
             $commandId = $data['command_id'] ?? null;
 
@@ -130,7 +143,13 @@ class CreateOrderAction
             // Determinar status inicial do pedido
             $orderStatus = 'novo';
             if ($saveAccount) {
-                $orderStatus = 'aberto';
+                // [FIX] Delivery e Retirada SEMPRE começam como 'novo' para aparecer no Kanban
+                // Mesmo se for "Salvar" (que normalmente seria 'aberto' para mesas)
+                if (in_array($orderType, ['delivery', 'pickup'])) {
+                    $orderStatus = 'novo';
+                } else {
+                    $orderStatus = 'aberto';
+                }
             } elseif ($finalizeNow && $isPaid && !in_array($orderType, ['delivery', 'pickup'])) {
                 // Se finalizou e pagou (e não é delivery/pickup que precisam do Kanban), conclui direto
                 $orderStatus = 'concluido';
