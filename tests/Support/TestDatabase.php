@@ -32,6 +32,13 @@ final class TestDatabase
                     user_id INTEGER NOT NULL,
                     name TEXT NOT NULL,
                     slug TEXT NOT NULL,
+                    phone TEXT,
+                    address TEXT,
+                    address_number TEXT,
+                    zip_code TEXT,
+                    primary_color TEXT,
+                    logo TEXT,
+                    is_active INTEGER DEFAULT 1,
                     created_at TEXT
                 );
             ');
@@ -103,7 +110,11 @@ final class TestDatabase
             $conn->exec('
                 CREATE TABLE IF NOT EXISTS categories (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL
+                    restaurant_id INTEGER NOT NULL,
+                    name TEXT NOT NULL,
+                    category_type TEXT,
+                    sort_order INTEGER,
+                    is_active INTEGER DEFAULT 1
                 );
             ');
 
@@ -113,9 +124,19 @@ final class TestDatabase
                     restaurant_id INTEGER NOT NULL,
                     category_id INTEGER,
                     name TEXT NOT NULL,
+                    description TEXT,
                     stock INTEGER NOT NULL DEFAULT 0,
                     image TEXT,
-                    price REAL DEFAULT 0
+                    price REAL DEFAULT 0,
+                    icon TEXT,
+                    icon_as_photo INTEGER DEFAULT 0,
+                    item_number INTEGER,
+                    is_active INTEGER DEFAULT 1,
+                    display_order INTEGER DEFAULT 0,
+                    is_featured INTEGER DEFAULT 0,
+                    promotional_price REAL,
+                    promo_expires_at TEXT,
+                    is_on_promotion INTEGER DEFAULT 0
                 );
             ');
 
@@ -160,6 +181,112 @@ final class TestDatabase
                     current_order_id INTEGER
                 );
             ');
+
+            $conn->exec('
+                CREATE TABLE IF NOT EXISTS additional_groups (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    restaurant_id INTEGER NOT NULL,
+                    name TEXT NOT NULL,
+                    required INTEGER DEFAULT 0
+                );
+            ');
+
+            $conn->exec('
+                CREATE TABLE IF NOT EXISTS additional_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    restaurant_id INTEGER NOT NULL,
+                    name TEXT NOT NULL,
+                    price REAL NOT NULL
+                );
+            ');
+
+            $conn->exec('
+                CREATE TABLE IF NOT EXISTS additional_group_items (
+                    group_id INTEGER NOT NULL,
+                    item_id INTEGER NOT NULL
+                );
+            ');
+
+            $conn->exec('
+                CREATE TABLE IF NOT EXISTS additional_categories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    restaurant_id INTEGER NOT NULL,
+                    name TEXT NOT NULL
+                );
+            ');
+
+            $conn->exec('
+                CREATE TABLE IF NOT EXISTS additional_group_categories (
+                    group_id INTEGER NOT NULL,
+                    category_id INTEGER NOT NULL
+                );
+            ');
+
+            $conn->exec('
+                CREATE TABLE IF NOT EXISTS product_additional_relations (
+                    product_id INTEGER NOT NULL,
+                    group_id INTEGER NOT NULL
+                );
+            ');
+
+            $conn->exec('
+                CREATE TABLE IF NOT EXISTS combos (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    restaurant_id INTEGER NOT NULL,
+                    name TEXT NOT NULL,
+                    description TEXT,
+                    price REAL NOT NULL,
+                    display_order INTEGER DEFAULT 0,
+                    is_active INTEGER DEFAULT 1
+                );
+            ');
+
+            $conn->exec('
+                CREATE TABLE IF NOT EXISTS combo_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    combo_id INTEGER NOT NULL,
+                    product_id INTEGER NOT NULL,
+                    allow_additionals INTEGER DEFAULT 0
+                );
+            ');
+
+            $conn->exec('
+                CREATE TABLE IF NOT EXISTS cardapio_config (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    restaurant_id INTEGER NOT NULL,
+                    whatsapp_enabled INTEGER DEFAULT 0,
+                    whatsapp_number TEXT,
+                    whatsapp_message TEXT,
+                    is_open INTEGER DEFAULT 1,
+                    opening_time TEXT,
+                    closing_time TEXT,
+                    closed_message TEXT,
+                    delivery_enabled INTEGER DEFAULT 1,
+                    delivery_fee REAL,
+                    min_order_value REAL,
+                    delivery_time_min INTEGER,
+                    delivery_time_max INTEGER,
+                    pickup_enabled INTEGER DEFAULT 1,
+                    dine_in_enabled INTEGER DEFAULT 1,
+                    accept_cash INTEGER DEFAULT 1,
+                    accept_credit INTEGER DEFAULT 1,
+                    accept_debit INTEGER DEFAULT 1,
+                    accept_pix INTEGER DEFAULT 1,
+                    pix_key TEXT,
+                    pix_key_type TEXT
+                );
+            ');
+
+            $conn->exec('
+                CREATE TABLE IF NOT EXISTS business_hours (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    restaurant_id INTEGER NOT NULL,
+                    day_of_week INTEGER NOT NULL,
+                    is_open INTEGER DEFAULT 1,
+                    open_time TEXT,
+                    close_time TEXT
+                );
+            ');
             return;
         }
 
@@ -183,6 +310,13 @@ final class TestDatabase
                 user_id INT NOT NULL,
                 name VARCHAR(255) NOT NULL,
                 slug VARCHAR(255) NOT NULL,
+                phone VARCHAR(50) NULL,
+                address VARCHAR(255) NULL,
+                address_number VARCHAR(50) NULL,
+                zip_code VARCHAR(20) NULL,
+                primary_color VARCHAR(50) NULL,
+                logo VARCHAR(255) NULL,
+                is_active TINYINT(1) DEFAULT 1,
                 created_at DATETIME NULL
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ');
@@ -254,7 +388,11 @@ final class TestDatabase
         $conn->exec('
             CREATE TABLE IF NOT EXISTS categories (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL
+                restaurant_id INT NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                category_type VARCHAR(50) NULL,
+                sort_order INT NULL,
+                is_active TINYINT(1) DEFAULT 1
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ');
 
@@ -264,9 +402,19 @@ final class TestDatabase
                 restaurant_id INT NOT NULL,
                 category_id INT NULL,
                 name VARCHAR(255) NOT NULL,
+                description TEXT NULL,
                 stock INT NOT NULL DEFAULT 0,
                 image VARCHAR(255) NULL,
-                price DECIMAL(10,2) DEFAULT 0
+                price DECIMAL(10,2) DEFAULT 0,
+                icon VARCHAR(255) NULL,
+                icon_as_photo TINYINT(1) DEFAULT 0,
+                item_number INT NULL,
+                is_active TINYINT(1) DEFAULT 1,
+                display_order INT DEFAULT 0,
+                is_featured TINYINT(1) DEFAULT 0,
+                promotional_price DECIMAL(10,2) NULL,
+                promo_expires_at DATETIME NULL,
+                is_on_promotion TINYINT(1) DEFAULT 0
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ');
 
@@ -311,6 +459,113 @@ final class TestDatabase
                 current_order_id INT NULL
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         ');
+
+        $conn->exec('
+            CREATE TABLE IF NOT EXISTS additional_groups (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                restaurant_id INT NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                required TINYINT(1) DEFAULT 0
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ');
+
+        $conn->exec('
+            CREATE TABLE IF NOT EXISTS additional_items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                restaurant_id INT NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                price DECIMAL(10,2) NOT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ');
+
+        $conn->exec('
+            CREATE TABLE IF NOT EXISTS additional_group_items (
+                group_id INT NOT NULL,
+                item_id INT NOT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ');
+
+        $conn->exec('
+            CREATE TABLE IF NOT EXISTS additional_categories (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                restaurant_id INT NOT NULL,
+                name VARCHAR(255) NOT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ');
+
+        $conn->exec('
+            CREATE TABLE IF NOT EXISTS additional_group_categories (
+                group_id INT NOT NULL,
+                category_id INT NOT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ');
+
+        $conn->exec('
+            CREATE TABLE IF NOT EXISTS product_additional_relations (
+                product_id INT NOT NULL,
+                group_id INT NOT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ');
+
+        $conn->exec('
+            CREATE TABLE IF NOT EXISTS combos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                restaurant_id INT NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                description TEXT NULL,
+                price DECIMAL(10,2) NOT NULL,
+                display_order INT DEFAULT 0,
+                is_active TINYINT(1) DEFAULT 1
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ');
+
+        $conn->exec('
+            CREATE TABLE IF NOT EXISTS combo_items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                combo_id INT NOT NULL,
+                product_id INT NOT NULL,
+                allow_additionals TINYINT(1) DEFAULT 0
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ');
+
+        $conn->exec('
+            CREATE TABLE IF NOT EXISTS cardapio_config (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                restaurant_id INT NOT NULL,
+                whatsapp_enabled TINYINT(1) DEFAULT 0,
+                whatsapp_number VARCHAR(50) NULL,
+                whatsapp_message TEXT NULL,
+                is_open TINYINT(1) DEFAULT 1,
+                opening_time VARCHAR(10) NULL,
+                closing_time VARCHAR(10) NULL,
+                closed_message TEXT NULL,
+                delivery_enabled TINYINT(1) DEFAULT 1,
+                delivery_fee DECIMAL(10,2) NULL,
+                min_order_value DECIMAL(10,2) NULL,
+                delivery_time_min INT NULL,
+                delivery_time_max INT NULL,
+                pickup_enabled TINYINT(1) DEFAULT 1,
+                dine_in_enabled TINYINT(1) DEFAULT 1,
+                accept_cash TINYINT(1) DEFAULT 1,
+                accept_credit TINYINT(1) DEFAULT 1,
+                accept_debit TINYINT(1) DEFAULT 1,
+                accept_pix TINYINT(1) DEFAULT 1,
+                pix_key VARCHAR(255) NULL,
+                pix_key_type VARCHAR(50) NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ');
+
+        $conn->exec('
+            CREATE TABLE IF NOT EXISTS business_hours (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                restaurant_id INT NOT NULL,
+                day_of_week INT NOT NULL,
+                is_open TINYINT(1) DEFAULT 1,
+                open_time VARCHAR(10) NULL,
+                close_time VARCHAR(10) NULL,
+                UNIQUE KEY restaurant_day (restaurant_id, day_of_week)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ');
     }
 
     public static function truncateAll(): void
@@ -320,6 +575,16 @@ final class TestDatabase
         $driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
 
         $tables = [
+            'additional_group_items',
+            'additional_group_categories',
+            'product_additional_relations',
+            'combo_items',
+            'combos',
+            'business_hours',
+            'cardapio_config',
+            'additional_items',
+            'additional_groups',
+            'additional_categories',
             'cash_movements',
             'order_payments',
             'order_items',
