@@ -9,6 +9,7 @@
 
 namespace App\Controllers;
 
+use App\Core\Logger;
 use App\Core\View;
 use App\Services\CardapioPublico\CardapioPublicoQueryService;
 
@@ -136,6 +137,14 @@ class CardapioPublicoController
         $jsConfig = json_encode($jsConfigArray, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?: '{}';
         // Raw config for checkout-order.js (keeps snake_case)
         $jsConfigRaw = json_encode($cardapioConfig ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?: '{}';
+
+        Logger::debug('Cardápio público payload size', [
+            'products_bytes' => strlen($jsProducts),
+            'combos_bytes' => strlen($jsCombos),
+            'relations_bytes' => strlen($jsRelations),
+            'config_bytes' => strlen($jsConfig),
+            'raw_config_bytes' => strlen($jsConfigRaw),
+        ]);
 
         // Renderizar view pública via View renderer
         View::render('cardapio_publico', [

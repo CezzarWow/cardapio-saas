@@ -14,6 +14,7 @@ class Container
 {
     private array $bindings = [];
     private array $instances = [];
+    private array $fallbackWarnings = [];
 
     /**
      * Bind a factory for a class (Transient - new instance every time)
@@ -42,14 +43,8 @@ class Container
     public function get(string $key)
     {
         if (!isset($this->bindings[$key])) {
-            // Fallback: If class exists and has no dependencies, try to instantiate
-            // BUT per user rules ("Explicit dependencies"), we should prefer explicit binding.
-            // For safety during migration, we can allow direct new if class exists,
-            // but ideally we should throw Exception if strictly following DI.
-            // Let's allow simple instantiation for non-bound classes to avoid breaking everything immediately,
-            // but for the Pilot we will bind everything explicitly.
             if (class_exists($key)) {
-                return new $key();
+                return $this->instantiateFallback($key);
             }
             throw new \Exception("Dependency not found: {$key}");
         }
@@ -64,5 +59,22 @@ class Container
     public function has(string $key): bool
     {
         return isset($this->bindings[$key]);
+    }
+
+    private function instantiateFallback(string $key)
+    {
+        $this->logFallback($key);
+        return new $key();
+    }
+
+    private function logFallback(string $key): void
+    {
+        if (isset($this->fallbackWarnings[$key])) {
+            return;
+        }
+        $this->fallbackWarnings[$key] = true;
+        Logger::warning('Container fallback used; bind explicitly instead of instantiating directly', [
+            'class' => $key
+        ]);
     }
 }

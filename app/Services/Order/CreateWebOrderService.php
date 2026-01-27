@@ -3,6 +3,7 @@
 namespace App\Services\Order;
 
 use App\Core\Database;
+use App\Core\Logger;
 use App\Repositories\AdditionalItemRepository;
 use App\Repositories\ClientRepository;
 use App\Repositories\Order\OrderItemRepository;
@@ -82,11 +83,7 @@ class CreateWebOrderService
             $total = $subtotal + $deliveryFee;
 
             // 3. Mapear tipo de pedido
-            $orderTypeRaw = trim($input['order_type'] ?? 'delivery');
-            if (empty($orderTypeRaw)) {
-                $orderTypeRaw = 'delivery';
-            }
-            $orderType = self::ORDER_TYPE_MAP[$orderTypeRaw] ?? 'delivery';
+            $orderType = $this->resolveOrderType($input['order_type'] ?? null);
 
             // 4. Processar troco
             $changeAmount = $this->parseChangeAmount($input['change_amount'] ?? null);
@@ -118,6 +115,10 @@ class CreateWebOrderService
             if (isset($conn)) {
                 $conn->rollBack();
             }
+            Logger::error('Falha ao criar pedido web', [
+                'restaurant_id' => $restaurantId,
+                'message' => $e->getMessage(),
+            ]);
             return ['success' => false, 'message' => 'Erro ao criar pedido: ' . $e->getMessage()];
         }
     }
@@ -215,6 +216,15 @@ class CreateWebOrderService
         $value = str_replace(',', '.', $value);
 
         return floatval($value) ?: null;
+    }
+
+    private function resolveOrderType(?string $raw): string
+    {
+        $normalized = trim((string) ($raw ?? ''));
+        if ($normalized === '' || !isset(self::ORDER_TYPE_MAP[$normalized])) {
+            return 'delivery';
+        }
+        return self::ORDER_TYPE_MAP[$normalized];
     }
 
     /**

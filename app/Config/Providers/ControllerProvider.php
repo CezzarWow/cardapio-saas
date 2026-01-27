@@ -166,6 +166,21 @@ class ControllerProvider implements Provider
             );
         });
 
+        $container->bind(\App\Controllers\Admin\ConfigGeraisController::class, fn () => new \App\Controllers\Admin\ConfigGeraisController());
+
+        $container->bind(\App\Controllers\Admin\PanelController::class, fn () => new \App\Controllers\Admin\PanelController());
+
+        $container->bind(\App\Controllers\Admin\RedirectController::class, fn () => new \App\Controllers\Admin\RedirectController());
+
+        $container->bind(\App\Controllers\Admin\SalesController::class, function ($c) {
+            return new \App\Controllers\Admin\SalesController(
+                $c->get(\App\Services\SalesService::class),
+                $c->get(\App\Validators\SalesValidator::class)
+            );
+        });
+
+        $container->bind(\App\Controllers\MenuController::class, fn () => new \App\Controllers\MenuController());
+
         // Order API Controller
         $container->bind(\App\Controllers\Api\OrderApiController::class, function ($c) {
             return new \App\Controllers\Api\OrderApiController(

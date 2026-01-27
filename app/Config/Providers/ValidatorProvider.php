@@ -21,5 +21,6 @@ class ValidatorProvider implements Provider
         $container->bind(\App\Validators\AdditionalValidator::class, fn () => new \App\Validators\AdditionalValidator());
         $container->bind(\App\Validators\DeliveryValidator::class, fn () => new \App\Validators\DeliveryValidator());
         $container->bind(\App\Validators\OrderValidator::class, fn () => new \App\Validators\OrderValidator());
+        $container->bind(\App\Validators\SalesValidator::class, fn () => new \App\Validators\SalesValidator());
     }
 }

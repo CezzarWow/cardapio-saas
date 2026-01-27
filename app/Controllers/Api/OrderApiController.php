@@ -9,6 +9,7 @@
 
 namespace App\Controllers\Api;
 
+use App\Core\Logger;
 use App\Services\Order\CreateWebOrderService;
 
 class OrderApiController
@@ -38,7 +39,15 @@ class OrderApiController
         }
 
         // Delega para o Service Injetado
-        $result = $this->service->execute($input);
+        try {
+            $result = $this->service->execute($input);
+        } catch (\Throwable $e) {
+            Logger::error('Order API execution failed', [
+                'input' => $input,
+                'message' => $e->getMessage()
+            ]);
+            $result = ['success' => false, 'message' => 'Erro interno ao processar o pedido'];
+        }
 
         echo json_encode($result);
     }

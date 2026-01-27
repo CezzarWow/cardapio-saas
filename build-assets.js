@@ -51,6 +51,7 @@ function hashContent(content) {
       minify: true,
       sourcemap: false,
       write: false,
+      outdir: outDir,
       format: 'iife',
       target: ['chrome58', 'firefox57', 'safari11']
     });
