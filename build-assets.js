@@ -19,6 +19,8 @@ const jsEntries = [
   'public/js/cardapio/checkout-fields.js',
   'public/js/cardapio/checkout-modals.js',
   'public/js/cardapio/checkout.js',
+  'public/js/cardapio/modules/catalog-renderer.js',
+  'public/js/cardapio/modules/catalog-virtualizer.js',
   'public/js/cardapio.js'
 ];
 
@@ -53,7 +55,18 @@ function hashContent(content) {
       target: ['chrome58', 'firefox57', 'safari11']
     });
 
-    const combinedJs = jsBundle.outputFiles.map(f => f.text).join('\n');
+    const jsOutputs = jsBundle.outputFiles
+      .filter(f => f.path.endsWith('.js'))
+      .sort((a, b) => {
+        const aName = path.basename(a.path);
+        const bName = path.basename(b.path);
+        const aMatch = aName.match(/^entry(\d+)\.js$/);
+        const bMatch = bName.match(/^entry(\d+)\.js$/);
+        const aIndex = aMatch ? parseInt(aMatch[1], 10) : Number.MAX_SAFE_INTEGER;
+        const bIndex = bMatch ? parseInt(bMatch[1], 10) : Number.MAX_SAFE_INTEGER;
+        return aIndex - bIndex;
+      });
+    const combinedJs = jsOutputs.map(f => f.text).join('\n');
     const jsHash = hashContent(combinedJs);
     const jsFileName = `cardapio.${jsHash}.js`;
     fs.writeFileSync(path.join(outDir, jsFileName), combinedJs);

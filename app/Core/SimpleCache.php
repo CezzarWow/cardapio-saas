@@ -33,11 +33,11 @@ class SimpleCache
         $content = file_get_contents($file);
         $data = json_decode($content, true);
 
-        if (!$data || !isset($data['expires_at'])) {
+        if (!is_array($data) || !array_key_exists('expires_at', $data)) {
             return $default;
         }
 
-        if (time() > $data['expires_at']) {
+        if ($data['expires_at'] !== 0 && time() > $data['expires_at']) {
             unlink($file); // Expired
             return $default;
         }
@@ -52,8 +52,9 @@ class SimpleCache
     public function put(string $key, mixed $value, int $ttlSeconds = 300): void
     {
         $file = $this->getFilePath($key);
+        $expiresAt = $ttlSeconds > 0 ? time() + $ttlSeconds : 0;
         $data = [
-            'expires_at' => time() + $ttlSeconds,
+            'expires_at' => $expiresAt,
             'payload' => $value
         ];
 
@@ -88,6 +89,10 @@ class SimpleCache
     {
         // Sanitize key
         $safeKey = preg_replace('/[^a-zA-Z0-9_-]/', '', $key);
-        return $this->cacheDir . '/' . $safeKey . '.cache';
+        if ($safeKey === '') {
+            $safeKey = 'key';
+        }
+        $hash = substr(hash('sha256', $key), 0, 16);
+        return $this->cacheDir . '/' . $safeKey . '.' . $hash . '.cache';
     }
 }

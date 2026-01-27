@@ -60,9 +60,16 @@ class RedisAdapter
     public function get(string $key, $default = null)
     {
         $val = $this->redis->get($key);
-        if ($val === false || $val === null) return $default;
+        if ($val === false || $val === null) {
+            return $default;
+        }
+
         $decoded = json_decode($val, true);
-        return $decoded === null ? $default : $decoded;
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return $default;
+        }
+
+        return $decoded;
     }
 
     public function put(string $key, $value, int $ttlSeconds = 300): void
