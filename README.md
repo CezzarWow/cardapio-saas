@@ -51,15 +51,19 @@ This application implements several security layers:
 
 ## 📚 API Documentation
 
-See `docs/api/swagger.yaml` for the Public API specification.
+See `docs/openapi.yaml` (OpenAPI 3.0) for the `/api/v1/` endpoints.
 
 ## 🏗️ Architecture Overview
 
-- **App/Core**: Core framework components (Router, Container, Database).
-- **App/Controllers**: Request handlers.
+- **App/Core**: Router, Container, Database, Logger, Cache, QueryBuilder.
+- **App/Controllers**: Request handlers (Admin, Api).
 - **App/Services**: Business logic.
 - **App/Repositories**: Data access layer.
-- **App/Middleware**: Request filtering pipeline.
+- **App/Events**: EventDispatcher, OrderCreatedEvent, CardapioChangedEvent, listeners.
+- **App/DTO**: OrderDTO, OrderItemDTO.
+- **App/Middleware**: CSRF, Sanitizer, Throttle, Authorization.
+
+Details: `docs/ARQUITETURA.md`. Contributing: `CONTRIBUTING.md`.
 
 ---
 *Built by Google Deepmind Agent*

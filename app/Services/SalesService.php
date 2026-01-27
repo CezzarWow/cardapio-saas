@@ -37,11 +37,21 @@ class SalesService
     }
 
     /**
-     * Lista todas as vendas do restaurante
+     * Lista todas as vendas do restaurante (sem paginação)
      */
     public function listOrders(int $restaurantId): array
     {
         return $this->orderRepo->findAllWithDetails($restaurantId);
+    }
+
+    /**
+     * Lista vendas paginadas (ETAPA 5).
+     *
+     * @return array{items: array, total: int, page: int, per_page: int, total_pages: int}
+     */
+    public function listOrdersPaginated(int $restaurantId, int $page = 1, int $perPage = 20): array
+    {
+        return $this->orderRepo->findAllWithDetailsPaginated($restaurantId, $page, $perPage);
     }
 
     /**

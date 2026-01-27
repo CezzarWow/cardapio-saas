@@ -10,7 +10,7 @@
 |------|--------|------------|
 | **Implementar DTOs (em vez de arrays)** | 🟡 Parcial | OrderDTO e OrderItemDTO criados; `findAsDto()` no OrderRepository. Migração gradual: ainda há muito retorno em array. Falta usar DTOs em mais serviços/repos. |
 | **Criar sistema de eventos** | 🟡 Parcial | EventDispatcher + EventContract + OrderCreatedEvent implementados; dispatch no CreateOrderAction. Falta: mais eventos (OrderPaid, OrderDelivered), listeners de exemplo (ex.: invalidação de cache). |
-| **Query Builder simples** | 🔴 Pendente | Repositórios ainda usam SQL escrito à mão. Falta classe/helper para montar SELECT/WHERE/ORDER de forma fluente. |
+| **Query Builder simples** | ✅ Feito | `App\Core\QueryBuilder` (select/from/join/where/groupBy/orderBy/limit/offset/get); uso piloto em `OrderRepository::findAllWithDetailsPaginated`. |
 | **Padronizar versionamento de API** | ✅ Feito | Rota `/api/v1/order/create` registrada; frontend (checkout-order.js) atualizado. `/api/order/create` mantido como legado. |
 
 ---
@@ -22,7 +22,7 @@
 | **Cache com invalidação automática** | 🟢 Feito | ProductRepository, CategoryRepository e ComboRepository disparam `CardapioChangedEvent`; o listener invalida todas as chaves de cardápio. Repos de Config e Adicionais ainda usam forget manual (opcional migrar depois). |
 | **Code splitting no frontend** | 🔴 Pendente | Carregar bundles por rota/SPA em vez de um bundle único onde fizer sentido. |
 | **Otimizar queries do banco** | 🔴 Pendente | Revisar N+1, índices, consultas pesadas em listagens. |
-| **Paginação em listagens** | 🔴 Pendente | Pedidos, vendas, produtos, etc. retornarem páginas (limit/offset ou cursor) em vez de listas completas. |
+| **Paginação em listagens** | 🟢 Feito | Vendas paginadas: `OrderRepository::findAllWithDetailsPaginated`, `SalesService::listOrdersPaginated`, `SalesController` com ?page= e ?per_page=; view com links Anterior/Próxima. |
 
 ---
 
@@ -30,19 +30,19 @@
 
 | Item | Status | Observação |
 |------|--------|------------|
-| **Documentar API (Swagger)** | 🔴 Pendente | OpenAPI/Swagger para os endpoints `/api/v1/...` (e futuros). |
-| **Documentar arquitetura** | 🔴 Pendente | Doc de pastas, fluxo request→router→controller→service→repository, DTOs, eventos. |
-| **Implementar migrations de banco** | 🔴 Pendente | Scripts versionados (ex.: PHP ou SQL numerados) para criar/alterar tabelas. |
-| **Guias de contribuição** | 🔴 Pendente | CONTRIBUTING.md com padrões de código, como rodar testes, como propor mudanças. |
+| **Documentar API (Swagger)** | ✅ Feito | `docs/openapi.yaml` (OpenAPI 3.0) com todos os endpoints `/api/v1/`. |
+| **Documentar arquitetura** | ✅ Feito | `docs/ARQUITETURA.md` (camadas, fluxo, DTOs, eventos, cache, segurança). |
+| **Implementar migrations de banco** | 🟡 Estrutura | `database/migrations/` com README e convenção; `001_example_placeholder.sql` de exemplo. Falta runner automático. |
+| **Guias de contribuição** | ✅ Feito | `CONTRIBUTING.md` (ambiente, padrões, testes, commits, onde alterar). |
 
 ---
 
 ## Resumo visual
 
 ```
-ETAPA 4  █████████░  ~70%   (DTOs + eventos + API v1; falta Query Builder)
-ETAPA 5  ███░░░░░░░  ~25%   (cache com invalidação por eventos em Produto/Categoria/Combo; falta code split, queries, paginação)
-ETAPA 6  ░░░░░░░░░░    0%   (tudo pendente)
+ETAPA 4  ██████████  100%   (DTOs, eventos, API v1, Query Builder)
+ETAPA 5  ██████░░░░  ~50%   (cache invalidation, paginação em vendas; falta code split, otimizar queries)
+ETAPA 6  ████████░░  ~80%   (Swagger, ARQUITETURA, CONTRIBUTING, migrations dir; falta runner de migrations)
 ```
 
 ---

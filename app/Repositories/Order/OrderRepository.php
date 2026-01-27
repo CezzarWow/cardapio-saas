@@ -4,6 +4,7 @@ namespace App\Repositories\Order;
 
 use App\Core\Database;
 use App\Core\Logger;
+use App\Core\QueryBuilder;
 use App\DTO\OrderDTO;
 use PDO;
 
@@ -137,6 +138,43 @@ class OrderRepository
         ');
         $stmt->execute(['rid' => $restaurantId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Lista pedidos com detalhes paginados (ETAPA 5).
+     *
+     * @return array{items: list<array<string, mixed>>, total: int, page: int, per_page: int, total_pages: int}
+     */
+    public function findAllWithDetailsPaginated(int $restaurantId, int $page = 1, int $perPage = 20): array
+    {
+        $conn = Database::connect();
+        $page = max(1, $page);
+        $perPage = max(1, min(100, $perPage));
+        $offset = ($page - 1) * $perPage;
+
+        $qb = new QueryBuilder($conn);
+        $items = $qb->select('o.*, COALESCE(SUM(oi.quantity * oi.price), 0) as calculated_total')
+            ->from('orders o')
+            ->join('LEFT JOIN order_items oi ON oi.order_id = o.id')
+            ->where('o.restaurant_id = :rid', ['rid' => $restaurantId])
+            ->groupBy('o.id')
+            ->orderBy('o.created_at', 'DESC')
+            ->limit($perPage)
+            ->offset($offset)
+            ->get();
+
+        $stmtCount = $conn->prepare('SELECT COUNT(*) as cnt FROM orders WHERE restaurant_id = :rid');
+        $stmtCount->execute(['rid' => $restaurantId]);
+        $total = (int) ($stmtCount->fetch(PDO::FETCH_ASSOC)['cnt'] ?? 0);
+        $totalPages = $total > 0 ? (int) ceil($total / $perPage) : 1;
+
+        return [
+            'items' => $items,
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+            'total_pages' => $totalPages,
+        ];
     }
 
     /**

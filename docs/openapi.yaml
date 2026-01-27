@@ -1,0 +1,222 @@
+openapi: 3.0.3
+info:
+  title: Cardápio SaaS - API Pública
+  description: Endpoints da API v1 para pedidos, balcão, mesa, comanda e delivery.
+  version: 1.0.0
+
+servers:
+  - url: /api/v1
+    description: API v1 (prefixo base)
+
+tags:
+  - name: Pedidos
+    description: Checkout do cardápio público
+  - name: Balcão
+    description: Venda direta no balcão
+  - name: Mesa
+    description: Abrir conta, adicionar itens, fechar mesa
+  - name: Comanda
+    description: Abrir comanda, adicionar itens, fechar
+  - name: Delivery
+    description: Criar pedido e atualizar status
+
+paths:
+  /order/create:
+    post:
+      tags: [Pedidos]
+      summary: Criar pedido (cardápio público)
+      description: Recebe pedido do checkout web (entrega/retirada/local).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                restaurant_id: { type: integer }
+                order_type: { type: string, example: entrega }
+                payment_method: { type: string }
+                items: { type: array, items: { $ref: '#/components/schemas/OrderItemInput' } }
+                delivery_fee: { type: number }
+                observation: { type: string }
+      responses:
+        '200':
+          description: Pedido criado ou erro de validação
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  order_id: { type: integer }
+                  message: { type: string }
+
+  /balcao/venda:
+    post:
+      tags: [Balcão]
+      summary: Registrar venda no balcão
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [restaurant_id, items]
+              properties:
+                restaurant_id: { type: integer }
+                items: { type: array }
+                payments: { type: array }
+      responses:
+        '201':
+          description: Venda registrada
+        '500':
+          description: Erro interno
+
+  /mesa/abrir:
+    post:
+      tags: [Mesa]
+      summary: Abrir conta de mesa
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                restaurant_id: { type: integer }
+                table_id: { type: integer }
+      responses:
+        '201':
+          description: Conta aberta
+        '400':
+          description: Dados inválidos
+
+  /mesa/itens:
+    post:
+      tags: [Mesa]
+      summary: Adicionar itens à mesa
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                restaurant_id: { type: integer }
+                order_id: { type: integer }
+                items: { type: array }
+      responses:
+        '200':
+          description: Itens adicionados
+
+  /mesa/fechar:
+    post:
+      tags: [Mesa]
+      summary: Fechar conta da mesa
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                restaurant_id: { type: integer }
+                order_id: { type: integer }
+                payments: { type: array }
+      responses:
+        '200':
+          description: Mesa fechada
+
+  /comanda/abrir:
+    post:
+      tags: [Comanda]
+      summary: Abrir comanda
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                restaurant_id: { type: integer }
+                items: { type: array }
+      responses:
+        '201':
+          description: Comanda aberta
+
+  /comanda/itens:
+    post:
+      tags: [Comanda]
+      summary: Adicionar itens à comanda
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                restaurant_id: { type: integer }
+                order_id: { type: integer }
+                items: { type: array }
+      responses:
+        '200':
+          description: Itens adicionados
+
+  /comanda/fechar:
+    post:
+      tags: [Comanda]
+      summary: Fechar comanda
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                restaurant_id: { type: integer }
+                order_id: { type: integer }
+                payments: { type: array }
+      responses:
+        '200':
+          description: Comanda fechada
+
+  /delivery/criar:
+    post:
+      tags: [Delivery]
+      summary: Criar pedido de delivery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                restaurant_id: { type: integer }
+                delivery_data: { type: object }
+                items: { type: array }
+                payments: { type: array }
+      responses:
+        '201':
+          description: Pedido criado
+
+  /delivery/status:
+    post:
+      tags: [Delivery]
+      summary: Atualizar status do delivery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                restaurant_id: { type: integer }
+                order_id: { type: integer }
+                status: { type: string }
+      responses:
+        '200':
+          description: Status atualizado
+
+components:
+  schemas:
+    OrderItemInput:
+      type: object
+      properties:
+        product_id: { type: integer }
+        name: { type: string }
+        quantity: { type: integer }
+        unit_price: { type: number }
+        observation: { type: string }
+        additionals: { type: array }

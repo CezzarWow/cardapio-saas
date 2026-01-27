@@ -25,15 +25,17 @@ class SalesController extends BaseController
     }
 
     /**
-     * Lista todas as vendas
+     * Lista vendas com paginação (ETAPA 5). Aceita ?page= e ?per_page=
      */
     public function index(): void
     {
         $rid = $this->getRestaurantId();
-        $rawOrders = $this->service->listOrders($rid);
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+        $perPage = max(5, min(100, (int) ($_GET['per_page'] ?? 20)));
 
-        // --- PREPARAÇÃO DO VIEWMODEL ---
-        // Calcular total para a View
+        $result = $this->service->listOrdersPaginated($rid, $page, $perPage);
+        $rawOrders = $result['items'];
+
         $totalSalesVal = array_sum(array_column($rawOrders, 'calculated_total'));
         $totalSalesFormatted = number_format($totalSalesVal, 2, ',', '.');
 
@@ -45,19 +47,23 @@ class SalesController extends BaseController
                 'formatted_id' => '#' . str_pad($sale['id'], 4, '0', STR_PAD_LEFT),
                 'formatted_date' => date('d/m/Y H:i', strtotime($sale['created_at'])),
                 'formatted_total' => 'R$ ' . number_format($sale['calculated_total'], 2, ',', '.'),
-                // Flags de permissão/estado
                 'can_reopen' => $isConcluido,
                 'can_cancel' => $isConcluido,
                 'is_canceled' => $isCancelado,
-                'status_label' => ucfirst($sale['status']) // Fallback simples se precisar
+                'status_label' => ucfirst($sale['status']),
             ]);
         }, $rawOrders);
 
-        // Passa variáveis prontas para a View
         $viewData = [
             'orders' => $orders,
-            'totalSales' => $totalSalesVal, // Mantendo original por compatibilidade se algo usar
-            'totalSalesFormatted' => $totalSalesFormatted
+            'totalSales' => $totalSalesVal,
+            'totalSalesFormatted' => $totalSalesFormatted,
+            'pagination' => [
+                'page' => $result['page'],
+                'per_page' => $result['per_page'],
+                'total' => $result['total'],
+                'total_pages' => $result['total_pages'],
+            ],
         ];
         extract($viewData);
 

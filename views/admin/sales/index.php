@@ -72,6 +72,29 @@
                 </tbody>
             </table>
         </div>
+
+        <?php if (!empty($pagination) && $pagination['total_pages'] > 1): ?>
+        <?php
+          $req = $_SERVER['REQUEST_URI'] ?? '/admin/loja/vendas';
+          $base = preg_replace('/[?&]page=\d+/', '', $req);
+          $base = rtrim(rtrim($base, '&'), '?');
+          $sep = strpos($base, '?') !== false ? '&' : '?';
+        ?>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding: 0 0.5rem;">
+            <span style="color: #6b7280; font-size: 0.875rem;">
+                Página <?= (int)$pagination['page'] ?> de <?= (int)$pagination['total_pages'] ?>
+                (<?= (int)$pagination['total'] ?> vendas)
+            </span>
+            <div style="display: flex; gap: 8px;">
+                <?php if ($pagination['page'] > 1): ?>
+                    <a href="<?= htmlspecialchars($base . $sep . 'page=' . ($pagination['page'] - 1)) ?>" style="padding: 8px 12px; background: #f3f4f6; border-radius: 6px; text-decoration: none; color: #374151;">← Anterior</a>
+                <?php endif; ?>
+                <?php if ($pagination['page'] < $pagination['total_pages']): ?>
+                    <a href="<?= htmlspecialchars($base . $sep . 'page=' . ($pagination['page'] + 1)) ?>" style="padding: 8px 12px; background: #2563eb; color: white; border-radius: 6px; text-decoration: none;">Próxima →</a>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 </main>
 
