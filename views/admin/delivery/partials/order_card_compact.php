@@ -39,30 +39,29 @@ $diff = $now->diff($createdAt);
 $timeAgo = $diff->h > 0 ? $diff->h . 'h' : $diff->i . 'm';
 
 // Cliente para aria-label
-$clientName = htmlspecialchars($order['client_name'] ?? 'Cliente');
-$statusLabel = ucfirst($status);
-
-// JSON para modal
-$orderJson = htmlspecialchars(json_encode([
-    'id' => $order['id'],
-    'status' => $status,
+$clientNameRaw = (string) ($order['client_name'] ?? 'Cliente');
+$clientName = \App\Helpers\ViewHelper::e($clientNameRaw);
+$statusLabel = \App\Helpers\ViewHelper::e(ucfirst($status));
+$orderPayload = [
+    'id' => (int) ($order['id'] ?? 0),
+    'status' => (string) $status,
     'client_name' => $order['client_name'] ?? null,
     'client_phone' => $order['client_phone'] ?? null,
     'client_address' => $order['client_address'] ?? null,
-    'total' => $order['total'] ?? 0,
+    'total' => (float) ($order['total'] ?? 0),
     'payment_method' => $order['payment_method'] ?? null,
-    'is_paid' => $order['is_paid'] ?? 0,
+    'is_paid' => (int) ($order['is_paid'] ?? 0),
     'created_at' => date('d/m/Y H:i', strtotime($order['created_at'])),
     'items' => []
-]), ENT_QUOTES, 'UTF-8');
+];
 ?>
 
 <div class="delivery-card-compact delivery-card-compact--<?= \App\Helpers\ViewHelper::e($status) ?>" 
-     onclick='DeliveryUI.openDetailsModal(<?= $orderJson ?>)'
+     onclick='DeliveryUI.openDetailsModal(<?= json_encode($orderPayload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
      tabindex="0"
      role="button"
      aria-label="Pedido de <?= $clientName ?> - Status: <?= $statusLabel ?> - R$ <?= number_format($order['total'] ?? 0, 2, ',', '.') ?>"
-     onkeypress="if(event.key==='Enter') DeliveryUI.openDetailsModal(<?= $orderJson ?>)">
+     onkeypress="if(event.key==='Enter') DeliveryUI.openDetailsModal(<?= json_encode($orderPayload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>)">
     
     <div class="delivery-card-compact-header">
         <span class="delivery-card-compact-id">

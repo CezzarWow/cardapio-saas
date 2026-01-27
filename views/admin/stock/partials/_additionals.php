@@ -75,7 +75,7 @@
                 <!-- Botões de Ação do Grupo -->
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <button type="button" class="btn-action-link" 
-                            data-group-id="<?= $groupId ?>" 
+                            data-group-id="<?= (int) $groupId ?>" 
                             data-group-name="<?= \App\Helpers\ViewHelper::e($groupName) ?>"
                             data-item-ids="<?= \App\Helpers\ViewHelper::e(\App\Helpers\ViewHelper::js($itemIds)) ?>"
                             style="padding: 6px 10px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;"
@@ -84,8 +84,8 @@
                         Itens
                     </button>
                     <!-- Botão Categoria Removido -->
-                    <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/adicionais/grupo/deletar?id=<?= $groupId ?>"
-                       onclick='return confirm(<?= \App\Helpers\ViewHelper::js($confirmMsg) ?>)'
+                    <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/adicionais/grupo/deletar?id=<?= (int) $groupId ?>"
+                       onclick='return confirm(<?= json_encode($confirmMsg, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
                        style="color: #dc2626; padding: 6px; border-radius: 6px; text-decoration: none;">
                         <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
                     </a>
@@ -103,13 +103,14 @@
                             $itemId = (int) ($item['id'] ?? 0);
                             $itemName = (string) ($item['name'] ?? '');
                             $itemPrice = (float) ($item['price'] ?? 0);
+                            $itemPriceClass = $itemPrice > 0 ? 'paid' : 'free';
                         ?>
                         <div class="item-chip">
                             <span class="item-chip-name"><?= \App\Helpers\ViewHelper::e($itemName) ?></span>
-                            <span class="item-chip-price <?= $itemPrice > 0 ? 'paid' : 'free' ?>">
+                            <span class="item-chip-price <?= \App\Helpers\ViewHelper::e($itemPriceClass) ?>">
                                 <?= $itemPrice > 0 ? ('R$ ' . number_format($itemPrice, 2, ',', '.')) : 'Grátis' ?>
                             </span>
-                            <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/adicionais/desvincular?grupo=<?= $groupId ?>&item=<?= $itemId ?>"
+                            <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/adicionais/desvincular?grupo=<?= (int) $groupId ?>&item=<?= (int) $itemId ?>"
                                class="item-chip-unlink" title="Desvincular">
                                 <i data-lucide="x" style="width: 12px; height: 12px;"></i>
                             </a>

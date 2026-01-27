@@ -67,22 +67,27 @@
                 </h3>
                 
                 <div class="payment-methods-list">
-                    <label class="payment-method-option <?= ($cardapioConfig['accept_cash'] ?? 1) ? '' : 'disabled-option' ?>" data-method="dinheiro">
-                        <input type="radio" name="paymentMethod" value="dinheiro" onchange="selectPaymentMethod('dinheiro')" <?= ($cardapioConfig['accept_cash'] ?? 1) ? '' : 'disabled' ?>>
+                    <?php
+                        $cashEnabled = ((int) ($cardapioConfig['accept_cash'] ?? 1)) ? true : false;
+                        $creditEnabled = ((int) ($cardapioConfig['accept_credit'] ?? 1)) ? true : false;
+                        $pixEnabled = ((int) ($cardapioConfig['accept_pix'] ?? 1)) ? true : false;
+                    ?>
+                    <label class="payment-method-option <?= \App\Helpers\ViewHelper::e($cashEnabled ? '' : 'disabled-option') ?>" data-method="dinheiro">
+                        <input type="radio" name="paymentMethod" value="dinheiro" onchange="selectPaymentMethod('dinheiro')" <?= \App\Helpers\ViewHelper::e($cashEnabled ? '' : 'disabled') ?>>
                         <span class="payment-method-check"></span>
                         <span class="payment-method-icon">💵</span>
                         <span class="payment-method-label">Dinheiro</span>
                     </label>
                     
-                    <label class="payment-method-option <?= ($cardapioConfig['accept_credit'] ?? 1) ? '' : 'disabled-option' ?>" data-method="cartao">
-                        <input type="radio" name="paymentMethod" value="cartao" onchange="selectPaymentMethod('cartao')" <?= ($cardapioConfig['accept_credit'] ?? 1) ? '' : 'disabled' ?>>
+                    <label class="payment-method-option <?= \App\Helpers\ViewHelper::e($creditEnabled ? '' : 'disabled-option') ?>" data-method="cartao">
+                        <input type="radio" name="paymentMethod" value="cartao" onchange="selectPaymentMethod('cartao')" <?= \App\Helpers\ViewHelper::e($creditEnabled ? '' : 'disabled') ?>>
                         <span class="payment-method-check"></span>
                         <span class="payment-method-icon">💳</span>
                         <span class="payment-method-label">Cartão</span>
                     </label>
                     
-                    <label class="payment-method-option <?= ($cardapioConfig['accept_pix'] ?? 1) ? '' : 'disabled-option' ?>" data-method="pix">
-                        <input type="radio" name="paymentMethod" value="pix" onchange="selectPaymentMethod('pix')" <?= ($cardapioConfig['accept_pix'] ?? 1) ? '' : 'disabled' ?>>
+                    <label class="payment-method-option <?= \App\Helpers\ViewHelper::e($pixEnabled ? '' : 'disabled-option') ?>" data-method="pix">
+                        <input type="radio" name="paymentMethod" value="pix" onchange="selectPaymentMethod('pix')" <?= \App\Helpers\ViewHelper::e($pixEnabled ? '' : 'disabled') ?>>
                         <span class="payment-method-check"></span>
                         <span class="payment-method-icon">💠</span>
                         <span class="payment-method-label">PIX</span>

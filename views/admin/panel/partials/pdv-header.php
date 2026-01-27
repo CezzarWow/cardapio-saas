@@ -8,16 +8,17 @@
 ?>
 
 <?php if ($isEditingPaid && $editingOrderId): ?>
+    <?php $editingId = (int) $editingOrderId; ?>
     <div id="edit-paid-banner" style="background: #dcfce7; border-bottom: 2px solid #22c55e; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;">
         <div style="display: flex; align-items: center; gap: 10px;">
             <span style="background: #16a34a; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 800;">PAGO</span>
-            <span style="font-weight: 700; color: #166534;">Pedido #<?= $editingOrderId ?> - Aguardando Retirada</span>
+            <span style="font-weight: 700; color: #166534;">Pedido #<?= (int) $editingId ?> - Aguardando Retirada</span>
         </div>
         <div style="display: flex; gap: 10px;">
-            <a href="<?= BASE_URL ?>/admin/loja/mesas" style="background: #64748b; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+            <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/mesas" style="background: #64748b; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
                 ← Voltar
             </a>
-            <button onclick="cancelPaidOrder(<?= $editingOrderId ?>)" style="background: #ef4444; color: white; padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; font-size: 0.9rem;">
+            <button onclick="cancelPaidOrder(<?= (int) $editingId ?>)" style="background: #ef4444; color: white; padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; font-size: 0.9rem;">
                 Cancelar Pedido
             </button>
         </div>
@@ -67,9 +68,10 @@
         $currentType = $contaAberta['order_type'] ?? 'local';
         // Mapeia tipos legados se necessário
         if ($currentType == 'balcao') $currentType = 'local';
+        if (!in_array($currentType, ['local', 'retirada', 'entrega'], true)) $currentType = 'local';
     ?>
     <input type="hidden" id="keep_open_value" value="false">
-    <input type="hidden" id="selected_order_type" value="<?= $currentType ?>">
+    <input type="hidden" id="selected_order_type" value="<?= \App\Helpers\ViewHelper::e($currentType) ?>">
     <?php endif; ?>
 
 </header>

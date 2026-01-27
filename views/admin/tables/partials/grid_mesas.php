@@ -17,11 +17,11 @@
         ?>
 
         <div class="table-card <?= \App\Helpers\ViewHelper::e($cardClass) ?>" 
-             onclick="abrirMesa(<?= $mesaId ?>, <?= $mesaNumber ?>)"
+             onclick="abrirMesa(<?= (int) $mesaId ?>, <?= (int) $mesaNumber ?>)"
              tabindex="0"
              role="button"
              aria-label="<?= \App\Helpers\ViewHelper::e($ariaLabel) ?>"
-             onkeypress="if(event.key==='Enter') abrirMesa(<?= $mesaId ?>, <?= $mesaNumber ?>)">
+             onkeypress="if(event.key==='Enter') abrirMesa(<?= (int) $mesaId ?>, <?= (int) $mesaNumber ?>)">
             
             <?php if ($isOccupied && !empty($mesa['credit_limit']) && $mesa['credit_limit'] > 0): ?>
                 <span class="table-card__badge">CREDIÁRIO</span>
@@ -35,7 +35,7 @@
                 <?php endif; ?>
             <?php endif; ?>
 
-            <span class="table-card__number"><?= $mesaNumber ?></span>
+            <span class="table-card__number"><?= (int) $mesaNumber ?></span>
             <span class="table-card__status"><?= \App\Helpers\ViewHelper::e($statusText) ?></span>
 
             <?php if ($isOccupied): ?>

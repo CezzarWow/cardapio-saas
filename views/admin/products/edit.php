@@ -63,9 +63,10 @@ $triggerStyle = $checkedCount > 0 ? 'color: #1f2937; font-weight: 600;' : 'color
                                 <?php else: ?>
                                     <?php foreach ($additionalGroups as $group): ?>
                                         <?php $groupId = (int) ($group['id'] ?? 0); ?>
+                                        <?php $groupChecked = in_array($groupId, array_map('intval', $linkedGroups), true) ? 'checked' : ''; ?>
                                         <label style="display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 4px; transition: background 0.1s;">
-                                            <input type="checkbox" name="additional_groups[]" value="<?= $groupId ?>" 
-                                                <?= in_array($groupId, array_map('intval', $linkedGroups), true) ? 'checked' : '' ?>
+                                            <input type="checkbox" name="additional_groups[]" value="<?= (int) $groupId ?>" 
+                                                <?= \App\Helpers\ViewHelper::e($groupChecked) ?>
                                                 onchange="updateTriggerText(this)" style="width: 16px; height: 16px;">
                                             <span style="font-size: 0.95rem; color: #374151;"><?= htmlspecialchars($group['name']) ?></span>
                                         </label>
@@ -86,7 +87,7 @@ $triggerStyle = $checkedCount > 0 ? 'color: #1f2937; font-weight: 600;' : 'color
                     </div>
                     <div style="flex: 1;">
                         <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Estoque</label>
-                        <input type="number" name="stock" value="<?= intval($product['stock']) ?>" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 8px;">
+                        <input type="number" name="stock" value="<?= (int) ($product['stock'] ?? 0) ?>" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 8px;">
                     </div>
                 </div>
 
@@ -119,7 +120,7 @@ if (!array_key_exists($currentIcon, $icons)) {
                                 <img src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/uploads/<?= \App\Helpers\ViewHelper::e($imageFile) ?>" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb;">
                                 <div style="display: flex; flex-direction: column; gap: 2px;">
                                     <span style="color: #6b7280; font-size: 0.75rem;">Atual</span>
-                                    <button type="button" onclick='openCropper(<?= \App\Helpers\ViewHelper::js($imageUrl) ?>)' 
+                                    <button type="button" onclick='openCropper(<?= json_encode($imageUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>)' 
                                             style="background: white; border: 1px solid #d1d5db; border-radius: 6px; padding: 6px 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: background 0.1s; font-size: 0.8rem; color: #374151;"
                                             title="Recortar novamente">
                                         <i data-lucide="pencil" style="width: 14px; height: 14px;"></i> Editar
@@ -128,9 +129,9 @@ if (!array_key_exists($currentIcon, $icons)) {
                             </div>
                         <?php endif; ?>
                         <input type="file" name="image" id="imageInput" accept="image/*" style="width: 100%; padding: 8px; border: 1px dashed #d1d5db; border-radius: 8px; background: #f9fafb; font-size: 0.8rem;">
-                        <div id="iconAsPhotoOption" style="display: <?= $hasImage ? 'none' : 'block' ?>; margin-top: 8px; padding: 8px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 6px;">
+                        <div id="iconAsPhotoOption" style="display: <?= \App\Helpers\ViewHelper::e($hasImage ? 'none' : 'block') ?>; margin-top: 8px; padding: 8px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 6px;">
                             <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                                <input type="checkbox" name="icon_as_photo" id="iconAsPhotoCheckbox" <?= $iconAsPhoto ? 'checked' : '' ?> style="width: 14px; height: 14px;">
+                                <input type="checkbox" name="icon_as_photo" id="iconAsPhotoCheckbox" <?= \App\Helpers\ViewHelper::e($iconAsPhoto ? 'checked' : '') ?> style="width: 14px; height: 14px;">
                                 <span style="font-weight: 600; color: #92400e; font-size: 0.75rem;">Usar ícone como foto</span>
                             </label>
                         </div>
@@ -157,9 +158,13 @@ if (!array_key_exists($currentIcon, $icons)) {
                                 <?php foreach ($icons as $emoji => $label):
                                     $isSelected = ($emoji === $currentIcon);
                                     ?>
-                                    <div class="icon-option" data-icon="<?= \App\Helpers\ViewHelper::e($emoji) ?>" onclick='selectIcon(<?= \App\Helpers\ViewHelper::js($emoji) ?>)' 
+                                    <?php
+                                        $iconBg = $isSelected ? '#eff6ff' : 'white';
+                                        $iconBorder = $isSelected ? '#2563eb' : '#e5e7eb';
+                                    ?>
+                                    <div class="icon-option" data-icon="<?= \App\Helpers\ViewHelper::e($emoji) ?>" onclick='selectIcon(<?= json_encode($emoji, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>)' 
                                          title="<?= \App\Helpers\ViewHelper::e($label) ?>"
-                                         style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 50px; background: <?= $isSelected ? '#eff6ff' : 'white' ?>; border: 2px solid <?= $isSelected ? '#2563eb' : '#e5e7eb' ?>; border-radius: 6px; cursor: pointer; transition: all 0.15s;">
+                                         style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 50px; background: <?= \App\Helpers\ViewHelper::e($iconBg) ?>; border: 2px solid <?= \App\Helpers\ViewHelper::e($iconBorder) ?>; border-radius: 6px; cursor: pointer; transition: all 0.15s;">
                                         <span style="font-size: 1.5rem;"><?= \App\Helpers\ViewHelper::e($emoji) ?></span>
                                     </div>
                                 <?php endforeach; ?>

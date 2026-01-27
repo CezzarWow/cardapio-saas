@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= \App\Helpers\ViewHelper::e(\App\Helpers\ViewHelper::csrfToken()) ?>">
-    <title>Painel PDV - <?= $_SESSION['loja_ativa_nome'] ?? 'Minha Loja' ?></title>
+    <title>Painel PDV - <?= \App\Helpers\ViewHelper::e($_SESSION['loja_ativa_nome'] ?? 'Minha Loja') ?></title>
     
     <script>
         const BASE_URL = '<?= BASE_URL ?>';

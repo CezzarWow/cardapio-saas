@@ -1,7 +1,7 @@
-<?php
+﻿<?php
 /**
- * PARTIAL: Grid de Produtos para Reposição
- * Extraído de reposition/index.php
+ * PARTIAL: Grid de Produtos para ReposiÃ§Ã£o
+ * ExtraÃ­do de reposition/index.php
  */
 
 $STOCK_CRITICAL_LIMIT = 5;
@@ -27,10 +27,12 @@ $STOCK_CRITICAL_LIMIT = 5;
             $isNegative = $stock < 0;
             $isNormal = $stock > $STOCK_CRITICAL_LIMIT;
             $stockClass = $isNegative ? 'stock-product-card-stock--danger' : ($isCritical ? 'stock-product-card-stock--warning' : 'stock-product-card-stock--ok');
-            $statusLabel = $isNegative ? 'Negativo' : ($isCritical ? 'Crítico' : 'Normal');
+            $statusLabel = $isNegative ? 'Negativo' : ($isCritical ? 'CrÃ­tico' : 'Normal');
+            $statusBg = $isNegative ? '#fecaca' : ($isCritical ? '#fef3c7' : '#d1fae5');
+            $statusColor = $isNegative ? '#dc2626' : ($isCritical ? '#d97706' : '#059669');
             ?>
         <div class="stock-product-card product-row" 
-             data-id="<?= $prodId ?>"
+             data-id="<?= (int) $prodId ?>"
              data-name="<?= \App\Helpers\ViewHelper::e(strtolower($prodName)) ?>" 
              data-stock="<?= (int) $stock ?>"
              data-category="<?= \App\Helpers\ViewHelper::e($categoryName) ?>">
@@ -56,18 +58,18 @@ $STOCK_CRITICAL_LIMIT = 5;
                         <?= (int) $stock ?>
                     </span>
                     <span style="padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600;
-                        background: <?= $isNegative ? '#fecaca' : ($isCritical ? '#fef3c7' : '#d1fae5') ?>;
-                        color: <?= $isNegative ? '#dc2626' : ($isCritical ? '#d97706' : '#059669') ?>;">
+                        background: <?= \App\Helpers\ViewHelper::e($statusBg) ?>;
+                        color: <?= \App\Helpers\ViewHelper::e($statusColor) ?>;">
                         <?= \App\Helpers\ViewHelper::e($statusLabel) ?>
                     </span>
                 </div>
             </div>
             
-            <!-- Ação -->
+            <!-- AÃ§Ã£o -->
             <div class="stock-product-card-actions">
                 <button onclick='openAdjustModal(<?= $prodId ?>, <?= \App\Helpers\ViewHelper::js($prodName) ?>, <?= (int) $stock ?>)'
                         style="flex: 1; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; text-align: center; font-size: 0.9rem;">
-                    📦 Repor
+                    ðŸ“¦ Repor
                 </button>
             </div>
         </div>

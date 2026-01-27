@@ -47,30 +47,30 @@
                 }
             ?>
             <?php if ($isPaid): ?>
-                <div class="table-card <?= $cardClass ?>"
+                <div class="table-card <?= \App\Helpers\ViewHelper::e($cardClass) ?>"
                      onclick='showPaidOrderOptions(<?= $orderId ?>, <?= \App\Helpers\ViewHelper::js($clientNameRaw) ?>, <?= (float) $total ?>, <?= (int) $clientId ?>)'
                      tabindex="0"
                      role="button"
                      aria-label="<?= \App\Helpers\ViewHelper::e($ariaLabel) ?>"
                      onkeypress='if(event.key==="Enter") showPaidOrderOptions(<?= $orderId ?>, <?= \App\Helpers\ViewHelper::js($clientNameRaw) ?>, <?= (float) $total ?>, <?= (int) $clientId ?>)'>
             <?php else: ?>
-                <div class="table-card <?= $cardClass ?>"
+                <div class="table-card <?= \App\Helpers\ViewHelper::e($cardClass) ?>"
                      <?php if ($isDelivery): ?>
-                     onclick='if(window.DeliveryUI){ DeliveryUI.openDetailsModal(<?= $orderId ?>); } else { if(typeof AdminSPA!=="undefined") AdminSPA.navigateTo("delivery"); else window.location.href=<?= \App\Helpers\ViewHelper::js($deliveryUrl) ?>; }'
+                     onclick='if(window.DeliveryUI){ DeliveryUI.openDetailsModal(<?= (int) $orderId ?>); } else { if(typeof AdminSPA!=="undefined") AdminSPA.navigateTo("delivery"); else window.location.href=<?= json_encode($deliveryUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>; }'
                      <?php else: ?>
-                     onclick='if(typeof AdminSPA!=="undefined") AdminSPA.navigateTo("balcao", true, true, {order_id: <?= $orderId ?>}); else window.location.href=<?= \App\Helpers\ViewHelper::js($pdvUrl) ?>;'
+                     onclick='if(typeof AdminSPA!=="undefined") AdminSPA.navigateTo("balcao", true, true, {order_id: <?= (int) $orderId ?>}); else window.location.href=<?= json_encode($pdvUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;'
                      <?php endif; ?>
                      tabindex="0"
                      role="button"
                      aria-label="<?= \App\Helpers\ViewHelper::e($ariaLabel) ?>"
                      <?php if ($isDelivery): ?>
-                     onkeypress='if(event.key==="Enter"){ if(window.DeliveryUI){ DeliveryUI.openDetailsModal(<?= $orderId ?>); } else { if(typeof AdminSPA!=="undefined") AdminSPA.navigateTo("delivery"); else window.location.href=<?= \App\Helpers\ViewHelper::js($deliveryUrl) ?>; } }'
+                     onkeypress='if(event.key==="Enter"){ if(window.DeliveryUI){ DeliveryUI.openDetailsModal(<?= (int) $orderId ?>); } else { if(typeof AdminSPA!=="undefined") AdminSPA.navigateTo("delivery"); else window.location.href=<?= json_encode($deliveryUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>; } }'
                      <?php else: ?>
-                     onkeypress='if(event.key==="Enter"){ if(typeof AdminSPA!=="undefined") AdminSPA.navigateTo("balcao", true, true, {order_id: <?= $orderId ?>}); else window.location.href=<?= \App\Helpers\ViewHelper::js($pdvUrl) ?>; }'
+                     onkeypress='if(event.key==="Enter"){ if(typeof AdminSPA!=="undefined") AdminSPA.navigateTo("balcao", true, true, {order_id: <?= (int) $orderId ?>}); else window.location.href=<?= json_encode($pdvUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>; }'
                      <?php endif; ?>>
             <?php endif; ?>
                 
-                <span class="comanda-card__name"><?= $clientNameHtml ?></span>
+                <span class="comanda-card__name"><?= \App\Helpers\ViewHelper::e($clientNameHtml) ?></span>
                 <span class="comanda-card__status"><?= \App\Helpers\ViewHelper::e($statusText) ?></span>
                 <span class="comanda-card__total">R$ <?= number_format($total, 2, ',', '.') ?></span>
 

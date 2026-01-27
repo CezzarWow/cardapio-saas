@@ -54,12 +54,13 @@
                     $catId = (int) ($cat['id'] ?? 0);
                     $catName = (string) ($cat['name'] ?? '');
                     $isSystemCategory = in_array($cat['category_type'] ?? 'default', ['featured', 'combos']);
+                    $iconColor = $isSystemCategory ? '#f59e0b' : '#2563eb';
                     $confirmMsg = 'Excluir a categoria \"' . $catName . '\"?';
                     ?>
                 <tr class="category-row" data-name="<?= \App\Helpers\ViewHelper::e(strtolower($catName)) ?>">
                     <td>
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <i data-lucide="tag" style="width: 16px; height: 16px; color: <?= $isSystemCategory ? '#f59e0b' : '#2563eb' ?>;"></i>
+                            <i data-lucide="tag" style="width: 16px; height: 16px; color: <?= \App\Helpers\ViewHelper::e($iconColor) ?>;"></i>
                             <span style="font-weight: 500; color: #1f2937;"><?= \App\Helpers\ViewHelper::e($catName) ?></span>
                             <?php if ($isSystemCategory): ?>
                                 <span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600;">Sistema</span>
@@ -68,14 +69,14 @@
                     </td>
                     <td>
                         <div class="stock-actions" style="justify-content: flex-start;">
-                            <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/categorias/editar?id=<?= $catId ?>" 
+                            <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/categorias/editar?id=<?= (int) $catId ?>" 
                                class="btn-stock-action btn-stock-edit">
                                 <i data-lucide="pencil" style="width: 14px; height: 14px;"></i>
                                 Editar
                             </a>
                             <?php if (!$isSystemCategory): ?>
-                                <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/categorias/deletar?id=<?= $catId ?>" 
-                                   onclick='return confirm(<?= \App\Helpers\ViewHelper::js($confirmMsg) ?>)'
+                                <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/categorias/deletar?id=<?= (int) $catId ?>" 
+                                   onclick='return confirm(<?= json_encode($confirmMsg, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
                                    class="btn-stock-action btn-stock-delete">
                                     <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                                     Excluir

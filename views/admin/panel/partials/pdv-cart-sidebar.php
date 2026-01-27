@@ -34,9 +34,10 @@
     <div id="cart-items-area" class="cart-items-area" style="display: none;"></div>
 
     <?php if (!empty($itensJaPedidos)): ?>
+        <?php $savedLabel = $mesa_id ? 'Já na Mesa' : 'Já na Comanda'; ?>
         <div style="padding: 1rem; background: #fff7ed; border-bottom: 1px solid #fed7aa;">
             <h3 style="font-size: 0.85rem; font-weight: 700; color: #9a3412; margin-bottom: 0.5rem; display:flex; justify-content:space-between; align-items:center;">
-                <span><?= $mesa_id ? 'Já na Mesa' : 'Já na Comanda' ?></span>
+                <span><?= \App\Helpers\ViewHelper::e($savedLabel) ?></span>
                 <span>Total: R$ <?= number_format($contaAberta['total'], 2, ',', '.') ?></span>
             </h3>
             <div style="max-height: 150px; overflow-y: auto;">
@@ -102,7 +103,7 @@
         </div>
     <?php else: ?>
         <!-- SE ESTIVER EM MESA OU COMANDA, inputs principais já estão em dashboard.php -->
-         <input type="hidden" id="current_order_is_paid" value="<?= ($contaAberta['is_paid'] ?? 0) ?>">
+         <input type="hidden" id="current_order_is_paid" value="<?= (int) ($contaAberta['is_paid'] ?? 0) ?>">
          <input type="hidden" id="client-search"> 
     <?php endif; ?>
         
@@ -133,7 +134,7 @@
                 $showSaveBtn = !empty($mesa_id) || !empty($contaAberta['id']);
                 ?>
             <button id="btn-save-command" data-action="order-save"
-                    style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: <?= $showSaveBtn ? 'flex' : 'none' ?>; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
+                    style="flex: 1; background: #ea580c; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: <?= \App\Helpers\ViewHelper::e($showSaveBtn ? 'flex' : 'none') ?>; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                 Salvar
             </button>
             <?php endif; ?>
@@ -156,7 +157,7 @@
 
             <!-- 4. Botão FECHAR MESA -->
             <?php if (!empty($showCloseTable)): ?>
-                <button data-action="order-close-table" data-table-id="<?= $mesa_id ?>"
+                <button data-action="order-close-table" data-table-id="<?= (int) $mesa_id ?>"
                         style="flex: 1; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                     Finalizar
                 </button>
@@ -164,7 +165,7 @@
 
             <!-- 5. Botão ENTREGAR/BAIXAR (Comanda) -->
             <?php if (!empty($showCloseCommand)): ?>
-                <button data-action="order-close-command" data-order-id="<?= $contaAberta['id'] ?>"
+                <button data-action="order-close-command" data-order-id="<?= (int) ($contaAberta['id'] ?? 0) ?>"
                         style="flex: 1; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px; font-size: 1.1rem;">
                     Finalizar
                 </button>
@@ -183,11 +184,12 @@
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0;">
                     <i data-lucide="receipt" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;"></i>
-                    Ficha <?= $mesa_id ? 'Mesa ' . $mesa_numero : 'Cliente' ?>
+                    <?php $fichaTitle = $mesa_id ? ('Mesa ' . $mesa_numero) : 'Cliente'; ?>
+                    Ficha <?= \App\Helpers\ViewHelper::e($fichaTitle) ?>
                 </h2>
                 <button data-action="ficha-close" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.5rem; line-height: 1;">&times;</button>
             </div>
-            <p style="font-size: 0.9rem; opacity: 0.9; margin-top: 5px;">Consumo atual • <?= date('d/m/Y H:i') ?></p>
+            <p style="font-size: 0.9rem; opacity: 0.9; margin-top: 5px;">Consumo atual • <?= \App\Helpers\ViewHelper::e(date('d/m/Y H:i')) ?></p>
         </div>
         
         <!-- Itens -->

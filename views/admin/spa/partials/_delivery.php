@@ -55,7 +55,7 @@
         </h1>
         <div class="delivery-counter">
             <i data-lucide="package" style="width: 18px; height: 18px;"></i>
-            <span id="delivery-count"><?= count($orders ?? []) ?></span> pedidos
+            <span id="delivery-count"><?= (int) count($orders ?? []) ?></span> pedidos
         </div>
     </div>
 

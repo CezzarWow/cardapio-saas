@@ -11,11 +11,11 @@
 ?>
 
 <!-- Cashier CSS (Modular - cada arquivo com versão para cache) -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/caixa/_variables.css?v=<?= APP_VERSION ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/caixa/base.css?v=<?= APP_VERSION ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/caixa/cards.css?v=<?= APP_VERSION ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/caixa/flow.css?v=<?= APP_VERSION ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/caixa/modals.css?v=<?= APP_VERSION ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/caixa/_variables.css?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/caixa/base.css?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/caixa/cards.css?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/caixa/flow.css?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/caixa/modals.css?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>">
 
 <?php if (!$caixa): ?>
 <!-- ========================================== -->
@@ -28,7 +28,7 @@
         </div>
         <h1 class="cashier-title">Iniciar Dia</h1>
         <p class="cashier-subtitle">Informe o Fundo de Troco para abrir o caixa.</p>
-        <form action="<?= BASE_URL ?>/admin/loja/caixa/abrir" method="POST" id="form-open-cashier">
+        <form action="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/caixa/abrir" method="POST" id="form-open-cashier">
             <?= \App\Helpers\ViewHelper::csrfField() ?>
             <input type="text" name="opening_balance" required placeholder="R$ 0,00" class="cashier-input">
             <button type="submit" class="cashier-btn-open">
@@ -48,7 +48,7 @@
     <div class="cashier-header">
         <div>
             <h1 class="cashier-header-title">Financeiro & Caixa</h1>
-            <p class="cashier-header-subtitle">Visão geral do turno atual (Aberto em <?= date('d/m/Y H:i', strtotime($caixa['opened_at'])) ?>)</p>
+            <p class="cashier-header-subtitle">Visão geral do turno atual (Aberto em <?= \App\Helpers\ViewHelper::e(date('d/m/Y H:i', strtotime($caixa['opened_at'] ?? 'now'))) ?>)</p>
         </div>
         <div class="cashier-status-badge">
             ● Caixa Aberto
@@ -96,10 +96,26 @@
                     <p class="cashier-flow-empty">Nenhuma movimentação ainda.</p>
                 <?php else: ?>
                     <?php foreach ($movimentosView as $mov): ?>
+                    <?php
+                        $movId = (int) ($mov['id'] ?? 0);
+                        $orderId = (int) ($mov['order_id'] ?? 0);
+                        $amount = (float) ($mov['amount'] ?? 0);
+                        $amountFormatted = number_format($amount, 2, ',', '.');
+                        $createdAtFormatted = date('d/m/Y H:i', strtotime($mov['created_at'] ?? 'now'));
+
+                        $colorBg = \App\Helpers\ViewHelper::cssColor($mov['color_bg'] ?? '', '#e2e8f0');
+                        $colorText = \App\Helpers\ViewHelper::cssColor($mov['color_text'] ?? '', '#334155');
+
+                        $icon = (string) ($mov['icon'] ?? '');
+                        if (preg_match('/^[a-z0-9-]+$/i', $icon) !== 1) $icon = 'circle';
+
+                        $sign = (string) ($mov['sign'] ?? '');
+                        if (!in_array($sign, ['+', '-'], true)) $sign = '';
+                    ?>
                     <div class="cashier-flow-item">
                         <div class="cashier-flow-left">
-                            <div class="cashier-flow-icon" style="background: <?= $mov['color_bg'] ?>; color: <?= $mov['color_text'] ?>;">
-                                <i data-lucide="<?= $mov['icon'] ?>"></i>
+                            <div class="cashier-flow-icon" style="background: <?= \App\Helpers\ViewHelper::e($colorBg) ?>; color: <?= \App\Helpers\ViewHelper::e($colorText) ?>;">
+                                <i data-lucide="<?= \App\Helpers\ViewHelper::e($icon) ?>"></i>
                             </div>
                             <div>
                                 <strong class="cashier-flow-type"><?= htmlspecialchars($mov['type']) ?></strong>
@@ -108,28 +124,28 @@
                                 </div>
 
                                 <div class="cashier-flow-actions">
-                                    <?php if ($mov['type'] == 'venda' && $mov['order_id']): ?>
-                                        <a href="<?= BASE_URL ?>/admin/loja/caixa/estornar-pdv?id=<?= $mov['id'] ?>" 
+                                    <?php if ($mov['type'] == 'venda' && $orderId): ?>
+                                        <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/caixa/estornar-pdv?id=<?= (int) $movId ?>" 
                                            onclick="return confirm('Editar venda? O valor sairá do caixa e os itens irão para o balcão.')"
                                            class="cashier-flow-link link-edit">
                                             <i data-lucide="edit-3"></i> Editar
                                         </a>
 
                                         <?php if ($mov['is_table_reopen']): ?>
-                                            <a href="<?= BASE_URL ?>/admin/loja/caixa/estornar-mesa?id=<?= $mov['id'] ?>" 
+                                            <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/caixa/estornar-mesa?id=<?= (int) $movId ?>" 
                                                onclick="return confirm('Reabrir mesa? A mesa ficará ocupada novamente.')"
                                                class="cashier-flow-link link-reopen">
                                                 <i data-lucide="rotate-ccw"></i> Reabrir
                                             </a>
                                         <?php endif; ?>
 
-                                        <a href="javascript:void(0)" onclick="CashierSPA.openOrderDetails(<?= $mov['order_id'] ?>, '<?= number_format($mov['amount'], 2, ',', '.') ?>', '<?= date('d/m/Y H:i', strtotime($mov['created_at'])) ?>')"
+                                        <a href="javascript:void(0)" onclick='CashierSPA.openOrderDetails(<?= (int) $orderId ?>, <?= json_encode($amountFormatted, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= json_encode($createdAtFormatted, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
                                            class="cashier-flow-link link-view">
                                             <i data-lucide="scroll-text"></i> Ver Comanda
                                         </a>
                                     <?php endif; ?>
 
-                                    <a href="<?= BASE_URL ?>/admin/loja/caixa/remover?id=<?= $mov['id'] ?>" 
+                                    <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/caixa/remover?id=<?= (int) $movId ?>" 
                                        onclick="return confirm('Tem certeza? Isso apagará o registro do caixa. Se for venda, também cancelará o pedido.')"
                                        class="cashier-flow-link link-delete">
                                         <i data-lucide="trash-2"></i> Apagar
@@ -139,11 +155,11 @@
                         </div>
 
                         <div class="cashier-flow-right">
-                            <div class="cashier-flow-amount" style="color: <?= $mov['color_text'] ?>;">
-                                <?= $mov['sign'] ?> R$ <?= number_format($mov['amount'], 2, ',', '.') ?>
+                            <div class="cashier-flow-amount" style="color: <?= \App\Helpers\ViewHelper::e($colorText) ?>;">
+                                <?= \App\Helpers\ViewHelper::e($sign) ?> R$ <?= number_format($amount, 2, ',', '.') ?>
                             </div>
                             <div class="cashier-flow-time">
-                                <?= date('H:i', strtotime($mov['created_at'])) ?>
+                                <?= \App\Helpers\ViewHelper::e(date('H:i', strtotime($mov['created_at'] ?? 'now'))) ?>
                             </div>
                         </div>
                     </div>
@@ -189,7 +205,7 @@
     <div class="cashier-modal-content">
         <h3 id="modalTitle" class="cashier-modal-title">Nova Movimentação</h3>
         
-        <form action="<?= BASE_URL ?>/admin/loja/caixa/movimentar" method="POST" id="form-movimento">
+        <form action="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/caixa/movimentar" method="POST" id="form-movimento">
             <?= \App\Helpers\ViewHelper::csrfField() ?>
             <input type="hidden" name="type" id="movType">
             
@@ -280,10 +296,10 @@
 <?php endif; ?>
 
 <!-- Config JSON para SPA -->
-<div id="caixa-config" data-config='<?= json_encode([
+<div id="caixa-config" data-config='<?= \App\Helpers\ViewHelper::e(\App\Helpers\ViewHelper::js([
     "baseUrl" => BASE_URL,
     "caixaAberto" => $caixa ? true : false
-]) ?>'></div>
+])) ?>'></div>
 
 <!-- Script do Caixa SPA -->
-<script data-spa-script src="<?= BASE_URL ?>/js/admin/cashier.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/admin/cashier.js?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>"></script>

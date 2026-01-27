@@ -18,22 +18,27 @@
         <div class="cardapio-modal-body">
             <!-- Tipo de Pedido -->
             <div class="order-type-section">
-                <label class="order-type-option <?= ($cardapioConfig['dine_in_enabled'] ?? 1) ? '' : 'disabled-option' ?>" data-method="local">
-                    <input type="radio" name="orderType" value="local" onchange="selectOrderType('local')" <?= ($cardapioConfig['dine_in_enabled'] ?? 1) ? '' : 'disabled' ?>>
+                <?php
+                    $dineEnabled = ((int) ($cardapioConfig['dine_in_enabled'] ?? 1)) ? true : false;
+                    $pickupEnabled = ((int) ($cardapioConfig['pickup_enabled'] ?? 1)) ? true : false;
+                    $deliveryEnabled = ((int) ($cardapioConfig['delivery_enabled'] ?? 1)) ? true : false;
+                ?>
+                <label class="order-type-option <?= \App\Helpers\ViewHelper::e($dineEnabled ? '' : 'disabled-option') ?>" data-method="local">
+                    <input type="radio" name="orderType" value="local" onchange="selectOrderType('local')" <?= \App\Helpers\ViewHelper::e($dineEnabled ? '' : 'disabled') ?>>
                     <span class="order-type-check"></span>
                     <span class="order-type-icon">🍽️</span>
                     <span class="order-type-label">Local</span>
                 </label>
                 
-                <label class="order-type-option <?= ($cardapioConfig['pickup_enabled'] ?? 1) ? '' : 'disabled-option' ?>" data-method="retirada">
-                    <input type="radio" name="orderType" value="retirada" onchange="selectOrderType('retirada')" <?= ($cardapioConfig['pickup_enabled'] ?? 1) ? '' : 'disabled' ?>>
+                <label class="order-type-option <?= \App\Helpers\ViewHelper::e($pickupEnabled ? '' : 'disabled-option') ?>" data-method="retirada">
+                    <input type="radio" name="orderType" value="retirada" onchange="selectOrderType('retirada')" <?= \App\Helpers\ViewHelper::e($pickupEnabled ? '' : 'disabled') ?>>
                     <span class="order-type-check"></span>
                     <span class="order-type-icon">🛍️</span>
                     <span class="order-type-label">Retirada</span>
                 </label>
                 
-                <label class="order-type-option <?= ($cardapioConfig['delivery_enabled'] ?? 1) ? '' : 'disabled-option' ?>" data-method="entrega">
-                    <input type="radio" name="orderType" value="entrega" onchange="selectOrderType('entrega')" <?= ($cardapioConfig['delivery_enabled'] ?? 1) ? 'checked' : 'disabled' ?>>
+                <label class="order-type-option <?= \App\Helpers\ViewHelper::e($deliveryEnabled ? '' : 'disabled-option') ?>" data-method="entrega">
+                    <input type="radio" name="orderType" value="entrega" onchange="selectOrderType('entrega')" <?= \App\Helpers\ViewHelper::e($deliveryEnabled ? 'checked' : 'disabled') ?>>
                     <span class="order-type-check"></span>
                     <span class="order-type-icon">🚗</span>
                     <span class="order-type-label">Entrega</span>

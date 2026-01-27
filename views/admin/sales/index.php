@@ -43,7 +43,7 @@
                                 <?= \App\Helpers\ViewHelper::e($sale['formatted_total'] ?? '') ?>
                             </td>
                                  <td style="padding: 1rem; display: flex; gap: 8px;">
-                                    <button onclick="openOrderDetails(<?= $saleId ?>)" 
+                                    <button onclick="openOrderDetails(<?= (int) $saleId ?>)" 
                                             title="Ver Itens"
                                             style="background: #f3f4f6; border: none; padding: 8px; border-radius: 6px; cursor: pointer; color: #4b5563;">
                                         <i data-lucide="eye" style="width: 18px;"></i>
@@ -51,13 +51,13 @@
 
                                     <?php if ($sale['can_reopen']): ?>
                                         
-                                        <button onclick="reabrirMesa(<?= $saleId ?>)" 
+                                        <button onclick="reabrirMesa(<?= (int) $saleId ?>)" 
                                                 title="Reabrir Mesa (Estornar e Editar)"
                                                 style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 8px; border-radius: 6px; cursor: pointer; color: #2563eb;">
                                             <i data-lucide="rotate-ccw" style="width: 18px;"></i>
                                         </button>
 
-                                        <button onclick="cancelarVenda(<?= $saleId ?>)" 
+                                        <button onclick="cancelarVenda(<?= (int) $saleId ?>)" 
                                                 title="Cancelar Venda (Excluir)"
                                                 style="background: #fef2f2; border: 1px solid #fecaca; padding: 8px; border-radius: 6px; cursor: pointer; color: #b91c1c;">
                                             <i data-lucide="trash-2" style="width: 18px;"></i>

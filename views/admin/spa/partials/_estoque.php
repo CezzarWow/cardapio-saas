@@ -73,12 +73,12 @@
             <button type="button" class="stock-tab active" data-tab="produtos">
                 <i data-lucide="package" style="width: 16px; height: 16px;"></i>
                 Produtos
-                <span class="tab-badge"><?= $totalProducts ?? 0 ?></span>
+                <span class="tab-badge"><?= (int) ($totalProducts ?? 0) ?></span>
             </button>
             <button type="button" class="stock-tab" data-tab="categorias">
                 <i data-lucide="tags" style="width: 16px; height: 16px;"></i>
                 Categorias
-                <span class="tab-badge"><?= $totalCategories ?? 0 ?></span>
+                <span class="tab-badge"><?= (int) ($totalCategories ?? 0) ?></span>
             </button>
             <button type="button" class="stock-tab" data-tab="adicionais">
                 <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i>

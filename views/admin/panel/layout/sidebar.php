@@ -7,6 +7,8 @@ $isInMesaContext = !empty($mesa_id);
 $isInClienteContext = !empty($contaAberta['client_id'] ?? null);
 $isInMesasSection = $isInMesaContext || $isInClienteContext;
 $lojaLogoFile = basename((string) ($_SESSION['loja_ativa_logo'] ?? ''));
+$activePdv = (!$isInMesasSection && ViewHelper::isRouteActive('pdv')) ? 'active' : '';
+$activeMesas = ($isInMesasSection || ViewHelper::isRouteActive('mesas')) ? 'active' : '';
 ?>
 
 <aside class="sidebar">
@@ -23,12 +25,12 @@ $lojaLogoFile = basename((string) ($_SESSION['loja_ativa_logo'] ?? ''));
     </div>
     
     <nav class="sidebar-nav">
-        <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/pdv" class="nav-item <?= (!$isInMesasSection && ViewHelper::isRouteActive('pdv')) ? 'active' : '' ?>">
+        <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/pdv" class="nav-item <?= \App\Helpers\ViewHelper::e($activePdv) ?>">
             <i data-lucide="layout-dashboard" size="36"></i>
             <span class="nav-label">BalcÃ£o</span>
         </a>
 
-        <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/mesas" class="nav-item <?= ($isInMesasSection || ViewHelper::isRouteActive('mesas')) ? 'active' : '' ?>">
+        <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/mesas" class="nav-item <?= \App\Helpers\ViewHelper::e($activeMesas) ?>">
             <i data-lucide="utensils-crossed" size="36"></i>
             <span class="nav-label">Mesas</span>
         </a>

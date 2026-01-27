@@ -41,14 +41,14 @@ $inputBg = $isEditing ? 'white' : '#f3f4f6';
                     <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
                         <div>
                             <label style="font-weight: 600; font-size: 0.9rem; color: #374151;">Nome do Restaurante</label>
-                            <input type="text" name="name" value="<?= htmlspecialchars($loja['name']) ?>" required <?= $disabled ?>
-                                   style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; margin-top: 5px; background: <?= $inputBg ?>;">
+                            <input type="text" name="name" value="<?= htmlspecialchars($loja['name']) ?>" required <?= \App\Helpers\ViewHelper::e($disabled ?? '') ?>
+                                   style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; margin-top: 5px; background: <?= \App\Helpers\ViewHelper::e($inputBg ?? '') ?>;">
                         </div>
                         
                         <div>
                             <label style="font-weight: 600; font-size: 0.9rem; color: #374151;">Cor do Sistema</label>
                             <div style="display: flex; gap: 10px; margin-top: 5px;">
-                                <input type="color" name="primary_color" value="<?= \App\Helpers\ViewHelper::e($loja['primary_color'] ?? '#2563eb') ?>" <?= $disabled ?> style="height: 40px; width: 60px; border: none; cursor: pointer; border-radius: 6px;">
+                                <input type="color" name="primary_color" value="<?= \App\Helpers\ViewHelper::e($loja['primary_color'] ?? '#2563eb') ?>" <?= \App\Helpers\ViewHelper::e($disabled ?? '') ?> style="height: 40px; width: 60px; border: none; cursor: pointer; border-radius: 6px;">
                                 <input type="text" value="<?= \App\Helpers\ViewHelper::e($loja['primary_color'] ?? '#2563eb') ?>" readonly style="flex: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: #f9fafb; color: #6b7280;">
                             </div>
                         </div>
@@ -61,13 +61,13 @@ $inputBg = $isEditing ? 'white' : '#f3f4f6';
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
                         <label style="font-weight: 600; font-size: 0.9rem; color: #374151;">Telefone / WhatsApp</label>
-                        <input type="text" name="phone" value="<?= htmlspecialchars($loja['phone'] ?? '') ?>" placeholder="(00) 00000-0000" <?= $disabled ?>
-                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; margin-top: 5px; background: <?= $inputBg ?>;">
+                        <input type="text" name="phone" value="<?= htmlspecialchars($loja['phone'] ?? '') ?>" placeholder="(00) 00000-0000" <?= \App\Helpers\ViewHelper::e($disabled ?? '') ?>
+                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; margin-top: 5px; background: <?= \App\Helpers\ViewHelper::e($inputBg ?? '') ?>;">
                     </div>
                     <div>
                         <label style="font-weight: 600; font-size: 0.9rem; color: #374151;">CEP</label>
-                        <input type="text" name="zip_code" value="<?= htmlspecialchars($loja['zip_code'] ?? '') ?>" placeholder="00000-000" <?= $disabled ?>
-                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; margin-top: 5px; background: <?= $inputBg ?>;">
+                        <input type="text" name="zip_code" value="<?= htmlspecialchars($loja['zip_code'] ?? '') ?>" placeholder="00000-000" <?= \App\Helpers\ViewHelper::e($disabled ?? '') ?>
+                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; margin-top: 5px; background: <?= \App\Helpers\ViewHelper::e($inputBg ?? '') ?>;">
                     </div>
                 </div>
 
@@ -75,13 +75,13 @@ $inputBg = $isEditing ? 'white' : '#f3f4f6';
                 <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 15px;">
                     <div>
                         <label style="font-weight: 600; font-size: 0.9rem; color: #374151;">Endereço</label>
-                        <input type="text" name="address" value="<?= htmlspecialchars($loja['address'] ?? '') ?>" placeholder="Rua, Bairro..." <?= $disabled ?>
-                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; margin-top: 5px; background: <?= $inputBg ?>;">
+                        <input type="text" name="address" value="<?= htmlspecialchars($loja['address'] ?? '') ?>" placeholder="Rua, Bairro..." <?= \App\Helpers\ViewHelper::e($disabled ?? '') ?>
+                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; margin-top: 5px; background: <?= \App\Helpers\ViewHelper::e($inputBg ?? '') ?>;">
                     </div>
                      <div>
                         <label style="font-weight: 600; font-size: 0.9rem; color: #374151;">Número</label>
-                        <input type="text" name="address_number" value="<?= htmlspecialchars($loja['address_number'] ?? '') ?>" placeholder="Nº" <?= $disabled ?>
-                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; margin-top: 5px; background: <?= $inputBg ?>;">
+                        <input type="text" name="address_number" value="<?= htmlspecialchars($loja['address_number'] ?? '') ?>" placeholder="Nº" <?= \App\Helpers\ViewHelper::e($disabled ?? '') ?>
+                               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; margin-top: 5px; background: <?= \App\Helpers\ViewHelper::e($inputBg ?? '') ?>;">
                     </div>
                 </div>
 

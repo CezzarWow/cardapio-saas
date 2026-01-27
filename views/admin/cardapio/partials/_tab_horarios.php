@@ -24,11 +24,11 @@
         <!-- Checkbox Aberto -->
         <label class="cardapio-admin-toggle" style="flex-shrink: 0; transform: scale(0.8);">
             <input type="checkbox" 
-                   name="hours[<?= $dayNum ?>][is_open]" 
-                   id="hour_day_<?= $dayNum ?>"
+                   name="hours[<?= (int) $dayNum ?>][is_open]" 
+                   id="hour_day_<?= (int) $dayNum ?>"
                    value="1"
-                   <?= $day['is_open'] ? 'checked' : '' ?>
-                   onchange="CardapioAdmin.toggleHourRow(<?= $dayNum ?>)">
+                   <?= ((bool) ($day['is_open'] ?? false)) ? 'checked' : '' ?>
+                   onchange="CardapioAdmin.toggleHourRow(<?= (int) $dayNum ?>)">
             <span class="cardapio-admin-toggle-slider"></span>
         </label>
         
@@ -36,29 +36,29 @@
         <span style="width: 100px; font-weight: 500; font-size: 0.85rem; color: #374151;"><?= htmlspecialchars($day['name']) ?></span>
         
         <!-- Horários (ou "Fechado") -->
-        <div id="hour_fields_<?= $dayNum ?>" style="display: flex; align-items: center; gap: 6px; <?= $day['is_open'] ? '' : 'opacity: 0.4;' ?>">
+        <div id="hour_fields_<?= (int) $dayNum ?>" style="display: flex; align-items: center; gap: 6px; <?= ((bool) ($day['is_open'] ?? false)) ? '' : 'opacity: 0.4;' ?>">
             <input type="time" 
                    class="cardapio-admin-input" 
                    style="width: 90px; padding: 4px 6px; font-size: 0.85rem; height: 30px;"
-                   name="hours[<?= $dayNum ?>][open_time]" 
-                   id="hour_open_<?= $dayNum ?>"
+                   name="hours[<?= (int) $dayNum ?>][open_time]" 
+                   id="hour_open_<?= (int) $dayNum ?>"
                    value="<?= htmlspecialchars($day['open_time']) ?>"
-                   <?= $day['is_open'] ? '' : 'disabled' ?>>
+                   <?= ((bool) ($day['is_open'] ?? false)) ? '' : 'disabled' ?>>
             
             <span style="color: #6b7280; font-size: 0.8rem;">até</span>
             
             <input type="time" 
                    class="cardapio-admin-input" 
                    style="width: 90px; padding: 4px 6px; font-size: 0.85rem; height: 30px;"
-                   name="hours[<?= $dayNum ?>][close_time]" 
-                   id="hour_close_<?= $dayNum ?>"
+                   name="hours[<?= (int) $dayNum ?>][close_time]" 
+                   id="hour_close_<?= (int) $dayNum ?>"
                    value="<?= htmlspecialchars($day['close_time']) ?>"
-                   <?= $day['is_open'] ? '' : 'disabled' ?>>
+                   <?= ((bool) ($day['is_open'] ?? false)) ? '' : 'disabled' ?>>
         </div>
         
         <!-- Label Fechado -->
-        <span id="hour_closed_<?= $dayNum ?>" 
-              style="color: #ef4444; font-weight: 500; font-size: 0.8rem; margin-left: auto; <?= $day['is_open'] ? 'display: none;' : '' ?>">
+        <span id="hour_closed_<?= (int) $dayNum ?>" 
+              style="color: #ef4444; font-weight: 500; font-size: 0.8rem; margin-left: auto; <?= ((bool) ($day['is_open'] ?? false)) ? 'display: none;' : '' ?>">
             Fechado
         </span>
         

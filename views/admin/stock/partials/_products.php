@@ -23,9 +23,13 @@
         </div>
         
         <!-- Critical Stock -->
+        <?php
+            $criticalIconBg = $criticalStockCount > 0 ? 'critical-stock-icon-bg-danger' : 'critical-stock-icon-bg-warning';
+            $criticalIconSvg = $criticalStockCount > 0 ? 'critical-stock-svg-danger' : 'critical-stock-svg-warning';
+        ?>
         <div class="stock-indicator-item">
-            <div class="stock-indicator-icon <?= $criticalStockCount > 0 ? 'critical-stock-icon-bg-danger' : 'critical-stock-icon-bg-warning' ?>">
-                <i data-lucide="alert-triangle" style="width: 18px; height: 18px;" class="<?= $criticalStockCount > 0 ? 'critical-stock-svg-danger' : 'critical-stock-svg-warning' ?>"></i>
+            <div class="stock-indicator-icon <?= \App\Helpers\ViewHelper::e($criticalIconBg) ?>">
+                <i data-lucide="alert-triangle" style="width: 18px; height: 18px;" class="<?= \App\Helpers\ViewHelper::e($criticalIconSvg) ?>"></i>
             </div>
             <div>
                 <span class="stock-indicator-text" style="color: <?= $criticalStockCount > 0 ? '#dc2626' : '#d97706' ?>;"><?= (int) ($criticalStockCount ?? 0) ?></span>
@@ -68,7 +72,7 @@
             $formattedPrice = (string) ($prod['formatted_price'] ?? '');
         ?>
         <div class="stock-product-card product-row" 
-             data-product-id="<?= $prodId ?>"
+             data-product-id="<?= (int) $prodId ?>"
              data-name="<?= \App\Helpers\ViewHelper::e(strtolower($prodName)) ?>" 
              data-category="<?= \App\Helpers\ViewHelper::e($categoryName) ?>">
             
@@ -104,12 +108,12 @@
             
             <!-- Ações -->
             <div class="stock-product-card-actions">
-                <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/produtos/editar?id=<?= $prodId ?>" class="btn-edit">
+                <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/produtos/editar?id=<?= (int) $prodId ?>" class="btn-edit">
                     <i data-lucide="pencil" style="width: 14px; height: 14px;"></i>
                     Editar
                 </a>
                 <a href="javascript:void(0)" 
-                   onclick='StockSPA.openDeleteModal(<?= $prodId ?>, <?= \App\Helpers\ViewHelper::js($prodName) ?>)' class="btn-delete">
+                   onclick='StockSPA.openDeleteModal(<?= (int) $prodId ?>, <?= json_encode($prodName, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>)' class="btn-delete">
                     <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                     Excluir
                 </a>

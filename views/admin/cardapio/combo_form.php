@@ -38,7 +38,8 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
         </div>
 
         <!-- Formulário -->
-        <form method="POST" action="<?= BASE_URL ?>/admin/loja/cardapio/combo/<?= $isEdit ? 'atualizar' : 'salvar' ?>" enctype="multipart/form-data">
+        <?php $comboAction = $isEdit ? 'atualizar' : 'salvar'; ?>
+        <form method="POST" action="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/cardapio/combo/<?= \App\Helpers\ViewHelper::e($comboAction) ?>" enctype="multipart/form-data">
             <?= \App\Helpers\ViewHelper::csrfField() ?>
             <?php if ($isEdit): ?>
                 <input type="hidden" name="id" value="<?= (int) ($combo['id'] ?? 0) ?>">
@@ -98,7 +99,7 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
                     <span class="cardapio-admin-toggle-label">Combo Ativo</span>
                     <label class="cardapio-admin-toggle">
                         <input type="checkbox" name="is_active" value="1"
-                               <?= ($combo['is_active'] ?? 1) ? 'checked' : '' ?>>
+                              <?= ((int) ($combo['is_active'] ?? 1)) ? 'checked' : '' ?>>
                         <span class="cardapio-admin-toggle-slider"></span>
                     </label>
                 </div>
@@ -126,7 +127,7 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
                                        name="products[]" 
                                        value="<?= (int) ($product['id'] ?? 0) ?>"
                                        id="prod_<?= (int) ($product['id'] ?? 0) ?>"
-                                       <?= in_array($product['id'], $comboProducts ?? []) ? 'checked' : '' ?>
+                                      <?= in_array((int) ($product['id'] ?? 0), array_map('intval', $comboProducts ?? []), true) ? 'checked' : '' ?>
                                        style="width: 18px; height: 18px;">
                                 <label for="prod_<?= (int) ($product['id'] ?? 0) ?>" style="cursor: pointer;">
                                     <span style="font-weight: 500;"><?= htmlspecialchars($product['name']) ?></span>
@@ -141,7 +142,7 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
                                     <input type="checkbox" 
                                            name="allow_additionals[<?= (int) ($product['id'] ?? 0) ?>]" 
                                            value="1"
-                                           <?= (isset($comboItemsSettings[$product['id']]['allow_additionals']) && $comboItemsSettings[$product['id']]['allow_additionals'] == 0) ? '' : 'checked' ?>>
+                                          <?= (isset($comboItemsSettings[$product['id']]['allow_additionals']) && (int) $comboItemsSettings[$product['id']]['allow_additionals'] === 0) ? '' : 'checked' ?>>
                                     <span class="cardapio-admin-toggle-slider"></span>
                                 </label>
                             </div>
@@ -158,7 +159,7 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
             <div style="display: flex; gap: 12px; margin-top: 1rem;">
                 <button type="submit" class="cardapio-admin-btn cardapio-admin-btn-primary" style="flex: 1; justify-content: center;">
                     <i data-lucide="save"></i>
-                    <?= $isEdit ? 'Atualizar Combo' : 'Criar Combo' ?>
+                    <?= \App\Helpers\ViewHelper::e($isEdit ? 'Atualizar Combo' : 'Criar Combo') ?>
                 </button>
                 <a href="<?= BASE_URL ?>/admin/loja/cardapio" class="cardapio-admin-btn" style="background: #f1f5f9; color: #475569;">
                     Cancelar

@@ -46,27 +46,32 @@
                         $displayPrice = $product['effective_price'] ?? $product['price'];
                         $originalPrice = $product['original_price'] ?? $product['price'];
                         $isPromo = !empty($product['is_promo_valid']);
+                        $promoClass = $isPromo ? ' product-on-promo' : '';
+                        $promoStyle = $isPromo ? ' style="display:flex;justify-content:space-between;align-items:center;color:#dc2626"' : '';
+                        $promoSpanStyle = $isPromo ? ' style="color:#dc2626"' : '';
+                        $isPromoAttr = $isPromo ? 'true' : 'false';
+                        $hasExtrasAttr = $hasExtras ? 'true' : 'false';
                         // Calcula percentual de desconto
                         $discountPercent = 0;
                         if ($isPromo && $originalPrice > 0) {
                             $discountPercent = round((1 - ($displayPrice / $originalPrice)) * 100);
                         }
                         ?>
-                        <div class="product-card product-card-compact<?= $isPromo ? ' product-on-promo' : '' ?>" 
-                             onclick='PDV.clickProduct(<?= (int) $productId ?>, <?= \App\Helpers\ViewHelper::js($productName) ?>, <?= \App\Helpers\ViewHelper::js((float) $displayPrice) ?>, <?= $hasExtras ? 'true' : 'false' ?>)'
+                        <div class="product-card product-card-compact<?= \App\Helpers\ViewHelper::e($promoClass) ?>" 
+                             onclick='PDV.clickProduct(<?= (int) $productId ?>, <?= \App\Helpers\ViewHelper::js($productName) ?>, <?= \App\Helpers\ViewHelper::js((float) $displayPrice) ?>, <?= \App\Helpers\ViewHelper::e($hasExtrasAttr) ?>)'
                              data-category="<?= \App\Helpers\ViewHelper::e($categoryName) ?>"
                              data-id="<?= (int) $productId ?>"
                              data-name="<?= \App\Helpers\ViewHelper::e($productName) ?>"
                              data-price="<?= (float) $displayPrice ?>"
                              data-original-price="<?= (float) $originalPrice ?>"
-                             data-is-promo="<?= $isPromo ? 'true' : 'false' ?>"
-                             data-has-extras="<?= $hasExtras ? 'true' : 'false' ?>">
+                             data-is-promo="<?= \App\Helpers\ViewHelper::e($isPromoAttr) ?>"
+                             data-has-extras="<?= \App\Helpers\ViewHelper::e($hasExtrasAttr) ?>">
                             
                             <div class="product-info">
                                 <h3><?= \App\Helpers\ViewHelper::e($productName) ?></h3>
                             </div>
-                            <div class="product-price"<?= $isPromo ? ' style="display:flex;justify-content:space-between;align-items:center;color:#dc2626"' : '' ?>>
-                                <span<?= $isPromo ? ' style="color:#dc2626"' : '' ?>>R$ <?= number_format($displayPrice, 2, ',', '.') ?></span>
+                            <div class="product-price"<?= \App\Helpers\ViewHelper::e($promoStyle) ?>>
+                                <span<?= \App\Helpers\ViewHelper::e($promoSpanStyle) ?>>R$ <?= number_format($displayPrice, 2, ',', '.') ?></span>
                                 <?php if ($isPromo && $discountPercent > 0): ?>
                                 <span style="color:#dc2626;font-weight:700">-<?= (int) $discountPercent ?>%</span>
                                 <?php endif; ?>

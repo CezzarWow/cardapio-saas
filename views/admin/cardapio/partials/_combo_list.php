@@ -31,8 +31,9 @@
                         </div>
                         
                         <!-- Toggle Ativo/Inativo -->
-                         <label class="cardapio-admin-toggle" title="<?= ($combo['is_active'] ?? 0) ? 'Desativar' : 'Ativar' ?>">
-                            <input type="checkbox" onchange="toggleComboActive(<?= (int) ($combo['id'] ?? 0) ?>, this.checked)" <?= ($combo['is_active'] ?? 0) ? 'checked' : '' ?>>
+                        <?php $comboChecked = ((int) ($combo['is_active'] ?? 0)) ? 'checked' : ''; ?>
+                        <label class="cardapio-admin-toggle" title="<?= \App\Helpers\ViewHelper::e(((int) ($combo['is_active'] ?? 0)) ? 'Desativar' : 'Ativar') ?>">
+                           <input type="checkbox" onchange="toggleComboActive(<?= (int) ($combo['id'] ?? 0) ?>, this.checked)" <?= \App\Helpers\ViewHelper::e($comboChecked) ?>>
                             <span class="cardapio-admin-toggle-slider"></span>
                         </label>
                     </div>

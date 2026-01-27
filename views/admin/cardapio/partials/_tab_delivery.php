@@ -30,7 +30,7 @@
         <span class="cardapio-admin-toggle-label">Habilitar Delivery</span>
         <label class="cardapio-admin-toggle">
             <input type="checkbox" name="delivery_enabled" id="delivery_enabled" value="1" disabled
-                   <?= ($config['delivery_enabled'] ?? 1) ? 'checked' : '' ?>>
+                   <?= ((int) ($config['delivery_enabled'] ?? 1)) ? 'checked' : '' ?>>
             <span class="cardapio-admin-toggle-slider"></span>
         </label>
     </div>
@@ -69,7 +69,7 @@
                    name="delivery_time_min" 
                    min="1"
                    disabled
-                   value="<?= $config['delivery_time_min'] ?? 30 ?>">
+                   value="<?= (int) ($config['delivery_time_min'] ?? 30) ?>">
         </div>
 
         <div class="cardapio-admin-form-group delivery-field delivery-field-container is-disabled">
@@ -80,7 +80,7 @@
                    name="delivery_time_max" 
                    min="1"
                    disabled
-                   value="<?= $config['delivery_time_max'] ?? 45 ?>">
+                   value="<?= (int) ($config['delivery_time_max'] ?? 45) ?>">
         </div>
     </div>
 </div>
@@ -98,7 +98,7 @@
             <span class="cardapio-admin-toggle-label" style="font-size: 0.9rem;">Habilitar Retirada</span>
             <label class="cardapio-admin-toggle">
                 <input type="checkbox" name="pickup_enabled" id="pickup_enabled" value="1"
-                       <?= ($config['pickup_enabled'] ?? 1) ? 'checked' : '' ?>>
+                       <?= ((int) ($config['pickup_enabled'] ?? 1)) ? 'checked' : '' ?>>
                 <span class="cardapio-admin-toggle-slider"></span>
             </label>
         </div>
@@ -114,7 +114,7 @@
             <span class="cardapio-admin-toggle-label" style="font-size: 0.9rem;">Habilitar Consumo</span>
             <label class="cardapio-admin-toggle">
                 <input type="checkbox" name="dine_in_enabled" id="dine_in_enabled" value="1"
-                       <?= ($config['dine_in_enabled'] ?? 1) ? 'checked' : '' ?>>
+                       <?= ((int) ($config['dine_in_enabled'] ?? 1)) ? 'checked' : '' ?>>
                 <span class="cardapio-admin-toggle-slider"></span>
             </label>
         </div>

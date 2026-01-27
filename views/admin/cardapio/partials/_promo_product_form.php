@@ -38,7 +38,7 @@
                             echo '<optgroup label="' . htmlspecialchars($currentCategory) . '">';
                         endif;
                     ?>
-                        <option value="<?= $product['id'] ?>" data-price="<?= $product['price'] ?>">
+                        <option value="<?= (int) ($product['id'] ?? 0) ?>" data-price="<?= (float) ($product['price'] ?? 0) ?>">
                             <?= htmlspecialchars($product['name']) ?>
                         </option>
                     <?php endforeach; ?>

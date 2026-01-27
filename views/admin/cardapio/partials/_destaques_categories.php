@@ -29,6 +29,11 @@
                 $icon = 'folder';
                 $color = '#64748b';
                 $label = $category['name'];
+                $rowStyle = $isSystem ? 'background-color: #f8fafc;' : '';
+                $nameStyle = $isSystem ? 'font-weight: 600; color: #1e293b;' : '';
+                $activeChecked = (($category['is_active'] ?? 1) ? 'checked' : '');
+                $upDisabled = $index === 0 ? 'disabled' : '';
+                $downDisabled = $index === count($categories) - 1 ? 'disabled' : '';
 
                 if (($category['category_type'] ?? '') === 'featured') {
                     $icon = 'star';
@@ -38,10 +43,10 @@
                     $color = '#ef4444';
                 }
                 ?>
-            <div class="cardapio-admin-destaques-category-row" data-category-id="<?= $categoryId ?>" style="<?= $isSystem ? 'background-color: #f8fafc;' : '' ?>">
+            <div class="cardapio-admin-destaques-category-row" data-category-id="<?= (int) $categoryId ?>" style="<?= \App\Helpers\ViewHelper::e($rowStyle) ?>">
                 <div class="cardapio-admin-destaques-category-info">
                     <i data-lucide="<?= \App\Helpers\ViewHelper::e($icon) ?>" style="width: 18px; height: 18px; color: <?= \App\Helpers\ViewHelper::e($color) ?>;"></i>
-                    <span class="cardapio-admin-destaques-category-name" style="<?= $isSystem ? 'font-weight: 600; color: #1e293b;' : '' ?>">
+                    <span class="cardapio-admin-destaques-category-name" style="<?= \App\Helpers\ViewHelper::e($nameStyle) ?>">
                         <?= htmlspecialchars($label) ?>
                         <?php if ($isSystem): ?>
                             <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 400; margin-left: 6px;">(Sistema)</span>
@@ -53,9 +58,9 @@
                         <!-- Toggle Habilitar/Desabilitar -->
                     <label class="cardapio-admin-toggle" title="<?= \App\Helpers\ViewHelper::e(($category['is_active'] ?? 1) ? 'Desabilitar' : 'Habilitar') ?>">
                         <input type="checkbox" 
-                               name="category_enabled[<?= $categoryId ?>]" 
+                               name="category_enabled[<?= (int) $categoryId ?>]" 
                                value="1"
-                               <?= ($category['is_active'] ?? 1) ? 'checked' : '' ?>>
+                               <?= \App\Helpers\ViewHelper::e($activeChecked) ?>>
                         <span class="cardapio-admin-toggle-slider"></span>
                     </label>
                     
@@ -63,21 +68,21 @@
                     <div class="cardapio-admin-destaques-arrows">
                          <button type="button" 
                                  class="cardapio-admin-destaques-arrow-btn" 
-                                onclick="CardapioAdmin.Destaques.moveCategory(<?= $categoryId ?>, 'up')"
-                                <?= $index === 0 ? 'disabled' : '' ?>>
+                                onclick="CardapioAdmin.Destaques.moveCategory(<?= (int) $categoryId ?>, 'up')"
+                                <?= \App\Helpers\ViewHelper::e($upDisabled) ?>>
                              <i data-lucide="chevron-up" style="width: 16px; height: 16px;"></i>
                          </button>
                          <button type="button" 
                                  class="cardapio-admin-destaques-arrow-btn" 
-                                onclick="CardapioAdmin.Destaques.moveCategory(<?= $categoryId ?>, 'down')"
-                                <?= $index === count($categories) - 1 ? 'disabled' : '' ?>>
+                                onclick="CardapioAdmin.Destaques.moveCategory(<?= (int) $categoryId ?>, 'down')"
+                                <?= \App\Helpers\ViewHelper::e($downDisabled) ?>>
                              <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
                          </button>
                     </div>
                     
                      <!-- Input hidden para salvar a ordem -->
                      <input type="hidden" 
-                           name="category_order[<?= $categoryId ?>]" 
+                           name="category_order[<?= (int) $categoryId ?>]" 
                            value="<?= (int) $index ?>"
                            data-order-input>
                 </div>

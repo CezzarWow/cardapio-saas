@@ -112,8 +112,8 @@
                     <?php $i = 0;
                 foreach ($productsByCategory as $categoryName => $products): $active = $i === 0 ? 'active' : ''; ?>
                     <button type="button" 
-                            class="combo-tab-btn <?= $active ?>" 
-                            onclick="toggleComboTab(this, 'cat_<?= md5($categoryName) ?>')"
+                            class="combo-tab-btn <?= \App\Helpers\ViewHelper::e($active) ?>" 
+                            onclick="toggleComboTab(this, 'cat_<?= \App\Helpers\ViewHelper::e(md5($categoryName)) ?>')"
                             style="padding: 10px 16px; border: none; background: transparent; color: #64748b; font-weight: 500; cursor: pointer; border-radius: 6px; white-space: nowrap; transition: all 0.2s;">
                         <?= htmlspecialchars($categoryName) ?>
                     </button>
@@ -124,18 +124,18 @@
                 <div class="combo-category-contents" style="padding: 20px; background: #fff;">
                     <?php $i = 0;
                 foreach ($productsByCategory as $categoryName => $products): $display = $i === 0 ? 'grid' : 'none'; ?>
-                    <div id="cat_<?= md5($categoryName) ?>" class="combo-tab-content" style="display: <?= $display ?>; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                    <div id="cat_<?= md5($categoryName) ?>" class="combo-tab-content" style="display: <?= \App\Helpers\ViewHelper::e($display) ?>; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
                         <?php foreach ($products as $product): ?>
                             <div class="combo-product-card" 
-                                 id="card_prod_<?= $product['id'] ?>"
+                                 id="card_prod_<?= (int) ($product['id'] ?? 0) ?>"
                                  style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; position: relative; transition: all 0.2s; background: #fff;">
                                 
                                 <input type="hidden" 
                                        class="combo-product-qty" 
-                                       id="qty_prod_<?= $product['id'] ?>"
+                                       id="qty_prod_<?= (int) ($product['id'] ?? 0) ?>"
                                        value="0"
-                                       data-id="<?= $product['id'] ?>"
-                                       data-price="<?= $product['price'] ?>">
+                                       data-id="<?= (int) ($product['id'] ?? 0) ?>"
+                                       data-price="<?= (float) ($product['price'] ?? 0) ?>">
 
                                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
                                     <span style="font-weight: 600; font-size: 0.9rem; color: #334155; line-height: 1.3; margin-right: 10px;"><?= htmlspecialchars($product['name']) ?></span>
@@ -147,14 +147,14 @@
                                 <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border-radius: 6px; padding: 4px;">
                                      <button type="button" 
                                              class="btn-qty-minus"
-                                             onclick="updateComboQty('<?= $product['id'] ?>', -1)"
+                                             onclick="updateComboQty(<?= (int) ($product['id'] ?? 0) ?>, -1)"
                                              style="width: 28px; height: 28px; border: 1px solid #e2e8f0; background: #fff; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b;">
                                          <i data-lucide="minus" size="14"></i>
                                      </button>
-                                     <span id="display_qty_<?= $product['id'] ?>" style="font-weight: 600; color: #334155; font-size: 0.9rem;">0</span>
+                                     <span id="display_qty_<?= (int) ($product['id'] ?? 0) ?>" style="font-weight: 600; color: #334155; font-size: 0.9rem;">0</span>
                                      <button type="button" 
                                              class="btn-qty-plus"
-                                             onclick="updateComboQty('<?= $product['id'] ?>', 1)"
+                                             onclick="updateComboQty(<?= (int) ($product['id'] ?? 0) ?>, 1)"
                                              style="width: 28px; height: 28px; border: 1px solid #e2e8f0; background: #fff; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #3b82f6;">
                                          <i data-lucide="plus" size="14"></i>
                                      </button>
@@ -164,7 +164,7 @@
                                 <div class="allow-additionals-wrapper" style="border-top: 1px solid #f1f5f9; margin-top: 10px; padding-top: 8px; display: flex; align-items: center; justify-content: space-between;">
                                     <span style="font-size: 0.75rem; color: #94a3b8;">Adicionais?</span>
                                     <label class="cardapio-admin-toggle" style="transform: scale(0.7); transform-origin: right center;">
-                                        <input type="checkbox" class="combo-additional-toggle" data-prod-id="<?= $product['id'] ?>" checked>
+                                        <input type="checkbox" class="combo-additional-toggle" data-prod-id="<?= (int) ($product['id'] ?? 0) ?>" checked>
                                         <span class="cardapio-admin-toggle-slider"></span>
                                     </label>
                                 </div>

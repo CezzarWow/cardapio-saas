@@ -64,18 +64,26 @@
 
 <?php \App\Core\View::renderFromScope('cardapio/partials/modals/payment.php', get_defined_vars()); ?>
 
+<?php
+    $productsData = is_string($jsProducts ?? null) ? json_decode($jsProducts, true) : ($jsProducts ?? []);
+    $combosData = is_string($jsCombos ?? null) ? json_decode($jsCombos, true) : ($jsCombos ?? []);
+    $relationsData = is_string($jsRelations ?? null) ? json_decode($jsRelations, true) : ($jsRelations ?? []);
+    $configData = is_string($jsConfig ?? null) ? json_decode($jsConfig, true) : ($jsConfig ?? []);
+    $configRawData = is_string($jsConfigRaw ?? null) ? json_decode($jsConfigRaw, true) : ($jsConfigRaw ?? []);
+?>
+
 <script>
     // Variables injected by CardapioPublicoController
-    window.products = <?= $jsProducts ?>;
-    window.combos = <?= $jsCombos ?>;
-    window.PRODUCT_RELATIONS = <?= $jsRelations ?>;
+    window.products = <?= json_encode($productsData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    window.combos = <?= json_encode($combosData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    window.PRODUCT_RELATIONS = <?= json_encode($relationsData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     window.BASE_URL = <?= json_encode(BASE_URL, JSON_UNESCAPED_SLASHES) ?>;
     
     // Configurações do cardápio admin
-    window.CARDAPIO_CONFIG = <?= $jsConfig ?>;
+    window.CARDAPIO_CONFIG = <?= json_encode($configData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
     // Configurações completas (usado pelo checkout-order.js)
-    window.cardapioConfig = <?= $jsConfigRaw ?>;
+    window.cardapioConfig = <?= json_encode($configRawData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
     // Diagnóstico silencioso
     document.addEventListener('DOMContentLoaded', () => {

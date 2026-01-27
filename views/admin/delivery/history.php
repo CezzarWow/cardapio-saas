@@ -44,19 +44,19 @@
             <!-- 2. Pedidos -->
             <div class="history-summary-card" style="margin-bottom: 0; flex: 1; min-width: 150px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <span style="color: #64748b; font-weight: 600;">Pedidos:</span>
-                <span style="font-size: 1.3rem; font-weight: 800; color: #1e293b;"><?= $totalPedidos ?></span>
+                <span style="font-size: 1.3rem; font-weight: 800; color: #1e293b;"><?= (int) ($totalPedidos ?? 0) ?></span>
             </div>
 
             <!-- 3. Valor Total (Entregue) -->
             <div class="history-summary-card" style="margin-bottom: 0; flex: 1; min-width: 180px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <span style="color: #64748b; font-weight: 600;">Receita:</span>
-                <span style="font-size: 1.3rem; font-weight: 800; color: #059669;">R$ <?= $totalValorFormatted ?></span>
+                <span style="font-size: 1.3rem; font-weight: 800; color: #059669;">R$ <?= \App\Helpers\ViewHelper::e($totalValorFormatted ?? '') ?></span>
             </div>
 
             <!-- 4. Valor Cancelado -->
             <div class="history-summary-card" style="margin-bottom: 0; flex: 1; min-width: 180px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <span style="color: #64748b; font-weight: 600;">Cancelado:</span>
-                <span style="font-size: 1.3rem; font-weight: 800; color: #dc2626;">R$ <?= $totalCanceladoFormatted ?></span>
+                <span style="font-size: 1.3rem; font-weight: 800; color: #dc2626;">R$ <?= \App\Helpers\ViewHelper::e($totalCanceladoFormatted ?? '') ?></span>
             </div>
         </div>
 
@@ -88,8 +88,8 @@
                                 $statusBg = \App\Helpers\ViewHelper::cssColor($order['status_bg_rgba'] ?? '', 'rgba(148,163,184,0.35)');
                                 $statusColor = \App\Helpers\ViewHelper::cssColor($order['status_color'] ?? '', '#0f172a');
                             ?>
-                            <tr onclick="HistoryModal.open(<?= $orderId ?>)" style="cursor: pointer;">
-                                <td><strong>#<?= $orderId ?></strong></td>
+                            <tr onclick="HistoryModal.open(<?= (int) $orderId ?>)" style="cursor: pointer;">
+                                <td><strong>#<?= (int) $orderId ?></strong></td>
                                 <td><?= htmlspecialchars($order['client_name'] ?? 'Cliente') ?></td>
                                 <td><?= \App\Helpers\ViewHelper::e($order['formatted_time'] ?? '') ?></td>
                                 <td>

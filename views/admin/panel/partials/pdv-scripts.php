@@ -14,12 +14,12 @@
     const BASE_URL = <?= \App\Helpers\ViewHelper::js(BASE_URL) ?>;
     
     // Carrinho recuperado do PHP (sessão ou banco)
-    const recoveredCart = <?= \App\Helpers\ViewHelper::js($cartRecovery ?? []) ?>;
+    const recoveredCart = <?= json_encode($cartRecovery ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     
     // Modo edição de pedido PAGO (para cobrar só a diferença)
-    const isEditingPaidOrder = <?= ($isEditingPaid ?? false) ? 'true' : 'false' ?>;
+    const isEditingPaidOrder = <?= json_encode((bool) ($isEditingPaid ?? false)) ?>;
     const originalPaidTotal = <?= \App\Helpers\ViewHelper::js((float) ($originalPaidTotalFromDB ?? 0)) ?>;
-    const editingPaidOrderId = <?= \App\Helpers\ViewHelper::js($editingOrderId ?? null) ?>;
+    const editingPaidOrderId = <?= json_encode($editingOrderId ?? null, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     
     // Taxa de entrega configurada
     const PDV_DELIVERY_FEE = <?= \App\Helpers\ViewHelper::js((float) ($deliveryFee ?? 0)) ?>;

@@ -58,7 +58,7 @@ $statusFilter = $statusFilter ?? 'todos';
                     <i data-lucide="<?= \App\Helpers\ViewHelper::e($col['icon']) ?>" style="width: 18px; height: 18px;"></i>
                     <?= \App\Helpers\ViewHelper::e($col['label']) ?>
                 </span>
-                <span class="delivery-column-count"><?= count($ordersByStatus[$status] ?? []) ?></span>
+                <span class="delivery-column-count"><?= (int) count($ordersByStatus[$status] ?? []) ?></span>
             </div>
 
             <div class="delivery-column-body">

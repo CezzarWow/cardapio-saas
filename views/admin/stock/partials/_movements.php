@@ -98,10 +98,16 @@
                 <tr><td colspan="7" style="padding: 2rem; text-align: center; color: #999;">Nenhuma movimentação registrada.</td></tr>
             <?php else: ?>
                 <?php foreach ($movements as $mov): ?>
-                <?php $productImageFile = !empty($mov['product_image']) ? basename((string) $mov['product_image']) : ''; ?>
+                <?php
+                    $productImageFile = !empty($mov['product_image']) ? basename((string) $mov['product_image']) : '';
+                    $isEntrada = ($mov['type'] ?? '') === 'entrada';
+                    $typeBg = $isEntrada ? '#d1fae5' : '#fecaca';
+                    $typeColor = $isEntrada ? '#059669' : '#dc2626';
+                    $typeLabel = $isEntrada ? '↑ Entrada' : '↓ Saída';
+                ?>
                 <tr>
                     <td style="color: #6b7280; font-size: 0.9rem;">
-                        <?= date('d/m/Y H:i', strtotime($mov['created_at'])) ?>
+                        <?= \App\Helpers\ViewHelper::e(date('d/m/Y H:i', strtotime($mov['created_at'] ?? 'now'))) ?>
                     </td>
                     <td>
                         <div style="display: flex; align-items: center; gap: 10px;">
@@ -120,12 +126,12 @@
                     </td>
                     <td style="text-align: center;">
                         <span style="padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 600;
-                            background: <?= $mov['type'] == 'entrada' ? '#d1fae5' : '#fecaca' ?>;
-                            color: <?= $mov['type'] == 'entrada' ? '#059669' : '#dc2626' ?>;">
-                            <?= $mov['type'] == 'entrada' ? '↑ Entrada' : '↓ Saída' ?>
+                            background: <?= \App\Helpers\ViewHelper::e($typeBg) ?>;
+                            color: <?= \App\Helpers\ViewHelper::e($typeColor) ?>;">
+                            <?= \App\Helpers\ViewHelper::e($typeLabel) ?>
                         </span>
                     </td>
-                    <td style="text-align: center; font-weight: 700; font-size: 1.1rem; color: <?= $mov['type'] == 'entrada' ? '#059669' : '#dc2626' ?>;">
+                    <td style="text-align: center; font-weight: 700; font-size: 1.1rem; color: <?= \App\Helpers\ViewHelper::e($typeColor) ?>;">
                         <?= $mov['type'] == 'entrada' ? '+' : '-' ?><?= (int) ($mov['quantity'] ?? 0) ?>
                     </td>
                     <td style="text-align: center; color: #6b7280;">

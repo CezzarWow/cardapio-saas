@@ -107,7 +107,7 @@ $isHistory = strpos($_SERVER['REQUEST_URI'] ?? '', '/delivery/history') !== fals
     <?php endif; ?>
     
     <!-- Botão HISTÓRICO -->
-    <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/delivery/history" class="delivery-filter-btn <?= $isHistory ? 'active' : '' ?>">
+    <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/delivery/history" class="delivery-filter-btn <?= \App\Helpers\ViewHelper::e($isHistory ? 'active' : '') ?>">
         📋 Histórico
     </a>
 </div>

@@ -35,7 +35,7 @@
             <span class="cardapio-admin-toggle-label">Loja Aberta</span>
             <label class="cardapio-admin-toggle">
                 <input type="checkbox" name="is_open" id="is_open" value="1" disabled
-                       <?= ($config['is_open'] ?? 1) ? 'checked' : '' ?>>
+                       <?= ((int) ($config['is_open'] ?? 1)) ? 'checked' : '' ?>>
                 <span class="cardapio-admin-toggle-slider"></span>
             </label>
         </div>
@@ -77,7 +77,7 @@
             <span class="cardapio-admin-toggle-label" style="font-size: 0.9rem;">💵 Dinheiro</span>
             <label class="cardapio-admin-toggle">
                 <input type="checkbox" name="accept_cash" id="accept_cash" value="1" disabled
-                       <?= ($config['accept_cash'] ?? 1) ? 'checked' : '' ?>>
+                       <?= ((int) ($config['accept_cash'] ?? 1)) ? 'checked' : '' ?>>
                 <span class="cardapio-admin-toggle-slider"></span>
             </label>
         </div>
@@ -85,7 +85,7 @@
             <span class="cardapio-admin-toggle-label" style="font-size: 0.9rem;">💳 Cartão</span>
             <label class="cardapio-admin-toggle">
                 <input type="checkbox" name="accept_card" id="accept_card" value="1" disabled
-                       <?= ($config['accept_card'] ?? ($config['accept_credit'] ?? 1)) ? 'checked' : '' ?>>
+                       <?= ((int) ($config['accept_card'] ?? ($config['accept_credit'] ?? 1))) ? 'checked' : '' ?>>
                 <span class="cardapio-admin-toggle-slider"></span>
             </label>
         </div>
@@ -94,13 +94,13 @@
             <label class="cardapio-admin-toggle">
                 <input type="checkbox" name="accept_pix" id="accept_pix" value="1" disabled
                        onchange="document.getElementById('pix-key-fields').style.display = this.checked ? 'block' : 'none'"
-                       <?= ($config['accept_pix'] ?? 1) ? 'checked' : '' ?>>
+                       <?= ((int) ($config['accept_pix'] ?? 1)) ? 'checked' : '' ?>>
                 <span class="cardapio-admin-toggle-slider"></span>
             </label>
         </div>
         
         <!-- Chave PIX (condicional) -->
-        <div id="pix-key-fields" class="pagamentos-field" style="margin-top: 10px; opacity: 0.7; pointer-events: none; <?= ($config['accept_pix'] ?? 1) ? '' : 'display: none;' ?>">
+        <div id="pix-key-fields" class="pagamentos-field" style="margin-top: 10px; opacity: 0.7; pointer-events: none; <?= ((int) ($config['accept_pix'] ?? 1)) ? '' : 'display: none;' ?>">
             <div style="display: flex; gap: 8px;">
                 <div style="flex: 1;">
                     <label class="cardapio-admin-label" for="pix_key" style="font-size: 0.8rem; margin-bottom: 4px;">Chave PIX</label>
@@ -111,12 +111,13 @@
                 </div>
                 <div style="width: 110px;">
                     <label class="cardapio-admin-label" for="pix_key_type" style="font-size: 0.8rem; margin-bottom: 4px;">Tipo</label>
+                    <?php $pixType = (string) ($config['pix_key_type'] ?? ''); ?>
                     <select class="cardapio-admin-input" id="pix_key_type" name="pix_key_type" disabled style="padding: 6px 8px; font-size: 0.85rem; background-color: #f8fafc;">
-                        <option value="telefone" <?= ($config['pix_key_type'] ?? '') == 'telefone' ? 'selected' : '' ?>>Telefone</option>
-                        <option value="cpf" <?= ($config['pix_key_type'] ?? '') == 'cpf' ? 'selected' : '' ?>>CPF</option>
-                        <option value="cnpj" <?= ($config['pix_key_type'] ?? '') == 'cnpj' ? 'selected' : '' ?>>CNPJ</option>
-                        <option value="email" <?= ($config['pix_key_type'] ?? '') == 'email' ? 'selected' : '' ?>>E-mail</option>
-                        <option value="aleatoria" <?= ($config['pix_key_type'] ?? '') == 'aleatoria' ? 'selected' : '' ?>>Aleatória</option>
+                        <option value="telefone" <?= \App\Helpers\ViewHelper::e($pixType === 'telefone' ? 'selected' : '') ?>>Telefone</option>
+                        <option value="cpf" <?= \App\Helpers\ViewHelper::e($pixType === 'cpf' ? 'selected' : '') ?>>CPF</option>
+                        <option value="cnpj" <?= \App\Helpers\ViewHelper::e($pixType === 'cnpj' ? 'selected' : '') ?>>CNPJ</option>
+                        <option value="email" <?= \App\Helpers\ViewHelper::e($pixType === 'email' ? 'selected' : '') ?>>E-mail</option>
+                        <option value="aleatoria" <?= \App\Helpers\ViewHelper::e($pixType === 'aleatoria' ? 'selected' : '') ?>>Aleatória</option>
                     </select>
                 </div>
             </div>
@@ -151,7 +152,7 @@
         <span class="cardapio-admin-toggle-label">Habilitar WhatsApp</span>
         <label class="cardapio-admin-toggle">
             <input type="checkbox" name="whatsapp_enabled" id="whatsapp_enabled" value="1" disabled
-                   <?= ($config['whatsapp_enabled'] ?? 0) ? 'checked' : '' ?>>
+                   <?= ((int) ($config['whatsapp_enabled'] ?? 0)) ? 'checked' : '' ?>>
             <span class="cardapio-admin-toggle-slider"></span>
         </label>
     </div>

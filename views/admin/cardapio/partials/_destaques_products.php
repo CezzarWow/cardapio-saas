@@ -58,7 +58,7 @@
             <button type="button" 
                     class="cardapio-admin-destaques-tab-btn" 
                     data-category-tab="<?= \App\Helpers\ViewHelper::e($categoryKey) ?>"
-                    onclick='CardapioAdmin.Destaques.switchTab(<?= \App\Helpers\ViewHelper::js($categoryKey) ?>)'>
+                    onclick='CardapioAdmin.Destaques.switchTab(<?= json_encode($categoryKey, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'>
                 <i data-lucide="folder" style="width: 16px; height: 16px;"></i>
                 <?= \App\Helpers\ViewHelper::e($categoryKey) ?>
             </button>
@@ -75,7 +75,7 @@
                         <?php foreach ($featuredProducts as $product): ?>
                         <?php $productId = (int) ($product['id'] ?? 0); ?>
                         <div class="cardapio-admin-destaques-product-card featured" 
-                             data-product-id="<?= $productId ?>"
+                             data-product-id="<?= (int) $productId ?>"
                              draggable="true"
                              ondragstart="CardapioAdmin.Destaques.dragStart(event)"
                              ondragover="CardapioAdmin.Destaques.dragOver(event)"
@@ -93,7 +93,7 @@
                             </div>
                             <button type="button" 
                                     class="cardapio-admin-destaques-highlight-btn active"
-                                    onclick="CardapioAdmin.Destaques.toggleHighlight(<?= $productId ?>)">
+                                    onclick="CardapioAdmin.Destaques.toggleHighlight(<?= (int) $productId ?>)">
                                 <i data-lucide="x" style="width: 16px; height: 16px;"></i>
                                 Remover
                             </button>
@@ -116,9 +116,14 @@
                         $productId = (int) ($product['id'] ?? 0);
                         $isFeatured = !empty($product['is_featured']);
                         $displayOrder = (int) ($product['display_order'] ?? 0);
+                        $featuredClass = $isFeatured ? 'featured' : '';
+                        $activeClass = $isFeatured ? 'active' : '';
+                        $toggleIcon = $isFeatured ? 'x' : 'star';
+                        $toggleLabel = $isFeatured ? 'Remover' : 'Destacar';
+                        $checkedAttr = $isFeatured ? 'checked' : '';
                     ?>
-                    <div class="cardapio-admin-destaques-product-card <?= $isFeatured ? 'featured' : '' ?>" 
-                         data-product-id="<?= $productId ?>"
+                    <div class="cardapio-admin-destaques-product-card <?= \App\Helpers\ViewHelper::e($featuredClass) ?>" 
+                         data-product-id="<?= (int) $productId ?>"
                          draggable="true"
                          ondragstart="CardapioAdmin.Destaques.dragStart(event)"
                          ondragover="CardapioAdmin.Destaques.dragOver(event)"
@@ -137,21 +142,21 @@
                             </div>
                         </div>
                         <button type="button" 
-                                class="cardapio-admin-destaques-highlight-btn <?= $isFeatured ? 'active' : '' ?>"
-                                onclick="CardapioAdmin.Destaques.toggleHighlight(<?= $productId ?>)">
-                            <i data-lucide="<?= $isFeatured ? 'x' : 'star' ?>" style="width: 16px; height: 16px;"></i>
-                            <?= $isFeatured ? 'Remover' : 'Destacar' ?>
+                                class="cardapio-admin-destaques-highlight-btn <?= \App\Helpers\ViewHelper::e($activeClass) ?>"
+                                onclick="CardapioAdmin.Destaques.toggleHighlight(<?= (int) $productId ?>)">
+                            <i data-lucide="<?= \App\Helpers\ViewHelper::e($toggleIcon) ?>" style="width: 16px; height: 16px;"></i>
+                            <?= \App\Helpers\ViewHelper::e($toggleLabel) ?>
                         </button>
                         <input type="checkbox" 
-                               name="featured[<?= $productId ?>]" 
+                               name="featured[<?= (int) $productId ?>]" 
                                value="1" 
-                               <?= $isFeatured ? 'checked' : '' ?>
+                               <?= \App\Helpers\ViewHelper::e($checkedAttr) ?>
                                style="display: none;"
-                               data-featured-input="<?= $productId ?>">
+                               data-featured-input="<?= (int) $productId ?>">
                         <input type="hidden"
-                               name="product_order[<?= $productId ?>]"
-                               value="<?= $displayOrder ?>"
-                               data-order-input="<?= $productId ?>">
+                               name="product_order[<?= (int) $productId ?>]"
+                               value="<?= (int) $displayOrder ?>"
+                               data-order-input="<?= (int) $productId ?>">
                     </div>
                     <?php endforeach; ?>
                 </div>
