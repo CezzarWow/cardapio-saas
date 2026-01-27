@@ -118,7 +118,8 @@ class ControllerProvider implements Provider
                 $c->get(\App\Services\Pdv\PdvService::class),
                 $c->get(\App\Repositories\TableRepository::class),
                 $c->get(\App\Services\RestaurantService::class),
-                $c->get(\App\Repositories\Order\OrderRepository::class)
+                $c->get(\App\Repositories\Order\OrderRepository::class),
+                $c->get(\App\Repositories\Cardapio\CardapioConfigRepository::class)
             );
         });
 

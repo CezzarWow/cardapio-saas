@@ -17,6 +17,50 @@ class ImageConverter
     private const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
     /**
+     * Basic upload + convert to WebP (no thumbnail).
+     * Backward-compatible helper used by some code paths (e.g. store logo upload).
+     *
+     * @return string|false Generated filename (webp) or false on failure.
+     */
+    public static function uploadAndConvert(
+        array $file,
+        string $uploadDir,
+        int $maxDimension = 1200,
+        int $quality = 85
+    ) {
+        if (empty($file['name']) || $file['error'] !== UPLOAD_ERR_OK) {
+            return false;
+        }
+
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, self::ALLOWED_EXTENSIONS, true)) {
+            return false;
+        }
+
+        $image = self::loadImage($file['tmp_name'], $ext);
+        if (!$image) {
+            return false;
+        }
+
+        $uploadDir = rtrim($uploadDir, '/\\');
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $uniqueName = bin2hex(random_bytes(16)) . '.webp';
+        $resized = self::resize($image, $maxDimension);
+        $path = $uploadDir . DIRECTORY_SEPARATOR . $uniqueName;
+        $ok = imagewebp($resized, $path, $quality);
+
+        imagedestroy($image);
+        if ($resized !== $image) {
+            imagedestroy($resized);
+        }
+
+        return $ok ? $uniqueName : false;
+    }
+
+    /**
      * Upload com otimização completa: redimensiona + cria thumbnail
      * 
      * @param array $file $_FILES['campo']

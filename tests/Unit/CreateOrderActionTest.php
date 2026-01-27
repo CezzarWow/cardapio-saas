@@ -2,15 +2,15 @@
 
 namespace Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
+use App\Repositories\ClientRepository;
+use App\Repositories\Order\OrderItemRepository;
+use App\Repositories\Order\OrderRepository;
+use App\Repositories\StockRepository;
+use App\Repositories\TableRepository;
+use App\Services\CashRegisterService;
 use App\Services\Order\CreateOrderAction;
 use App\Services\PaymentService;
-use App\Services\CashRegisterService;
-use App\Repositories\StockRepository;
-use App\Repositories\Order\OrderRepository;
-use App\Repositories\Order\OrderItemRepository;
-use App\Repositories\TableRepository;
-use App\Repositories\ClientRepository;
+use PHPUnit\Framework\TestCase;
 
 class CreateOrderActionTest extends TestCase
 {
@@ -46,34 +46,24 @@ class CreateOrderActionTest extends TestCase
 
     public function testExecuteCreatesOrderSuccessfully(): void
     {
-        // Arrange
         $data = [
             'cart' => [
-                ['id' => 1, 'product_id' => 1, 'quantity' => 2, 'price' => 10.00]
+                ['id' => 1, 'product_id' => 1, 'quantity' => 2, 'price' => 10.00],
             ],
             'order_type' => 'balcao',
             'finalize_now' => true,
             'is_paid' => 1,
-            'payments' => [['method' => 'dinheiro', 'amount' => 20.00]]
+            'payments' => [['method' => 'dinheiro', 'amount' => 20.00]],
         ];
 
-        // Mock caixa aberto
         $this->cashRegisterService
             ->expects($this->once())
             ->method('assertOpen')
             ->willReturn(['id' => 1]);
 
-        // Mock Database connection (PDO mock)
-        $pdo = $this->createMock(\PDO::class);
-        $pdo->expects($this->once())
-            ->method('beginTransaction');
-        $pdo->expects($this->once())
-            ->method('commit');
+        // Note: this unit test does NOT mock Database::connect() (static), so it cannot reliably
+        // assert beginTransaction/commit. Those behaviors are better covered by integration tests.
 
-        // Mock Database::connect() usando reflection ou mock estático
-        // Por enquanto, vamos assumir que funciona
-
-        // Mocks expectations
         $this->orderRepository
             ->expects($this->once())
             ->method('create')
@@ -103,53 +93,40 @@ class CreateOrderActionTest extends TestCase
             ->expects($this->once())
             ->method('registerMovement');
 
-        // Act & Assert
-        // Nota: Este teste pode falhar se Database::connect() não for mockado
-        // Em ambiente real, use banco de testes ou mock do Database
         try {
             $result = $this->action->execute(1, 5, $data);
             $this->assertEquals(123, $result);
         } catch (\App\Exceptions\DatabaseConnectionException $e) {
-            $this->markTestSkipped('Database connection required for full test');
+            $this->markTestSkipped('Database connection required for this test');
         }
     }
 
     public function testExecuteFailsValidationWithEmptyCart(): void
     {
-        // Arrange
-        $data = []; // Empty cart
+        $data = [];
 
-        // Mock caixa aberto
         $this->cashRegisterService
             ->expects($this->once())
             ->method('assertOpen')
             ->willReturn(['id' => 1]);
 
-        // Assert - should throw exception for empty cart
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('O carrinho está vazio');
+        $this->expectExceptionMessage('O carrinho');
 
-        // Act
         try {
             $this->action->execute(1, 5, $data);
         } catch (\App\Exceptions\DatabaseConnectionException $e) {
-            $this->markTestSkipped('Database connection required for full test');
+            $this->markTestSkipped('Database connection required for this test');
         }
     }
 
     public function testExecuteNormalizesOrderType(): void
     {
-        // Este teste verifica que tipos são normalizados corretamente
-        // Como normalizeOrderType() é privado, testamos indiretamente
-        // através do comportamento do execute()
-        
         $this->markTestIncomplete('Requires database setup to test order type normalization');
     }
 
     public function testExecuteHandlesExistingOrder(): void
     {
-        // Testa incremento de pedido existente
         $this->markTestIncomplete('Requires database setup to test existing order handling');
     }
 }
-

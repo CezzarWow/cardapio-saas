@@ -42,14 +42,14 @@ class OrderCreationTraitTest extends TestCase
             ->method('insert')
             ->with($orderId, $cart);
         
-        // Expect decrement to be called for each item
+        // Expect decrement to be called for each item (PHPUnit 11 removed withConsecutive())
+        $calls = [];
         $stockRepo
             ->expects($this->exactly(2))
             ->method('decrement')
-            ->withConsecutive(
-                [1, 2],
-                [2, 1]
-            );
+            ->willReturnCallback(function ($productId, $qty) use (&$calls) {
+                $calls[] = [$productId, $qty];
+            });
         
         // Use reflection to call protected method
         $reflection = new \ReflectionClass($instance);
@@ -57,6 +57,8 @@ class OrderCreationTraitTest extends TestCase
         $method->setAccessible(true);
         
         $method->invoke($instance, $orderId, $cart, $itemRepo, $stockRepo);
+
+        $this->assertSame([[1, 2], [2, 1]], $calls);
     }
 
     public function testLogOrderCreatedFormatsMessageCorrectly(): void

@@ -4,99 +4,103 @@ namespace App\Middleware;
 
 /**
  * CSRF Middleware
- * Protects the application against Cross-Site Request Forgery attacks
+ * Protects the application against Cross-Site Request Forgery attacks.
+ *
+ * Important: return false when blocking, so Router global middleware can stop execution
+ * without hard-exiting the PHP process (this also keeps PHPUnit running).
  */
 class CsrfMiddleware
 {
     private const TOKEN_KEY = 'csrf_token';
 
     /**
-     * Handle the incoming request
+     * Handle the incoming request.
      *
      * @return bool Returns true if request is valid, false otherwise
      */
     public static function handle(): bool
     {
-        // 1. Ensure session is started (should be by index.php)
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
-        // 2. Generate token if not exists
         if (empty($_SESSION[self::TOKEN_KEY])) {
             $_SESSION[self::TOKEN_KEY] = bin2hex(random_bytes(32));
         }
 
-        // 3. Check Request Method and Exceptions
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 
-        // Exceções: Rotas que não exigem verificação CSRF
-        // NOTA: Apenas rotas que realmente não podem usar CSRF devem estar aqui.
-        // Ver documentação em docs/CSRF_EXCEPTIONS.md para justificativas.
+        // Routes that do not require CSRF validation (should be kept minimal).
         $exceptions = [
-            // '/admin/loja/venda/fechar-comanda', // REMOVIDO: Frontend envia CSRF token no payload
-            '/admin/loja/reposicao/ajustar', // Ajuste de estoque via SPA (verificar se pode receber CSRF)
-            'reposicao/ajustar', // Variação sem prefixo completo
-            '/api/v1/order/create', // API cardápio público (checkout)
-            '/api/order/create' // Legado; manter até desativar clientes antigos
+            '/admin/loja/reposicao/ajustar',
+            'reposicao/ajustar',
+            '/api/v1/order/create',
+            '/api/order/create',
         ];
 
-        // Verifica se a URI atual corresponde a alguma exceção
         foreach ($exceptions as $ex) {
-            if (strpos($uri, $ex) !== false) {
+            if (self::matchesException($path, $ex)) {
                 return true;
             }
         }
 
-        if (in_array($method, ['GET', 'HEAD', 'OPTIONS'])) {
-            return true; // Safe methods don't need CSRF check
+        if (in_array($method, ['GET', 'HEAD', 'OPTIONS'], true)) {
+            return true;
         }
 
-        // 4. Validate Token for Unsafe Methods (POST, PUT, DELETE, etc)
-        $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
+        // Token from form or header
+        $token = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
 
-        // [FIX] Read from JSON Input if not found in headers, AND stash it for Controllers
+        // Token from JSON body (also stash body for controllers since php://input can be consumed once)
         if (!$token && strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false) {
             $rawInput = file_get_contents('php://input');
             $input = json_decode($rawInput, true);
-            $token = $input['csrf_token'] ?? null;
-            
-            // Stash for controllers since php://input is now consumed
-            if ($input) {
+            if (is_array($input)) {
                 $_REQUEST['JSON_BODY'] = $input;
+                $token = $input['csrf_token'] ?? null;
             }
         }
 
         if (!$token || !hash_equals($_SESSION[self::TOKEN_KEY], $token)) {
-            // CSRF inválido check
             http_response_code(403);
 
-            // Detecta se é requisição AJAX/JSON
-            http_response_code(403);
-
-            // Detecta se é requisição AJAX/JSON
             $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
-                      strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
             $wantsJson = strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false;
             $isJsonRequest = strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false;
 
             if ($isAjax || $wantsJson || $isJsonRequest) {
                 header('Content-Type: application/json');
-                die(json_encode([
+                echo json_encode([
                     'success' => false,
-                    'message' => 'Token CSRF inválido ou expirado. Por favor, atualize a página (F5) e tente novamente.'
-                ]));
+                    'message' => 'Token CSRF invalido ou expirado. Atualize a pagina e tente novamente.',
+                ]);
+                return false;
             }
 
-            die('Ação não autorizada (Token CSRF Inválido). Atualize a página e tente novamente.');
+            echo 'Acao nao autorizada (token CSRF invalido). Atualize a pagina e tente novamente.';
+            return false;
         }
 
         return true;
     }
 
+    private static function matchesException(string $path, string $exception): bool
+    {
+        if ($exception === '') {
+            return false;
+        }
+
+        if ($path === $exception) {
+            return true;
+        }
+
+        return str_ends_with($path, $exception);
+    }
+
     /**
-     * Get the current CSRF Token
+     * Get the current CSRF token.
      */
     public static function getToken(): string
     {
@@ -107,6 +111,7 @@ class CsrfMiddleware
         if (empty($_SESSION[self::TOKEN_KEY])) {
             $_SESSION[self::TOKEN_KEY] = bin2hex(random_bytes(32));
         }
+
         return $_SESSION[self::TOKEN_KEY];
     }
 }

@@ -168,7 +168,9 @@ class ServiceProvider implements Provider
             return new \App\Services\Order\CreateWebOrderService(
                 $c->get(\App\Repositories\ClientRepository::class),
                 $c->get(\App\Repositories\Order\OrderRepository::class),
-                $c->get(\App\Repositories\Order\OrderItemRepository::class)
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
+                $c->get(\App\Repositories\ProductRepository::class),
+                $c->get(\App\Repositories\AdditionalItemRepository::class)
             );
         });
 

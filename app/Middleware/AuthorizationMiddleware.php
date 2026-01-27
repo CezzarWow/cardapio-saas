@@ -30,6 +30,12 @@ class AuthorizationMiddleware
             session_start();
         }
 
+        // Public routes (cardápio público e checkout)
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+        if (self::isPublicRoute($path)) {
+            return true;
+        }
+
         // 2. Verifica se há usuário autenticado
         // Em modo DEV, permite continuar (comportamento atual do BaseController)
         $userId = $_SESSION['user_id'] ?? null;
@@ -90,6 +96,16 @@ class AuthorizationMiddleware
         }
 
         return true;
+    }
+
+    private static function isPublicRoute(string $path): bool
+    {
+        if (str_starts_with($path, '/api/')) {
+            return $path === '/api/v1/order/create' || $path === '/api/order/create';
+        }
+
+        // Qualquer rota fora de /admin e /api é cardápio público
+        return !str_starts_with($path, '/admin');
     }
 
     /**

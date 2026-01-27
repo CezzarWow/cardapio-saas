@@ -66,8 +66,8 @@ class MiddlewareTest extends TestCase
         $result = CsrfMiddleware::handle();
         $output = ob_get_clean();
         
-        // Deve retornar false ou enviar resposta de erro
-        $this->assertFalse($result || !empty($output));
+        // Deve bloquear: retorna false e/ou envia resposta
+        $this->assertTrue($result === false || !empty($output));
     }
 
     public function testRequestSanitizerMiddlewareCleansInput(): void
@@ -93,7 +93,7 @@ class MiddlewareTest extends TestCase
     public function testAuthorizationMiddlewareAllowsInDevelopment(): void
     {
         // Em desenvolvimento, permite mesmo sem sessão
-        define('APP_ENV', 'development');
+        $_ENV['APP_ENV'] = 'development';
         $_SERVER['REQUEST_URI'] = '/admin';
         
         $result = AuthorizationMiddleware::handle();

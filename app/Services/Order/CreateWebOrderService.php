@@ -3,9 +3,11 @@
 namespace App\Services\Order;
 
 use App\Core\Database;
+use App\Repositories\AdditionalItemRepository;
 use App\Repositories\ClientRepository;
 use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\Order\OrderRepository;
+use App\Repositories\ProductRepository;
 
 /**
  * Service para criar pedidos via Cardápio Web
@@ -16,6 +18,8 @@ class CreateWebOrderService
     private ClientRepository $clientRepository;
     private OrderRepository $orderRepository;
     private OrderItemRepository $itemRepository;
+    private ProductRepository $productRepository;
+    private AdditionalItemRepository $additionalItemRepository;
 
     /**
      * Mapeamento de tipos de pedido (frontend → banco)
@@ -31,11 +35,15 @@ class CreateWebOrderService
     public function __construct(
         ClientRepository $clientRepository,
         OrderRepository $orderRepository,
-        OrderItemRepository $itemRepository
+        OrderItemRepository $itemRepository,
+        ProductRepository $productRepository,
+        AdditionalItemRepository $additionalItemRepository
     ) {
         $this->clientRepository = $clientRepository;
         $this->orderRepository = $orderRepository;
         $this->itemRepository = $itemRepository;
+        $this->productRepository = $productRepository;
+        $this->additionalItemRepository = $additionalItemRepository;
     }
 
     /**
@@ -68,7 +76,7 @@ class CreateWebOrderService
             ]);
 
             // 2. Calcular total
-            $calculatedItems = $this->calculateItems($items);
+            $calculatedItems = $this->calculateItems($restaurantId, $items);
             $subtotal = array_sum(array_column($calculatedItems, 'total'));
             $deliveryFee = floatval($input['delivery_fee'] ?? 0);
             $total = $subtotal + $deliveryFee;
@@ -117,31 +125,78 @@ class CreateWebOrderService
     /**
      * Calcula preço de cada item (com adicionais)
      */
-    private function calculateItems(array $items): array
+    private function calculateItems(int $restaurantId, array $items): array
     {
         $calculated = [];
 
         foreach ($items as $item) {
-            $unitPrice = $item['unit_price'] ?? 0;
-            $quantity = $item['quantity'] ?? 1;
+            $productId = (int) ($item['product_id'] ?? 0);
+            if ($productId <= 0) {
+                throw new \InvalidArgumentException('Produto inválido');
+            }
+
+            $product = $this->productRepository->find($productId, $restaurantId);
+            if (!$product || (isset($product['is_active']) && (int) $product['is_active'] !== 1)) {
+                throw new \InvalidArgumentException('Produto não encontrado ou inativo');
+            }
+
+            $unitPrice = $this->resolveProductPrice($product);
+            $quantity = max(1, (int) ($item['quantity'] ?? 1));
+            $extras = [];
 
             // Soma adicionais
-            if (!empty($item['additionals'])) {
-                foreach ($item['additionals'] as $add) {
-                    $unitPrice += ($add['price'] ?? 0);
+            $additionals = $item['additionals'] ?? [];
+            if (is_array($additionals)) {
+                foreach ($additionals as $add) {
+                    $addId = (int) ($add['id'] ?? $add['item_id'] ?? 0);
+                    if ($addId <= 0) {
+                        throw new \InvalidArgumentException('Adicional inválido');
+                    }
+
+                    $addItem = $this->additionalItemRepository->findById($addId, $restaurantId);
+                    if (!$addItem) {
+                        throw new \InvalidArgumentException('Adicional não encontrado');
+                    }
+
+                    $addPrice = (float) ($addItem['price'] ?? 0);
+                    $unitPrice += $addPrice;
+                    $extras[] = [
+                        'id' => (int) $addItem['id'],
+                        'name' => $addItem['name'] ?? 'Adicional',
+                        'price' => $addPrice
+                    ];
                 }
             }
 
             $calculated[] = [
-                'product_id' => $item['product_id'] ?? null,
-                'name' => $item['name'] ?? 'Produto',
+                'product_id' => $productId,
+                'name' => $product['name'] ?? 'Produto',
                 'quantity' => $quantity,
                 'price' => $unitPrice,
-                'total' => $unitPrice * $quantity
+                'total' => $unitPrice * $quantity,
+                'extras' => empty($extras) ? null : $extras
             ];
         }
 
         return $calculated;
+    }
+
+    private function resolveProductPrice(array $product): float
+    {
+        $price = (float) ($product['price'] ?? 0);
+        $promoPrice = (float) ($product['promotional_price'] ?? 0);
+        $isPromo = !empty($product['is_on_promotion']) && $promoPrice > 0;
+
+        if (!$isPromo) {
+            return $price;
+        }
+
+        $expires = $product['promo_expires_at'] ?? null;
+        if (!$expires || $expires >= date('Y-m-d')) {
+            return $promoPrice;
+        }
+
+        return $price;
     }
 
     /**

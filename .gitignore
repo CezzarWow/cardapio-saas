@@ -5,6 +5,9 @@
 /.idea
 *.log
 .DS_Store
+/testdox.html
+/.phpunit.cache
+/cache
 /public/uploads
 /storage/logs
 /storage/cache

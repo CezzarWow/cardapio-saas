@@ -3,6 +3,7 @@
 namespace App\Services\Order\Flows\Comanda;
 
 use App\Core\Database;
+use App\Core\Logger;
 use App\Repositories\Order\OrderRepository;
 use App\Services\CashRegisterService;
 use App\Services\Order\OrderStatus;
@@ -128,7 +129,9 @@ class CloseComandaAction
             ];
 
         } catch (\Throwable $e) {
-            $conn->rollBack();
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
             Logger::error('[COMANDA] ERRO ao fechar', [
                 'restaurant_id' => $restaurantId,
                 'order_id' => $orderId,
