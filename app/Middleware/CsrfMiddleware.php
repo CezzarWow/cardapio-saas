@@ -33,8 +33,6 @@ class CsrfMiddleware
 
         // Routes that do not require CSRF validation (should be kept minimal).
         $exceptions = [
-            '/admin/loja/reposicao/ajustar',
-            'reposicao/ajustar',
             '/api/v1/order/create',
             '/api/order/create',
         ];

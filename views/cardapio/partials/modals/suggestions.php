@@ -52,8 +52,8 @@ if (empty($drinks)): ?>
                                         <p class="suggestion-item-price">R$ <?= number_format($drink['price'], 2, ',', '.') ?></p>
                                     </div>
                                 </div>
-                                <button class="suggestion-drink-btn" data-id="<?= $drink['id'] ?>" 
-                                    onclick="addDrinkToCart(<?= $drink['id'] ?>, '<?= htmlspecialchars(addslashes($drink['name'])) ?>', <?= $drink['price'] ?>, '<?= htmlspecialchars($drink['image'] ?? '') ?>')">
+                                <button class="suggestion-drink-btn" data-id="<?= (int) ($drink['id'] ?? 0) ?>" 
+                                    onclick="addDrinkToCart(<?= (int) ($drink['id'] ?? 0) ?>, '<?= htmlspecialchars(addslashes((string) ($drink['name'] ?? ''))) ?>', <?= (float) ($drink['price'] ?? 0) ?>, '<?= htmlspecialchars((string) ($drink['image'] ?? '')) ?>')">
                                     <i data-lucide="plus" size="16"></i>
                                 </button>
                             </div>
@@ -87,8 +87,8 @@ foreach ($additionalGroups as $group):
                                                 <p class="suggestion-item-price"><?= $sauce['price'] > 0 ? 'R$ ' . number_format($sauce['price'], 2, ',', '.') : 'Grátis' ?></p>
                                             </div>
                                         </div>
-                                        <button class="suggestion-sauce-btn" data-id="<?= $sauce['id'] ?>" 
-                                            onclick="addSauceToCart(<?= $sauce['id'] ?>, '<?= htmlspecialchars(addslashes($sauce['name'])) ?>', <?= $sauce['price'] ?>)">
+                                        <button class="suggestion-sauce-btn" data-id="<?= (int) ($sauce['id'] ?? 0) ?>" 
+                                            onclick="addSauceToCart(<?= (int) ($sauce['id'] ?? 0) ?>, '<?= htmlspecialchars(addslashes((string) ($sauce['name'] ?? ''))) ?>', <?= (float) ($sauce['price'] ?? 0) ?>)">
                                             <i data-lucide="plus" size="16"></i>
                                         </button>
                                     </div>

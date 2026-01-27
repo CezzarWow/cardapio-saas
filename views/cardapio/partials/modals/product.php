@@ -44,7 +44,7 @@
                 <div id="additionalsList" class="cardapio-additionals-list">
                     <?php foreach ($additionalGroups as $group): ?>
                         <?php if (isset($additionalItems[$group['id']]) && count($additionalItems[$group['id']]) > 0): ?>
-                            <div class="cardapio-additional-group" data-group-id="<?= $group['id'] ?>">
+                            <div class="cardapio-additional-group" data-group-id="<?= (int) ($group['id'] ?? 0) ?>">
                                 <p class="cardapio-additional-group-name"><?= htmlspecialchars($group['name']) ?></p>
                                 <?php foreach ($additionalItems[$group['id']] as $item): ?>
                                     <label class="cardapio-additional-item">
@@ -52,9 +52,9 @@
                                             <input 
                                                 type="checkbox" 
                                                 class="cardapio-additional-checkbox"
-                                                data-additional-id="<?= $item['id'] ?>"
-                                                data-additional-name="<?= htmlspecialchars($item['name']) ?>"
-                                                data-additional-price="<?= number_format($item['price'], 2, '.', '') ?>"
+                                                data-additional-id="<?= (int) ($item['id'] ?? 0) ?>"
+                                                data-additional-name="<?= htmlspecialchars((string) ($item['name'] ?? '')) ?>"
+                                                data-additional-price="<?= number_format((float) ($item['price'] ?? 0), 2, '.', '') ?>"
                                             >
                                             <span class="cardapio-additional-name"><?= htmlspecialchars($item['name']) ?></span>
                                         </div>

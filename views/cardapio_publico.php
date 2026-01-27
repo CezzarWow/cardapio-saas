@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="csrf-token" content="<?= \App\Helpers\ViewHelper::csrfToken() ?>">
-    <title><?= $restaurant['name'] ?> - Cardápio Digital</title>
+    <meta name="csrf-token" content="<?= \App\Helpers\ViewHelper::e(\App\Helpers\ViewHelper::csrfToken()) ?>">
+    <title><?= \App\Helpers\ViewHelper::e($restaurant['name'] ?? '') ?> - Cardápio Digital</title>
     
     <!-- CSS Modular - Cardápio Público -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/css/base.css">
@@ -69,7 +69,7 @@
     window.products = <?= $jsProducts ?>;
     window.combos = <?= $jsCombos ?>;
     window.PRODUCT_RELATIONS = <?= $jsRelations ?>;
-    window.BASE_URL = '<?= BASE_URL ?>';
+    window.BASE_URL = <?= json_encode(BASE_URL, JSON_UNESCAPED_SLASHES) ?>;
     
     // Configurações do cardápio admin
     window.CARDAPIO_CONFIG = <?= $jsConfig ?>;

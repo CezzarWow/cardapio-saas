@@ -28,10 +28,10 @@
                         <div class="options-list-items" style="display: none; position: absolute; top: 105%; left: 0; right: 0; background: white; border: 1px solid #d1d5db; border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 10; padding: 5px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                             <?php foreach ($allItems as $item): ?>
                                 <label style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-radius: 6px; transition: background 0.1s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-                                    <input type="checkbox" name="item_ids[]" value="<?= $item['id'] ?>" onchange="updateItemsTriggerText()" style="width: 18px; height: 18px; accent-color: #10b981;">
+                                    <input type="checkbox" name="item_ids[]" value="<?= (int) ($item['id'] ?? 0) ?>" onchange="updateItemsTriggerText()" style="width: 18px; height: 18px; accent-color: #10b981;">
                                     <span style="flex: 1; font-size: 0.95rem; color: #374151;"><?= htmlspecialchars($item['name']) ?></span>
-                                    <span style="padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: <?= $item['price'] > 0 ? '#dbeafe' : '#d1fae5' ?>; color: <?= $item['price'] > 0 ? '#1d4ed8' : '#059669' ?>;">
-                                        <?= $item['price'] > 0 ? '+R$ ' . number_format($item['price'], 2, ',', '.') : 'Grátis' ?>
+                                    <span style="padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: <?= ((float) ($item['price'] ?? 0)) > 0 ? '#dbeafe' : '#d1fae5' ?>; color: <?= ((float) ($item['price'] ?? 0)) > 0 ? '#1d4ed8' : '#059669' ?>;">
+                                        <?= ((float) ($item['price'] ?? 0)) > 0 ? '+R$ ' . number_format((float) ($item['price'] ?? 0), 2, ',', '.') : 'Grátis' ?>
                                     </span>
                                 </label>
                             <?php endforeach; ?>

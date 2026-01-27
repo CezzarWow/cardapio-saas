@@ -25,14 +25,14 @@
                             <h4 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;"><?= htmlspecialchars($combo['name']) ?></h4>
                             <?php if (!empty($combo['discount_percent']) && $combo['discount_percent'] > 0): ?>
                                 <span style="background: #fff7ed; color: #ea580c; font-size: 0.8rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;">
-                                    -<?= $combo['discount_percent'] ?>%
+                                    -<?= (int) $combo['discount_percent'] ?>%
                                 </span>
                             <?php endif; ?>
                         </div>
                         
                         <!-- Toggle Ativo/Inativo -->
-                         <label class="cardapio-admin-toggle" title="<?= $combo['is_active'] ? 'Desativar' : 'Ativar' ?>">
-                            <input type="checkbox" onchange="toggleComboActive(<?= $combo['id'] ?>, this.checked)" <?= $combo['is_active'] ? 'checked' : '' ?>>
+                         <label class="cardapio-admin-toggle" title="<?= ($combo['is_active'] ?? 0) ? 'Desativar' : 'Ativar' ?>">
+                            <input type="checkbox" onchange="toggleComboActive(<?= (int) ($combo['id'] ?? 0) ?>, this.checked)" <?= ($combo['is_active'] ?? 0) ? 'checked' : '' ?>>
                             <span class="cardapio-admin-toggle-slider"></span>
                         </label>
                     </div>
@@ -76,11 +76,11 @@
 
                             <div style="display: flex; gap: 8px;">
                                 <button type="button" class="cardapio-admin-btn-icon" style="color: #475569; padding: 4px; background: transparent; border: none; cursor: pointer;" 
-                                        onclick="CardapioAdmin.loadComboForEdit(<?= $combo['id'] ?>)" title="Editar">
+                                        onclick="CardapioAdmin.loadComboForEdit(<?= (int) ($combo['id'] ?? 0) ?>)" title="Editar">
                                     <i data-lucide="pencil" size="18"></i>
                                 </button>
                                 <button type="button" class="cardapio-admin-btn-icon" style="color: #ef4444; padding: 4px; background: transparent; border: none; cursor: pointer;" 
-                                        onclick="if(confirm('Excluir este combo?')) location.href='<?= BASE_URL ?>/admin/loja/cardapio/combo/deletar?id=<?= $combo['id'] ?>'" title="Excluir">
+                                        onclick="if(confirm('Excluir este combo?')) location.href='<?= BASE_URL ?>/admin/loja/cardapio/combo/deletar?id=<?= (int) ($combo['id'] ?? 0) ?>'" title="Excluir">
                                     <i data-lucide="trash-2" size="18"></i>
                                 </button>
                             </div>

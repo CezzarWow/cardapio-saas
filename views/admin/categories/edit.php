@@ -18,7 +18,7 @@
         <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
             <form action="<?= BASE_URL ?>/admin/loja/categorias/atualizar" method="POST">
                 <?= \App\Helpers\ViewHelper::csrfField() ?>
-                <input type="hidden" name="id" value="<?= $category['id'] ?>">
+                <input type="hidden" name="id" value="<?= (int) ($category['id'] ?? 0) ?>">
                 
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Nome da Categoria</label>

@@ -7,6 +7,15 @@ use Exception;
 
 class ViewHelper
 {
+    /**
+     * HTML-escape helper for views.
+     * Use for any untrusted content rendered into HTML text/attributes.
+     */
+    public static function e(mixed $value): string
+    {
+        return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
     public static function csrfField(): string
     {
         $token = CsrfMiddleware::getToken();

@@ -28,7 +28,7 @@
                         <div class="options-list-cat" style="display: none; position: absolute; top: 105%; left: 0; right: 0; background: white; border: 1px solid #d1d5db; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 10; padding: 5px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                             <?php foreach ($categories as $cat): ?>
                                 <label style="display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 4px; transition: background 0.1s;">
-                                    <input type="checkbox" name="category_ids[]" value="<?= $cat['id'] ?>" onchange="updateCategoryTriggerText(this)" style="width: 16px; height: 16px;">
+                                    <input type="checkbox" name="category_ids[]" value="<?= (int) ($cat['id'] ?? 0) ?>" onchange="updateCategoryTriggerText(this)" style="width: 16px; height: 16px;">
                                     <span style="font-size: 0.95rem; color: #374151;"><?= htmlspecialchars($cat['name']) ?></span>
                                 </label>
                             <?php endforeach; ?>

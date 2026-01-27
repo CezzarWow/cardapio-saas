@@ -31,7 +31,7 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
         
         <!-- Header -->
         <div class="cardapio-admin-header">
-            <h1 class="cardapio-admin-title"><?= $title ?></h1>
+            <h1 class="cardapio-admin-title"><?= \App\Helpers\ViewHelper::e($title) ?></h1>
             <p class="cardapio-admin-subtitle">
                 <a href="<?= BASE_URL ?>/admin/loja/cardapio" style="color: #2563eb;">← Voltar para Configurações</a>
             </p>
@@ -41,7 +41,7 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
         <form method="POST" action="<?= BASE_URL ?>/admin/loja/cardapio/combo/<?= $isEdit ? 'atualizar' : 'salvar' ?>" enctype="multipart/form-data">
             <?= \App\Helpers\ViewHelper::csrfField() ?>
             <?php if ($isEdit): ?>
-                <input type="hidden" name="id" value="<?= $combo['id'] ?>">
+                <input type="hidden" name="id" value="<?= (int) ($combo['id'] ?? 0) ?>">
             <?php endif; ?>
 
             <div class="cardapio-admin-card">
@@ -89,7 +89,7 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
                                name="display_order" 
                                min="0"
                                placeholder="0"
-                               value="<?= $combo['display_order'] ?? 0 ?>">
+                               value="<?= (int) ($combo['display_order'] ?? 0) ?>">
                         <p class="cardapio-admin-hint">Menor número = aparece primeiro</p>
                     </div>
                 </div>
@@ -124,11 +124,11 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <input type="checkbox" 
                                        name="products[]" 
-                                       value="<?= $product['id'] ?>"
-                                       id="prod_<?= $product['id'] ?>"
+                                       value="<?= (int) ($product['id'] ?? 0) ?>"
+                                       id="prod_<?= (int) ($product['id'] ?? 0) ?>"
                                        <?= in_array($product['id'], $comboProducts ?? []) ? 'checked' : '' ?>
                                        style="width: 18px; height: 18px;">
-                                <label for="prod_<?= $product['id'] ?>" style="cursor: pointer;">
+                                <label for="prod_<?= (int) ($product['id'] ?? 0) ?>" style="cursor: pointer;">
                                     <span style="font-weight: 500;"><?= htmlspecialchars($product['name']) ?></span>
                                     <span style="color: #6b7280; font-size: 0.85rem;"> - R$ <?= number_format($product['price'], 2, ',', '.') ?></span>
                                 </label>
@@ -139,7 +139,7 @@ $title = $isEdit ? 'Editar Combo' : 'Novo Combo';
                                 <span style="font-size: 0.85rem; color: #64748b;">Permitir adicionais</span>
                                 <label class="cardapio-admin-toggle" style="transform: scale(0.8);">
                                     <input type="checkbox" 
-                                           name="allow_additionals[<?= $product['id'] ?>]" 
+                                           name="allow_additionals[<?= (int) ($product['id'] ?? 0) ?>]" 
                                            value="1"
                                            <?= (isset($comboItemsSettings[$product['id']]['allow_additionals']) && $comboItemsSettings[$product['id']]['allow_additionals'] == 0) ? '' : 'checked' ?>>
                                     <span class="cardapio-admin-toggle-slider"></span>

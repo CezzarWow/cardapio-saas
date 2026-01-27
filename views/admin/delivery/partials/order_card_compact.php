@@ -57,7 +57,7 @@ $orderJson = htmlspecialchars(json_encode([
 ]), ENT_QUOTES, 'UTF-8');
 ?>
 
-<div class="delivery-card-compact delivery-card-compact--<?= $status ?>" 
+<div class="delivery-card-compact delivery-card-compact--<?= \App\Helpers\ViewHelper::e($status) ?>" 
      onclick='DeliveryUI.openDetailsModal(<?= $orderJson ?>)'
      tabindex="0"
      role="button"
@@ -79,7 +79,7 @@ $orderJson = htmlspecialchars(json_encode([
         </span>
         <span class="delivery-card-compact-time">
             <i data-lucide="clock" style="width: 12px; height: 12px;"></i>
-            <?= $timeAgo ?>
+            <?= \App\Helpers\ViewHelper::e($timeAgo) ?>
         </span>
     </div>
 
@@ -97,8 +97,8 @@ if ($orderType === 'local') {
     $badgeLabel = '🚚 Delivery';
 }
 ?>
-        <span class="delivery-card-compact-customer" style="color: <?= $badgeColor ?>; font-weight: 700;">
-            <?= $badgeLabel ?>
+        <span class="delivery-card-compact-customer" style="color: <?= \App\Helpers\ViewHelper::e($badgeColor) ?>; font-weight: 700;">
+            <?= \App\Helpers\ViewHelper::e($badgeLabel) ?>
         </span>
         
         <?php
@@ -123,8 +123,8 @@ if ($isPaid == 1) {
     $paymentColor = '#dc2626'; // Vermelho
 }
 ?>
-        <span style="font-size: 0.75rem; font-weight: 600; color: <?= $paymentColor ?>;">
-            <?= $paymentBadge ?>
+        <span style="font-size: 0.75rem; font-weight: 600; color: <?= \App\Helpers\ViewHelper::e($paymentColor) ?>;">
+            <?= \App\Helpers\ViewHelper::e($paymentBadge) ?>
         </span>
         
         <span class="delivery-card-compact-total">
@@ -135,16 +135,16 @@ if ($isPaid == 1) {
     <div class="delivery-card-compact-actions" onclick="event.stopPropagation()">
         <?php if ($action): ?>
             <button class="delivery-card-compact-btn delivery-card-compact-btn--primary"
-                    onclick="DeliveryActions.advance(<?= $order['id'] ?>, '<?= $status ?>', '<?= $orderType ?>')"
-                    aria-label="<?= $action['label'] ?>">
-                <i data-lucide="<?= $action['icon'] ?>" style="width: 14px; height: 14px;"></i>
-                <?= $action['label'] ?>
+                    onclick="DeliveryActions.advance(<?= (int) ($order['id'] ?? 0) ?>, <?= htmlspecialchars(json_encode($status), ENT_QUOTES, 'UTF-8') ?>, <?= htmlspecialchars(json_encode($orderType), ENT_QUOTES, 'UTF-8') ?>)"
+                    aria-label="<?= \App\Helpers\ViewHelper::e($action['label'] ?? '') ?>">
+                <i data-lucide="<?= \App\Helpers\ViewHelper::e($action['icon'] ?? '') ?>" style="width: 14px; height: 14px;"></i>
+                <?= \App\Helpers\ViewHelper::e($action['label'] ?? '') ?>
             </button>
         <?php endif; ?>
 
         <?php if (in_array($status, ['novo', 'preparo', 'rota'])): ?>
             <button class="delivery-card-compact-btn delivery-card-compact-btn--cancel"
-                    onclick="DeliveryUI.openCancelModal(<?= $order['id'] ?>)"
+                    onclick="DeliveryUI.openCancelModal(<?= (int) ($order['id'] ?? 0) ?>)"
                     aria-label="Cancelar pedido">
                 <i data-lucide="x" style="width: 14px; height: 14px;"></i>
             </button>

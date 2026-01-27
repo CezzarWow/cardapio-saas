@@ -4,7 +4,13 @@
  * Baseado na documentação oficial: https://qz.io/wiki/signing-messages
  */
 
-$KEY = __DIR__ . '/keys/private-key.pem';
+$defaultKey = __DIR__ . '/../../storage/qz/keys/private-key.pem';
+$legacyKey = __DIR__ . '/keys/private-key.pem';
+$KEY = $_ENV['QZ_PRIVATE_KEY_PATH'] ?? $defaultKey;
+if (!file_exists($KEY) && file_exists($legacyKey)) {
+    // Backward compat for existing deployments; prefer moving the key outside public/.
+    $KEY = $legacyKey;
+}
 
 // Aceita GET (padrão QZ) ou POST
 $req = $_GET['request'] ?? null;

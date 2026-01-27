@@ -25,7 +25,7 @@
         <div class="cardapio-info" style="display: flex; flex-direction: column; gap: 6px; width: max-content;">
             <p class="cardapio-delivery-time" style="display: flex; align-items: center; justify-content: center; margin: 0; white-space: nowrap;">
                 <i data-lucide="clock" size="14" style="margin-right: 6px;"></i>
-                <?= ($cardapioConfig['delivery_time_min'] ?? 30) ?>-<?= ($cardapioConfig['delivery_time_max'] ?? 45) ?> min
+                <?= (int) ($cardapioConfig['delivery_time_min'] ?? 30) ?>-<?= (int) ($cardapioConfig['delivery_time_max'] ?? 45) ?> min
             </p>
             
             <?php if ($cardapioConfig['is_open_now'] ?? true): ?>
@@ -40,7 +40,7 @@
                         $reason = $cardapioConfig['closed_reason'] ?? '';
                 if ($reason === 'outside_hours' && ($cardapioConfig['today_hours'] ?? null)) {
                     $hours = $cardapioConfig['today_hours'];
-                    echo 'Abre ' . substr($hours['open_time'], 0, 5);
+                    echo 'Abre ' . \App\Helpers\ViewHelper::e(substr((string) ($hours['open_time'] ?? ''), 0, 5));
                 } elseif ($reason === 'day_closed') {
                     echo 'Fechado hoje';
                 } else {

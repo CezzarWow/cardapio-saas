@@ -8,6 +8,9 @@
 /testdox.html
 /.phpunit.cache
 /cache
+/storage/qz
+/public/qz/keys/private-key.pem
+/public/qz/keys/digital-certificate.txt
 /public/uploads
 /storage/logs
 /storage/cache

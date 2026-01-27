@@ -26,7 +26,7 @@ $inputBg = $isEditing ? 'white' : '#f3f4f6';
                     <div style="width: 120px; text-align: center;">
                         <div class="logo-preview-container" style="width: 100px; height: 100px; border-radius: 50%; background: #f3f4f6; border: 2px dashed #d1d5db; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0 auto 10px auto;">
                             <?php if (!empty($loja['logo'])): ?>
-                                <img src="<?= BASE_URL ?>/uploads/<?= $loja['logo'] ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                <img src="<?= BASE_URL ?>/uploads/<?= \App\Helpers\ViewHelper::e($loja['logo'] ?? '') ?>" style="width: 100%; height: 100%; object-fit: cover;">
                             <?php else: ?>
                                 <i data-lucide="store" color="#9ca3af" size="40"></i>
                             <?php endif; ?>
@@ -48,8 +48,8 @@ $inputBg = $isEditing ? 'white' : '#f3f4f6';
                         <div>
                             <label style="font-weight: 600; font-size: 0.9rem; color: #374151;">Cor do Sistema</label>
                             <div style="display: flex; gap: 10px; margin-top: 5px;">
-                                <input type="color" name="primary_color" value="<?= $loja['primary_color'] ?? '#2563eb' ?>" <?= $disabled ?> style="height: 40px; width: 60px; border: none; cursor: pointer; border-radius: 6px;">
-                                <input type="text" value="<?= $loja['primary_color'] ?? '#2563eb' ?>" readonly style="flex: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: #f9fafb; color: #6b7280;">
+                                <input type="color" name="primary_color" value="<?= \App\Helpers\ViewHelper::e($loja['primary_color'] ?? '#2563eb') ?>" <?= $disabled ?> style="height: 40px; width: 60px; border: none; cursor: pointer; border-radius: 6px;">
+                                <input type="text" value="<?= \App\Helpers\ViewHelper::e($loja['primary_color'] ?? '#2563eb') ?>" readonly style="flex: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: #f9fafb; color: #6b7280;">
                             </div>
                         </div>
                     </div>

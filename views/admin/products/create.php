@@ -32,7 +32,7 @@
                         <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Categoria</label>
                         <select name="category_id" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: white;">
                             <?php foreach ($categories as $cat): ?>
-                                <option value="<?= $cat['id'] ?>"><?= $cat['name'] ?></option>
+                                <option value="<?= (int) ($cat['id'] ?? 0) ?>"><?= \App\Helpers\ViewHelper::e($cat['name'] ?? '') ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -52,8 +52,8 @@
                                 <?php else: ?>
                                     <?php foreach ($additionalGroups as $group): ?>
                                         <label style="display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 4px; transition: background 0.1s;">
-                                            <input type="checkbox" name="additional_groups[]" value="<?= $group['id'] ?>" onchange="updateTriggerText(this)" style="width: 16px; height: 16px;">
-                                            <span style="font-size: 0.95rem; color: #374151;"><?= htmlspecialchars($group['name']) ?></span>
+                                            <input type="checkbox" name="additional_groups[]" value="<?= (int) ($group['id'] ?? 0) ?>" onchange="updateTriggerText(this)" style="width: 16px; height: 16px;">
+                                            <span style="font-size: 0.95rem; color: #374151;"><?= \App\Helpers\ViewHelper::e($group['name'] ?? '') ?></span>
                                         </label>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
@@ -119,10 +119,10 @@
                             
                             <div id="iconGrid" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 50; max-height: 300px; overflow-y: auto; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 8px; padding: 15px; background: white; border: 1px solid #e5e7eb; border-top: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
                                 <?php foreach ($icons as $emoji => $label): ?>
-                                    <div class="icon-option" data-icon="<?= $emoji ?>" onclick="selectIcon('<?= $emoji ?>')" 
-                                         title="<?= $label ?>"
+                                    <div class="icon-option" data-icon="<?= \App\Helpers\ViewHelper::e($emoji) ?>" onclick="selectIcon('<?= \App\Helpers\ViewHelper::e($emoji) ?>')" 
+                                         title="<?= \App\Helpers\ViewHelper::e($label) ?>"
                                          style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 50px; background: <?= $emoji === '🍔' ? '#eff6ff' : 'white' ?>; border: 2px solid <?= $emoji === '🍔' ? '#2563eb' : '#e5e7eb' ?>; border-radius: 6px; cursor: pointer; transition: all 0.15s;">
-                                        <span style="font-size: 1.5rem;"><?= $emoji ?></span>
+                                        <span style="font-size: 1.5rem;"><?= \App\Helpers\ViewHelper::e($emoji) ?></span>
                                     </div>
                                 <?php endforeach; ?>
                             </div>

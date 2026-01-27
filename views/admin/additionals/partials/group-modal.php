@@ -29,10 +29,10 @@
                         <div class="options-list-group-items" style="display: none; position: absolute; top: 105%; left: 0; right: 0; background: white; border: 1px solid #d1d5db; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 10; padding: 5px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                             <?php foreach ($allItems as $itm): ?>
                                 <label style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-radius: 6px; transition: background 0.1s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-                                    <input type="checkbox" name="item_ids[]" value="<?= $itm['id'] ?>" onchange="updateGroupItemsTriggerText()" style="width: 18px; height: 18px; accent-color: #2563eb;">
+                                    <input type="checkbox" name="item_ids[]" value="<?= (int) ($itm['id'] ?? 0) ?>" onchange="updateGroupItemsTriggerText()" style="width: 18px; height: 18px; accent-color: #2563eb;">
                                     <span style="flex: 1; font-size: 0.95rem; color: #374151;"><?= htmlspecialchars($itm['name']) ?></span>
                                     <span style="font-size: 0.8rem; color: #6b7280;">
-                                        <?= $itm['price'] > 0 ? 'R$ ' . number_format($itm['price'], 2, ',', '.') : 'Grátis' ?>
+                                        <?= ((float) ($itm['price'] ?? 0)) > 0 ? 'R$ ' . number_format((float) ($itm['price'] ?? 0), 2, ',', '.') : 'Grátis' ?>
                                     </span>
                                 </label>
                             <?php endforeach; ?>

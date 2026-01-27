@@ -29,33 +29,33 @@
         <tbody>
             <?php foreach ($restaurants as $loja): ?>
                 <tr>
-                    <td>#<?php echo $loja['id']; ?></td>
+                    <td>#<?php echo (int) ($loja['id'] ?? 0); ?></td>
                     <td>
-                        <strong><?php echo $loja['name']; ?></strong><br>
-                        <small style="color:#777"><?php echo $loja['slug_display']; ?></small>
+                        <strong><?php echo \App\Helpers\ViewHelper::e($loja['name'] ?? ''); ?></strong><br>
+                        <small style="color:#777"><?php echo \App\Helpers\ViewHelper::e($loja['slug_display'] ?? ''); ?></small>
                     </td>
                     
                     <td class="text-center">
-                        <a href="admin/autologin?id=<?php echo $loja['id']; ?>" class="btn-pdv" title="Gerenciar esta Loja">
+                        <a href="admin/autologin?id=<?php echo (int) ($loja['id'] ?? 0); ?>" class="btn-pdv" title="Gerenciar esta Loja">
                             <i class="fas fa-desktop"></i> Acessar
                         </a>
                     </td>
 
                     <td class="text-center">
-                        <a href="<?php echo $loja['slug']; ?>" target="_blank" class="btn-link-cardapio">
+                        <a href="<?php echo \App\Helpers\ViewHelper::e($loja['slug'] ?? ''); ?>" target="_blank" class="btn-link-cardapio">
                             <i class="fas fa-external-link-alt"></i>
                         </a>
                     </td>
                     
                     <td class="text-center">
-                        <a href="admin/restaurantes/status?id=<?php echo $loja['id']; ?>" class="badge <?php echo $loja['status_class']; ?>">
-                            <?php echo $loja['status_label']; ?>
+                        <a href="admin/restaurantes/status?id=<?php echo (int) ($loja['id'] ?? 0); ?>" class="badge <?php echo \App\Helpers\ViewHelper::e($loja['status_class'] ?? ''); ?>">
+                            <?php echo \App\Helpers\ViewHelper::e($loja['status_label'] ?? ''); ?>
                         </a>
                     </td>
 
                     <td class="text-center">
-                        <a href="admin/restaurantes/editar?id=<?php echo $loja['id']; ?>" class="btn-action btn-edit"><i class="fas fa-edit"></i></a>
-                        <a href="admin/restaurantes/deletar?id=<?php echo $loja['id']; ?>" class="btn-action btn-delete" onclick="return confirm('Excluir?');"><i class="fas fa-trash"></i></a>
+                        <a href="admin/restaurantes/editar?id=<?php echo (int) ($loja['id'] ?? 0); ?>" class="btn-action btn-edit"><i class="fas fa-edit"></i></a>
+                        <a href="admin/restaurantes/deletar?id=<?php echo (int) ($loja['id'] ?? 0); ?>" class="btn-action btn-delete" onclick="return confirm('Excluir?');"><i class="fas fa-trash"></i></a>
                     </td>
                 </tr>
             <?php endforeach; ?>

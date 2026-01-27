@@ -18,7 +18,7 @@
                 <i data-lucide="package" style="width: 18px; height: 18px; color: #2563eb;"></i>
             </div>
             <div>
-                <span style="font-weight: 700; color: #1f2937;"><?= $totalProducts ?></span>
+                <span style="font-weight: 700; color: #1f2937;"><?= (int) $totalProducts ?></span>
                 <span style="font-size: 0.8rem; color: #6b7280;"> produtos</span>
             </div>
         </div>
@@ -29,7 +29,7 @@
                 <i data-lucide="alert-triangle" style="width: 18px; height: 18px; color: #d97706;"></i>
             </div>
             <div>
-                <span style="font-weight: 700; color: #d97706;"><?= $criticalCount ?></span>
+                <span style="font-weight: 700; color: #d97706;"><?= (int) $criticalCount ?></span>
                 <span style="font-size: 0.8rem; color: #6b7280;"> críticos</span>
             </div>
         </div>
@@ -40,7 +40,7 @@
                 <i data-lucide="trending-down" style="width: 18px; height: 18px; color: #dc2626;"></i>
             </div>
             <div>
-                <span style="font-weight: 700; color: #dc2626;"><?= $negativeCount ?></span>
+                <span style="font-weight: 700; color: #dc2626;"><?= (int) $negativeCount ?></span>
                 <span style="font-size: 0.8rem; color: #6b7280;"> negativos</span>
             </div>
         </div>
@@ -53,7 +53,7 @@
         <button class="category-chip active" data-category="">📂 Todas</button>
         <?php foreach ($categories as $cat): ?>
             <?php if (!in_array($cat['category_type'] ?? 'default', ['featured', 'combos'])): ?>
-                <button class="category-chip" data-category="<?= htmlspecialchars($cat['name']) ?>">
+                <button class="category-chip" data-category="<?= htmlspecialchars((string) ($cat['name'] ?? '')) ?>">
                     <?= htmlspecialchars($cat['name']) ?>
                 </button>
             <?php endif; ?>
@@ -79,12 +79,12 @@
             }
         ?>
         <div class="stock-product-card product-row" 
-             data-product-id="<?= $prod['id'] ?>"
-             data-name="<?= strtolower($prod['name']) ?>" 
-             data-category="<?= htmlspecialchars($prod['category_name'] ?? '') ?>">
+             data-product-id="<?= (int) ($prod['id'] ?? 0) ?>"
+             data-name="<?= htmlspecialchars(strtolower((string) ($prod['name'] ?? ''))) ?>" 
+             data-category="<?= htmlspecialchars((string) ($prod['category_name'] ?? '')) ?>">
             
             <?php if ($prod['image']): ?>
-                <img src="<?= BASE_URL ?>/uploads/thumb/<?= $prod['image'] ?>" loading="lazy" 
+                <img src="<?= BASE_URL ?>/uploads/thumb/<?= \App\Helpers\ViewHelper::e($prod['image'] ?? '') ?>" loading="lazy" 
                      class="stock-product-image" alt="<?= htmlspecialchars($prod['name']) ?>">
             <?php else: ?>
                 <div class="stock-product-placeholder">
@@ -97,12 +97,12 @@
                 <span class="stock-product-card-category"><?= htmlspecialchars($prod['category_name'] ?? '') ?></span>
                 
                 <div class="stock-product-card-footer">
-                    <span class="stock-product-card-stock <?= $stockClass ?>"><?= $stock ?> un</span>
+                    <span class="stock-product-card-stock <?= \App\Helpers\ViewHelper::e($stockClass) ?>"><?= (int) $stock ?> un</span>
                 </div>
             </div>
             
             <div class="stock-product-card-actions">
-                <button onclick="StockSPA.openAdjustModal(<?= $prod['id'] ?>, '<?= htmlspecialchars(addslashes($prod['name'])) ?>', <?= $stock ?>)" 
+                <button onclick="StockSPA.openAdjustModal(<?= (int) ($prod['id'] ?? 0) ?>, '<?= htmlspecialchars(addslashes((string) ($prod['name'] ?? ''))) ?>', <?= (int) $stock ?>)" 
                         class="btn-reposition">
                     <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
                     Repor Estoque

@@ -16,7 +16,7 @@
         // Mostra categorias normais E combos (não mostra featured)
         if ($catType === 'default' || $catType === 'combos'):
             ?>
-            <button class="cardapio-category-btn" data-category="<?= $category['id'] ?>">
+            <button class="cardapio-category-btn" data-category="<?= (int) ($category['id'] ?? 0) ?>">
                 <?= htmlspecialchars($category['name']) ?>
             </button>
         <?php endif; ?>

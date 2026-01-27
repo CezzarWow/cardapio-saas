@@ -19,7 +19,7 @@ use App\Core\ViewHelper;
     <div class="brand-area">
         <a href="<?= BASE_URL ?>/admin/loja/config" title="Configurações da Loja">
             <?php if (!empty($_SESSION['loja_ativa_logo'])): ?>
-                <img src="<?= BASE_URL ?>/uploads/<?= $_SESSION['loja_ativa_logo'] ?>" class="store-logo" alt="Logo">
+                <img src="<?= BASE_URL ?>/uploads/<?= \App\Helpers\ViewHelper::e($_SESSION['loja_ativa_logo'] ?? '') ?>" class="store-logo" alt="Logo">
             <?php else: ?>
                 <div class="brand-icon">
                     <i data-lucide="store" color="white" size="32"></i>
@@ -82,7 +82,7 @@ use App\Core\ViewHelper;
 </main>
 
 <?php // Scripts do SPA ?>
-<script>if(typeof BASE_URL === 'undefined') { const BASE_URL = '<?= BASE_URL ?>'; window.BASE_URL = BASE_URL; }</script>
+<script>if(typeof BASE_URL === 'undefined') { const BASE_URL = <?= json_encode(BASE_URL, JSON_UNESCAPED_SLASHES) ?>; window.BASE_URL = BASE_URL; }</script>
 <script src="<?= BASE_URL ?>/js/admin/spa-config.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/admin/spa-ui.js?v=<?= time() ?>"></script>
 <script src="<?= BASE_URL ?>/js/admin/admin-spa.js?v=<?= time() ?>"></script>

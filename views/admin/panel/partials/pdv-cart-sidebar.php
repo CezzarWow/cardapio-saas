@@ -42,12 +42,12 @@
             <div style="max-height: 150px; overflow-y: auto;">
                 <?php foreach ($itensJaPedidos as $itemAntigo): ?>
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #9a3412; margin-bottom: 4px;">
-                        <span><?= $itemAntigo['quantity'] ?>x <?= $itemAntigo['name'] ?></span>
+                        <span><?= (int) ($itemAntigo['quantity'] ?? 0) ?>x <?= \App\Helpers\ViewHelper::e($itemAntigo['name'] ?? '') ?></span>
                         <div style="display:flex; align-items:center; gap:5px;">
                             <span>R$ <?= number_format($itemAntigo['price'], 2, ',', '.') ?></span>
                             <button data-action="saved-item-delete" 
-                                    data-id="<?= $itemAntigo['id'] ?>" 
-                                    data-order-id="<?= $contaAberta['id'] ?>"
+                                    data-id="<?= (int) ($itemAntigo['id'] ?? 0) ?>" 
+                                    data-order-id="<?= (int) ($contaAberta['id'] ?? 0) ?>"
                                     title="Remover item salvo"
                                     style="border:none; background:none; cursor:pointer; color:#ef4444; display:flex; align-items:center;">
                                 <i data-lucide="trash" style="width:14px; height:14px;"></i>
@@ -58,8 +58,8 @@
             </div>
             <div style="text-align: right; margin-top: 5px;">
                  <button data-action="table-cancel" 
-                         data-table-id="<?= $mesa_id ?>"
-                         data-order-id="<?= $contaAberta['id'] ?>"
+                         data-table-id="<?= (int) $mesa_id ?>"
+                         data-order-id="<?= (int) ($contaAberta['id'] ?? 0) ?>"
                          style="background: none; border: none; color: #dc2626; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-decoration: underline;">
                      Cancelar Pedido da Mesa
                  </button>
@@ -198,7 +198,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                             <div style="flex: 1;">
                                 <div style="font-weight: 700; color: #111827; font-size: 1rem;">
-                                    <?= $item['quantity'] ?>x <?= $item['name'] ?>
+                                    <?= (int) ($item['quantity'] ?? 0) ?>x <?= \App\Helpers\ViewHelper::e($item['name'] ?? '') ?>
                                 </div>
                                 <?php
                                     // Mostrar adicionais se existirem
@@ -209,9 +209,9 @@
                                     <div style="margin-top: 4px; padding-left: 12px; border-left: 2px solid #d1d5db;">
                                         <?php foreach ($extras as $extra): ?>
                                             <div style="font-size: 0.85rem; color: #6b7280;">
-                                                + <?= $extra['name'] ?? $extra ?> 
+                                                + <?= \App\Helpers\ViewHelper::e($extra['name'] ?? $extra ?? '') ?> 
                                                 <?php if (!empty($extra['price'])): ?>
-                                                    <span style="color: #2563eb;">(+R$ <?= number_format($extra['price'], 2, ',', '.') ?>)</span>
+                                                    <span style="color: #2563eb;">(+R$ <?= number_format((float) $extra['price'], 2, ',', '.') ?>)</span>
                                                 <?php endif; ?>
                                             </div>
                                         <?php endforeach; ?>
@@ -220,17 +220,17 @@
                                 
                                 <?php if (!empty($item['observation'])): ?>
                                     <div style="font-size: 0.8rem; color: #9ca3af; font-style: italic; margin-top: 4px;">
-                                        📝 <?= $item['observation'] ?>
+                                        📝 <?= \App\Helpers\ViewHelper::e($item['observation'] ?? '') ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
                             <div style="text-align: right; min-width: 80px;">
                                 <span style="font-weight: 800; color: #2563eb; font-size: 1.1rem;">
-                                    R$ <?= number_format($item['price'] * $item['quantity'], 2, ',', '.') ?>
+                                    R$ <?= number_format(((float) ($item['price'] ?? 0)) * ((int) ($item['quantity'] ?? 0)), 2, ',', '.') ?>
                                 </span>
-                                <?php if ($item['quantity'] > 1): ?>
+                                <?php if (((int) ($item['quantity'] ?? 0)) > 1): ?>
                                     <div style="font-size: 0.75rem; color: #9ca3af;">
-                                        (R$ <?= number_format($item['price'], 2, ',', '.') ?>/un)
+                                        (R$ <?= number_format((float) ($item['price'] ?? 0), 2, ',', '.') ?>/un)
                                     </div>
                                 <?php endif; ?>
                             </div>

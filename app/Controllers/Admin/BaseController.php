@@ -14,6 +14,10 @@ use App\Core\Logger;
  */
 abstract class BaseController
 {
+    private function getAppEnv(): string
+    {
+        return defined('APP_ENV') ? (string) APP_ENV : (string) ($_ENV['APP_ENV'] ?? 'production');
+    }
     /**
      * Verifica se há sessão ativa de usuário.
      * Se não, redireciona para login.
@@ -25,10 +29,15 @@ abstract class BaseController
         }
 
         if (empty($_SESSION['user_id'])) {
-            // DEV MODE: Auto-login como usuário 1 se não houver sessão
-            // (Comportamento alinhado com getUserId())
-            $_SESSION['user_id'] = 1;
-            return;
+            if ($this->getAppEnv() === 'development') {
+                // DEV MODE: Auto-login como usuário 1 se não houver sessão
+                // (Comportamento alinhado com getUserId())
+                $_SESSION['user_id'] = 1;
+                return;
+            }
+
+            header('Location: ' . (defined('BASE_URL') ? BASE_URL : '') . '/admin');
+            exit;
         }
     }
 
@@ -43,9 +52,14 @@ abstract class BaseController
         }
 
         if (empty($_SESSION['loja_ativa_id'])) {
-            // DEV MODE: Auto-select restaurant 8 if no session
-            // (Similar to user_id = 1 in checkSession)
-            $_SESSION['loja_ativa_id'] = 8;
+            if ($this->getAppEnv() === 'development') {
+                // DEV MODE: Auto-select restaurant 8 if no session
+                // (Similar to user_id = 1 in checkSession)
+                $_SESSION['loja_ativa_id'] = 8;
+            } else {
+                header('Location: ' . (defined('BASE_URL') ? BASE_URL : '') . '/admin');
+                exit;
+            }
         }
 
         return (int) $_SESSION['loja_ativa_id'];
@@ -244,6 +258,11 @@ abstract class BaseController
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        return (int) ($_SESSION['user_id'] ?? 1); // Default 1 para dev
+        if (isset($_SESSION['user_id'])) {
+            return (int) $_SESSION['user_id'];
+        }
+
+        // Production should never reach this without session; keep dev fallback.
+        return $this->getAppEnv() === 'development' ? 1 : 0;
     }
 }
