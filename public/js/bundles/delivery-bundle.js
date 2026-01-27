@@ -767,8 +767,17 @@ window.DeliveryPolling = window.DeliveryPolling || {
 window.DeliveryPolling = DeliveryPolling;
 
 // Alias para padronização SPA
-DeliveryPolling.init = function () {
+DeliveryPolling.init = function (params) {
     this.start();
+
+    // [FIX] Se veio com open_order (da aba Mesas), abre modal automaticamente
+    if (params && params.open_order) {
+        setTimeout(() => {
+            if (window.DeliveryUI) {
+                window.DeliveryUI.openDetailsModal(params.open_order);
+            }
+        }, 300); // Aguarda o DOM carregar
+    }
 };
 
 // Auto-start APENAS se não estiver no SPA Shell (modo legado)

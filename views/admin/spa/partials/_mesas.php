@@ -34,9 +34,8 @@
 <?php \App\Core\View::renderFromScope('admin/tables/partials/modals/dossie.php', get_defined_vars()); ?>
 <?php \App\Core\View::renderFromScope('admin/tables/partials/modals/pedido_pago.php', get_defined_vars()); ?>
 
-
-
-<!-- Mesas Bundle (9 scripts combinados) -->
+<!-- Mesas Bundle -->
 <script data-spa-script="mesas-bundle" src="<?= BASE_URL ?>/js/bundles/mesas-bundle.js?v=<?= APP_VERSION ?>"></script>
 
-
+<!-- Modal de Delivery (compartilhado) -->
+<script data-spa-script="delivery-details" src="<?= BASE_URL ?>/js/shared/delivery-details-modal.js?v=<?= APP_VERSION ?>"></script>

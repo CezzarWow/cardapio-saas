@@ -50,7 +50,7 @@ const AdminSPA = {
     registerDefaultModules() {
         // Delivery
         this.registerModule('delivery', {
-            onEnter: async () => { if (window.DeliveryPolling) DeliveryPolling.init(); },
+            onEnter: async (params) => { if (window.DeliveryPolling) DeliveryPolling.init(params); },
             onLeave: async () => { if (window.DeliveryPolling) DeliveryPolling.stop(); }
         });
 
@@ -337,7 +337,8 @@ const AdminSPA = {
 
     async enterSection(sectionName) {
         const module = this.modules[sectionName];
-        if (module && module.onEnter) await module.onEnter();
+        // [FIX] Passa queryParams para o onEnter do módulo (ex: open_order para delivery)
+        if (module && module.onEnter) await module.onEnter(this.currentQueryParams);
         if (window.lucide) lucide.createIcons();
     },
 
