@@ -14,4 +14,6 @@
 /public/uploads
 /storage/logs
 /storage/cache
+/storage/test.sqlite
+/storage/test.sqlite-journal
 composer.phar

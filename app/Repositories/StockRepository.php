@@ -32,10 +32,18 @@ class StockRepository
         }
 
         $conn->prepare($sql)->execute($params);
-        return $conn->prepare('SELECT stock FROM products WHERE id = :id')->execute(['id' => $productId]) ? $conn->lastInsertId() : 0; // lastInsertId wont work for SELECT.
-        // Need to refetch if we want return value, but usually just void is enough.
-        // Original service returns void in decrement, and updated array in update.
-        return 0;
+
+        $selectSql = 'SELECT stock FROM products WHERE id = :id';
+        $selectParams = ['id' => $productId];
+        if ($restaurantId) {
+            $selectSql .= ' AND restaurant_id = :rid';
+            $selectParams['rid'] = $restaurantId;
+        }
+
+        $stmt = $conn->prepare($selectSql);
+        $stmt->execute($selectParams);
+        $stock = $stmt->fetchColumn();
+        return $stock === false ? 0 : (int) $stock;
     }
 
     /**

@@ -2,18 +2,15 @@
 
 namespace Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
 use App\Core\Router;
-use App\Core\Container;
+use PHPUnit\Framework\TestCase;
 
-/**
- * Testes unitários para Router
- */
 class RouterTest extends TestCase
 {
     protected function setUp(): void
     {
         Router::clear();
+        RouterTestController::$called = false;
     }
 
     protected function tearDown(): void
@@ -31,42 +28,46 @@ class RouterTest extends TestCase
 
     public function testPatternRegistersPatternRoute(): void
     {
-        Router::pattern('/^\/user\/(\d+)$/', \stdClass::class, 'method');
-
-        $patterns = Router::getRoutes(); // Nota: getRoutes() não retorna patterns
-        // Patterns são testados via dispatch
-        $this->assertTrue(true); // Placeholder
+        Router::pattern('/^\\/user\\/(\\d+)$/', \stdClass::class, 'method');
+        $this->assertTrue(true);
     }
 
     public function testSetDefaultRegistersDefaultHandler(): void
     {
         $called = false;
-        Router::setDefault(function($path) use (&$called) {
+        Router::setDefault(function ($path) use (&$called) {
             $called = true;
         });
 
-        // Dispatch de rota não encontrada deve chamar default
         Router::dispatch('/non_existent');
-        
+
         $this->assertTrue($called);
     }
 
     public function testDispatchCallsControllerMethod(): void
     {
-        $this->markTestIncomplete('Requires controller mock setup');
+        Router::add('/test', RouterTestController::class, 'testMethod');
+
+        $result = Router::dispatch('/test');
+
+        $this->assertTrue($result);
+        $this->assertTrue(RouterTestController::$called);
     }
 
     public function testDispatchReturnsTrueWhenRouteFound(): void
     {
-        $controller = new class {
-            public function testMethod() {
-                // Mock controller
-            }
-        };
+        Router::add('/test', RouterTestController::class, 'testMethod');
 
-        Router::add('/test', get_class($controller), 'testMethod');
-        
-        // Não podemos testar dispatch facilmente sem setup completo
-        $this->assertTrue(true); // Placeholder
+        $this->assertTrue(Router::dispatch('/test'));
+    }
+}
+
+class RouterTestController
+{
+    public static bool $called = false;
+
+    public function testMethod(): void
+    {
+        self::$called = true;
     }
 }

@@ -2,23 +2,18 @@
 
 namespace Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
 use App\Repositories\Order\OrderRepository;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
 /**
- * Unit tests for OrderRepository::updateStatus
- * 
- * Tests transition validation per implementation_plan.md Seção 2.4 e 2.5
+ * Unit tests for OrderRepository::updateStatus transition rules.
  */
 class OrderRepositoryStatusTransitionTest extends TestCase
 {
-    /**
-     * Data provider for valid transitions
-     */
     public static function validTransitionsProvider(): array
     {
         return [
-            // PEDIDOS (operacionais)
             ['novo', 'aguardando'],
             ['novo', 'concluido'],
             ['novo', 'cancelado'],
@@ -32,110 +27,77 @@ class OrderRepositoryStatusTransitionTest extends TestCase
             ['em_entrega', 'entregue'],
             ['em_entrega', 'cancelado'],
             ['entregue', 'concluido'],
-            // CONTAS (financeiras)
             ['aberto', 'concluido'],
             ['aberto', 'cancelado'],
         ];
     }
 
-    /**
-     * Data provider for invalid transitions
-     */
     public static function invalidTransitionsProvider(): array
     {
         return [
-            // Transições proibidas conforme doc
-            ['novo', 'aberto', 'Mistura pedido operacional com conta financeira'],
-            ['aberto', 'novo', 'Conta não vira pedido'],
-            ['concluido', 'aberto', 'Estado final não pode mudar'],
-            ['concluido', 'cancelado', 'Estado final não pode mudar'],
-            ['cancelado', 'novo', 'Estado final não pode mudar'],
-            ['cancelado', 'aberto', 'Estado final não pode mudar'],
-            ['entregue', 'aberto', 'Já entregue não reabre'],
-            ['entregue', 'novo', 'Backward transition proibida'],
-            // Transições inexistentes
+            ['novo', 'aberto', 'Operational order cannot become financial account'],
+            ['aberto', 'novo', 'Account does not become operational order'],
+            ['concluido', 'aberto', 'Final state cannot transition'],
+            ['concluido', 'cancelado', 'Final state cannot transition'],
+            ['cancelado', 'novo', 'Final state cannot transition'],
+            ['cancelado', 'aberto', 'Final state cannot transition'],
+            ['entregue', 'aberto', 'Delivered order cannot reopen'],
+            ['entregue', 'novo', 'Backward transition'],
             ['em_preparo', 'novo', 'Backward transition'],
             ['pronto', 'aguardando', 'Backward transition'],
         ];
     }
 
-    /**
-     * Test: Transição válida deve estar no array VALID_TRANSITIONS
-     * 
-     * @dataProvider validTransitionsProvider
-     */
+    #[DataProvider('validTransitionsProvider')]
     public function testValidTransitionIsAllowed(string $from, string $to): void
     {
-        // Usamos reflection para acessar a constante privada
         $reflection = new \ReflectionClass(OrderRepository::class);
         $constant = $reflection->getConstant('VALID_TRANSITIONS');
 
-        $this->assertArrayHasKey($from, $constant, "Status '{$from}' não está definido em VALID_TRANSITIONS");
-        $this->assertContains($to, $constant[$from], "Transição {$from} → {$to} deveria ser válida");
+        $this->assertArrayHasKey($from, $constant, "Status '{$from}' not defined");
+        $this->assertContains($to, $constant[$from], "Transition {$from} -> {$to} should be allowed");
     }
 
-    /**
-     * Test: Transição inválida NÃO deve estar no array VALID_TRANSITIONS
-     * 
-     * @dataProvider invalidTransitionsProvider
-     */
+    #[DataProvider('invalidTransitionsProvider')]
     public function testInvalidTransitionIsBlocked(string $from, string $to, string $reason): void
     {
         $reflection = new \ReflectionClass(OrderRepository::class);
         $constant = $reflection->getConstant('VALID_TRANSITIONS');
 
         if (!array_key_exists($from, $constant)) {
-            // Status não definido = implicitamente bloqueado
-            $this->assertTrue(true, "Status '{$from}' não definido, transição bloqueada");
+            $this->assertTrue(true, "Status '{$from}' not defined, transition blocked");
             return;
         }
 
         $this->assertNotContains(
-            $to, 
-            $constant[$from], 
-            "Transição {$from} → {$to} NÃO deveria ser permitida. Razão: {$reason}"
+            $to,
+            $constant[$from],
+            "Transition {$from} -> {$to} should NOT be allowed. Reason: {$reason}"
         );
     }
 
-    /**
-     * Test: Estados finais (concluido, cancelado) não podem transitar para nenhum outro
-     */
     public function testFinalStatesHaveNoTransitions(): void
     {
         $reflection = new \ReflectionClass(OrderRepository::class);
         $constant = $reflection->getConstant('VALID_TRANSITIONS');
 
-        $this->assertEmpty($constant['concluido'], "'concluido' deve ser estado final sem transições");
-        $this->assertEmpty($constant['cancelado'], "'cancelado' deve ser estado final sem transições");
+        $this->assertEmpty($constant['concluido'], "'concluido' must be final");
+        $this->assertEmpty($constant['cancelado'], "'cancelado' must be final");
     }
 
-    /**
-     * Test: 'novo' NÃO pode transitar para 'aberto' (regra crítica)
-     */
     public function testNovoCannotTransitionToAberto(): void
     {
         $reflection = new \ReflectionClass(OrderRepository::class);
         $constant = $reflection->getConstant('VALID_TRANSITIONS');
 
-        $this->assertNotContains(
-            'aberto', 
-            $constant['novo'], 
-            "'novo' → 'aberto' é PROIBIDO: mistura pedido operacional com conta financeira"
-        );
+        $this->assertNotContains('aberto', $constant['novo']);
     }
 
-    /**
-     * Test: 'aberto' pode transitar para 'concluido' (fechamento de comanda)
-     */
     public function testAbertoCanTransitionToConcluido(): void
     {
         $reflection = new \ReflectionClass(OrderRepository::class);
         $constant = $reflection->getConstant('VALID_TRANSITIONS');
 
-        $this->assertContains(
-            'concluido', 
-            $constant['aberto'], 
-            "'aberto' → 'concluido' é necessário para CloseCommandAction"
-        );
+        $this->assertContains('concluido', $constant['aberto']);
     }
 }

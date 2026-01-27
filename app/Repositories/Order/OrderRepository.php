@@ -84,7 +84,7 @@ class OrderRepository
             'total' => $data['total'],
             'status' => $status,
             'otype' => $data['order_type'],
-            'payment' => $data['payment_method'],
+            'payment' => $data['payment_method'] ?? null,
             'obs' => $data['observation'] ?? null,
             'change' => $data['change_for'] ?? null,
             'source' => $data['source'] ?? 'pdv'

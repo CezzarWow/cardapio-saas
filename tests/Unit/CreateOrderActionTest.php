@@ -10,7 +10,9 @@ use App\Repositories\TableRepository;
 use App\Services\CashRegisterService;
 use App\Services\Order\CreateOrderAction;
 use App\Services\PaymentService;
+use PDO;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\TestDatabase;
 
 class CreateOrderActionTest extends TestCase
 {
@@ -25,6 +27,8 @@ class CreateOrderActionTest extends TestCase
 
     protected function setUp(): void
     {
+        TestDatabase::truncateAll();
+
         $this->paymentService = $this->createMock(PaymentService::class);
         $this->cashRegisterService = $this->createMock(CashRegisterService::class);
         $this->stockRepository = $this->createMock(StockRepository::class);
@@ -59,14 +63,16 @@ class CreateOrderActionTest extends TestCase
         $this->cashRegisterService
             ->expects($this->once())
             ->method('assertOpen')
+            ->with($this->isInstanceOf(PDO::class), 1)
             ->willReturn(['id' => 1]);
-
-        // Note: this unit test does NOT mock Database::connect() (static), so it cannot reliably
-        // assert beginTransaction/commit. Those behaviors are better covered by integration tests.
 
         $this->orderRepository
             ->expects($this->once())
             ->method('create')
+            ->with($this->callback(function (array $payload) {
+                return $payload['order_type'] === 'balcao'
+                    && $payload['total'] === 20.0;
+            }), 'concluido')
             ->willReturn(123);
 
         $this->orderRepository
@@ -75,11 +81,13 @@ class CreateOrderActionTest extends TestCase
 
         $this->orderRepository
             ->expects($this->once())
-            ->method('updateOrderType');
+            ->method('updateOrderType')
+            ->with(123, 'balcao');
 
         $this->itemRepository
             ->expects($this->once())
-            ->method('insert');
+            ->method('insert')
+            ->with(123, $data['cart']);
 
         $this->stockRepository
             ->expects($this->atLeastOnce())
@@ -93,12 +101,8 @@ class CreateOrderActionTest extends TestCase
             ->expects($this->once())
             ->method('registerMovement');
 
-        try {
-            $result = $this->action->execute(1, 5, $data);
-            $this->assertEquals(123, $result);
-        } catch (\App\Exceptions\DatabaseConnectionException $e) {
-            $this->markTestSkipped('Database connection required for this test');
-        }
+        $result = $this->action->execute(1, 5, $data);
+        $this->assertEquals(123, $result);
     }
 
     public function testExecuteFailsValidationWithEmptyCart(): void
@@ -108,25 +112,132 @@ class CreateOrderActionTest extends TestCase
         $this->cashRegisterService
             ->expects($this->once())
             ->method('assertOpen')
+            ->with($this->isInstanceOf(PDO::class), 1)
             ->willReturn(['id' => 1]);
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('O carrinho');
 
-        try {
-            $this->action->execute(1, 5, $data);
-        } catch (\App\Exceptions\DatabaseConnectionException $e) {
-            $this->markTestSkipped('Database connection required for this test');
-        }
+        $this->action->execute(1, 5, $data);
     }
 
     public function testExecuteNormalizesOrderType(): void
     {
-        $this->markTestIncomplete('Requires database setup to test order type normalization');
+        $data = [
+            'cart' => [
+                ['id' => 1, 'product_id' => 1, 'quantity' => 1, 'price' => 10.00],
+            ],
+            'order_type' => 'entrega',
+            'finalize_now' => false,
+            'is_paid' => 0,
+            'payments' => [],
+        ];
+
+        $this->cashRegisterService
+            ->expects($this->once())
+            ->method('assertOpen')
+            ->with($this->isInstanceOf(PDO::class), 1)
+            ->willReturn(['id' => 1]);
+
+        $this->orderRepository
+            ->expects($this->once())
+            ->method('create')
+            ->with($this->callback(function (array $payload) {
+                return $payload['order_type'] === 'delivery';
+            }), 'novo')
+            ->willReturn(456);
+
+        $this->orderRepository
+            ->expects($this->once())
+            ->method('updateOrderType')
+            ->with(456, 'delivery');
+
+        $this->itemRepository
+            ->expects($this->once())
+            ->method('insert');
+
+        $this->stockRepository
+            ->expects($this->once())
+            ->method('decrement');
+
+        $this->paymentService
+            ->expects($this->once())
+            ->method('registerPayments');
+
+        $this->cashRegisterService
+            ->expects($this->never())
+            ->method('registerMovement');
+
+        $result = $this->action->execute(1, 5, $data);
+        $this->assertEquals(456, $result);
     }
 
     public function testExecuteHandlesExistingOrder(): void
     {
-        $this->markTestIncomplete('Requires database setup to test existing order handling');
+        $data = [
+            'order_id' => 10,
+            'cart' => [
+                ['id' => 1, 'product_id' => 1, 'quantity' => 1, 'price' => 12.00],
+            ],
+            'order_type' => 'balcao',
+            'finalize_now' => true,
+            'is_paid' => 1,
+            'payments' => [['method' => 'pix', 'amount' => 12.00]],
+        ];
+
+        $this->cashRegisterService
+            ->expects($this->once())
+            ->method('assertOpen')
+            ->with($this->isInstanceOf(PDO::class), 1)
+            ->willReturn(['id' => 1]);
+
+        $this->orderRepository
+            ->expects($this->once())
+            ->method('find')
+            ->with(10)
+            ->willReturn([
+                'id' => 10,
+                'status' => 'aberto',
+                'total' => 0,
+                'order_type' => 'balcao',
+            ]);
+
+        $this->orderRepository
+            ->expects($this->once())
+            ->method('updateStatus')
+            ->with(10, 'concluido');
+
+        $this->itemRepository
+            ->expects($this->once())
+            ->method('insert')
+            ->with(10, $data['cart']);
+
+        $this->orderRepository
+            ->expects($this->once())
+            ->method('updateTotal')
+            ->with(10, 12.0);
+
+        $this->orderRepository
+            ->expects($this->never())
+            ->method('create');
+
+        $this->stockRepository
+            ->expects($this->once())
+            ->method('decrement');
+
+        $this->paymentService
+            ->expects($this->once())
+            ->method('registerPayments');
+
+        $this->orderRepository
+            ->expects($this->once())
+            ->method('updatePayment');
+
+        $this->cashRegisterService
+            ->expects($this->once())
+            ->method('registerMovement');
+
+        $result = $this->action->execute(1, 5, $data);
+        $this->assertEquals(10, $result);
     }
 }
