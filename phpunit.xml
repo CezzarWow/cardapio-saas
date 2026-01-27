@@ -13,6 +13,7 @@
             <directory suffix="Test.php">./tests/Integration</directory>
         </testsuite>
     </testsuites>
+    <!-- Coverage não é coletada por padrão (Xdebug/PCOV ausentes). Instale um driver de cobertura ou personalize a CLI caso precise de relatórios. -->
     <source>
         <include>
             <directory suffix=".php">./app</directory>

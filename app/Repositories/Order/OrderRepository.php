@@ -96,13 +96,13 @@ class OrderRepository
     /**
      * Busca pedido por ID
      */
-    public function find(int $id, int $restaurantId = null): ?array
+    public function find(int $id, ?int $restaurantId = null): ?array
     {
         $conn = Database::connect();
         $sql = 'SELECT * FROM orders WHERE id = :id';
         $params = ['id' => $id];
 
-        if ($restaurantId) {
+        if ($restaurantId !== null) {
             $sql .= ' AND restaurant_id = :rid';
             $params['rid'] = $restaurantId;
         }

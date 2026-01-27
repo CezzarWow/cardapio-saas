@@ -240,4 +240,99 @@ class CreateOrderActionTest extends TestCase
         $result = $this->action->execute(1, 5, $data);
         $this->assertEquals(10, $result);
     }
+
+    public function testExecuteProcessesComboWithAdditionalsAndMultiplePayments(): void
+    {
+        $cart = [
+            [
+                'id' => 1,
+                'product_id' => 1,
+                'name' => 'Combo Especial',
+                'price' => 20.00,
+                'quantity' => 1,
+                'extras' => [
+                    ['id' => 101, 'name' => 'Molho Especial', 'price' => 3.00]
+                ],
+                'observation' => 'Sem cebola'
+            ],
+            [
+                'id' => 2,
+                'product_id' => 2,
+                'name' => 'Cerveja',
+                'price' => 8.00,
+                'quantity' => 2
+            ]
+        ];
+
+        $payments = [
+            ['method' => 'pix', 'amount' => 20.00],
+            ['method' => 'dinheiro', 'amount' => 16.00],
+        ];
+
+        $this->cashRegisterService
+            ->expects($this->once())
+            ->method('assertOpen')
+            ->with($this->isInstanceOf(PDO::class), 1)
+            ->willReturn(['id' => 1]);
+
+        $this->orderRepository
+            ->expects($this->once())
+            ->method('create')
+            ->with($this->callback(function (array $payload) {
+                return $payload['payment_method'] === 'multiplo'
+                    && $payload['total'] === 36.0
+                    && $payload['observation'] === null;
+            }), 'concluido')
+            ->willReturn(555);
+
+        $this->orderRepository
+            ->expects($this->once())
+            ->method('updatePayment')
+            ->with(555, true, 'multiplo');
+
+        $this->orderRepository
+            ->expects($this->once())
+            ->method('updateOrderType')
+            ->with(555, 'balcao');
+
+        $this->itemRepository
+            ->expects($this->once())
+            ->method('insert')
+            ->with(555, $cart);
+
+        $stockCalls = [];
+        $this->stockRepository
+            ->expects($this->exactly(2))
+            ->method('decrement')
+            ->willReturnCallback(function (int $productId, int $quantity) use (&$stockCalls) {
+                $stockCalls[] = [$productId, $quantity];
+                return null;
+            });
+
+        $this->paymentService
+            ->expects($this->once())
+            ->method('registerPayments')
+            ->with($this->isInstanceOf(PDO::class), 555, $payments);
+
+        $this->cashRegisterService
+            ->expects($this->once())
+            ->method('registerMovement')
+            ->with(
+                $this->isInstanceOf(PDO::class),
+                1,
+                36.0,
+                'Venda Balcao #555',
+                555
+            );
+
+        $this->action->execute(1, 5, [
+            'cart' => $cart,
+            'order_type' => 'balcao',
+            'finalize_now' => true,
+            'is_paid' => 1,
+            'payments' => $payments,
+        ]);
+
+        $this->assertEquals([[1, 1], [2, 2]], $stockCalls);
+    }
 }

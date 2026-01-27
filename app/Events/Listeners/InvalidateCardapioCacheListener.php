@@ -22,6 +22,7 @@ final class InvalidateCardapioCacheListener
             'config_' . $rid,
             'hours_' . $rid,
             'products_' . $rid,
+            'additionals_' . $rid,
             'combos_' . $rid,
         ];
 

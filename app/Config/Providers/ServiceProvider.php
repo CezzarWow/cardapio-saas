@@ -170,7 +170,8 @@ class ServiceProvider implements Provider
                 $c->get(\App\Repositories\Order\OrderRepository::class),
                 $c->get(\App\Repositories\Order\OrderItemRepository::class),
                 $c->get(\App\Repositories\ProductRepository::class),
-                $c->get(\App\Repositories\AdditionalItemRepository::class)
+                $c->get(\App\Repositories\AdditionalItemRepository::class),
+                $c->get(\App\Services\PaymentService::class)
             );
         });
 

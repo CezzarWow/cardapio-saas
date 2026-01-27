@@ -31,10 +31,10 @@ class StockRepositoryTest extends TestCase
     {
         $productId = $this->seedProduct(5);
 
-        $this->repository->increment($productId, 4);
+        $stockAfter = $this->repository->increment($productId, 4);
 
-        $stock = $this->fetchStock($productId);
-        $this->assertEquals(9, $stock);
+        $this->assertEquals(9, $stockAfter);
+        $this->assertEquals(9, $this->fetchStock($productId));
     }
 
     public function testUpdateStockSetsExactValue(): void

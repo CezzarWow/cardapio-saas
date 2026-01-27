@@ -172,7 +172,7 @@ abstract class BaseController
     protected function handleDelete(
         callable $action,
         string $baseRedirect,
-        int $id = null
+        ?int $id = null
     ): void {
         $restaurantId = $this->getRestaurantId();
         $id = $id ?? $this->getInt('id');

@@ -9,6 +9,7 @@ use App\Repositories\ClientRepository;
 use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\ProductRepository;
+use App\Services\PaymentService;
 
 /**
  * Service para criar pedidos via Cardápio Web
@@ -21,6 +22,7 @@ class CreateWebOrderService
     private OrderItemRepository $itemRepository;
     private ProductRepository $productRepository;
     private AdditionalItemRepository $additionalItemRepository;
+    private PaymentService $paymentService;
 
     /**
      * Mapeamento de tipos de pedido (frontend → banco)
@@ -38,13 +40,15 @@ class CreateWebOrderService
         OrderRepository $orderRepository,
         OrderItemRepository $itemRepository,
         ProductRepository $productRepository,
-        AdditionalItemRepository $additionalItemRepository
+        AdditionalItemRepository $additionalItemRepository,
+        PaymentService $paymentService
     ) {
         $this->clientRepository = $clientRepository;
         $this->orderRepository = $orderRepository;
         $this->itemRepository = $itemRepository;
         $this->productRepository = $productRepository;
         $this->additionalItemRepository = $additionalItemRepository;
+        $this->paymentService = $paymentService;
     }
 
     /**
@@ -102,6 +106,10 @@ class CreateWebOrderService
 
             // 6. Inserir itens
             $this->itemRepository->insert($orderId, $calculatedItems);
+
+            // 7. Registrar pagamentos relacionados ao pedido
+            $payments = $input['payments'] ?? [];
+            $this->paymentService->registerPayments($conn, $orderId, $payments);
 
             $conn->commit();
 

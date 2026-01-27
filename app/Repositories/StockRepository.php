@@ -20,36 +20,37 @@ class StockRepository
     /**
      * Incrementa estoque
      */
-    public function increment(int $productId, int $amount, int $restaurantId = null): int
+    public function increment(int $productId, int $amount, ?int $restaurantId = null): int
     {
         $conn = Database::connect();
         $sql = 'UPDATE products SET stock = stock + :amount WHERE id = :pid';
         $params = ['amount' => $amount, 'pid' => $productId];
 
-        if ($restaurantId) {
+        if ($restaurantId !== null) {
             $sql .= ' AND restaurant_id = :rid';
             $params['rid'] = $restaurantId;
         }
 
         $conn->prepare($sql)->execute($params);
 
-        $selectSql = 'SELECT stock FROM products WHERE id = :id';
-        $selectParams = ['id' => $productId];
-        if ($restaurantId) {
+        $selectSql = 'SELECT stock FROM products WHERE id = :pid';
+        $selectParams = ['pid' => $productId];
+        if ($restaurantId !== null) {
             $selectSql .= ' AND restaurant_id = :rid';
             $selectParams['rid'] = $restaurantId;
         }
 
         $stmt = $conn->prepare($selectSql);
         $stmt->execute($selectParams);
+
         $stock = $stmt->fetchColumn();
-        return $stock === false ? 0 : (int) $stock;
+        return (int) ($stock === false ? 0 : $stock);
     }
 
     /**
      * Decrementa estoque
      */
-    public function decrement(int $productId, int $amount, int $restaurantId = null): void
+    public function decrement(int $productId, int $amount, ?int $restaurantId = null): void
     {
         $conn = Database::connect();
         $sql = 'UPDATE products SET stock = stock - :amount WHERE id = :pid';

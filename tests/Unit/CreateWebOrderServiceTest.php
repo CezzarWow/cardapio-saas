@@ -146,6 +146,68 @@ class CreateWebOrderServiceTest extends TestCase
         $this->assertEqualsWithDelta($expectedItemPrice, (float) $item['price'], 0.001);
     }
 
+    public function testExecuteHandlesAdditionalsAndMultiplePayments(): void
+    {
+        $restaurantId = 5;
+        $userId = 5;
+        $this->seedUser($userId);
+        $this->seedRestaurant($restaurantId, $userId);
+
+        $productId = $this->seedProduct($restaurantId, [
+            'price' => 15.00
+        ]);
+
+        $groupId = $this->seedAdditionalGroup($restaurantId, 'Molhos', true);
+        $additionalId = $this->seedAdditionalItem($restaurantId, 'Molho Especial', 3.00);
+        $this->linkAdditionalGroupItem($groupId, $additionalId);
+        $this->linkProductToGroup($productId, $groupId);
+
+        $payments = [
+            ['method' => 'pix', 'amount' => 13.00],
+            ['method' => 'dinheiro', 'amount' => 10.00],
+        ];
+
+        $result = $this->service->execute([
+            'restaurant_id' => $restaurantId,
+            'customer_name' => 'Cliente Combo',
+            'order_type' => 'entrega',
+            'payment_method' => 'pix',
+            'delivery_fee' => 5.00,
+            'items' => [
+                [
+                    'product_id' => $productId,
+                    'quantity' => 1,
+                    'additionals' => [
+                        [
+                            'id' => $additionalId,
+                            'name' => 'Molho Especial',
+                            'price' => 3.00
+                        ]
+                    ]
+                ]
+            ],
+            'payments' => $payments
+        ]);
+
+        $this->assertTrue($result['success']);
+        $orderId = (int) $result['order_id'];
+        $order = $this->fetchOrder($orderId);
+        $this->assertEqualsWithDelta(23.00, (float) $order['total'], 0.001);
+
+        $dbPayments = $this->fetchOrderPayments($orderId);
+        $this->assertCount(2, $dbPayments);
+        $this->assertEquals('dinheiro', $dbPayments[0]['method']);
+        $this->assertEquals(10.00, (float) $dbPayments[0]['amount']);
+        $this->assertEquals('pix', $dbPayments[1]['method']);
+        $this->assertEquals(13.00, (float) $dbPayments[1]['amount']);
+        $this->assertEqualsWithDelta(23.00, array_sum(array_column($dbPayments, 'amount')), 0.01);
+
+        $itemExtras = $this->fetchOrderItemExtras($orderId);
+        $extras = json_decode($itemExtras['extras'], true);
+        $this->assertIsArray($extras);
+        $this->assertEquals($additionalId, (int) $extras[0]['id']);
+    }
+
     private function seedUser(int $id): void
     {
         $stmt = $this->conn->prepare('
@@ -251,6 +313,22 @@ class CreateWebOrderServiceTest extends TestCase
             'pid' => $productId,
             'gid' => $groupId
         ]);
+    }
+
+    private function fetchOrderPayments(int $orderId): array
+    {
+        $stmt = $this->conn->prepare('SELECT method, amount FROM order_payments WHERE order_id = :oid ORDER BY method ASC');
+        $stmt->execute(['oid' => $orderId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    private function fetchOrderItemExtras(int $orderId): array
+    {
+        $stmt = $this->conn->prepare('SELECT extras FROM order_items WHERE order_id = :oid LIMIT 1');
+        $stmt->execute(['oid' => $orderId]);
+        $item = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $this->assertNotFalse($item);
+        return $item;
     }
 
     private function fetchOrder(int $orderId): array
