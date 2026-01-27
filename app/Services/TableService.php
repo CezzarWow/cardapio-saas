@@ -22,7 +22,23 @@ class TableService
      */
     public function getAllTables($restaurantId)
     {
-        return $this->tableRepo->findAll($restaurantId);
+        $tables = $this->tableRepo->findAll($restaurantId);
+
+        foreach ($tables as &$table) {
+            $hasOrder = !empty($table['current_order_id']);
+            $isOccupied = ($table['status'] ?? '') === 'ocupada';
+            $itemsCount = (int) ($table['items_count'] ?? 0);
+
+            if ($isOccupied && $hasOrder && $itemsCount === 0) {
+                $this->tableRepo->free((int) $table['id']);
+                $table['status'] = 'livre';
+                $table['current_order_id'] = null;
+                $table['order_total'] = 0;
+            }
+        }
+        unset($table);
+
+        return $tables;
     }
 
     /**

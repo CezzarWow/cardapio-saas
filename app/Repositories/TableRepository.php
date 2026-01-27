@@ -52,7 +52,8 @@ class TableRepository
         
         // [FIX] Calcula total somando os itens, pois orders.total nem sempre está atualizado em tempo real
         $sql = "SELECT t.*, 
-                       (SELECT SUM(price * quantity) FROM order_items WHERE order_id = o.id) as order_total, 
+                       COALESCE((SELECT SUM(price * quantity) FROM order_items WHERE order_id = o.id), 0) as order_total, 
+                       COALESCE((SELECT COUNT(*) FROM order_items WHERE order_id = o.id), 0) as items_count,
                        o.order_type, 
                        c.credit_limit, 
                        c.name as client_name 
