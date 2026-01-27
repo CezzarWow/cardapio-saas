@@ -99,12 +99,17 @@
                 <?php else: ?>
                     <div class="item-chips-container">
                         <?php foreach ($group['items'] as $item): ?>
+                        <?php
+                            $itemId = (int) ($item['id'] ?? 0);
+                            $itemName = (string) ($item['name'] ?? '');
+                            $itemPrice = (float) ($item['price'] ?? 0);
+                        ?>
                         <div class="item-chip">
-                            <span class="item-chip-name"><?= htmlspecialchars($item['name']) ?></span>
-                            <span class="item-chip-price <?= $item['price'] > 0 ? 'paid' : 'free' ?>">
-                                <?= $item['price'] > 0 ? 'R$ ' . number_format($item['price'], 2, ',', '.') : 'Grátis' ?>
+                            <span class="item-chip-name"><?= \App\Helpers\ViewHelper::e($itemName) ?></span>
+                            <span class="item-chip-price <?= $itemPrice > 0 ? 'paid' : 'free' ?>">
+                                <?= $itemPrice > 0 ? ('R$ ' . number_format($itemPrice, 2, ',', '.')) : 'Grátis' ?>
                             </span>
-                            <a href="<?= BASE_URL ?>/admin/loja/adicionais/desvincular?grupo=<?= $group['id'] ?>&item=<?= $item['id'] ?>"
+                            <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/adicionais/desvincular?grupo=<?= $groupId ?>&item=<?= $itemId ?>"
                                class="item-chip-unlink" title="Desvincular">
                                 <i data-lucide="x" style="width: 12px; height: 12px;"></i>
                             </a>
@@ -126,7 +131,7 @@
 
 <!-- Scripts de Adicionais -->
 <!-- MultiSelect precisa ser executado toda vez para garantir disponibilidade no contexto SPA -->
-<script src="<?= BASE_URL ?>/js/components/multi-select.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/components/multi-select.js?v=<?= time() ?>"></script>
 
 <!-- Scripts de adicionais unificados (Bundle) -->
-<script src="<?= BASE_URL ?>/js/admin/additionals-bundle.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/admin/additionals-bundle.js?v=<?= time() ?>"></script>
