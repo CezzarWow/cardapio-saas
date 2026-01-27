@@ -13,9 +13,9 @@
 ?>
 
 <!-- CSS do Delivery (cache bust) -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/base.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/history.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/modals.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/delivery/base.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/delivery/history.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/delivery/modals.css?v=<?= time() ?>">
 
 <main class="main-content">
     <div class="history-container">
@@ -37,7 +37,7 @@
             <!-- 1. Filtro de data -->
             <form class="history-filter" method="GET" style="margin-bottom: 0; flex: 1; min-width: 200px; justify-content: center;">
                 <label for="date" style="margin-right: -5px;">📅</label>
-                <input type="date" name="date" id="date" value="<?= $selectedDate ?>" style="width: auto;">
+                <input type="date" name="date" id="date" value="<?= \App\Helpers\ViewHelper::e($selectedDate ?? '') ?>" style="width: auto;">
                 <button type="submit">Buscar</button>
             </form>
 
@@ -83,17 +83,22 @@
                     </thead>
                     <tbody>
                         <?php foreach ($orders as $order): ?>
-                            <tr onclick="HistoryModal.open(<?= $order['id'] ?>)" style="cursor: pointer;">
-                                <td><strong>#<?= $order['id'] ?></strong></td>
+                            <?php
+                                $orderId = (int) ($order['id'] ?? 0);
+                                $statusBg = \App\Helpers\ViewHelper::cssColor($order['status_bg_rgba'] ?? '', 'rgba(148,163,184,0.35)');
+                                $statusColor = \App\Helpers\ViewHelper::cssColor($order['status_color'] ?? '', '#0f172a');
+                            ?>
+                            <tr onclick="HistoryModal.open(<?= $orderId ?>)" style="cursor: pointer;">
+                                <td><strong>#<?= $orderId ?></strong></td>
                                 <td><?= htmlspecialchars($order['client_name'] ?? 'Cliente') ?></td>
-                                <td><?= $order['formatted_time'] ?></td>
+                                <td><?= \App\Helpers\ViewHelper::e($order['formatted_time'] ?? '') ?></td>
                                 <td>
-                                    <span class="history-badge" style="background: <?= $order['status_bg_rgba'] ?>; color: <?= $order['status_color'] ?>;">
-                                        <?= $order['status_label'] ?>
+                                    <span class="history-badge" style="background: <?= \App\Helpers\ViewHelper::e($statusBg) ?>; color: <?= \App\Helpers\ViewHelper::e($statusColor) ?>;">
+                                        <?= \App\Helpers\ViewHelper::e($order['status_label'] ?? '') ?>
                                     </span>
                                 </td>
-                                <td><?= $order['payment_method_label'] ?></td>
-                                <td><strong><?= $order['formatted_total'] ?></strong></td>
+                                <td><?= \App\Helpers\ViewHelper::e($order['payment_method_label'] ?? '') ?></td>
+                                <td><strong><?= \App\Helpers\ViewHelper::e($order['formatted_total'] ?? '') ?></strong></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -112,18 +117,18 @@
 
 <!-- JS -->
 <script>
-    const BASE_URL = '<?= BASE_URL ?>';
+    const BASE_URL = <?= \App\Helpers\ViewHelper::js(BASE_URL) ?>;
     if (typeof lucide !== 'undefined') lucide.createIcons();
 </script>
 <!-- Constantes e helpers compartilhados (carregar PRIMEIRO) -->
-<script src="<?= BASE_URL ?>/js/delivery/helpers.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/delivery/constants.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/delivery/helpers.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/delivery/constants.js?v=<?= time() ?>"></script>
 <!-- DeliveryPrint Modules (carregar SUB-MÓDULOS primeiro) -->
-<script src="<?= BASE_URL ?>/js/delivery/print-helpers.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/delivery/print-generators.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/delivery/print-modal.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/delivery/print-actions.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/delivery/print-helpers.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/delivery/print-generators.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/delivery/print-modal.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/delivery/print-actions.js?v=<?= time() ?>"></script>
 <!-- Orquestrador (carregar POR ÚLTIMO) -->
-<script src="<?= BASE_URL ?>/js/delivery/print.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/delivery/print.js?v=<?= time() ?>"></script>
 
 <?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

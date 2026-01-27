@@ -13,11 +13,11 @@
 ?>
 
 <!-- CSS do Delivery (cache bust) -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/base.css?v=<?= time() ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/kanban.css?v=<?= APP_VERSION ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/cards-compact.css?v=<?= APP_VERSION ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/modals.css?v=<?= APP_VERSION ?>">
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/states.css">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/delivery/base.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/delivery/kanban.css?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/delivery/cards-compact.css?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/delivery/modals.css?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/delivery/states.css">
 
 <!-- Forçar alinhamento igual ao Histórico -->
 <style>
@@ -79,17 +79,17 @@
 
 <!-- Script para passar constantes PHP para JS -->
 <script>
-    window.DeliveryConfig = {
-        BASE_URL: '<?= BASE_URL ?>',
-        initialStatusFilter: '<?= $statusFilter ?? '' ?>'
-    };
+    window.DeliveryConfig = <?= \App\Helpers\ViewHelper::js([
+        'BASE_URL' => BASE_URL,
+        'initialStatusFilter' => $statusFilter ?? ''
+    ]) ?>;
 </script>
 
 <!-- QZ Tray Library (CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.min.js"></script>
 
 <!-- Print Bundle (Shared with PDV) -->
-<script data-spa-script="print-bundle" src="<?= BASE_URL ?>/js/bundles/print-bundle.js?v=<?= time() ?>"></script>
+<script data-spa-script="print-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/print-bundle.js?v=<?= time() ?>"></script>
 
 <!-- Delivery Bundle (12 scripts combinados) -->
-<script data-spa-script="delivery-bundle" src="<?= BASE_URL ?>/js/bundles/delivery-bundle.js?v=<?= time() ?>"></script>
+<script data-spa-script="delivery-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/delivery-bundle.js?v=<?= time() ?>"></script>

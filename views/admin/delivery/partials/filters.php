@@ -42,7 +42,7 @@ $isHistory = strpos($_SERVER['REQUEST_URI'] ?? '', '/delivery/history') !== fals
     
     <!-- Botão TODOS -->
     <?php if ($isHistory): ?>
-        <a href="<?= BASE_URL ?>/admin/loja/delivery" class="delivery-filter-btn">
+        <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/delivery" class="delivery-filter-btn">
             Todos
         </a>
     <?php else: ?>
@@ -53,7 +53,7 @@ $isHistory = strpos($_SERVER['REQUEST_URI'] ?? '', '/delivery/history') !== fals
 
     <!-- Botão NOVO -->
     <?php if ($isHistory): ?>
-        <a href="<?= BASE_URL ?>/admin/loja/delivery?status=novo" class="delivery-filter-btn" data-status="novo">
+        <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/delivery?status=novo" class="delivery-filter-btn" data-status="novo">
             🆕 Novo
         </a>
     <?php else: ?>
@@ -64,7 +64,7 @@ $isHistory = strpos($_SERVER['REQUEST_URI'] ?? '', '/delivery/history') !== fals
 
     <!-- Botão PREPARO -->
     <?php if ($isHistory): ?>
-        <a href="<?= BASE_URL ?>/admin/loja/delivery?status=preparo" class="delivery-filter-btn" data-status="preparo">
+        <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/delivery?status=preparo" class="delivery-filter-btn" data-status="preparo">
             🍳 Preparo
         </a>
     <?php else: ?>
@@ -75,7 +75,7 @@ $isHistory = strpos($_SERVER['REQUEST_URI'] ?? '', '/delivery/history') !== fals
 
     <!-- Botão ROTA -->
     <?php if ($isHistory): ?>
-        <a href="<?= BASE_URL ?>/admin/loja/delivery?status=rota" class="delivery-filter-btn" data-status="rota">
+        <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/delivery?status=rota" class="delivery-filter-btn" data-status="rota">
             🛵 Rota
         </a>
     <?php else: ?>
@@ -86,7 +86,7 @@ $isHistory = strpos($_SERVER['REQUEST_URI'] ?? '', '/delivery/history') !== fals
 
     <!-- Botão ENTREGUE -->
     <?php if ($isHistory): ?>
-        <a href="<?= BASE_URL ?>/admin/loja/delivery?status=entregue" class="delivery-filter-btn" data-status="entregue">
+        <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/delivery?status=entregue" class="delivery-filter-btn" data-status="entregue">
             ✅ Entregue
         </a>
     <?php else: ?>
@@ -97,7 +97,7 @@ $isHistory = strpos($_SERVER['REQUEST_URI'] ?? '', '/delivery/history') !== fals
 
     <!-- Botão CANCELADO -->
     <?php if ($isHistory): ?>
-        <a href="<?= BASE_URL ?>/admin/loja/delivery?status=cancelado" class="delivery-filter-btn" data-status="cancelado">
+        <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/delivery?status=cancelado" class="delivery-filter-btn" data-status="cancelado">
             ❌ Cancelado
         </a>
     <?php else: ?>
@@ -107,7 +107,7 @@ $isHistory = strpos($_SERVER['REQUEST_URI'] ?? '', '/delivery/history') !== fals
     <?php endif; ?>
     
     <!-- Botão HISTÓRICO -->
-    <a href="<?= BASE_URL ?>/admin/loja/delivery/history" class="delivery-filter-btn <?= $isHistory ? 'active' : '' ?>">
+    <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/delivery/history" class="delivery-filter-btn <?= $isHistory ? 'active' : '' ?>">
         📋 Histórico
     </a>
 </div>

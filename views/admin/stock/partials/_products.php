@@ -17,7 +17,7 @@
                 <i data-lucide="package" class="total-products-svg"></i>
             </div>
             <div>
-                <span class="stock-indicator-text"><?= $totalProducts ?></span>
+                <span class="stock-indicator-text"><?= (int) ($totalProducts ?? 0) ?></span>
                 <span class="stock-indicator-label"> produtos</span>
             </div>
         </div>
@@ -28,7 +28,7 @@
                 <i data-lucide="alert-triangle" style="width: 18px; height: 18px;" class="<?= $criticalStockCount > 0 ? 'critical-stock-svg-danger' : 'critical-stock-svg-warning' ?>"></i>
             </div>
             <div>
-                <span class="stock-indicator-text" style="color: <?= $criticalStockCount > 0 ? '#dc2626' : '#d97706' ?>;"><?= $criticalStockCount ?></span>
+                <span class="stock-indicator-text" style="color: <?= $criticalStockCount > 0 ? '#dc2626' : '#d97706' ?>;"><?= (int) ($criticalStockCount ?? 0) ?></span>
                 <span class="stock-indicator-label"> críticos</span>
             </div>
         </div>
@@ -57,22 +57,32 @@
         </div>
     <?php else: ?>
         <?php foreach ($products as $prod): ?>
+        <?php
+            $prodId = (int) ($prod['id'] ?? 0);
+            $prodName = (string) ($prod['name'] ?? '');
+            $categoryName = (string) ($prod['category_name'] ?? '');
+            $imageFile = !empty($prod['image']) ? basename((string) $prod['image']) : '';
+            $displayIcon = (string) ($prod['display_icon'] ?? '');
+            $stockClass = (string) ($prod['stock_class'] ?? '');
+            $stockInt = (int) ($prod['stock_int'] ?? 0);
+            $formattedPrice = (string) ($prod['formatted_price'] ?? '');
+        ?>
         <div class="stock-product-card product-row" 
-             data-product-id="<?= $prod['id'] ?>"
-             data-name="<?= strtolower($prod['name']) ?>" 
-             data-category="<?= htmlspecialchars($prod['category_name']) ?>">
+             data-product-id="<?= $prodId ?>"
+             data-name="<?= \App\Helpers\ViewHelper::e(strtolower($prodName)) ?>" 
+             data-category="<?= \App\Helpers\ViewHelper::e($categoryName) ?>">
             
             <!-- Imagem (usando thumbnail para carregamento rápido) -->
-            <?php if ($prod['image']): ?>
-                <img src="<?= BASE_URL ?>/uploads/thumb/<?= $prod['image'] ?>" loading="lazy" 
+            <?php if ($imageFile !== ''): ?>
+                <img src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/uploads/thumb/<?= \App\Helpers\ViewHelper::e($imageFile) ?>" loading="lazy" 
                      class="stock-product-image"
-                     alt="<?= htmlspecialchars($prod['name']) ?>">
+                     alt="<?= \App\Helpers\ViewHelper::e($prodName) ?>">
             <?php elseif (($prod['icon_as_photo'] ?? 0) == 1): ?>
                 <div class="stock-product-icon-container">
                     <?php if ($prod['is_lucide_icon']): ?>
-                        <i data-lucide="<?= $prod['display_icon'] ?>" style="width: 64px; height: 64px; color: #3b82f6;"></i>
+                        <i data-lucide="<?= \App\Helpers\ViewHelper::e($displayIcon) ?>" style="width: 64px; height: 64px; color: #3b82f6;"></i>
                     <?php else: ?>
-                        <span style="font-size: 4rem; line-height: 1;"><?= $prod['display_icon'] ?></span>
+                        <span style="font-size: 4rem; line-height: 1;"><?= \App\Helpers\ViewHelper::e($displayIcon) ?></span>
                     <?php endif; ?>
                 </div>
             <?php else: ?>
@@ -83,23 +93,23 @@
             
             <!-- Corpo -->
             <div class="stock-product-card-body">
-                <div class="stock-product-card-name"><?= htmlspecialchars($prod['name']) ?></div>
-                <span class="stock-product-card-category"><?= htmlspecialchars($prod['category_name']) ?></span>
+                <div class="stock-product-card-name"><?= \App\Helpers\ViewHelper::e($prodName) ?></div>
+                <span class="stock-product-card-category"><?= \App\Helpers\ViewHelper::e($categoryName) ?></span>
                 
                 <div class="stock-product-card-footer">
-                    <span class="stock-product-card-price">R$ <?= $prod['formatted_price'] ?></span>
-                    <span class="stock-product-card-stock <?= $prod['stock_class'] ?>"><?= $prod['stock_int'] ?></span>
+                    <span class="stock-product-card-price">R$ <?= \App\Helpers\ViewHelper::e($formattedPrice) ?></span>
+                    <span class="stock-product-card-stock <?= \App\Helpers\ViewHelper::e($stockClass) ?>"><?= (int) $stockInt ?></span>
                 </div>
             </div>
             
             <!-- Ações -->
             <div class="stock-product-card-actions">
-                <a href="<?= BASE_URL ?>/admin/loja/produtos/editar?id=<?= $prod['id'] ?>" class="btn-edit">
+                <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/produtos/editar?id=<?= $prodId ?>" class="btn-edit">
                     <i data-lucide="pencil" style="width: 14px; height: 14px;"></i>
                     Editar
                 </a>
                 <a href="javascript:void(0)" 
-                   onclick="StockSPA.openDeleteModal(<?= $prod['id'] ?>, '<?= htmlspecialchars(addslashes($prod['name'])) ?>')" class="btn-delete">
+                   onclick='StockSPA.openDeleteModal(<?= $prodId ?>, <?= \App\Helpers\ViewHelper::js($prodName) ?>)' class="btn-delete">
                     <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                     Excluir
                 </a>

@@ -19,9 +19,9 @@
         <div style="background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 1100px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); height: fit-content;">
             <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700; color: #1f2937;">Editar Produto</h2>
             
-            <form action="<?= BASE_URL ?>/admin/loja/produtos/atualizar" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 15px;">
+            <form action="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/produtos/atualizar" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 15px;">
                 <?= \App\Helpers\ViewHelper::csrfField() ?>
-                <input type="hidden" name="id" value="<?= $product['id'] ?>">
+                <input type="hidden" name="id" value="<?= (int) ($product['id'] ?? 0) ?>">
                 
                 <div>
                     <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Nome do Produto</label>
@@ -33,7 +33,7 @@
                         <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Categoria</label>
                         <select name="category_id" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: white;">
                             <?php foreach ($categories as $cat): ?>
-                                <option value="<?= $cat['id'] ?>" <?= $cat['id'] == $product['category_id'] ? 'selected' : '' ?>><?= $cat['name'] ?></option>
+                                <option value="<?= (int) ($cat['id'] ?? 0) ?>" <?= ((int) ($cat['id'] ?? 0) === (int) ($product['category_id'] ?? 0)) ? 'selected' : '' ?>><?= \App\Helpers\ViewHelper::e($cat['name'] ?? '') ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -53,7 +53,7 @@ $triggerLabel = $checkedCount > 0 ? $checkedCount . ' Selecionado(s)' : 'Selecio
 $triggerStyle = $checkedCount > 0 ? 'color: #1f2937; font-weight: 600;' : 'color: #6b7280;';
 ?>
                             <div class="select-trigger" onclick="toggleSelect(this)" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; background: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-                                <span class="trigger-text" style="<?= $triggerStyle ?>"><?= $triggerLabel ?></span>
+                                <span class="trigger-text" style="<?= \App\Helpers\ViewHelper::e($triggerStyle) ?>"><?= \App\Helpers\ViewHelper::e($triggerLabel) ?></span>
                                 <i data-lucide="chevron-down" size="16" style="color: #9ca3af;"></i>
                             </div>
                             
@@ -62,9 +62,10 @@ $triggerStyle = $checkedCount > 0 ? 'color: #1f2937; font-weight: 600;' : 'color
                                     <p style="color: #9ca3af; font-size: 0.9rem; padding: 8px; text-align: center; margin: 0;">Nenhum grupo cadastrado</p>
                                 <?php else: ?>
                                     <?php foreach ($additionalGroups as $group): ?>
+                                        <?php $groupId = (int) ($group['id'] ?? 0); ?>
                                         <label style="display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 4px; transition: background 0.1s;">
-                                            <input type="checkbox" name="additional_groups[]" value="<?= $group['id'] ?>" 
-                                                <?= in_array($group['id'], $linkedGroups) ? 'checked' : '' ?>
+                                            <input type="checkbox" name="additional_groups[]" value="<?= $groupId ?>" 
+                                                <?= in_array($groupId, array_map('intval', $linkedGroups), true) ? 'checked' : '' ?>
                                                 onchange="updateTriggerText(this)" style="width: 16px; height: 16px;">
                                             <span style="font-size: 0.95rem; color: #374151;"><?= htmlspecialchars($group['name']) ?></span>
                                         </label>
@@ -103,8 +104,10 @@ $currentIcon = $product['icon'] ?? '🍔';
 if (!array_key_exists($currentIcon, $icons)) {
     $currentIcon = '🍔';
 }
-$hasImage = !empty($product['image']);
-$iconAsPhoto = ($product['icon_as_photo'] ?? 0) == 1;
+                $hasImage = !empty($product['image']);
+                $imageFile = basename((string) ($product['image'] ?? ''));
+                $imageUrl = BASE_URL . '/uploads/' . $imageFile;
+                $iconAsPhoto = ($product['icon_as_photo'] ?? 0) == 1;
 ?>
                 
                 <div style="display: flex; gap: 20px;">
@@ -113,10 +116,10 @@ $iconAsPhoto = ($product['icon_as_photo'] ?? 0) == 1;
                         <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Foto do Produto</label>
                         <?php if (!empty($product['image'])): ?>
                             <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
-                                <img src="<?= BASE_URL ?>/uploads/<?= $product['image'] ?>" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb;">
+                                <img src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/uploads/<?= \App\Helpers\ViewHelper::e($imageFile) ?>" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb;">
                                 <div style="display: flex; flex-direction: column; gap: 2px;">
                                     <span style="color: #6b7280; font-size: 0.75rem;">Atual</span>
-                                    <button type="button" onclick="openCropper('<?= BASE_URL ?>/uploads/<?= $product['image'] ?>')" 
+                                    <button type="button" onclick='openCropper(<?= \App\Helpers\ViewHelper::js($imageUrl) ?>)' 
                                             style="background: white; border: 1px solid #d1d5db; border-radius: 6px; padding: 6px 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: background 0.1s; font-size: 0.8rem; color: #374151;"
                                             title="Recortar novamente">
                                         <i data-lucide="pencil" style="width: 14px; height: 14px;"></i> Editar
@@ -139,12 +142,12 @@ $iconAsPhoto = ($product['icon_as_photo'] ?? 0) == 1;
                             Ícone do Produto <span style="color: #dc2626;">*</span>
                             <small style="font-weight: 400; color: #6b7280;">(Balcão PDV e Cardápio)</small>
                         </label>
-                        <input type="hidden" name="icon" id="selectedIcon" value="<?= $currentIcon ?>" required>
+                        <input type="hidden" name="icon" id="selectedIcon" value="<?= \App\Helpers\ViewHelper::e($currentIcon) ?>" required>
                         
                         <div class="icon-selector-container" style="border: 1px solid #e5e7eb; border-radius: 8px; background: white; position: relative;">
                             <div class="icon-selector-header" onclick="toggleIconGrid()" style="padding: 10px 15px; background: #f9fafb; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb;">
                                 <div style="display: flex; align-items: center; gap: 10px;">
-                                    <span id="selectedIconDisplay" style="font-size: 1.5rem;"><?= $currentIcon ?></span>
+                                    <span id="selectedIconDisplay" style="font-size: 1.5rem;"><?= \App\Helpers\ViewHelper::e($currentIcon) ?></span>
                                     <span style="font-weight: 600; color: #374151; font-size: 0.95rem;">Selecionar Ícone</span>
                                 </div>
                                 <i data-lucide="chevron-down" size="20" style="color: #9ca3af; transition: transform 0.2s;" id="iconChevron"></i>
@@ -154,10 +157,10 @@ $iconAsPhoto = ($product['icon_as_photo'] ?? 0) == 1;
                                 <?php foreach ($icons as $emoji => $label):
                                     $isSelected = ($emoji === $currentIcon);
                                     ?>
-                                    <div class="icon-option" data-icon="<?= $emoji ?>" onclick="selectIcon('<?= $emoji ?>')" 
-                                         title="<?= $label ?>"
+                                    <div class="icon-option" data-icon="<?= \App\Helpers\ViewHelper::e($emoji) ?>" onclick='selectIcon(<?= \App\Helpers\ViewHelper::js($emoji) ?>)' 
+                                         title="<?= \App\Helpers\ViewHelper::e($label) ?>"
                                          style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 50px; background: <?= $isSelected ? '#eff6ff' : 'white' ?>; border: 2px solid <?= $isSelected ? '#2563eb' : '#e5e7eb' ?>; border-radius: 6px; cursor: pointer; transition: all 0.15s;">
-                                        <span style="font-size: 1.5rem;"><?= $emoji ?></span>
+                                        <span style="font-size: 1.5rem;"><?= \App\Helpers\ViewHelper::e($emoji) ?></span>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
@@ -172,7 +175,7 @@ $iconAsPhoto = ($product['icon_as_photo'] ?? 0) == 1;
                 </div>
 
                 <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; align-items: center;">
-                    <a href="<?= BASE_URL ?>/admin/loja/produtos" style="width: 150px; text-align: center; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; color: #374151; text-decoration: none; font-weight: 600; background: white; transition: background 0.15s;">Cancelar</a>
+                    <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/produtos" style="width: 150px; text-align: center; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; color: #374151; text-decoration: none; font-weight: 600; background: white; transition: background 0.15s;">Cancelar</a>
                     <button type="submit" class="btn-primary" style="width: 150px; padding: 12px; border-radius: 8px; font-weight: 600;">Salvar</button>
                 </div>
 
@@ -186,9 +189,9 @@ $iconAsPhoto = ($product['icon_as_photo'] ?? 0) == 1;
 <?php \App\Core\View::renderFromScope('admin/products/partials/cropper-modal.php', get_defined_vars()); ?>
 
 <?php // Scripts de Componentes?>
-<script src="<?= BASE_URL ?>/js/components/multi-select.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/components/icon-selector.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/components/price-mask.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/components/cropper-modal.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/components/multi-select.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/components/icon-selector.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/components/price-mask.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/components/cropper-modal.js?v=<?= time() ?>"></script>
 
 <?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

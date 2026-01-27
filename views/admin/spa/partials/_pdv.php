@@ -28,20 +28,20 @@ $pdvConfig = [
 ?>
 
 <!-- CSS necessário para modal de impressão -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/delivery/modals.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/delivery/modals.css?v=<?= time() ?>">
 
 <div id="pdv-container" class="pdv-wrapper" style="height: 100%; display: flex; overflow: hidden;">
     
     <!-- Configuração JSON escondida -->
-    <div id="pdv-config" style="display:none;" data-config='<?= json_encode($pdvConfig, JSON_HEX_APOS | JSON_HEX_QUOT) ?>'></div>
+    <div id="pdv-config" style="display:none;" data-config='<?= \App\Helpers\ViewHelper::e(\App\Helpers\ViewHelper::js($pdvConfig)) ?>'></div>
     
     <!-- Inputs Hidden de Estado (Compatibilidade legado) -->
-    <input type="hidden" id="current_table_id" value="<?= $mesa_id ?: '' ?>">
-    <input type="hidden" id="current_table_number" value="<?= $mesa_numero ?? '' ?>">
-    <input type="hidden" id="current_order_id" value="<?= $contaAberta['id'] ?? '' ?>">
-    <input type="hidden" id="current_client_id" value="<?= $contaAberta['client_id'] ?? '' ?>">
-    <input type="hidden" id="current_client_name" value="<?= $contaAberta['client_name'] ?? '' ?>">
-    <input type="hidden" id="table-initial-total" value="<?= $contaAberta['total'] ?? 0 ?>">
+    <input type="hidden" id="current_table_id" value="<?= (int) ($mesa_id ?: 0) ?>">
+    <input type="hidden" id="current_table_number" value="<?= \App\Helpers\ViewHelper::e($mesa_numero ?? '') ?>">
+    <input type="hidden" id="current_order_id" value="<?= (int) ($contaAberta['id'] ?? 0) ?>">
+    <input type="hidden" id="current_client_id" value="<?= (int) ($contaAberta['client_id'] ?? 0) ?>">
+    <input type="hidden" id="current_client_name" value="<?= \App\Helpers\ViewHelper::e($contaAberta['client_name'] ?? '') ?>">
+    <input type="hidden" id="table-initial-total" value="<?= (float) ($contaAberta['total'] ?? 0) ?>">
 
 
     <!-- ÁREA PRINCIPAL (Esquerda) -->
@@ -71,12 +71,12 @@ $pdvConfig = [
 <!-- QZ Tray Library (CDN) para impressão térmica silenciosa -->
 <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.min.js"></script>
 <!-- Print Bundle (Shared with Delivery) -->
-<script data-spa-script="print-bundle" src="<?= BASE_URL ?>/js/bundles/print-bundle.js?v=<?= time() ?>"></script>
+<script data-spa-script="print-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/print-bundle.js?v=<?= time() ?>"></script>
 
 <!-- PDV Print Modal Controller (Only for PDV) -->
-<script data-spa-script="pdv-print" src="<?= BASE_URL ?>/js/pdv/pdv-print.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="pdv-print" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/pdv-print.js?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>"></script>
 
 
 <!-- PDV Bundle (Reativado após build) -->
-<script data-spa-script="pdv-bundle" src="<?= BASE_URL ?>/js/bundles/pdv-bundle.js?v=<?= time() ?>"></script>
+<script data-spa-script="pdv-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/pdv-bundle.js?v=<?= time() ?>"></script>
 

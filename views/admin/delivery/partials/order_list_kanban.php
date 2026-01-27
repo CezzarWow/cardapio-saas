@@ -51,12 +51,12 @@ $statusFilter = $statusFilter ?? 'todos';
             }
         }
         ?>
-        <div class="delivery-column delivery-column--<?= $status ?>" style="<?= $style ?>">
+        <div class="delivery-column delivery-column--<?= \App\Helpers\ViewHelper::e($status) ?>" style="<?= \App\Helpers\ViewHelper::e($style) ?>">
             
             <div class="delivery-column-header">
                 <span class="delivery-column-title">
-                    <i data-lucide="<?= $col['icon'] ?>" style="width: 18px; height: 18px;"></i>
-                    <?= $col['label'] ?>
+                    <i data-lucide="<?= \App\Helpers\ViewHelper::e($col['icon']) ?>" style="width: 18px; height: 18px;"></i>
+                    <?= \App\Helpers\ViewHelper::e($col['label']) ?>
                 </span>
                 <span class="delivery-column-count"><?= count($ordersByStatus[$status] ?? []) ?></span>
             </div>

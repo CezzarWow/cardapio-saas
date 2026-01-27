@@ -12,7 +12,7 @@
                 <p style="color: #6b7280;">Extrato completo de pedidos</p>
             </div>
             <div style="background: #eff6ff; color: #1d4ed8; padding: 10px 20px; border-radius: 8px; font-weight: 700; border: 1px solid #dbeafe;">
-                Total: R$ <?= $totalSalesFormatted ?>
+                Total: R$ <?= \App\Helpers\ViewHelper::e($totalSalesFormatted ?? '') ?>
             </div>
         </div>
 
@@ -31,18 +31,19 @@
                         <tr><td colspan="4" style="padding: 3rem; text-align: center; color: #9ca3af;">Nenhuma venda realizada.</td></tr>
                     <?php else: ?>
                         <?php foreach ($orders as $sale): ?>
+                        <?php $saleId = (int) ($sale['id'] ?? 0); ?>
                         <tr style="border-bottom: 1px solid #f3f4f6;">
                             <td style="padding: 1rem; font-weight: 600; color: #1f2937;">
-                                <?= $sale['formatted_id'] ?>
+                                <?= \App\Helpers\ViewHelper::e($sale['formatted_id'] ?? '') ?>
                             </td>
                             <td style="padding: 1rem; color: #4b5563;">
-                                <?= $sale['formatted_date'] ?>
+                                <?= \App\Helpers\ViewHelper::e($sale['formatted_date'] ?? '') ?>
                             </td>
                             <td style="padding: 1rem; font-weight: 700; color: #2563eb;">
-                                <?= $sale['formatted_total'] ?>
+                                <?= \App\Helpers\ViewHelper::e($sale['formatted_total'] ?? '') ?>
                             </td>
-                                <td style="padding: 1rem; display: flex; gap: 8px;">
-                                    <button onclick="openOrderDetails(<?= $sale['id'] ?>)" 
+                                 <td style="padding: 1rem; display: flex; gap: 8px;">
+                                    <button onclick="openOrderDetails(<?= $saleId ?>)" 
                                             title="Ver Itens"
                                             style="background: #f3f4f6; border: none; padding: 8px; border-radius: 6px; cursor: pointer; color: #4b5563;">
                                         <i data-lucide="eye" style="width: 18px;"></i>
@@ -50,13 +51,13 @@
 
                                     <?php if ($sale['can_reopen']): ?>
                                         
-                                        <button onclick="reabrirMesa(<?= $sale['id'] ?>)" 
+                                        <button onclick="reabrirMesa(<?= $saleId ?>)" 
                                                 title="Reabrir Mesa (Estornar e Editar)"
                                                 style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 8px; border-radius: 6px; cursor: pointer; color: #2563eb;">
                                             <i data-lucide="rotate-ccw" style="width: 18px;"></i>
                                         </button>
 
-                                        <button onclick="cancelarVenda(<?= $sale['id'] ?>)" 
+                                        <button onclick="cancelarVenda(<?= $saleId ?>)" 
                                                 title="Cancelar Venda (Excluir)"
                                                 style="background: #fef2f2; border: 1px solid #fecaca; padding: 8px; border-radius: 6px; cursor: pointer; color: #b91c1c;">
                                             <i data-lucide="trash-2" style="width: 18px;"></i>

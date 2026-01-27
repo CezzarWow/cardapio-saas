@@ -16,7 +16,7 @@
                 <i data-lucide="folder" style="width: 18px; height: 18px; color: #2563eb;"></i>
             </div>
             <div>
-                <span style="font-weight: 700; color: #1f2937;"><?= $totalGroups ?></span>
+                <span style="font-weight: 700; color: #1f2937;"><?= (int) ($totalGroups ?? 0) ?></span>
                 <span style="font-size: 0.8rem; color: #6b7280;"> grupos</span>
             </div>
         </div>
@@ -25,7 +25,7 @@
                 <i data-lucide="plus-circle" style="width: 18px; height: 18px; color: #059669;"></i>
             </div>
             <div>
-                <span style="font-weight: 700; color: #1f2937;"><?= $totalItems ?></span>
+                <span style="font-weight: 700; color: #1f2937;"><?= (int) ($totalItems ?? 0) ?></span>
                 <span style="font-size: 0.8rem; color: #6b7280;"> itens</span>
             </div>
         </div>
@@ -57,29 +57,35 @@
 <?php else: ?>
     <div class="additionals-groups">
         <?php foreach ($groups as $group): ?>
+        <?php
+            $groupId = (int) ($group['id'] ?? 0);
+            $groupName = (string) ($group['name'] ?? '');
+            $itemIds = array_map('intval', array_column($group['items'] ?? [], 'id'));
+            $confirmMsg = 'Excluir o grupo \"' . $groupName . '\" e todos seus vinculos?';
+        ?>
         <div class="group-card">
             <div class="group-card-header">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <i data-lucide="folder" style="width: 20px; height: 20px; color: #2563eb;"></i>
-                    <span style="font-weight: 700; color: #1f2937;"><?= htmlspecialchars($group['name']) ?></span>
+                    <span style="font-weight: 700; color: #1f2937;"><?= \App\Helpers\ViewHelper::e($groupName) ?></span>
                     <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600;">
-                        <?= count($group['items'] ?? []) ?> itens
+                        <?= (int) count($group['items'] ?? []) ?> itens
                     </span>
                 </div>
                 <!-- Botões de Ação do Grupo -->
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <button type="button" class="btn-action-link" 
-                            data-group-id="<?= $group['id'] ?>" 
-                            data-group-name="<?= htmlspecialchars($group['name']) ?>"
-                            data-item-ids="<?= htmlspecialchars(json_encode(array_column($group['items'] ?? [], 'id'))) ?>"
+                            data-group-id="<?= $groupId ?>" 
+                            data-group-name="<?= \App\Helpers\ViewHelper::e($groupName) ?>"
+                            data-item-ids="<?= \App\Helpers\ViewHelper::e(\App\Helpers\ViewHelper::js($itemIds)) ?>"
                             style="padding: 6px 10px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;"
                             title="Vincular Itens">
                         <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
                         Itens
                     </button>
                     <!-- Botão Categoria Removido -->
-                    <a href="<?= BASE_URL ?>/admin/loja/adicionais/grupo/deletar?id=<?= $group['id'] ?>"
-                       onclick="return confirm('Excluir o grupo &quot;<?= htmlspecialchars($group['name']) ?>&quot; e todos seus vínculos?')"
+                    <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/adicionais/grupo/deletar?id=<?= $groupId ?>"
+                       onclick='return confirm(<?= \App\Helpers\ViewHelper::js($confirmMsg) ?>)'
                        style="color: #dc2626; padding: 6px; border-radius: 6px; text-decoration: none;">
                         <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
                     </a>

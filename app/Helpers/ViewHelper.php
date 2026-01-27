@@ -16,10 +16,45 @@ class ViewHelper
         return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 
+    /**
+     * Encode a value as a JS literal that is safe to embed inside a <script> tag.
+     */
+    public static function js(mixed $value): string
+    {
+        return (string) json_encode($value, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+    }
+
+    /**
+     * Best-effort allowlist for CSS color values used in inline styles.
+     * Returns $fallback if $value does not look like a safe color.
+     */
+    public static function cssColor(mixed $value, string $fallback = ''): string
+    {
+        $s = trim((string) $value);
+        if ($s === '') return $fallback;
+
+        // #RGB, #RRGGBB, #RRGGBBAA
+        if (preg_match('/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?([0-9a-fA-F]{2})?$/', $s) === 1) {
+            return $s;
+        }
+
+        // rgb(0,0,0) / rgba(0,0,0,0.5)
+        if (preg_match('/^rgba?\\(\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}(\\s*,\\s*(0|1|0?\\.\\d+)\\s*)?\\)$/', $s) === 1) {
+            return $s;
+        }
+
+        // CSS variable: var(--token)
+        if (preg_match('/^var\\(--[a-zA-Z0-9_-]+\\)$/', $s) === 1) {
+            return $s;
+        }
+
+        return $fallback;
+    }
+
     public static function csrfField(): string
     {
         $token = CsrfMiddleware::getToken();
-        return '<input type="hidden" name="csrf_token" value="' . $token . '">';
+        return '<input type="hidden" name="csrf_token" value="' . self::e($token) . '">';
     }
 
     public static function csrfToken(): string

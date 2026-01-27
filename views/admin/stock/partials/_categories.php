@@ -12,7 +12,7 @@
             <i data-lucide="tags" style="width: 24px; height: 24px; color: #2563eb;"></i>
         </div>
         <div>
-            <div style="font-size: 1.5rem; font-weight: 700; color: #1f2937;"><?= $totalCategories ?></div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: #1f2937;"><?= (int) ($totalCategories ?? 0) ?></div>
             <div style="font-size: 0.85rem; color: #6b7280;">Categorias cadastradas</div>
         </div>
     </div>
@@ -51,13 +51,16 @@
             <tbody id="categoriesTable">
                 <?php foreach ($sortedCategories as $cat): ?>
                 <?php
+                    $catId = (int) ($cat['id'] ?? 0);
+                    $catName = (string) ($cat['name'] ?? '');
                     $isSystemCategory = in_array($cat['category_type'] ?? 'default', ['featured', 'combos']);
+                    $confirmMsg = 'Excluir a categoria \"' . $catName . '\"?';
                     ?>
-                <tr class="category-row" data-name="<?= strtolower(htmlspecialchars($cat['name'])) ?>">
+                <tr class="category-row" data-name="<?= \App\Helpers\ViewHelper::e(strtolower($catName)) ?>">
                     <td>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <i data-lucide="tag" style="width: 16px; height: 16px; color: <?= $isSystemCategory ? '#f59e0b' : '#2563eb' ?>;"></i>
-                            <span style="font-weight: 500; color: #1f2937;"><?= htmlspecialchars($cat['name']) ?></span>
+                            <span style="font-weight: 500; color: #1f2937;"><?= \App\Helpers\ViewHelper::e($catName) ?></span>
                             <?php if ($isSystemCategory): ?>
                                 <span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600;">Sistema</span>
                             <?php endif; ?>
@@ -65,14 +68,14 @@
                     </td>
                     <td>
                         <div class="stock-actions" style="justify-content: flex-start;">
-                            <a href="<?= BASE_URL ?>/admin/loja/categorias/editar?id=<?= $cat['id'] ?>" 
+                            <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/categorias/editar?id=<?= $catId ?>" 
                                class="btn-stock-action btn-stock-edit">
                                 <i data-lucide="pencil" style="width: 14px; height: 14px;"></i>
                                 Editar
                             </a>
                             <?php if (!$isSystemCategory): ?>
-                                <a href="<?= BASE_URL ?>/admin/loja/categorias/deletar?id=<?= $cat['id'] ?>" 
-                                   onclick="return confirm('Excluir a categoria &quot;<?= htmlspecialchars($cat['name']) ?>&quot;?')"
+                                <a href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/categorias/deletar?id=<?= $catId ?>" 
+                                   onclick='return confirm(<?= \App\Helpers\ViewHelper::js($confirmMsg) ?>)'
                                    class="btn-stock-action btn-stock-delete">
                                     <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                                     Excluir
@@ -92,7 +95,7 @@
     <div style="background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 400px; margin: 20px;">
         <h3 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 1.5rem;">Nova Categoria</h3>
         
-        <form action="<?= BASE_URL ?>/admin/loja/categorias/salvar" method="POST">
+        <form action="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/admin/loja/categorias/salvar" method="POST">
             <?= \App\Helpers\ViewHelper::csrfField() ?>
             <div style="margin-bottom: 1.5rem;">
                 <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Nome da Categoria</label>

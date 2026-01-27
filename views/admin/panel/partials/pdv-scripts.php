@@ -11,21 +11,21 @@
     // ============================================
     // VARIÁVEIS GLOBAIS (Injetadas pelo PHP)
     // ============================================
-    const BASE_URL = '<?= BASE_URL ?>';
+    const BASE_URL = <?= \App\Helpers\ViewHelper::js(BASE_URL) ?>;
     
     // Carrinho recuperado do PHP (sessão ou banco)
-    const recoveredCart = <?= json_encode($cartRecovery ?? []) ?>;
+    const recoveredCart = <?= \App\Helpers\ViewHelper::js($cartRecovery ?? []) ?>;
     
     // Modo edição de pedido PAGO (para cobrar só a diferença)
     const isEditingPaidOrder = <?= ($isEditingPaid ?? false) ? 'true' : 'false' ?>;
-    const originalPaidTotal = <?= $originalPaidTotalFromDB ?? 0 ?>;
-    const editingPaidOrderId = <?= $editingOrderId ?? 'null' ?>;
+    const originalPaidTotal = <?= \App\Helpers\ViewHelper::js((float) ($originalPaidTotalFromDB ?? 0)) ?>;
+    const editingPaidOrderId = <?= \App\Helpers\ViewHelper::js($editingOrderId ?? null) ?>;
     
     // Taxa de entrega configurada
-    const PDV_DELIVERY_FEE = <?= $deliveryFee ?>;
+    const PDV_DELIVERY_FEE = <?= \App\Helpers\ViewHelper::js((float) ($deliveryFee ?? 0)) ?>;
     
     // ID da Mesa (contexto)
-    const PDV_TABLE_ID = <?= $mesa_id ?: 0 ?>;
+    const PDV_TABLE_ID = <?= (int) ($mesa_id ?: 0) ?>;
 </script>
 
 <?php \App\Core\View::renderFromScope('admin/panel/partials/extras-modal.php', get_defined_vars()); ?>
@@ -35,37 +35,37 @@
 <!-- ============================================ -->
 
 <!-- Core: State e Carrinho -->
-<script src="<?= BASE_URL ?>/js/pdv/state.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/pdv-extras.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/pdv-cart.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/state.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/pdv-extras.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/pdv-cart.js?v=<?= time() ?>"></script>
 
 <!-- Tables: Mesas e Clientes -->
-<script src="<?= BASE_URL ?>/js/pdv/tables.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/tables-mesa.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/tables-cliente.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/tables-client-modal.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/tables.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/tables-mesa.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/tables-cliente.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/tables-client-modal.js?v=<?= time() ?>"></script>
 
 <!-- Ações e Ficha -->
-<script src="<?= BASE_URL ?>/js/pdv/order-actions.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/ficha.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/order-actions.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/ficha.js?v=<?= time() ?>"></script>
 
 <!-- Checkout: Módulos de Pagamento (ordem de dependência obrigatória) -->
-<script src="<?= BASE_URL ?>/js/pdv/checkout/helpers.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/state.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/totals.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/ui.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/payments.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/services/checkout-service.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/services/checkout-validator.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/adjust.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/submit.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/orderType.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/retirada.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/entrega.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/flow.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/checkout/index.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/helpers.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/state.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/totals.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/ui.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/payments.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/services/checkout-service.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/services/checkout-validator.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/adjust.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/submit.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/orderType.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/retirada.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/entrega.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/flow.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/checkout/index.js?v=<?= time() ?>"></script>
 
 <!-- Orquestrador Principal -->
-<script src="<?= BASE_URL ?>/js/pdv/pdv-events.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv/pdv-search.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/pdv.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/pdv-events.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/pdv-search.js?v=<?= time() ?>"></script>
+<script src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv.js?v=<?= time() ?>"></script>
