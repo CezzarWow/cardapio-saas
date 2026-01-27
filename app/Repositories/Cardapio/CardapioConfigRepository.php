@@ -3,7 +3,8 @@
 namespace App\Repositories\Cardapio;
 
 use App\Core\Database;
-use App\Core\Cache;
+use App\Events\CardapioChangedEvent;
+use App\Events\EventDispatcher;
 use PDO;
 
 /**
@@ -34,11 +35,8 @@ class CardapioConfigRepository
 
         $stmt = $conn->prepare('INSERT INTO cardapio_config (restaurant_id) VALUES (:rid)');
         $stmt->execute(['rid' => $restaurantId]);
-        try {
-            $cache = new Cache();
-            $cache->forget('config_' . $restaurantId);
-        } catch (\Exception $e) {
-        }
+        
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
     }
 
     /**
@@ -73,11 +71,8 @@ class CardapioConfigRepository
 
         $data['rid'] = $restaurantId;
         $conn->prepare($sql)->execute($data);
-        try {
-            $cache = new Cache();
-            $cache->forget('config_' . $restaurantId);
-        } catch (\Exception $e) {
-        }
+        
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
     }
 
     /**

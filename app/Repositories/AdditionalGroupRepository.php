@@ -3,7 +3,8 @@
 namespace App\Repositories;
 
 use App\Core\Database;
-use App\Core\Cache;
+use App\Events\CardapioChangedEvent;
+use App\Events\EventDispatcher;
 use PDO;
 
 class AdditionalGroupRepository
@@ -24,12 +25,9 @@ class AdditionalGroupRepository
         ]);
 
         $id = (int) $conn->lastInsertId();
-        try {
-            $cache = new Cache();
-            $cache->forget('additionals_' . $restaurantId);
-            $cache->forget('product_additional_relations');
-        } catch (\Exception $e) {
-        }
+        
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
+        
         return $id;
     }
 
@@ -105,6 +103,11 @@ class AdditionalGroupRepository
     {
         $conn = Database::connect();
 
+        // Busca restaurant_id para invalidar cache antes de apagar
+        $stmtFind = $conn->prepare('SELECT restaurant_id FROM additional_groups WHERE id = :id');
+        $stmtFind->execute(['id' => $id]);
+        $restaurantId = $stmtFind->fetchColumn();
+
         // Primeiro remove vínculos da tabela pivot
         $stmt = $conn->prepare('DELETE FROM additional_group_items WHERE group_id = :gid');
         $stmt->execute(['gid' => $id]);
@@ -112,11 +115,9 @@ class AdditionalGroupRepository
         // Depois remove o grupo
         $stmt = $conn->prepare('DELETE FROM additional_groups WHERE id = :id');
         $stmt->execute(['id' => $id]);
-        try {
-            $cache = new Cache();
-            // Não temos restaurantId aqui; invalidar relações globalmente
-            $cache->forget('product_additional_relations');
-        } catch (\Exception $e) {
+        
+        if ($restaurantId) {
+            EventDispatcher::dispatch(new CardapioChangedEvent((int) $restaurantId));
         }
     }
     /**

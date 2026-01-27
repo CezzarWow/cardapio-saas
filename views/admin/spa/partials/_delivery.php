@@ -88,20 +88,8 @@
 <!-- QZ Tray Library (CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.min.js"></script>
 
+<!-- Print Bundle (Shared with PDV) -->
+<script data-spa-script="print-bundle" src="<?= BASE_URL ?>/js/bundles/print-bundle.js?v=<?= time() ?>"></script>
+
 <!-- Delivery Bundle (12 scripts combinados) -->
 <script data-spa-script="delivery-bundle" src="<?= BASE_URL ?>/js/bundles/delivery-bundle.js?v=<?= time() ?>"></script>
-
-<!-- 
-    [BACKUP] Scripts originais para rollback:
-<script data-spa-script="delivery-helpers" src="<?= BASE_URL ?>/js/delivery/helpers.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="delivery-constants" src="<?= BASE_URL ?>/js/delivery/constants.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="delivery-tabs" src="<?= BASE_URL ?>/js/delivery/tabs.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="delivery-actions" src="<?= BASE_URL ?>/js/delivery/actions.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="delivery-ui" src="<?= BASE_URL ?>/js/delivery/ui.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="delivery-polling" src="<?= BASE_URL ?>/js/delivery/polling.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="delivery-print-helpers" src="<?= BASE_URL ?>/js/delivery/print-helpers.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="delivery-print-generators" src="<?= BASE_URL ?>/js/delivery/print-generators.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="delivery-print-modal" src="<?= BASE_URL ?>/js/delivery/print-modal.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="delivery-print-actions" src="<?= BASE_URL ?>/js/delivery/print-actions.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="delivery-print-main" src="<?= BASE_URL ?>/js/delivery/print.js?v=<?= APP_VERSION ?>"></script>
--->

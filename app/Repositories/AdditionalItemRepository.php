@@ -3,7 +3,8 @@
 namespace App\Repositories;
 
 use App\Core\Database;
-use App\Core\Cache;
+use App\Events\CardapioChangedEvent;
+use App\Events\EventDispatcher;
 use PDO;
 
 /**
@@ -27,12 +28,9 @@ class AdditionalItemRepository
         ]);
 
         $id = (int) $conn->lastInsertId();
-        try {
-            $cache = new Cache();
-            $cache->forget('additionals_' . $restaurantId);
-            $cache->forget('product_additional_relations');
-        } catch (\Exception $e) {
-        }
+        
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
+        
         return $id;
     }
 
@@ -50,12 +48,8 @@ class AdditionalItemRepository
             'id' => $id,
             'rid' => $restaurantId
         ]);
-        try {
-            $cache = new Cache();
-            $cache->forget('additionals_' . $restaurantId);
-            $cache->forget('product_additional_relations');
-        } catch (\Exception $e) {
-        }
+        
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
     }
 
     /**
@@ -73,12 +67,8 @@ class AdditionalItemRepository
         // Remove o item
         $stmt = $conn->prepare('DELETE FROM additional_items WHERE id = :id AND restaurant_id = :rid');
         $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
-        try {
-            $cache = new Cache();
-            $cache->forget('additionals_' . $restaurantId);
-            $cache->forget('product_additional_relations');
-        } catch (\Exception $e) {
-        }
+        
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
     }
 
     /**

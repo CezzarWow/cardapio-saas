@@ -68,13 +68,19 @@ const deliveryScripts = [
     'delivery/tabs.js',
     'delivery/actions.js',
     'delivery/ui.js',
-    'delivery/polling.js',
-    'delivery/print-helpers.js',
-    'delivery/print-generators.js',
-    'delivery/print-modal.js',
-    'delivery/print-actions.js',
-    'delivery/print-qz.js', // QZ Integration
-    'delivery/print.js'
+    'delivery/polling.js'
+];
+
+/**
+ * Print Bundle (Shared between Delivery and PDV)
+ */
+const printScripts = [
+    'delivery/print-helpers.js', // Helper functions
+    'delivery/print-generators.js', // HTML generators for tickets
+    'delivery/print-qz.js', // QZ Tray integration
+    'delivery/print-modal.js', // Modal control
+    'delivery/print-actions.js', // Print actions (status updates)
+    'delivery/print.js' // Main Entry Point for Print Logic
 ];
 
 /**
@@ -171,6 +177,7 @@ console.log('🚀 Building SPA Bundles...');
 const results = {
     pdv: createBundle('pdv-bundle', pdvScripts),
     delivery: createBundle('delivery-bundle', deliveryScripts),
+    print: createBundle('print-bundle', printScripts),
     mesas: createBundle('mesas-bundle', mesasScripts),
     cardapio: createBundle('cardapio-bundle', cardapioScripts)
 };

@@ -3,7 +3,8 @@
 namespace App\Repositories;
 
 use App\Core\Database;
-use App\Core\Cache;
+use App\Events\CardapioChangedEvent;
+use App\Events\EventDispatcher;
 
 class AdditionalPivotRepository
 {
@@ -18,11 +19,8 @@ class AdditionalPivotRepository
             'gid' => $groupId,
             'iid' => $itemId
         ]);
-        try {
-            $cache = new Cache();
-            $cache->forget('product_additional_relations');
-        } catch (\Exception $e) {
-        }
+        
+        $this->dispatchGroupEvent($groupId);
     }
 
     /**
@@ -33,10 +31,16 @@ class AdditionalPivotRepository
         $conn = Database::connect();
         $stmt = $conn->prepare('DELETE FROM additional_group_items WHERE item_id = :iid');
         $stmt->execute(['iid' => $itemId]);
-        try {
-            $cache = new Cache();
-            $cache->forget('product_additional_relations');
-        } catch (\Exception $e) {
+        
+        // Buscamos restaurantId pelo item (vínculos já foram apagados, mas item ainda deve existir)
+        // Se item também for apagado em seguida, o repo de item disparará o evento. 
+        // Mas se for só desvínculo, precisamos disparar aqui.
+        $stmtInfo = $conn->prepare('SELECT restaurant_id FROM additional_items WHERE id = :id');
+        $stmtInfo->execute(['id' => $itemId]);
+        $rid = $stmtInfo->fetchColumn();
+        
+        if ($rid) {
+            EventDispatcher::dispatch(new CardapioChangedEvent((int)$rid));
         }
     }
 
@@ -48,11 +52,8 @@ class AdditionalPivotRepository
         $conn = Database::connect();
         $stmt = $conn->prepare('DELETE FROM additional_group_items WHERE group_id = :gid AND item_id = :iid');
         $stmt->execute(['gid' => $groupId, 'iid' => $itemId]);
-        try {
-            $cache = new Cache();
-            $cache->forget('product_additional_relations');
-        } catch (\Exception $e) {
-        }
+        
+        $this->dispatchGroupEvent($groupId);
     }
 
     /**
@@ -77,10 +78,19 @@ class AdditionalPivotRepository
                 }
             }
         }
-        try {
-            $cache = new Cache();
-            $cache->forget('product_additional_relations');
-        } catch (\Exception $e) {
+        
+        $this->dispatchGroupEvent($groupId);
+    }
+    
+    private function dispatchGroupEvent(int $groupId): void
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare('SELECT restaurant_id FROM additional_groups WHERE id = :id');
+        $stmt->execute(['id' => $groupId]);
+        $rid = $stmt->fetchColumn();
+        
+        if ($rid) {
+            EventDispatcher::dispatch(new CardapioChangedEvent((int)$rid));
         }
     }
 }

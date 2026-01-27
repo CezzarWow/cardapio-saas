@@ -70,11 +70,10 @@ $pdvConfig = [
 <!-- Script de impressão do PDV -->
 <!-- QZ Tray Library (CDN) para impressão térmica silenciosa -->
 <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.min.js"></script>
-<!-- Delivery Print Modules (reusados pelo PDV) -->
-<script data-spa-script="delivery-print-helpers" src="<?= BASE_URL ?>/js/delivery/print-helpers.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="delivery-print-generators" src="<?= BASE_URL ?>/js/delivery/print-generators.js?v=<?= APP_VERSION ?>"></script>
-<script data-spa-script="delivery-print-qz" src="<?= BASE_URL ?>/js/delivery/print-qz.js?v=<?= APP_VERSION ?>"></script>
-<!-- PDV Print Modal Controller -->
+<!-- Print Bundle (Shared with Delivery) -->
+<script data-spa-script="print-bundle" src="<?= BASE_URL ?>/js/bundles/print-bundle.js?v=<?= time() ?>"></script>
+
+<!-- PDV Print Modal Controller (Only for PDV) -->
 <script data-spa-script="pdv-print" src="<?= BASE_URL ?>/js/pdv/pdv-print.js?v=<?= APP_VERSION ?>"></script>
 
 
