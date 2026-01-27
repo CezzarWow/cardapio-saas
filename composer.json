@@ -16,6 +16,7 @@
     "scripts": {
         "test": "phpunit --configuration phpunit.xml",
         "lint": "powershell -Command \"Get-ChildItem -Recurse -Filter '*.php' | ForEach-Object { php -l $_.FullName }\"",
+        "lint:app": "powershell -Command \"Get-ChildItem -Path app,tests -Recurse -Filter '*.php' | ForEach-Object { php -l $_.FullName }\"",
         "cs:fix": "php-cs-fixer fix --config=.php-cs-fixer.dist.php"
     }
 }

@@ -109,7 +109,13 @@ class CreateWebOrderService
 
             // 7. Registrar pagamentos relacionados ao pedido
             $payments = $input['payments'] ?? [];
-            $this->paymentService->registerPayments($conn, $orderId, $payments);
+            $paidAmount = $this->paymentService->registerPayments($conn, $orderId, $payments);
+
+            // 8. Marcar pedido como pago se há pagamentos
+            if ($paidAmount > 0) {
+                $conn->prepare('UPDATE orders SET is_paid = 1 WHERE id = :id')
+                    ->execute(['id' => $orderId]);
+            }
 
             $conn->commit();
 

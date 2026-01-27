@@ -16,6 +16,8 @@ use App\Repositories\CardapioPublico\CardapioPublicoRepository;
 use App\Services\Order\CreateWebOrderService;
 use App\Services\PaymentService;
 use App\Repositories\ComboRepository;
+use App\Events\CardapioChangedEvent;
+use App\Events\EventDispatcher;
 use PDO;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -121,7 +123,7 @@ class OrderApiIntegrationTest extends TestCase
 
         $initialCombos = $repo->getCombosWithItems($restaurantId);
         $this->assertEmpty($initialCombos);
-        $this->assertEquals([], $cache->get('combos_' . $restaurantId));
+        $this->assertNull($cache->get('combos_' . $restaurantId));
 
         $comboId = $this->createCombo($restaurantId, 'Combo Promo', 22.0, $productId);
         $freshCombos = $repo->getCombosWithItems($restaurantId);
@@ -130,7 +132,7 @@ class OrderApiIntegrationTest extends TestCase
 
         $initialAdditionals = $repo->getAdditionalsWithItems($restaurantId);
         $this->assertEmpty($initialAdditionals['groups']);
-        $this->assertEquals([], $cache->get('additionals_' . $restaurantId));
+        $this->assertNull($cache->get('additionals_' . $restaurantId));
 
         $groupId = $this->seedAdditionalGroup($restaurantId, 'Extras', true);
         $additionalId = $this->seedAdditionalItem($restaurantId, 'Extra Cheese', 3.00);
@@ -141,6 +143,159 @@ class OrderApiIntegrationTest extends TestCase
         $this->assertNotEmpty($freshAdditionals['groups']);
         $this->assertArrayHasKey($groupId, $freshAdditionals['items']);
         $this->assertEquals($additionalId, (int) $freshAdditionals['items'][$groupId][0]['id']);
+    }
+
+    /**
+     * Testa que checkout com entrega + múltiplas formas de pagamento funciona corretamente
+     */
+    public function testMultiplePaymentMethodsWithDeliveryFeeCalculation(): void
+    {
+        $restaurantId = $this->seedRestaurant(12);
+        $productId = $this->seedProduct($restaurantId, 10, 25.0, 'Pizza Grande');
+
+        $payload = [
+            'restaurant_id' => $restaurantId,
+            'customer_name' => 'Cliente Entrega',
+            'order_type' => 'entrega',
+            'delivery_fee' => 8.00,
+            'items' => [
+                [
+                    'product_id' => $productId,
+                    'quantity' => 2,
+                    'additionals' => [],
+                ],
+            ],
+            'payments' => [
+                ['method' => 'pix', 'amount' => 30.00],
+                ['method' => 'cartao_credito', 'amount' => 20.00],
+                ['method' => 'dinheiro', 'amount' => 8.00],
+            ],
+        ];
+
+        self::setApiInput((string) json_encode($payload));
+
+        $service = $this->createWebOrderService();
+        $controller = new OrderApiController($service);
+
+        ob_start();
+        $controller->create();
+        $response = json_decode(ob_get_clean(), true);
+
+        $this->assertTrue($response['success']);
+        $orderId = (int) $response['order_id'];
+
+        // Valida total = (25 * 2) + 8 = 58
+        $stmt = self::$conn->prepare('SELECT total, is_paid, order_type FROM orders WHERE id = :id');
+        $stmt->execute(['id' => $orderId]);
+        $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $this->assertEquals('delivery', $order['order_type']);
+        $this->assertEquals(1, (int) $order['is_paid']);
+        $this->assertEqualsWithDelta(58.00, (float) $order['total'], 0.01);
+
+        // Valida 3 linhas em order_payments
+        $stmt = self::$conn->prepare('SELECT method, amount FROM order_payments WHERE order_id = :id ORDER BY method');
+        $stmt->execute(['id' => $orderId]);
+        $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->assertCount(3, $payments);
+    }
+
+    /**
+     * Testa fluxo completo: checkout → alteração de produto → invalidação de cache → cardápio atualizado
+     */
+    public function testCheckoutAndCacheInvalidationFlow(): void
+    {
+        $restaurantId = $this->seedRestaurant(13);
+        $productId = $this->seedProduct($restaurantId, 5, 15.0, 'Burger Original');
+
+        // Garante que listener está registrado
+        require_once __DIR__ . '/../../app/Config/dependencies.php';
+
+        $cache = new Cache();
+        $repo = new CardapioPublicoRepository();
+
+        // Popula cache inicial
+        $initialProducts = $repo->getProducts($restaurantId);
+        $this->assertCount(1, $initialProducts);
+        $this->assertEqualsWithDelta(15.0, (float) $initialProducts[0]['price'], 0.01);
+
+        // Faz checkout via API
+        $payload = [
+            'restaurant_id' => $restaurantId,
+            'customer_name' => 'Cliente Cache Test',
+            'order_type' => 'retirada',
+            'items' => [
+                ['product_id' => $productId, 'quantity' => 1, 'additionals' => []],
+            ],
+            'payments' => [['method' => 'pix', 'amount' => 15.00]],
+        ];
+
+        self::setApiInput((string) json_encode($payload));
+        $service = $this->createWebOrderService();
+        $controller = new OrderApiController($service);
+
+        ob_start();
+        $controller->create();
+        $response = json_decode(ob_get_clean(), true);
+        $this->assertTrue($response['success']);
+
+        // Altera preço do produto no banco
+        self::$conn->prepare('UPDATE products SET price = :price WHERE id = :id')
+            ->execute(['price' => 20.0, 'id' => $productId]);
+
+        // Dispara evento de invalidação
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
+
+        // Busca cardápio novamente - deve refletir novo preço
+        $updatedProducts = $repo->getProducts($restaurantId);
+        $this->assertCount(1, $updatedProducts);
+        $this->assertEqualsWithDelta(20.0, (float) $updatedProducts[0]['price'], 0.01);
+    }
+
+    /**
+     * Testa que cardápio público reflete atualizações após invalidação de cache
+     */
+    public function testPublicCardapioReflectsCacheUpdatesAfterChanges(): void
+    {
+        $restaurantId = $this->seedRestaurant(14);
+        $productId = $this->seedProduct($restaurantId, 10, 30.0, 'Combo Familia');
+
+        // Garante listener registrado
+        require_once __DIR__ . '/../../app/Config/dependencies.php';
+
+        $cache = new Cache();
+        $repo = new CardapioPublicoRepository();
+
+        // Estado inicial: sem combos
+        $this->assertEmpty($repo->getCombosWithItems($restaurantId));
+
+        // Cria combo
+        $comboId = $this->createCombo($restaurantId, 'Combo Teste Cache', 45.0, $productId);
+
+        // Dispara invalidação
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
+
+        // Verifica que combo aparece
+        $combos = $repo->getCombosWithItems($restaurantId);
+        $this->assertCount(1, $combos);
+        $this->assertEquals($comboId, (int) $combos[0]['id']);
+        $this->assertEquals('Combo Teste Cache', $combos[0]['name']);
+
+        // Cria adicional e vincula
+        $groupId = $this->seedAdditionalGroup($restaurantId, 'Bebidas', false);
+        $itemId = $this->seedAdditionalItem($restaurantId, 'Coca-Cola', 5.0);
+        $this->linkAdditionalGroupItem($groupId, $itemId);
+        $this->linkProductToGroup($productId, $groupId);
+
+        // Dispara invalidação
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
+
+        // Verifica que adicional aparece
+        $additionals = $repo->getAdditionalsWithItems($restaurantId);
+        $this->assertNotEmpty($additionals['groups']);
+        $this->assertArrayHasKey($groupId, $additionals['items']);
+        $this->assertEquals('Coca-Cola', $additionals['items'][$groupId][0]['name']);
     }
 
     private function createWebOrderService(): CreateWebOrderService
