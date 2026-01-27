@@ -3,6 +3,8 @@
 namespace App\Repositories\Cardapio;
 
 use App\Core\Database;
+use App\Events\CardapioChangedEvent;
+use App\Events\EventDispatcher;
 use PDO;
 
 /**
@@ -61,6 +63,8 @@ class BusinessHoursRepository
                 'close' => $h['close']
             ]);
         }
+
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
     }
 
     /**
@@ -88,6 +92,8 @@ class BusinessHoursRepository
                 'close' => $hoursData[$day]['close_time'] ?? '22:00'
             ]);
         }
+
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
     }
 
     /**

@@ -7,6 +7,31 @@ use PDO;
 
 final class TestDatabase
 {
+    private const TABLES = [
+        'additional_group_items',
+        'additional_group_categories',
+        'product_additional_relations',
+        'combo_items',
+        'combos',
+        'business_hours',
+        'cardapio_config',
+        'additional_items',
+        'additional_groups',
+        'additional_categories',
+        'cash_movements',
+        'order_payments',
+        'order_items',
+        'orders',
+        'cash_registers',
+        'stock_movements',
+        'products',
+        'categories',
+        'tables',
+        'clients',
+        'restaurants',
+        'users',
+    ];
+    
     public static function setup(): void
     {
         $conn = Database::connect();
@@ -14,6 +39,8 @@ final class TestDatabase
         $driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
 
         if ($driver === 'sqlite') {
+            $conn->exec('PRAGMA foreign_keys = OFF;');
+            self::dropTables($conn, self::TABLES);
             $conn->exec('PRAGMA foreign_keys = ON;');
 
             $conn->exec('
@@ -293,6 +320,10 @@ final class TestDatabase
         if ($driver !== 'mysql') {
             return;
         }
+
+        $conn->exec('SET FOREIGN_KEY_CHECKS=0;');
+        self::dropTables($conn, self::TABLES);
+        $conn->exec('SET FOREIGN_KEY_CHECKS=1;');
 
         $conn->exec('
             CREATE TABLE IF NOT EXISTS users (
@@ -574,30 +605,7 @@ final class TestDatabase
 
         $driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
 
-        $tables = [
-            'additional_group_items',
-            'additional_group_categories',
-            'product_additional_relations',
-            'combo_items',
-            'combos',
-            'business_hours',
-            'cardapio_config',
-            'additional_items',
-            'additional_groups',
-            'additional_categories',
-            'cash_movements',
-            'order_payments',
-            'order_items',
-            'orders',
-            'cash_registers',
-            'stock_movements',
-            'products',
-            'categories',
-            'tables',
-            'clients',
-            'restaurants',
-            'users',
-        ];
+        $tables = self::TABLES;
 
         if ($driver === 'mysql') {
             $conn->exec('SET FOREIGN_KEY_CHECKS=0;');
@@ -614,6 +622,13 @@ final class TestDatabase
 
         foreach ($tables as $table) {
             $conn->exec("DELETE FROM {$table}");
+        }
+    }
+
+    private static function dropTables(PDO $conn, array $tables): void
+    {
+        foreach ($tables as $table) {
+            $conn->exec("DROP TABLE IF EXISTS {$table}");
         }
     }
 }

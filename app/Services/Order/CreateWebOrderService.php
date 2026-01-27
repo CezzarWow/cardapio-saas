@@ -144,8 +144,11 @@ class CreateWebOrderService
             $quantity = max(1, (int) ($item['quantity'] ?? 1));
             $extras = [];
 
-            // Soma adicionais
+            $productGroups = $this->additionalItemRepository->findByProduct($productId, $restaurantId);
             $additionals = $item['additionals'] ?? [];
+            $this->validateRequiredAdditionals($additionals, $productGroups);
+
+            // Soma adicionais
             if (is_array($additionals)) {
                 foreach ($additionals as $add) {
                     $addId = (int) ($add['id'] ?? $add['item_id'] ?? 0);
@@ -212,5 +215,48 @@ class CreateWebOrderService
         $value = str_replace(',', '.', $value);
 
         return floatval($value) ?: null;
+    }
+
+    /**
+     * Garante que grupos obrigatórios têm pelo menos um adicional selecionado.
+     */
+    private function validateRequiredAdditionals(array $additionals, array $groups): void
+    {
+        $selectedIds = [];
+        foreach ($additionals as $additional) {
+            $id = $this->extractAdditionalId($additional);
+            if ($id > 0) {
+                $selectedIds[$id] = true;
+            }
+        }
+
+        foreach ($groups as $group) {
+            if (empty($group['required'])) {
+                continue;
+            }
+
+            $groupItems = $group['items'] ?? [];
+            $hasSelection = false;
+            foreach ($groupItems as $item) {
+                $itemId = (int) ($item['id'] ?? 0);
+                if ($itemId > 0 && isset($selectedIds[$itemId])) {
+                    $hasSelection = true;
+                    break;
+                }
+            }
+
+            if (!$hasSelection) {
+                $groupName = $group['name'] ?? 'o grupo obrigatório';
+                throw new \InvalidArgumentException("Selecione pelo menos um adicional para {$groupName}");
+            }
+        }
+    }
+
+    /**
+     * Extrai ID do adicional independentemente do campo enviado (id ou item_id).
+     */
+    private function extractAdditionalId(array $additional): int
+    {
+        return (int) ($additional['id'] ?? $additional['item_id'] ?? 0);
     }
 }
