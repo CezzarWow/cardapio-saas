@@ -73,7 +73,6 @@
 </div>
 
 <!-- Modais -->
-<?php \App\Core\View::renderFromScope('admin/delivery/partials/modals/order_details.php', get_defined_vars()); ?>
 <?php \App\Core\View::renderFromScope('admin/delivery/partials/modals/cancel_order.php', get_defined_vars()); ?>
 <?php \App\Core\View::renderFromScope('admin/delivery/partials/modals/print_slip.php', get_defined_vars()); ?>
 
@@ -93,3 +92,6 @@
 
 <!-- Delivery Bundle (12 scripts combinados) -->
 <script data-spa-script="delivery-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/delivery-bundle.js?v=<?= time() ?>"></script>
+
+<!-- Modal de Detalhes (compartilhado com Mesas) -->
+<script data-spa-script="delivery-details" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/shared/delivery-details-modal.js?v=<?= time() ?>"></script>

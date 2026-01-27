@@ -36,16 +36,45 @@
     // Se nosso modal completo já foi carregado, não reexecuta
     if (window.DeliveryUI && window.DeliveryUI.printSlip) return;
 
-    // DeliveryUI minimal (ou extende o existente)
+    // Inicializa DeliveryUI (se já existe do delivery-bundle, vamos sobrescrever métodos)
     window.DeliveryUI = window.DeliveryUI || {};
 
     window.DeliveryUI.currentOrder = null;
     window.DeliveryUI.previouslyFocused = null;
 
-    window.DeliveryUI.openDetailsModal = async function (id) {
-        // Garante que o modal existe no DOM
-        ensureModalExists();
+    // Função para verificar/criar modal com botões de impressão
+    function ensureModalExistsLocal() {
+        const existingModal = document.getElementById('deliveryDetailsModal');
 
+        // Se existe mas NÃO tem seção de impressão, remove para recriar
+        if (existingModal && !existingModal.querySelector('.delivery-modal__print-section')) {
+            existingModal.parentElement?.remove() || existingModal.remove();
+        }
+
+        // Se ainda existe (com botões corretos), não faz nada
+        if (document.getElementById('deliveryDetailsModal')) return;
+
+        // Carrega CSS se necessário
+        if (!document.querySelector('link[href*="delivery/modals.css"]')) {
+            const css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = BASE_URL + '/css/delivery/modals.css?v=' + Date.now();
+            document.head.appendChild(css);
+        }
+
+        // Cria container e modal
+        const container = document.createElement('div');
+        container.id = 'delivery-modal-container-shared';
+        container.innerHTML = getModalHTML();
+        document.body.appendChild(container);
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // SOBRESCREVE openDetailsModal para usar nosso modal com botões
+    window.DeliveryUI.openDetailsModal = async function (id) {
+        // Garante que o modal NOSSO existe no DOM (com botões de impressão)
+        ensureModalExistsLocal();
         try {
             const res = await fetch(BASE_URL + '/admin/loja/delivery/details?id=' + id);
             const data = await res.json();
@@ -152,35 +181,6 @@
     window.openDeliveryDetailsModal = function (orderId) {
         DeliveryUI.openDetailsModal(orderId);
     };
-
-    // Cria modal no DOM se não existir OU se não tiver botões de impressão
-    function ensureModalExists() {
-        const existingModal = document.getElementById('deliveryDetailsModal');
-
-        // Se existe mas NÃO tem seção de impressão, remove para recriar
-        if (existingModal && !existingModal.querySelector('.delivery-modal__print-section')) {
-            existingModal.parentElement?.remove();
-        }
-
-        // Se ainda existe (com botões), não faz nada
-        if (document.getElementById('deliveryDetailsModal')) return;
-
-        // Carrega CSS se necessário
-        if (!document.querySelector('link[href*="delivery/modals.css"]')) {
-            const css = document.createElement('link');
-            css.rel = 'stylesheet';
-            css.href = BASE_URL + '/css/delivery/modals.css?v=' + Date.now();
-            document.head.appendChild(css);
-        }
-
-        // Cria container e modal
-        const container = document.createElement('div');
-        container.id = 'delivery-modal-container';
-        container.innerHTML = getModalHTML();
-        document.body.appendChild(container);
-
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
 
     function getModalHTML() {
         return `

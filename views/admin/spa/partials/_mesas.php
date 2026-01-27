@@ -38,4 +38,4 @@
 <script data-spa-script="mesas-bundle" src="<?= BASE_URL ?>/js/bundles/mesas-bundle.js?v=<?= APP_VERSION ?>"></script>
 
 <!-- Modal de Delivery (compartilhado) -->
-<script data-spa-script="delivery-details" src="<?= BASE_URL ?>/js/shared/delivery-details-modal.js?v=<?= APP_VERSION ?>"></script>
+<script data-spa-script="delivery-details" src="<?= BASE_URL ?>/js/shared/delivery-details-modal.js?v=<?= time() ?>"></script>
