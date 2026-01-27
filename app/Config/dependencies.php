@@ -32,4 +32,10 @@ $container = new Container();
 // 5. Controllers (Request Handling)
 (new ControllerProvider())->register($container);
 
+// 6. Event listeners (ETAPA 5: cache invalidation on cardápio change)
+\App\Events\EventDispatcher::listen(
+    'cardapio.changed',
+    new \App\Events\Listeners\InvalidateCardapioCacheListener()
+);
+
 return $container;

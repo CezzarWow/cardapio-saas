@@ -3,7 +3,8 @@
 namespace App\Repositories;
 
 use App\Core\Database;
-use App\Core\Cache;
+use App\Events\CardapioChangedEvent;
+use App\Events\EventDispatcher;
 use PDO;
 
 class CategoryRepository
@@ -39,12 +40,7 @@ class CategoryRepository
 
         $id = (int) $conn->lastInsertId();
 
-        // Invalida cache de categorias
-        try {
-            $cache = new Cache();
-            $cache->forget('categories_' . $data['restaurant_id']);
-        } catch (\Exception $e) {
-        }
+        EventDispatcher::dispatch(new CardapioChangedEvent((int) $data['restaurant_id']));
 
         return $id;
     }

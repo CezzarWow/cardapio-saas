@@ -38,7 +38,8 @@ class CsrfMiddleware
             // '/admin/loja/venda/fechar-comanda', // REMOVIDO: Frontend envia CSRF token no payload
             '/admin/loja/reposicao/ajustar', // Ajuste de estoque via SPA (verificar se pode receber CSRF)
             'reposicao/ajustar', // Variação sem prefixo completo
-            '/api/order/create' // API legada (considerar migrar para /api/v1/ com autenticação adequada)
+            '/api/v1/order/create', // API cardápio público (checkout)
+            '/api/order/create' // Legado; manter até desativar clientes antigos
         ];
 
         // Verifica se a URI atual corresponde a alguma exceção

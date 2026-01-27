@@ -130,7 +130,7 @@ const CheckoutOrder = {
     submitToApi: async function (orderData) {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-        const response = await fetch(window.BASE_URL + '/api/order/create', {
+        const response = await fetch(window.BASE_URL + '/api/v1/order/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -4,6 +4,8 @@ namespace App\Repositories;
 
 use App\Core\Database;
 use App\Core\Cache;
+use App\Events\CardapioChangedEvent;
+use App\Events\EventDispatcher;
 use PDO;
 
 class ProductRepository
@@ -133,15 +135,7 @@ class ProductRepository
             'rid' => $data['restaurant_id']
         ]);
 
-        // Invalida cache relevante
-        try {
-            $cache = new Cache();
-            $cache->forget('products_' . $data['restaurant_id']);
-            $cache->forget('combos_' . $data['restaurant_id']);
-            $cache->forget('product_additional_relations');
-        } catch (\Exception $e) {
-            // não bloquear execução em caso de falha no cache
-        }
+        EventDispatcher::dispatch(new CardapioChangedEvent((int) $data['restaurant_id']));
     }
 
     /**
@@ -153,13 +147,7 @@ class ProductRepository
         $stmt = $conn->prepare('DELETE FROM products WHERE id = :id AND restaurant_id = :rid');
         $stmt->execute(['id' => $id, 'rid' => $restaurantId]);
 
-        try {
-            $cache = new Cache();
-            $cache->forget('products_' . $restaurantId);
-            $cache->forget('combos_' . $restaurantId);
-            $cache->forget('product_additional_relations');
-        } catch (\Exception $e) {
-        }
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
     }
 
     /**
@@ -311,18 +299,13 @@ class ProductRepository
     }
 
     /**
-     * Invalida cache de promoções
+     * Invalida cache de promoções (via evento cardapio.changed)
      */
     private function invalidatePromoCache(int $restaurantId): void
     {
         try {
-            // Usar SimpleCache diretamente para alinhar com CardapioQueryService
-            require_once __DIR__ . '/../Core/SimpleCache.php';
-            $cache = new \App\Core\SimpleCache(); 
-            $cache->forget('products_' . $restaurantId);
-            $cache->forget('cardapio_index_' . $restaurantId . '_v2');
+            EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
         } catch (\Throwable $e) {
-            // Logar erro de cache mas não quebrar aplicação
             \App\Core\Logger::warning('Erro ao invalidar cache de promoções', [
                 'restaurant_id' => $restaurantId,
                 'error' => $e->getMessage()

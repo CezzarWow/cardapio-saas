@@ -22,7 +22,7 @@ class OrderApiController
 
     /**
      * Cria um novo pedido via API (cardápio web)
-     * POST /api/order/create
+     * POST /api/v1/order/create  (ou /api/order/create legado)
      */
     public function create()
     {

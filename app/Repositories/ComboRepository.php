@@ -4,6 +4,8 @@ namespace App\Repositories;
 
 use App\Core\Database;
 use App\Core\Cache;
+use App\Events\CardapioChangedEvent;
+use App\Events\EventDispatcher;
 use PDO;
 
 class ComboRepository
@@ -24,11 +26,7 @@ class ComboRepository
             'active' => $data['is_active']
         ]);
         $id = (int) $conn->lastInsertId();
-        try {
-            $cache = new Cache();
-            $cache->forget('combos_' . $data['restaurant_id']);
-        } catch (\Exception $e) {
-        }
+        EventDispatcher::dispatch(new CardapioChangedEvent((int) $data['restaurant_id']));
         return $id;
     }
 
@@ -114,11 +112,7 @@ class ComboRepository
             'id' => $id,
             'rid' => $data['restaurant_id']
         ]);
-        try {
-            $cache = new Cache();
-            $cache->forget('combos_' . $data['restaurant_id']);
-        } catch (\Exception $e) {
-        }
+        EventDispatcher::dispatch(new CardapioChangedEvent((int) $data['restaurant_id']));
     }
 
     /**
@@ -128,11 +122,7 @@ class ComboRepository
     {
         $conn = Database::connect();
         $conn->prepare('DELETE FROM combos WHERE id = :id AND restaurant_id = :rid')->execute(['id' => $id, 'rid' => $restaurantId]);
-        try {
-            $cache = new Cache();
-            $cache->forget('combos_' . $restaurantId);
-        } catch (\Exception $e) {
-        }
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
     }
 
     /**
@@ -143,11 +133,7 @@ class ComboRepository
         $conn = Database::connect();
         $conn->prepare('UPDATE combos SET is_active = :status WHERE id = :id AND restaurant_id = :rid')
              ->execute(['status' => $status, 'id' => $id, 'rid' => $restaurantId]);
-        try {
-            $cache = new Cache();
-            $cache->forget('combos_' . $restaurantId);
-        } catch (\Exception $e) {
-        }
+        EventDispatcher::dispatch(new CardapioChangedEvent($restaurantId));
     }
 
     /**

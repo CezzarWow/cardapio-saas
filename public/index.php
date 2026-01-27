@@ -63,9 +63,10 @@ $url_clean = parse_url($url, PHP_URL_PATH);
 $path = str_replace('/cardapio-saas/public', '', $url_clean);
 
 // ============================================================
-// GRUPO 1: Rotas de API (migradas para Router)
+// GRUPO 1: Rotas de API (versionamento padronizado em /api/v1/)
 // ============================================================
-Router::add('/api/order/create', \App\Controllers\Api\OrderApiController::class, 'create');
+Router::add('/api/v1/order/create', \App\Controllers\Api\OrderApiController::class, 'create');
+Router::add('/api/order/create', \App\Controllers\Api\OrderApiController::class, 'create'); // legado; preferir /api/v1/order/create
 
 // --- FLOWS ISOLADOS (Nova Arquitetura) ---
 Router::add('/api/v1/balcao/venda', \App\Controllers\Api\BalcaoController::class, 'store');
