@@ -187,4 +187,22 @@ class DeliveryController extends BaseController
         $result = $this->service->sendToTable((int)$data['order_id'], $rid);
         $this->json($result, $result['success'] ? 200 : 400);
     }
+
+    public function getHubData()
+    {
+        $rid = $this->getRestaurantId();
+        $orderId = $this->getInt('id'); // ID de "entrada" (o card clicado)
+
+        if ($orderId <= 0) {
+            $this->json(['success' => false, 'message' => 'ID inválido'], 400);
+        }
+
+        $data = $this->service->getClientHubData($orderId, $rid);
+
+        if (!$data['success']) {
+            $this->json($data, 404);
+        }
+
+        $this->json($data);
+    }
 }

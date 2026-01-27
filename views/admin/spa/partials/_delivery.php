@@ -90,6 +90,9 @@
 <!-- Print Bundle (Shared with PDV) -->
 <script data-spa-script="print-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/print-bundle.js?v=<?= time() ?>"></script>
 
+<!-- Print Animation (Shared) -->
+<script data-spa-script="print-animation" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/shared/print-animation.js?v=<?= time() ?>"></script>
+
 <!-- Delivery Bundle (12 scripts combinados) -->
 <script data-spa-script="delivery-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/delivery-bundle.js?v=<?= time() ?>"></script>
 

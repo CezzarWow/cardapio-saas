@@ -49,12 +49,20 @@ class TableRepository
     public function findAll(int $restaurantId): array
     {
         $conn = Database::connect();
-        $stmt = $conn->prepare('SELECT t.*, o.total as order_total, o.order_type, c.credit_limit, c.name as client_name 
-                                FROM tables t 
-                                LEFT JOIN orders o ON t.current_order_id = o.id 
-                                LEFT JOIN clients c ON o.client_id = c.id
-                                WHERE t.restaurant_id = :rid 
-                                ORDER BY CAST(t.number AS UNSIGNED)');
+        
+        // [FIX] Calcula total somando os itens, pois orders.total nem sempre está atualizado em tempo real
+        $sql = "SELECT t.*, 
+                       (SELECT SUM(price * quantity) FROM order_items WHERE order_id = o.id) as order_total, 
+                       o.order_type, 
+                       c.credit_limit, 
+                       c.name as client_name 
+                FROM tables t 
+                LEFT JOIN orders o ON t.current_order_id = o.id 
+                LEFT JOIN clients c ON o.client_id = c.id
+                WHERE t.restaurant_id = :rid 
+                ORDER BY CAST(t.number AS UNSIGNED)";
+                
+        $stmt = $conn->prepare($sql);
         $stmt->execute(['rid' => $restaurantId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

@@ -108,6 +108,7 @@ Router::add('/admin/loja/delivery/status', \App\Controllers\Admin\DeliveryContro
 Router::add('/admin/loja/delivery/list', \App\Controllers\Admin\DeliveryController::class, 'list');
 Router::add('/admin/loja/delivery/check', \App\Controllers\Admin\DeliveryController::class, 'check');
 Router::add('/admin/loja/delivery/details', \App\Controllers\Admin\DeliveryController::class, 'getOrderDetails');
+Router::add('/admin/loja/delivery/hub', \App\Controllers\Admin\DeliveryController::class, 'getHubData');
 Router::add('/admin/loja/delivery/history', \App\Controllers\Admin\DeliveryController::class, 'history');
 Router::add('/admin/loja/delivery/send-to-table', \App\Controllers\Admin\DeliveryController::class, 'sendToTable');
 

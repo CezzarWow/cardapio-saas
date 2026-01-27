@@ -143,11 +143,54 @@ class DeliveryService
             'message' => 'Pedido enviado para Mesas com sucesso'
         ];
     }
-    /**
-     * Retorna hash de estado dos pedidos (para Polling Otimizado)
-     */
     public function checkOrdersState(int $restaurantId): string
     {
         return $this->repository->getLastUpdateHash($restaurantId);
+    }
+
+    /**
+     * Hub Unificado: Retorna dados do cliente e todos seus pedidos ativos
+     */
+    public function getClientHubData(int $orderId, int $restaurantId): array
+    {
+        // 1. Acha o pedido original para descobrir o cliente
+        $order = $this->repository->findById($orderId, $restaurantId);
+        if (!$order) {
+            return ['success' => false, 'message' => 'Pedido não encontrado'];
+        }
+
+        // Tenta achar cliente via tabela orders (client_id)
+        // Se for nulo, talvez precise buscar via tabela de mesas? Por enquanto assume orders.client_id
+        // Para mesas anônimas, o hub talvez não funcione bem (só mostraria a mesa).
+        // Mas o foco aqui é Client Hub.
+        
+        // *Preciso do client_id, mas o findById simples não retorna. Vou usar o findWithDetails ou melhorar o findById.
+        // O repositorio->findById retorna array associativo básico. Se client_id não vier, busco full.
+        $fullOrder = $this->repository->findWithDetails($orderId, $restaurantId);
+        if (!$fullOrder || empty($fullOrder['client_id'])) {
+            // Se não tem cliente vinculado, retorna só esse pedido como "hub de 1 item"
+            // Ou retorna erro? O usuário quer um Hub de Cliente.
+            // Para mesa sem cliente cadastrado, é um "Cliente Anônimo".
+            return [
+                'success' => true,
+                'client' => [
+                    'name' => $fullOrder['client_name'] ?? ('Mesa ' . ($fullOrder['table_number'] ?? '?')),
+                    'phone' => '--',
+                    'is_anonymous' => true
+                ],
+                'orders' => [$fullOrder] 
+            ];
+        }
+
+        $clientId = $fullOrder['client_id'];
+
+        // 2. Busca tudo do cliente
+        $data = $this->repository->fetchClientHubData($clientId, $restaurantId);
+
+        return [
+            'success' => true,
+            'client' => $data['client'],
+            'orders' => $data['orders']
+        ];
     }
 }

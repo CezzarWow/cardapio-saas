@@ -221,4 +221,65 @@ class DeliveryOrderRepository
 
         return $result['state_hash'] ?? '';
     }
+
+    /**
+     * Busca TODOS os pedidos ativos de um cliente para o Hub Unificado
+     */
+    public function fetchClientHubData(int $clientId, int $restaurantId): array
+    {
+        $conn = Database::connect();
+
+        // 1. Busca dados do cliente
+        $stmtClient = $conn->prepare("SELECT * FROM clients WHERE id = :cid");
+        $stmtClient->execute(['cid' => $clientId]);
+        $client = $stmtClient->fetch(PDO::FETCH_ASSOC);
+
+        if (!$client) return [];
+
+        // 2. Busca pedidos ativos (não cancelados/fechados ou do dia)
+        // Critério: Status não é 'fechado' ou 'cancelado' (a menos que seja recente?)
+        // Vamos pegar tudo que não está 'fechado' E tudo do dia de hoje (mesmo fechado/cancelado para histórico)
+        $today = date('Y-m-d');
+        
+        $sql = "
+            SELECT o.*, t.number as table_number 
+            FROM orders o
+            LEFT JOIN tables t ON o.table_id = t.id
+            WHERE o.client_id = :cid 
+              AND o.restaurant_id = :rid
+              AND (
+                  o.status NOT IN ('fechado') 
+                  OR DATE(o.created_at) = :today
+              )
+            ORDER BY o.created_at DESC
+        ";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['cid' => $clientId, 'rid' => $restaurantId, 'today' => $today]);
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 3. Popula itens para cada pedido
+        foreach ($orders as &$order) {
+            $order['items'] = $this->itemRepo->findAll($order['id']);
+
+            // Recalcula total baseado nos itens (correção para mesas com total 0)
+            $calcTotal = 0;
+            if (!empty($order['items'])) {
+                foreach ($order['items'] as $item) {
+                     $calcTotal += (float)$item['price'] * (float)$item['quantity'];
+                }
+            }
+            // Soma taxa de entrega se existir
+            if (!empty($order['delivery_fee'])) {
+                 $calcTotal += (float)$order['delivery_fee'];
+            }
+            
+            $order['total'] = $calcTotal;
+        }
+
+        return [
+            'client' => $client,
+            'orders' => $orders
+        ];
+    }
 }

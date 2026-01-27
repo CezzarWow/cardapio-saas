@@ -7,70 +7,9 @@
  * ============================================
  */
 ?>
-<div id="deliveryPrintModal" 
-     class="delivery-modal delivery-modal--print" 
-     role="dialog" 
-     aria-modal="true" 
-     aria-labelledby="deliveryPrintModalTitle"
-     inert
-     hidden>
-    <div class="delivery-modal__content delivery-modal__content--small">
-        
-        <!-- Header -->
-        <div class="delivery-modal__header delivery-modal__header--dark">
-            <span id="deliveryPrintModalTitle" style="font-weight: 700;">🖨️ Imprimir Ficha</span>
-            <button onclick="DeliveryPrint.closeModal()" 
-                    class="delivery-modal__close"
-                    aria-label="Fechar impressão">
-                <span style="color: white; font-size: 1.2rem;">✕</span>
-            </button>
-        </div>
+<!-- Modal de Impressão Removido (Usa Impressão Direta) -->
+<!-- CSS e Container necessários para funcionamento do print-bundle -->
 
-        <!-- Abas de seleção -->
-        <div id="print-tabs-container" class="print-tabs" role="tablist">
-            <button onclick="DeliveryPrint.showDeliverySlip()" 
-                    id="tab-delivery" 
-                    class="print-tabs__btn print-tabs__btn--active"
-                    role="tab"
-                    aria-selected="true"
-                    aria-controls="print-slip-content">
-                🛵 Motoboy
-            </button>
-            <button onclick="DeliveryPrint.showKitchenSlip()" 
-                    id="tab-kitchen" 
-                    class="print-tabs__btn"
-                    role="tab"
-                    aria-selected="false"
-                    aria-controls="print-slip-content">
-                🍳 Cozinha
-            </button>
-        </div>
-
-        <!-- Conteúdo da Ficha -->
-        <div id="print-slip-content" 
-             class="print-slip-container"
-             role="tabpanel"
-             aria-labelledby="tab-delivery">
-            <!-- Prévia da ficha (preenchido via JS) -->
-        </div>
-
-        <!-- Footer -->
-        <div class="delivery-modal__footer">
-            <button onclick="DeliveryPrint.closeModal()" 
-                    class="delivery-modal__btn delivery-modal__btn--secondary"
-                    aria-label="Cancelar impressão">
-                Cancelar
-            </button>
-            <button onclick="DeliveryPrint.printFromModal()" 
-                    class="delivery-modal__btn delivery-modal__btn--primary"
-                    style="flex: 2;"
-                    aria-label="Imprimir ficha">
-                <i data-lucide="printer" style="width: 18px; height: 18px;"></i>
-                Imprimir
-            </button>
-        </div>
-    </div>
-</div>
 
 <!-- Área de impressão oculta -->
 <div id="print-area" style="display: none;"></div>

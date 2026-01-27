@@ -13,6 +13,16 @@
     if (window._deliveryDetailsLoaded) return;
     window._deliveryDetailsLoaded = true;
 
+    // Helpers compartilhados (polyfill se delivery-bundle não estiver carregado)
+    window.DeliveryHelpers = window.DeliveryHelpers || {
+        getBaseUrl: function () { return typeof BASE_URL !== 'undefined' ? BASE_URL : ''; },
+        getCsrf: function () { return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''; },
+        formatCurrency: function (val) { return 'R$ ' + parseFloat(val || 0).toFixed(2).replace('.', ','); },
+        getJsonHeaders: function () {
+            return { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': this.getCsrf() };
+        }
+    };
+
     // Constantes compartilhadas
     window.DeliveryConstants = window.DeliveryConstants || {
         statusLabels: {
@@ -56,9 +66,10 @@
 
         // Carrega CSS se necessário
         if (!document.querySelector('link[href*="delivery/modals.css"]')) {
+            const baseUrl = typeof DeliveryHelpers !== 'undefined' ? DeliveryHelpers.getBaseUrl() : (typeof BASE_URL !== 'undefined' ? BASE_URL : '');
             const css = document.createElement('link');
             css.rel = 'stylesheet';
-            css.href = BASE_URL + '/css/delivery/modals.css?v=' + Date.now();
+            css.href = baseUrl + '/css/delivery/modals.css?v=' + Date.now();
             document.head.appendChild(css);
         }
 
@@ -100,10 +111,31 @@
         document.getElementById('modal-client-name').textContent = order.client_name || 'Não identificado';
         document.getElementById('modal-client-phone').textContent = order.client_phone || '--';
 
-        let addr = order.client_address || 'Não informado';
-        if (order.client_number) addr += ', ' + order.client_number;
-        if (order.client_neighborhood) addr += ' - ' + order.client_neighborhood;
-        document.getElementById('modal-address').textContent = addr;
+        const isPickup = ['pickup', 'retirada'].includes((order.order_type || '').toLowerCase());
+        const addrEl = document.getElementById('modal-address');
+        const mapIcon = addrEl.parentElement.querySelector('i');
+
+        if (isPickup) {
+            addrEl.textContent = '📍 Retirada no Balcão';
+            addrEl.style.fontWeight = '600';
+            if (mapIcon) {
+                mapIcon.setAttribute('data-lucide', 'store'); // Muda ícone para loja
+                mapIcon.style.color = '#0284c7'; // Azul
+            }
+        } else {
+            let addr = order.client_address || 'Não informado';
+            if (order.client_number) addr += ', ' + order.client_number;
+            if (order.client_neighborhood) addr += ' - ' + order.client_neighborhood;
+            addrEl.textContent = addr;
+            addrEl.style.fontWeight = 'normal';
+            if (mapIcon) {
+                mapIcon.setAttribute('data-lucide', 'map-pin'); // Ícone de mapa
+                mapIcon.style.color = '#f59e0b'; // Laranja
+            }
+        }
+
+        // Re-renderiza ícones pois mudamos o atributo data-lucide
+        if (typeof lucide !== 'undefined') lucide.createIcons();
 
         document.getElementById('modal-total').textContent = 'R$ ' + parseFloat(order.total || 0).toFixed(2).replace('.', ',');
         document.getElementById('modal-time').textContent = order.created_at || '--';
@@ -142,15 +174,33 @@
         this.currentOrder = null;
     };
 
-    window.DeliveryUI.printSlip = function (type) {
-        if (!this.currentOrder) {
-            alert('Nenhum pedido selecionado');
+    // ==========================================
+    // IMPRESSÃO
+    // ==========================================
+    window.DeliveryUI.printSlip = async function (type) {
+        if (!this.currentOrder) { alert('Nenhum pedido selecionado'); return; }
+
+        if (window.DeliveryPrint && window.DeliveryPrint.Actions && window.DeliveryPrint.Actions.printDirect) {
+            // Usa módulo compartilhado se disponível
+            if (window.PrintAnimation) window.PrintAnimation.show();
+
+            await new Promise(r => setTimeout(r, 800)); // Delay visual
+
+            try {
+                await DeliveryPrint.Actions.printDirect(this.currentOrder.id, type);
+            } catch (e) {
+                console.error("Erro na impressão:", e);
+                alert("Erro ao imprimir.");
+            } finally {
+                if (window.PrintAnimation) window.PrintAnimation.hide();
+            }
             return;
         }
 
-        // Se DeliveryPrint disponível (QZ Tray), usa
-        if (window.DeliveryPrint && window.DeliveryPrint.openModal) {
-            DeliveryPrint.openModal(this.currentOrder.id, type);
+        // Se DeliveryPrint.Modal disponível (fallback)
+        if (window.DeliveryPrint && window.DeliveryPrint.Modal && window.DeliveryPrint.Modal.open) {
+            // Fallback para modal se direct não existir (segurança)
+            DeliveryPrint.Modal.open(this.currentOrder.id, type);
             return;
         }
 
