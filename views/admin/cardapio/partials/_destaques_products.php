@@ -54,12 +54,13 @@
             
             <!-- Abas das Categorias -->
             <?php foreach ($productsByCategory as $categoryName => $products): ?>
+            <?php $categoryKey = (string) $categoryName; ?>
             <button type="button" 
                     class="cardapio-admin-destaques-tab-btn" 
-                    data-category-tab="<?= htmlspecialchars($categoryName) ?>"
-                    onclick="CardapioAdmin.Destaques.switchTab('<?= htmlspecialchars($categoryName) ?>')">
+                    data-category-tab="<?= \App\Helpers\ViewHelper::e($categoryKey) ?>"
+                    onclick='CardapioAdmin.Destaques.switchTab(<?= \App\Helpers\ViewHelper::js($categoryKey) ?>)'>
                 <i data-lucide="folder" style="width: 16px; height: 16px;"></i>
-                <?= htmlspecialchars($categoryName) ?>
+                <?= \App\Helpers\ViewHelper::e($categoryKey) ?>
             </button>
             <?php endforeach; ?>
         </div>
@@ -72,8 +73,9 @@
                 <?php if (!empty($featuredProducts)): ?>
                     <div class="cardapio-admin-destaques-products-grid" data-sortable-area="featured">
                         <?php foreach ($featuredProducts as $product): ?>
+                        <?php $productId = (int) ($product['id'] ?? 0); ?>
                         <div class="cardapio-admin-destaques-product-card featured" 
-                             data-product-id="<?= $product['id'] ?>"
+                             data-product-id="<?= $productId ?>"
                              draggable="true"
                              ondragstart="CardapioAdmin.Destaques.dragStart(event)"
                              ondragover="CardapioAdmin.Destaques.dragOver(event)"
@@ -91,7 +93,7 @@
                             </div>
                             <button type="button" 
                                     class="cardapio-admin-destaques-highlight-btn active"
-                                    onclick="CardapioAdmin.Destaques.toggleHighlight(<?= $product['id'] ?>)">
+                                    onclick="CardapioAdmin.Destaques.toggleHighlight(<?= $productId ?>)">
                                 <i data-lucide="x" style="width: 16px; height: 16px;"></i>
                                 Remover
                             </button>
@@ -106,11 +108,17 @@
 
             <!-- Abas de Categorias -->
             <?php foreach ($productsByCategory as $categoryName => $products): ?>
-            <div class="cardapio-admin-destaques-tab-content" data-category-content="<?= htmlspecialchars($categoryName) ?>">
-                <div class="cardapio-admin-destaques-products-grid" data-sortable-area="<?= htmlspecialchars($categoryName) ?>">
+            <?php $categoryKey = (string) $categoryName; ?>
+            <div class="cardapio-admin-destaques-tab-content" data-category-content="<?= \App\Helpers\ViewHelper::e($categoryKey) ?>">
+                <div class="cardapio-admin-destaques-products-grid" data-sortable-area="<?= \App\Helpers\ViewHelper::e($categoryKey) ?>">
                     <?php foreach ($products as $product): ?>
-                    <div class="cardapio-admin-destaques-product-card <?= ($product['is_featured'] ?? 0) ? 'featured' : '' ?>" 
-                         data-product-id="<?= $product['id'] ?>"
+                    <?php
+                        $productId = (int) ($product['id'] ?? 0);
+                        $isFeatured = !empty($product['is_featured']);
+                        $displayOrder = (int) ($product['display_order'] ?? 0);
+                    ?>
+                    <div class="cardapio-admin-destaques-product-card <?= $isFeatured ? 'featured' : '' ?>" 
+                         data-product-id="<?= $productId ?>"
                          draggable="true"
                          ondragstart="CardapioAdmin.Destaques.dragStart(event)"
                          ondragover="CardapioAdmin.Destaques.dragOver(event)"
@@ -120,7 +128,7 @@
                             <div class="cardapio-admin-destaques-drag-handle">
                                 <i data-lucide="grip-vertical" style="width: 16px; height: 16px; color: #94a3b8;"></i>
                             </div>
-                            <?php if ($product['is_featured'] ?? 0): ?>
+                            <?php if ($isFeatured): ?>
                             <span class="cardapio-admin-destaques-star">⭐</span>
                             <?php endif; ?>
                             <div>
@@ -129,21 +137,21 @@
                             </div>
                         </div>
                         <button type="button" 
-                                class="cardapio-admin-destaques-highlight-btn <?= ($product['is_featured'] ?? 0) ? 'active' : '' ?>"
-                                onclick="CardapioAdmin.Destaques.toggleHighlight(<?= $product['id'] ?>)">
-                            <i data-lucide="<?= ($product['is_featured'] ?? 0) ? 'x' : 'star' ?>" style="width: 16px; height: 16px;"></i>
-                            <?= ($product['is_featured'] ?? 0) ? 'Remover' : 'Destacar' ?>
+                                class="cardapio-admin-destaques-highlight-btn <?= $isFeatured ? 'active' : '' ?>"
+                                onclick="CardapioAdmin.Destaques.toggleHighlight(<?= $productId ?>)">
+                            <i data-lucide="<?= $isFeatured ? 'x' : 'star' ?>" style="width: 16px; height: 16px;"></i>
+                            <?= $isFeatured ? 'Remover' : 'Destacar' ?>
                         </button>
                         <input type="checkbox" 
-                               name="featured[<?= $product['id'] ?>]" 
+                               name="featured[<?= $productId ?>]" 
                                value="1" 
-                               <?= ($product['is_featured'] ?? 0) ? 'checked' : '' ?>
+                               <?= $isFeatured ? 'checked' : '' ?>
                                style="display: none;"
-                               data-featured-input="<?= $product['id'] ?>">
+                               data-featured-input="<?= $productId ?>">
                         <input type="hidden"
-                               name="product_order[<?= $product['id'] ?>]"
-                               value="<?= $product['display_order'] ?? 0 ?>"
-                               data-order-input="<?= $product['id'] ?>">
+                               name="product_order[<?= $productId ?>]"
+                               value="<?= $displayOrder ?>"
+                               data-order-input="<?= $productId ?>">
                     </div>
                     <?php endforeach; ?>
                 </div>

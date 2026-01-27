@@ -24,6 +24,7 @@
         <div class="cardapio-admin-destaques-category-list" id="categoryList">
             <?php foreach ($categories as $index => $category): ?>
             <?php
+                $categoryId = (int) ($category['id'] ?? 0);
                 $isSystem = in_array($category['category_type'] ?? 'default', ['featured', 'combos']);
                 $icon = 'folder';
                 $color = '#64748b';
@@ -37,9 +38,9 @@
                     $color = '#ef4444';
                 }
                 ?>
-            <div class="cardapio-admin-destaques-category-row" data-category-id="<?= $category['id'] ?>" style="<?= $isSystem ? 'background-color: #f8fafc;' : '' ?>">
+            <div class="cardapio-admin-destaques-category-row" data-category-id="<?= $categoryId ?>" style="<?= $isSystem ? 'background-color: #f8fafc;' : '' ?>">
                 <div class="cardapio-admin-destaques-category-info">
-                    <i data-lucide="<?= $icon ?>" style="width: 18px; height: 18px; color: <?= $color ?>;"></i>
+                    <i data-lucide="<?= \App\Helpers\ViewHelper::e($icon) ?>" style="width: 18px; height: 18px; color: <?= \App\Helpers\ViewHelper::e($color) ?>;"></i>
                     <span class="cardapio-admin-destaques-category-name" style="<?= $isSystem ? 'font-weight: 600; color: #1e293b;' : '' ?>">
                         <?= htmlspecialchars($label) ?>
                         <?php if ($isSystem): ?>
@@ -48,11 +49,11 @@
                     </span>
                 </div>
                 
-                <div class="cardapio-admin-destaques-category-actions">
-                    <!-- Toggle Habilitar/Desabilitar -->
-                    <label class="cardapio-admin-toggle" title="<?= ($category['is_active'] ?? 1) ? 'Desabilitar' : 'Habilitar' ?>">
+                    <div class="cardapio-admin-destaques-category-actions">
+                        <!-- Toggle Habilitar/Desabilitar -->
+                    <label class="cardapio-admin-toggle" title="<?= \App\Helpers\ViewHelper::e(($category['is_active'] ?? 1) ? 'Desabilitar' : 'Habilitar') ?>">
                         <input type="checkbox" 
-                               name="category_enabled[<?= $category['id'] ?>]" 
+                               name="category_enabled[<?= $categoryId ?>]" 
                                value="1"
                                <?= ($category['is_active'] ?? 1) ? 'checked' : '' ?>>
                         <span class="cardapio-admin-toggle-slider"></span>
@@ -60,24 +61,24 @@
                     
                     <!-- Setas de Ordenação -->
                     <div class="cardapio-admin-destaques-arrows">
-                        <button type="button" 
-                                class="cardapio-admin-destaques-arrow-btn" 
-                                onclick="CardapioAdmin.Destaques.moveCategory(<?= $category['id'] ?>, 'up')"
+                         <button type="button" 
+                                 class="cardapio-admin-destaques-arrow-btn" 
+                                onclick="CardapioAdmin.Destaques.moveCategory(<?= $categoryId ?>, 'up')"
                                 <?= $index === 0 ? 'disabled' : '' ?>>
-                            <i data-lucide="chevron-up" style="width: 16px; height: 16px;"></i>
-                        </button>
-                        <button type="button" 
-                                class="cardapio-admin-destaques-arrow-btn" 
-                                onclick="CardapioAdmin.Destaques.moveCategory(<?= $category['id'] ?>, 'down')"
+                             <i data-lucide="chevron-up" style="width: 16px; height: 16px;"></i>
+                         </button>
+                         <button type="button" 
+                                 class="cardapio-admin-destaques-arrow-btn" 
+                                onclick="CardapioAdmin.Destaques.moveCategory(<?= $categoryId ?>, 'down')"
                                 <?= $index === count($categories) - 1 ? 'disabled' : '' ?>>
-                            <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
-                        </button>
+                             <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
+                         </button>
                     </div>
                     
-                    <!-- Input hidden para salvar a ordem -->
-                    <input type="hidden" 
-                           name="category_order[<?= $category['id'] ?>]" 
-                           value="<?= $index ?>"
+                     <!-- Input hidden para salvar a ordem -->
+                     <input type="hidden" 
+                           name="category_order[<?= $categoryId ?>]" 
+                           value="<?= (int) $index ?>"
                            data-order-input>
                 </div>
             </div>

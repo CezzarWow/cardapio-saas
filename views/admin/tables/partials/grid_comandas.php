@@ -13,12 +13,15 @@
     <?php else: ?>
         <?php foreach ($clientOrders as $order): ?>
             <?php
+                $orderId = (int) ($order['id'] ?? 0);
                 $isPaid = !empty($order['is_paid']) && $order['is_paid'] == 1;
-                $clientName = htmlspecialchars($order['client_name'] ?? 'Cliente');
-                $total = floatval($order['total'] ?? 0);
-                $clientId = intval($order['client_id'] ?? 0);
+                $clientNameRaw = (string) ($order['client_name'] ?? 'Cliente');
+                $clientNameHtml = \App\Helpers\ViewHelper::e($clientNameRaw);
+                $total = (float) ($order['total'] ?? 0);
+                $clientId = (int) ($order['client_id'] ?? 0);
                 $cardClass = $isPaid ? 'table-card--pago' : 'table-card--aberto';
                 $statusText = $isPaid ? 'PAGO' : 'ABERTO';
+                $ariaLabel = 'Comanda de ' . $clientNameRaw . ' - ' . $statusText . ' - R$ ' . number_format($total, 2, ',', '.');
             ?>
             
             <?php
@@ -33,7 +36,8 @@
                     $isDelivery = false; // Trata como comum para abrir no PDV
                 }
 
-                $clickAction = "";
+                $deliveryUrl = BASE_URL . '/admin/loja/delivery';
+                $pdvUrl = BASE_URL . '/admin/loja/pdv?order_id=' . $orderId;
                 if ($isDelivery) {
                     // Fluxo Delivery (Logística): Tenta abrir modal de detalhes ou vai para aba delivery
                     $clickAction = "if(window.DeliveryUI) { DeliveryUI.openDetailsModal({$order['id']}); } else { if(typeof AdminSPA!=='undefined') AdminSPA.navigateTo('delivery'); else window.location.href='".BASE_URL."/admin/loja/delivery'; }";
@@ -44,22 +48,30 @@
             ?>
             <?php if ($isPaid): ?>
                 <div class="table-card <?= $cardClass ?>"
-                     onclick="showPaidOrderOptions(<?= $order['id'] ?>, '<?= addslashes($clientName) ?>', <?= $total ?>, <?= $clientId ?>)"
+                     onclick='showPaidOrderOptions(<?= $orderId ?>, <?= \App\Helpers\ViewHelper::js($clientNameRaw) ?>, <?= (float) $total ?>, <?= (int) $clientId ?>)'
                      tabindex="0"
                      role="button"
-                     aria-label="Comanda de <?= $clientName ?> - <?= $statusText ?> - R$ <?= number_format($total, 2, ',', '.') ?>"
-                     onkeypress="if(event.key==='Enter') showPaidOrderOptions(<?= $order['id'] ?>, '<?= addslashes($clientName) ?>', <?= $total ?>, <?= $clientId ?>)">
+                     aria-label="<?= \App\Helpers\ViewHelper::e($ariaLabel) ?>"
+                     onkeypress='if(event.key==="Enter") showPaidOrderOptions(<?= $orderId ?>, <?= \App\Helpers\ViewHelper::js($clientNameRaw) ?>, <?= (float) $total ?>, <?= (int) $clientId ?>)'>
             <?php else: ?>
                 <div class="table-card <?= $cardClass ?>"
-                     onclick="<?= $clickAction ?>"
+                     <?php if ($isDelivery): ?>
+                     onclick='if(window.DeliveryUI){ DeliveryUI.openDetailsModal(<?= $orderId ?>); } else { if(typeof AdminSPA!=="undefined") AdminSPA.navigateTo("delivery"); else window.location.href=<?= \App\Helpers\ViewHelper::js($deliveryUrl) ?>; }'
+                     <?php else: ?>
+                     onclick='if(typeof AdminSPA!=="undefined") AdminSPA.navigateTo("balcao", true, true, {order_id: <?= $orderId ?>}); else window.location.href=<?= \App\Helpers\ViewHelper::js($pdvUrl) ?>;'
+                     <?php endif; ?>
                      tabindex="0"
                      role="button"
-                     aria-label="Comanda de <?= $clientName ?> - <?= $statusText ?> - R$ <?= number_format($total, 2, ',', '.') ?>"
-                     onkeypress="if(event.key==='Enter') { <?= $clickAction ?> }">
+                     aria-label="<?= \App\Helpers\ViewHelper::e($ariaLabel) ?>"
+                     <?php if ($isDelivery): ?>
+                     onkeypress='if(event.key==="Enter"){ if(window.DeliveryUI){ DeliveryUI.openDetailsModal(<?= $orderId ?>); } else { if(typeof AdminSPA!=="undefined") AdminSPA.navigateTo("delivery"); else window.location.href=<?= \App\Helpers\ViewHelper::js($deliveryUrl) ?>; } }'
+                     <?php else: ?>
+                     onkeypress='if(event.key==="Enter"){ if(typeof AdminSPA!=="undefined") AdminSPA.navigateTo("balcao", true, true, {order_id: <?= $orderId ?>}); else window.location.href=<?= \App\Helpers\ViewHelper::js($pdvUrl) ?>; }'
+                     <?php endif; ?>>
             <?php endif; ?>
                 
-                <span class="comanda-card__name"><?= $clientName ?></span>
-                <span class="comanda-card__status"><?= $statusText ?></span>
+                <span class="comanda-card__name"><?= $clientNameHtml ?></span>
+                <span class="comanda-card__status"><?= \App\Helpers\ViewHelper::e($statusText) ?></span>
                 <span class="comanda-card__total">R$ <?= number_format($total, 2, ',', '.') ?></span>
 
                 <?php if (!empty($order['order_type'])): ?>
