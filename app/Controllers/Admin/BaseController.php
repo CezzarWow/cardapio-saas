@@ -2,6 +2,8 @@
 
 namespace App\Controllers\Admin;
 
+use App\Core\Logger;
+
 /**
  * BaseController - Classe base para controllers admin
  *
@@ -101,7 +103,7 @@ abstract class BaseController
             $action($restaurantId);
             $this->redirect($successRedirect);
         } catch (\Exception $e) {
-            error_log('Controller Error: ' . $e->getMessage());
+            Logger::error('Controller Error', ['message' => $e->getMessage()]);
             $this->redirect($errorRedirect ?? $successRedirect . '&error=operacao_falhou');
         }
     }
@@ -144,7 +146,7 @@ abstract class BaseController
             $this->redirect($baseRedirect . '?success=' . $successKey);
             return true;
         } catch (\Exception $e) {
-            error_log('handleValidatedPost Error: ' . $e->getMessage());
+            Logger::error('handleValidatedPost Error', ['message' => $e->getMessage()]);
             $this->redirect($baseRedirect . '?error=operacao_falhou');
             return false;
         }
@@ -170,7 +172,7 @@ abstract class BaseController
             $action($id, $restaurantId);
             $this->redirect($baseRedirect);
         } catch (\Exception $e) {
-            error_log('handleDelete Error: ' . $e->getMessage());
+            Logger::error('handleDelete Error', ['message' => $e->getMessage()]);
             $this->redirect($baseRedirect . '?error=operacao_falhou');
         }
     }

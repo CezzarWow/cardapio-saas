@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Api;
 
+use App\Core\Logger;
 use App\Middleware\RequestSanitizerMiddleware;
 use App\Services\Order\Flows\Mesa\AddItemsToMesaAction;
 use App\Services\Order\Flows\Mesa\CloseMesaAccountAction;
@@ -186,7 +187,7 @@ class MesaController
 
     private function handleError(\Throwable $e): void
     {
-        error_log('[MESA_CONTROLLER] Erro: ' . $e->getMessage());
+        Logger::error('MesaController erro', ['message' => $e->getMessage()]);
 
         $code = str_contains($e->getMessage(), 'não encontrad') ? 404 : 500;
 

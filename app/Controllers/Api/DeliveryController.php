@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Api;
 
+use App\Core\Logger;
 use App\Middleware\RequestSanitizerMiddleware;
 use App\Services\Order\Flows\Delivery\CreateDeliveryStandaloneAction;
 use App\Services\Order\Flows\Delivery\DeliveryValidator;
@@ -125,7 +126,7 @@ class DeliveryController
 
     private function handleError(\Throwable $e): void
     {
-        error_log('[DELIVERY_CONTROLLER] Erro: ' . $e->getMessage());
+        Logger::error('DeliveryController erro', ['message' => $e->getMessage()]);
         $code = str_contains($e->getMessage(), 'não encontrad') ? 404 : 500;
         $this->json(['success' => false, 'message' => $e->getMessage()], $code);
     }

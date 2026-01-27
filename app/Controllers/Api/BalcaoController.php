@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Api;
 
+use App\Core\Logger;
 use App\Middleware\RequestSanitizerMiddleware;
 use App\Services\Order\Flows\Balcao\BalcaoValidator;
 use App\Services\Order\Flows\Balcao\CreateBalcaoSaleAction;
@@ -83,7 +84,7 @@ class BalcaoController
             ], 201);
 
         } catch (\Throwable $e) {
-            error_log('[BALCAO_CONTROLLER] Erro: ' . $e->getMessage());
+            Logger::error('BalcaoController erro', ['message' => $e->getMessage()]);
 
             $this->json([
                 'success' => false,

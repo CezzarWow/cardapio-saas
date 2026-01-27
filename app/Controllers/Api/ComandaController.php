@@ -2,6 +2,7 @@
 
 namespace App\Controllers\Api;
 
+use App\Core\Logger;
 use App\Middleware\RequestSanitizerMiddleware;
 use App\Services\Order\Flows\Comanda\AddItemsToComandaAction;
 use App\Services\Order\Flows\Comanda\CloseComandaAction;
@@ -167,7 +168,7 @@ class ComandaController
 
     private function handleError(\Throwable $e): void
     {
-        error_log('[COMANDA_CONTROLLER] Erro: ' . $e->getMessage());
+        Logger::error('ComandaController erro', ['message' => $e->getMessage()]);
         $code = str_contains($e->getMessage(), 'não encontrad') ? 404 : 500;
         $this->json(['success' => false, 'message' => $e->getMessage()], $code);
     }
