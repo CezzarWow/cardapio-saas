@@ -3,6 +3,8 @@
 namespace App\Repositories\Order;
 
 use App\Core\Database;
+use App\Core\Logger;
+use App\DTO\OrderDTO;
 use PDO;
 
 /**
@@ -110,6 +112,15 @@ class OrderRepository
     }
 
     /**
+     * Busca pedido por ID como DTO (ETAPA 4). Preferir em novo código.
+     */
+    public function findAsDto(int $id, ?int $restaurantId = null): ?OrderDTO
+    {
+        $row = $this->find($id, $restaurantId);
+        return $row ? OrderDTO::fromArray($row) : null;
+    }
+
+    /**
      * Busca todos os pedidos com detalhes (para listagem)
      */
     public function findAllWithDetails(int $restaurantId): array
@@ -180,8 +191,11 @@ class OrderRepository
         $allowed = self::VALID_TRANSITIONS[$currentStatus] ?? [];
 
         if (!in_array($newStatus, $allowed)) {
-            // Log para auditoria antes de lançar exceção
-            error_log("[ORDER_STATUS] Transição inválida bloqueada: #{$id} {$currentStatus} → {$newStatus}");
+            Logger::warning('Transição de status bloqueada', [
+                'order_id' => $id,
+                'from' => $currentStatus,
+                'to' => $newStatus,
+            ]);
             throw new \InvalidArgumentException(
                 "Transição de status inválida: {$currentStatus} → {$newStatus} (Pedido #{$id})"
             );
@@ -193,8 +207,12 @@ class OrderRepository
 
         $rowCount = $updateStmt->rowCount();
 
-        // Log de sucesso
-        error_log("[ORDER_STATUS] Transição OK: #{$id} {$currentStatus} → {$newStatus} (rows: {$rowCount})");
+        Logger::info('Status do pedido atualizado', [
+            'order_id' => $id,
+            'from' => $currentStatus,
+            'to' => $newStatus,
+            'rows' => $rowCount,
+        ]);
 
         return $rowCount;
     }

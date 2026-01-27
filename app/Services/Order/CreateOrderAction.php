@@ -4,6 +4,8 @@ namespace App\Services\Order;
 
 use App\Core\Database;
 use App\Core\Logger;
+use App\Events\EventDispatcher;
+use App\Events\OrderCreatedEvent;
 use App\Repositories\ClientRepository;
 use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\Order\OrderRepository;
@@ -69,7 +71,7 @@ class CreateOrderAction
             Logger::debug('CreateOrderAction: Processando pedido', [
                 'restaurant_id' => $restaurantId,
                 'order_id_input' => $existingOrderId,
-                'save_account' => $saveAccount,
+                'save_account' => isset($data['save_account']) && $data['save_account'] == true,
                 'finalize_now' => $finalizeNow,
                 'order_type' => $orderType,
                 'cart_count' => count($cart),
@@ -161,6 +163,13 @@ class CreateOrderAction
             );
 
             $conn->commit();
+
+            EventDispatcher::dispatch(new OrderCreatedEvent(
+                $orderId,
+                $restaurantId,
+                $orderType,
+                $orderStatus
+            ));
 
             return $orderId;
 
