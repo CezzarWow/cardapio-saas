@@ -28,7 +28,7 @@ $pdvConfig = [
 ?>
 
 <!-- CSS necessário para modal de impressão -->
-<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/delivery/modals.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/css/delivery/modals.css?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>">
 
 <div id="pdv-container" class="pdv-wrapper" style="height: 100%; display: flex; overflow: hidden;">
     
@@ -71,12 +71,12 @@ $pdvConfig = [
 <!-- QZ Tray Library (CDN) para impressão térmica silenciosa -->
 <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.min.js"></script>
 <!-- Print Bundle (Shared with Delivery) -->
-<script data-spa-script="print-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/print-bundle.js?v=<?= time() ?>"></script>
+<script data-spa-script="print-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/print-bundle.js?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>"></script>
 
 <!-- PDV Print Modal Controller (Only for PDV) -->
 <script data-spa-script="pdv-print" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/pdv/pdv-print.js?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>"></script>
 
 
 <!-- PDV Bundle (Reativado após build) -->
-<script data-spa-script="pdv-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/pdv-bundle.js?v=<?= time() ?>"></script>
+<script data-spa-script="pdv-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/pdv-bundle.js?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>"></script>
 

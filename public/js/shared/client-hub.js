@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Client Hub - Gestor Unified de Comandas do Cliente
- * Centraliza Mesa, Retirada e Entrega em uma única visão.
+ * Centraliza Mesa, Retirada e Entrega em uma Ãºnica visÃ£o.
  */
 window.ClientHub = {
     modalId: 'client-hub-modal',
@@ -16,7 +16,7 @@ window.ClientHub = {
 
         try {
             // Busca dados agrupados do backend
-            const response = await fetch(`${this.getBaseUrl()}/admin/loja/delivery/hub?id=${orderId}`);
+            const response = await fetch(`${this.getBaseUrl()}/admin/loja/delivery/hub?id=${orderId}&nocache=${Date.now()}`);
             const data = await response.json();
 
             if (!data.success) {
@@ -38,36 +38,78 @@ window.ClientHub = {
      * Renderiza o HTML completo baseados nos dados
      */
     render: function (data) {
-        const client = data.client || { name: 'Cliente Não Identificado' };
+        const client = data.client || { name: 'Cliente NÃ£o Identificado' };
         const orders = data.orders || [];
 
         // Calcula total geral
         const grandTotal = orders.reduce((sum, order) => sum + parseFloat(order.total || 0), 0);
 
-        // Gera seções
-        const sectionsHtml = orders.map(order => this.renderOrderSection(order)).join('');
+        // Agrupa itens de todos os pedidos por source_type para criar cards separados
+        const allItems = [];
+        let primaryOrder = orders[0];
+
+        orders.forEach(order => {
+            (order.items || []).forEach(item => {
+                allItems.push({
+                    ...item,
+                    order_id: order.id,
+                    order_type: order.order_type,
+                    table_number: order.table_number,
+                    client_address: order.client_address,
+                    client_number: order.client_number,
+                    client_neighborhood: order.client_neighborhood,
+                    status: order.status
+                });
+            });
+        });
+
+        // Agrupa por source_type
+        const groupedBySource = {};
+        allItems.forEach(item => {
+            const sourceType = item.source_type || item.order_type || 'comanda';
+            if (!groupedBySource[sourceType]) {
+                groupedBySource[sourceType] = {
+                    items: [],
+                    order_type: sourceType,
+                    order_id: item.order_id,
+                    table_number: item.table_number,
+                    client_address: item.client_address,
+                    client_number: item.client_number,
+                    client_neighborhood: item.client_neighborhood,
+                    status: item.status
+                };
+            }
+            groupedBySource[sourceType].items.push(item);
+        });
+
+        // Calcula subtotal de cada grupo
+        Object.values(groupedBySource).forEach(group => {
+            group.total = group.items.reduce((sum, item) => sum + (parseFloat(item.price) * parseInt(item.quantity)), 0);
+        });
+
+        // Gera seções - uma para cada source_type
+        const sectionsHtml = Object.values(groupedBySource).map(group => this.renderOrderSection(group)).join('');
 
         // Tenta achar um pedido de mesa para o rodapé ou usa o mais recente
-        const primaryOrder = orders.find(o => o.order_type === 'local') ||
+        primaryOrder = orders.find(o => o.order_type === 'local') ||
             orders.find(o => o.table_number) ||
             orders[0]; // Fallback
 
-        // Configuração do Botão de Rodapé
-        let footerConfig = { label: 'PEDIDO', icon: 'clipboard-list', cssClass: 'hub-btn-default', status: '' };
+        // ConfiguraÃ§Ã£o do BotÃ£o de RodapÃ©
+        let footerConfig = { label: 'VER MESA', icon: 'armchair', cssClass: 'hub-btn-orange', status: '' };
+
+        let actionOrderId = primaryOrder ? primaryOrder.id : 0;
 
         if (primaryOrder) {
-            footerConfig.status = primaryOrder.status;
-            if (primaryOrder.order_type === 'local' || primaryOrder.table_number) {
-                footerConfig.label = `MESA ${primaryOrder.table_number || '?'}`;
-                footerConfig.icon = 'armchair';
-                footerConfig.cssClass = 'hub-btn-orange';
-            } else if (primaryOrder.order_type === 'delivery') {
-                footerConfig.label = 'ENTREGA';
-                footerConfig.icon = 'bike';
-                footerConfig.cssClass = 'hub-btn-orange';
-            } else if (['pickup', 'retirada'].includes(primaryOrder.order_type)) {
-                footerConfig.label = 'RETIRADA';
-                footerConfig.icon = 'shopping-bag';
+            footerConfig.status = primaryOrder.status || 'Aberto';
+
+            // Se tiver nÃºmero da mesa, mostra MESA X, senÃ£o VER MESA (GenÃ©rico)
+            if (primaryOrder.table_number) {
+                footerConfig.label = `MESA ${primaryOrder.table_number}`;
+            }
+
+            // Cores baseadas no status/tipo
+            if (['pickup', 'retirada'].includes(primaryOrder.order_type)) {
                 footerConfig.cssClass = 'hub-btn-sky';
             }
         }
@@ -76,12 +118,9 @@ window.ClientHub = {
         <div class="hub-modal">
             <!-- HEADER -->
             <div class="hub-header">
-                <div class="hub-client-info">
+                <div class="hub-client-info" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                     <h1 class="hub-client-name">${client.name}</h1>
-                </div>
-                <!-- Total -->
-                <div class="hub-total-wrapper">
-                    <div class="hub-total-value">R$ ${this.formatMoney(grandTotal)}</div>
+                    <div class="hub-total-value" style="font-weight: 700;">Total: R$ ${this.formatMoney(grandTotal)}</div>
                 </div>
             </div>
 
@@ -102,11 +141,10 @@ window.ClientHub = {
                             CANCELAR
                         </button>
                         
-                        <button class="hub-btn-main ${footerConfig.cssClass}">
+                        <button onclick="ClientHub.goToPdv(${actionOrderId})" class="hub-btn-main ${footerConfig.cssClass}">
                             <i data-lucide="${footerConfig.icon}" size="32"></i>
                             <div class="hub-btn-text">
                                 <div class="hub-btn-title">${footerConfig.label}</div>
-                                <div class="hub-btn-subtitle">${footerConfig.status}</div>
                             </div>
                         </button>
                     </div>
@@ -122,47 +160,50 @@ window.ClientHub = {
     },
 
     /**
-     * Gera HTML de uma seção de pedido (Card)
+     * Navega para o PDV (Ver Mesa)
+     */
+    goToPdv: function (orderId) {
+        if (!orderId) return;
+
+        // Usa AdminSPA se disponÃ­vel, senÃ£o reload tradicional
+        if (typeof AdminSPA !== 'undefined') {
+            AdminSPA.navigateTo('balcao', true, true, { order_id: orderId });
+            this.close();
+        } else {
+            window.location.href = this.getBaseUrl() + '/admin/loja/pdv?order_id=' + orderId;
+        }
+    },
+
+    /**
+     * Gera HTML de uma seÃ§Ã£o de pedido (Card)
      */
     renderOrderSection: function (order) {
-        // Configuração visual por tipo
+        // ConfiguraÃ§Ã£o visual por tipo
         let typeConfig = {
             icon: 'shopping-bag', colorClass: 'hub-icon-sky', label: 'Pedido', borderClass: ''
         };
 
-        if (order.order_type === 'local' || order.table_number) {
+        if (order.order_type === 'local' || order.order_type === 'mesa' || order.table_number) {
             typeConfig = { icon: 'armchair', colorClass: 'hub-icon-indigo', label: `Mesa ${order.table_number || '?'}` };
+        } else if (order.order_type === 'comanda') {
+            typeConfig = { icon: 'armchair', colorClass: 'hub-icon-indigo', label: 'Mesa' };
         } else if (order.order_type === 'delivery') {
             typeConfig = { icon: 'bike', colorClass: 'hub-icon-orange', label: 'Entrega', borderClass: 'hub-border-orange' };
         } else if (order.order_type === 'pickup' || order.order_type === 'retirada') {
             typeConfig = { icon: 'shopping-bag', colorClass: 'hub-icon-sky', label: 'Retirada no Balcão' };
         }
-
         // Subtotal do pedido
         const total = parseFloat(order.total || 0);
 
         // Verifica estado (Em rota, etc)
         let statusBadge = '';
         if (order.status === 'rota') {
-            statusBadge = `<span class="hub-badge-rota">Em Rota 🛵</span>`;
+            statusBadge = `<span class="hub-badge-rota">Em Rota ðŸ›µ</span>`;
         }
 
-        // Endereço (se delivery)
-        let addressHtml = '';
-        if (order.order_type === 'delivery') {
-            let fullAddress = order.client_address || order.address || '';
-            if (order.client_number) fullAddress += `, ${order.client_number}`;
-            if (order.client_neighborhood) fullAddress += ` - ${order.client_neighborhood}`;
+        // Endereço removido - não exibir no modal
 
-            if (!fullAddress || fullAddress.trim() === '') fullAddress = 'Endereço não informado';
-
-            addressHtml = `
-            <div class="hub-address-row">
-                📍 ${fullAddress}
-            </div>`;
-        }
-
-        // Items
+        // Items - renderiza diretamente (agrupamento já foi feito no render())
         const itemsHtml = (order.items || []).map(item => `
             <div class="hub-item-row">
                 <div><span class="hub-qty">${parseInt(item.quantity)}x</span> ${item.name}</div>
@@ -189,7 +230,6 @@ window.ClientHub = {
                     </button>
                 </div>
             </div>
-            ${addressHtml}
             <div>
                 ${itemsHtml}
                 <div class="hub-item-row hub-subtotal-row">
@@ -382,3 +422,8 @@ window.ClientHub = {
         document.head.appendChild(style);
     }
 };
+
+
+
+
+

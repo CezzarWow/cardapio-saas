@@ -19,11 +19,24 @@
                 $isPaid = !empty($order['is_paid']) && $order['is_paid'] == 1;
                 $clientNameRaw = (string) ($order['client_name'] ?? 'Cliente');
                 $clientNameHtml = \App\Helpers\ViewHelper::e($clientNameRaw);
-                $total = (float) ($order['total'] ?? 0);
                 $clientId = (int) ($order['client_id'] ?? 0);
+                
+                // Lógica de Display Definitiva (Solicitação Técnico)
+                // Card Comanda DEVE mostrar o total Global (Mesa + Delivery)
+                
+                $totalGlobal = (float) ($order['total'] ?? 0);
+                $totalDelivery = (float) ($order['total_delivery'] ?? 0);
+                $totalTable = (float) ($order['total_table'] ?? 0);
+                
+                // Variável usada no onclick de pagamento
+                $total = $totalGlobal;
+                
+                // Display: Sempre Total Global
+                $displayTotal = 'Total: R$ ' . number_format($totalGlobal, 2, ',', '.');
+                
                 $cardClass = $isPaid ? 'table-card--pago' : 'table-card--aberto';
                 $statusText = $isPaid ? 'PAGO' : 'ABERTO';
-                $ariaLabel = 'Comanda de ' . $clientNameRaw . ' - ' . $statusText . ' - R$ ' . number_format($total, 2, ',', '.');
+                $ariaLabel = 'Comanda de ' . $clientNameRaw . ' - ' . $statusText . ' - ' . strip_tags($displayTotal);
             ?>
             
             <?php
@@ -64,9 +77,10 @@
                      <?php endif; ?>>
             <?php endif; ?>
                 
-                <span class="comanda-card__name"><?= \App\Helpers\ViewHelper::e($clientNameHtml) ?></span>
-                <span class="comanda-card__status"><?= \App\Helpers\ViewHelper::e($statusText) ?></span>
-                <span class="comanda-card__total">R$ <?= number_format($total, 2, ',', '.') ?></span>
+                <div style="margin-top: 15px;">
+                    <span class="comanda-card__name"><?= \App\Helpers\ViewHelper::e($clientNameHtml) ?></span>
+                    <span class="comanda-card__total"><?= $displayTotal // Já contém HTML seguro (number_format ou tags) ?></span>
+                </div>
 
                 <?php if (!empty($order['order_type'])): ?>
                     <?php if ($order['order_type'] === 'delivery' || $order['order_type'] === 'entrega'): ?>

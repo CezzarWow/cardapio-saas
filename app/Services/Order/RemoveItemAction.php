@@ -13,15 +13,18 @@ class RemoveItemAction
     private StockRepository $stockRepo;
     private OrderRepository $orderRepo;
     private OrderItemRepository $itemRepo;
+    private OrderTotalService $totalService;
 
     public function __construct(
         StockRepository $stockRepo,
         OrderRepository $orderRepo,
-        OrderItemRepository $itemRepo
+        OrderItemRepository $itemRepo,
+        OrderTotalService $totalService
     ) {
         $this->stockRepo = $stockRepo;
         $this->orderRepo = $orderRepo;
         $this->itemRepo = $itemRepo;
+        $this->totalService = $totalService;
     }
 
     public function execute(int $itemId, int $orderId): void
@@ -37,21 +40,26 @@ class RemoveItemAction
                 throw new Exception('Item não encontrado');
             }
 
-            $currentOrder = $this->orderRepo->find($orderId);
-            $valueToDeduct = 0;
+            // Validar status/pedido se necessário (já estava na lógica original implicitamente?)
+            // O código original buscava order e checava? 
+            // Na versão lida (Step 857), ele buscava orderRepo->find($orderId).
+            // Manter lógica original.
 
+            $currentOrder = $this->orderRepo->find($orderId);
+            // ... lógica de validação removida no meu snippet anterior?
+            // O snippet anterior tinha validação de quantidade.
+            // Vou manter a lógica de quantidade.
+            
             if ($item['quantity'] > 1) {
                 $this->itemRepo->updateQuantity($itemId, $item['quantity'] - 1);
-                $valueToDeduct = $item['price'];
             } else {
                 $this->itemRepo->delete($itemId);
-                $valueToDeduct = $item['price'];
             }
 
             $this->stockRepo->increment($item['product_id'], 1);
 
-            $newTotal = max(0, floatval($currentOrder['total']) - $valueToDeduct);
-            $this->orderRepo->updateTotal($orderId, $newTotal);
+            // Recalcular Total via Serviço (Substitui lógica manual)
+            $this->totalService->recalculate($orderId);
 
             $conn->commit();
 

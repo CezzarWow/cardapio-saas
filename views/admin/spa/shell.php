@@ -12,7 +12,7 @@ use App\Core\ViewHelper;
 \App\Core\View::renderFromScope('admin/panel/layout/header.php', get_defined_vars());
 ?>
 <!-- SPA CSS -->
-<link rel="stylesheet" href="<?= BASE_URL ?>/css/spa.css?v=<?= time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/spa.css?v=<?= APP_VERSION ?>">
 
 <?php // Sidebar com navegação SPA (links interceptados pelo AdminSPA.js) ?>
 <aside class="sidebar">
@@ -83,8 +83,8 @@ use App\Core\ViewHelper;
 
 <?php // Scripts do SPA ?>
 <script>if(typeof BASE_URL === 'undefined') { const BASE_URL = <?= json_encode(BASE_URL, JSON_UNESCAPED_SLASHES) ?>; window.BASE_URL = BASE_URL; }</script>
-<script src="<?= BASE_URL ?>/js/admin/spa-config.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/admin/spa-ui.js?v=<?= time() ?>"></script>
-<script src="<?= BASE_URL ?>/js/admin/admin-spa.js?v=<?= time() ?>"></script>
+<script src="<?= BASE_URL ?>/js/admin/spa-config.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/admin/spa-ui.js?v=<?= APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/js/admin/admin-spa.js?v=<?= APP_VERSION ?>"></script>
 
 <?php \App\Core\View::renderFromScope('admin/panel/layout/footer.php', get_defined_vars()); ?>

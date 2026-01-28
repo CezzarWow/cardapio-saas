@@ -58,13 +58,55 @@ class DeliveryService
             return null;
         }
 
-        // Separa items para manter compatibilidade com front
-        $items = $order['items'] ?? [];
-        unset($order['items']);
+        // Separa items
+        $allItems = $order['items'] ?? [];
+        
+        // Filtra itens baseados no tipo do pedido (Se for Delivery/Retirada, mostra apenas itens dessa origem)
+        // Isso resolve o problema de mostrar itens de Mesa junto com Delivery no modal de detalhes
+        $orderType = strtolower($order['order_type'] ?? '');
+        $isDeliveryOrPickup = in_array($orderType, ['delivery', 'entrega', 'pickup', 'retirada']);
+
+        $filteredItems = [];
+        $calculatedTotal = 0;
+
+        foreach ($allItems as $item) {
+            $source = strtolower(trim($item['source_type'] ?? ''));
+            
+            // Lógica de inclusão:
+            // 1. Se item tem source_type 'delivery'/'pickup', inclui
+            // 2. Se item não tem source_type (antigo) e o pedido é delivery, inclui (fallback comanda antiga)
+            // 3. Taxa de entrega sempre inclui se for delivery
+            
+            $isStartItem = empty($source) || $source === 'legado'; // Item sem source
+            $isTargetSource = in_array($source, ['delivery', 'entrega', 'pickup', 'retirada']);
+            $isFee = ($item['name'] ?? '') === 'Taxa de Entrega';
+
+            if ($isDeliveryOrPickup) {
+                if ($isTargetSource || $isStartItem || $isFee) {
+                    $filteredItems[] = $item;
+                    $calculatedTotal += ($item['price'] * ($item['quantity'] ?? 1));
+                }
+            } else {
+                // Se não for delivery (ex: mesa), mostra tudo (comportamento padrão)
+                $filteredItems[] = $item;
+                $calculatedTotal += ($item['price'] * ($item['quantity'] ?? 1));
+            }
+        }
+
+        // Se filtrou algo (quantidade diferente), usa o total recalculado para exibição
+        if ($isDeliveryOrPickup) {
+             if (!empty($order['total_delivery']) && $order['total_delivery'] > 0) {
+                 $order['total'] = $order['total_delivery'];
+             } elseif (count($filteredItems) < count($allItems)) {
+                 $order['total'] = $calculatedTotal;
+             }
+        }
+
+        unset($order['items']); // Remove para não duplicar no retorno
 
         return [
             'order' => $order,
-            'items' => $items
+            'items' => $filteredItems
         ];
     }
 
@@ -191,6 +233,27 @@ class DeliveryService
             'success' => true,
             'client' => $data['client'],
             'orders' => $data['orders']
+        ];
+    }
+
+    /**
+     * Retorna apenas os dados de um pedido específico (sem agregar outros pedidos do cliente)
+     */
+    public function getSingleOrderData(int $orderId, int $restaurantId): array
+    {
+        $order = $this->repository->findWithDetails($orderId, $restaurantId);
+        
+        if (!$order) {
+            return ['success' => false, 'message' => 'Pedido não encontrado'];
+        }
+
+        return [
+            'success' => true,
+            'client' => [
+                'name' => $order['client_name'] ?? ('Mesa ' . ($order['table_number'] ?? '?')),
+                'phone' => $order['client_phone'] ?? '--',
+            ],
+            'orders' => [$order] // Apenas este pedido
         ];
     }
 }

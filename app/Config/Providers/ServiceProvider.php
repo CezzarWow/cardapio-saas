@@ -171,7 +171,8 @@ class ServiceProvider implements Provider
                 $c->get(\App\Repositories\Order\OrderItemRepository::class),
                 $c->get(\App\Repositories\ProductRepository::class),
                 $c->get(\App\Repositories\AdditionalItemRepository::class),
-                $c->get(\App\Services\PaymentService::class)
+                $c->get(\App\Services\PaymentService::class),
+                $c->get(\App\Services\Order\OrderTotalService::class)
             );
         });
 
@@ -179,6 +180,10 @@ class ServiceProvider implements Provider
             return new \App\Services\CardapioPublico\CardapioPublicoQueryService(
                 $c->get(\App\Repositories\CardapioPublico\CardapioPublicoRepository::class)
             );
+        });
+
+        $container->singleton(\App\Services\Order\OrderTotalService::class, function ($c) {
+            return new \App\Services\Order\OrderTotalService();
         });
 
         // --- ACTIONS (Order) ---
@@ -190,7 +195,8 @@ class ServiceProvider implements Provider
                 $c->get(\App\Repositories\Order\OrderRepository::class),
                 $c->get(\App\Repositories\Order\OrderItemRepository::class),
                 $c->get(\App\Repositories\TableRepository::class),
-                $c->get(\App\Repositories\ClientRepository::class)
+                $c->get(\App\Repositories\ClientRepository::class),
+                $c->get(\App\Services\Order\OrderTotalService::class)
             );
         });
 
@@ -215,7 +221,8 @@ class ServiceProvider implements Provider
             return new \App\Services\Order\RemoveItemAction(
                 $c->get(\App\Repositories\StockRepository::class),
                 $c->get(\App\Repositories\Order\OrderRepository::class),
-                $c->get(\App\Repositories\Order\OrderItemRepository::class)
+                $c->get(\App\Repositories\Order\OrderItemRepository::class),
+                $c->get(\App\Services\Order\OrderTotalService::class)
             );
         });
 
@@ -386,7 +393,8 @@ class ServiceProvider implements Provider
                 $c->get(\App\Repositories\Order\OrderRepository::class),
                 $c->get(\App\Repositories\Order\OrderItemRepository::class),
                 $c->get(\App\Repositories\ClientRepository::class),
-                $c->get(\App\Repositories\StockRepository::class)
+                $c->get(\App\Repositories\StockRepository::class),
+                $c->get(\App\Services\Order\OrderTotalService::class)
             );
         });
 

@@ -19,9 +19,10 @@ class OrderItemRepository
     {
         $conn = Database::connect();
         $stmt = $conn->prepare('
-            SELECT product_id, quantity, price, id, name, extras, observation 
+            SELECT product_id, quantity, price, id, name, extras, observation, source_type 
             FROM order_items 
             WHERE order_id = :oid
+            ORDER BY source_type, id
         ');
         $stmt->execute(['oid' => $orderId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -56,8 +57,8 @@ class OrderItemRepository
         ');
 
         $stmtInsert = $conn->prepare('
-            INSERT INTO order_items (order_id, product_id, name, quantity, price, extras, observation) 
-            VALUES (:oid, :pid, :name, :qty, :price, :extras, :obs)
+            INSERT INTO order_items (order_id, product_id, name, quantity, price, extras, observation, source_type) 
+            VALUES (:oid, :pid, :name, :qty, :price, :extras, :obs, :source_type)
         ');
 
         $stmtUpdate = $conn->prepare('
@@ -132,7 +133,8 @@ class OrderItemRepository
                     'qty' => $quantity,
                     'price' => $item['price'],
                     'extras' => $extrasJson,
-                    'obs' => $obs
+                    'obs' => $obs,
+                    'source_type' => $item['source_type'] ?? null
                 ]);
             }
         }

@@ -7,279 +7,276 @@ use App\Repositories\Order\OrderItemRepository;
 use PDO;
 
 /**
- * Repository para Pedidos de Delivery
- * SQL puro extraído do DeliveryController
+ * Repositorio dedicado aos pedidos exibidos nas telas de Delivery/Kanban.
+ * Centraliza consultas otimizadas para status, historico e detalhes.
  */
 class DeliveryOrderRepository
 {
-    private OrderItemRepository $itemRepo;
+    private OrderItemRepository $orderItems;
 
-    public function __construct(OrderItemRepository $itemRepo)
+    /** Status que aparecem no Kanban/Historico */
+    private const ALLOWED_STATUSES = ['novo', 'preparo', 'rota', 'entregue', 'cancelado'];
+
+    /** Tipos de pedido contemplados no modulo */
+    private const ORDER_TYPES = ['delivery', 'pickup', 'retirada', 'local'];
+
+    /** Tipos de items que compõem o total do delivery */
+    private const DELIVERY_SOURCES = ['delivery', 'pickup', 'retirada', 'entrega'];
+
+    public function __construct(OrderItemRepository $orderItems)
     {
-        $this->itemRepo = $itemRepo;
+        $this->orderItems = $orderItems;
     }
 
     /**
-     * Busca pedidos de delivery/pickup/local (para Kanban)
+     * Lista pedidos para o Kanban, com filtro opcional de status.
      */
     public function fetchByRestaurant(int $restaurantId, ?string $statusFilter = null): array
     {
         $conn = Database::connect();
 
-        $sql = "
-            SELECT o.id, o.total, o.status, o.created_at, o.payment_method, o.order_type, o.is_paid, o.source,
-                   c.name as client_name, 
-                   c.phone as client_phone,
-                   c.address as client_address,
-                   t.number as table_number,
-                   (SELECT COUNT(*) FROM order_items WHERE order_id = o.id) as items_count
-            FROM orders o
-            LEFT JOIN clients c ON o.client_id = c.id
-            LEFT JOIN tables t ON o.table_id = t.id
-            WHERE o.restaurant_id = :rid 
-              AND (
-                  o.order_type = 'delivery' 
-                  OR 
-                  (o.order_type = 'pickup' AND o.source = 'web')
-              )
-        ";
-
         $params = ['rid' => $restaurantId];
+        $statusSql = '';
 
-        $validStatuses = ['novo', 'preparo', 'rota', 'entregue', 'cancelado'];
-        if ($statusFilter && in_array($statusFilter, $validStatuses)) {
-            $sql .= ' AND o.status = :status';
+        if ($statusFilter && $statusFilter !== 'todos' && in_array($statusFilter, self::ALLOWED_STATUSES, true)) {
+            $statusSql = ' AND o.status = :status';
             $params['status'] = $statusFilter;
+        } else {
+            $placeholders = "'" . implode("','", self::ALLOWED_STATUSES) . "'";
+            $statusSql = " AND o.status IN ({$placeholders})";
         }
 
-        $sql .= " ORDER BY 
-            CASE o.status 
-                WHEN 'novo' THEN 1 
-                WHEN 'preparo' THEN 2 
-                WHEN 'rota' THEN 3 
-                WHEN 'entregue' THEN 4 
-                WHEN 'cancelado' THEN 5 
-            END,
-            o.created_at DESC
+        $deliverySources = "'" . implode("','", self::DELIVERY_SOURCES) . "'";
+
+        $sql = "
+            SELECT o.id, o.restaurant_id, o.client_id, o.table_id,
+                   COALESCE(o.total_delivery, 0) as total,
+                   o.status, o.order_type, o.payment_method, o.is_paid, o.created_at,
+                   c.name AS client_name, c.phone AS client_phone,
+                   c.address AS client_address, c.address_number AS client_number,
+                   c.neighborhood AS client_neighborhood, c.city AS client_city,
+                   t.number AS table_number
+            FROM orders o
+            LEFT JOIN clients c ON c.id = o.client_id
+            LEFT JOIN tables t ON t.id = o.table_id
+            WHERE o.restaurant_id = :rid
+              AND o.order_type IN ('delivery','pickup','retirada','local')
+              {$statusSql}
+            ORDER BY o.created_at DESC, o.id DESC
         ";
 
         $stmt = $conn->prepare($sql);
         $stmt->execute($params);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map([$this, 'hydrateAddress'], $rows);
     }
 
     /**
-     * Busca pedidos por dia operacional (respeitando horário de funcionamento)
+     * Lista pedidos de um dia específico (histórico).
      */
     public function fetchByOperationalDay(int $restaurantId, string $date): array
     {
+        $start = $date . ' 00:00:00';
+        $end = $date . ' 23:59:59';
+
         $conn = Database::connect();
+        $deliverySources = "'" . implode("','", self::DELIVERY_SOURCES) . "'";
 
-        $dayOfWeek = date('w', strtotime($date));
-
-        $stmtHour = $conn->prepare('
-            SELECT * FROM business_hours 
-            WHERE restaurant_id = :rid AND day_of_week = :day
-        ');
-        $stmtHour->execute(['rid' => $restaurantId, 'day' => $dayOfWeek]);
-        $businessHour = $stmtHour->fetch(PDO::FETCH_ASSOC);
-
-        if (!$businessHour || !$businessHour['is_open']) {
-            return [
-                'orders' => [],
-                'business_hour' => $businessHour,
-                'period_start' => null,
-                'period_end' => null
-            ];
-        }
-
-        $openTime = $businessHour['open_time'];
-        $closeTime = $businessHour['close_time'];
-
-        $periodStart = $date . ' ' . $openTime . ':00';
-
-        if ($closeTime < $openTime) {
-            $nextDay = date('Y-m-d', strtotime($date . ' +1 day'));
-            $periodEnd = $nextDay . ' ' . $closeTime . ':00';
-        } else {
-            $periodEnd = $date . ' ' . $closeTime . ':00';
-        }
-
-        $sql = "
-            SELECT o.id, o.total, o.status, o.created_at, o.payment_method,
-                   c.name as client_name, 
-                   c.phone as client_phone
+        $stmt = $conn->prepare("
+            SELECT o.id, o.restaurant_id, o.client_id, o.table_id,
+                   COALESCE(o.total_delivery, 0) as total,
+                   o.status, o.order_type, o.payment_method, o.is_paid, o.created_at,
+                   c.name AS client_name, c.phone AS client_phone,
+                   c.address AS client_address, c.address_number AS client_number,
+                   c.neighborhood AS client_neighborhood, c.city AS client_city,
+                   t.number AS table_number
             FROM orders o
-            LEFT JOIN clients c ON o.client_id = c.id
-            WHERE o.restaurant_id = :rid 
-              AND o.order_type = 'delivery'
-              AND o.created_at >= :start
-              AND o.created_at < :end
-            ORDER BY o.created_at DESC
-        ";
+            LEFT JOIN clients c ON c.id = o.client_id
+            LEFT JOIN tables t ON t.id = o.table_id
+            WHERE o.restaurant_id = :rid
+              AND o.order_type IN ('delivery','pickup','retirada','local')
+              AND o.created_at BETWEEN :start AND :end
+            ORDER BY o.created_at DESC, o.id DESC
+        ");
+        $stmt->execute(['rid' => $restaurantId, 'start' => $start, 'end' => $end]);
 
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            'rid' => $restaurantId,
-            'start' => $periodStart,
-            'end' => $periodEnd
-        ]);
-        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $orders = array_map([$this, 'hydrateAddress'], $stmt->fetchAll(PDO::FETCH_ASSOC));
 
         return [
             'orders' => $orders,
-            'business_hour' => $businessHour,
-            'period_start' => $periodStart,
-            'period_end' => $periodEnd
+            'business_hour' => null,
+            'period_start' => $start,
+            'period_end' => $end,
         ];
     }
 
     /**
-     * Busca pedido por ID com dados básicos
+     * Busca pedido com detalhes e itens.
      */
-    public function findById(int $id, int $restaurantId): ?array
+    public function findWithDetails(int $orderId, int $restaurantId): ?array
     {
-        $conn = Database::connect();
-
-        $stmt = $conn->prepare('
-            SELECT id, status, order_type 
-            FROM orders 
-            WHERE id = :oid AND restaurant_id = :rid
-        ');
-        $stmt->execute(['oid' => $id, 'rid' => $restaurantId]);
-
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result ?: null;
-    }
-
-    /**
-     * Busca pedido com todos os detalhes (para modal e impressão)
-     */
-    public function findWithDetails(int $id, int $restaurantId): ?array
-    {
-        $conn = Database::connect();
-
-        $stmt = $conn->prepare('
-            SELECT o.*, 
-                   c.name as client_name, 
-                   c.phone as client_phone,
-                   c.address as client_address,
-                   c.address_number as client_number,
-                   c.neighborhood as client_neighborhood,
-                   r.name as restaurant_name,
-                   r.phone as restaurant_phone
-            FROM orders o
-            LEFT JOIN clients c ON o.client_id = c.id
-            LEFT JOIN restaurants r ON o.restaurant_id = r.id
-            WHERE o.id = :oid AND o.restaurant_id = :rid
-        ');
-        $stmt->execute(['oid' => $id, 'rid' => $restaurantId]);
-        $order = $stmt->fetch(PDO::FETCH_ASSOC);
-
+        $order = $this->findById($orderId, $restaurantId);
         if (!$order) {
             return null;
         }
 
-        // Usa OrderItemRepository injetado
-        $order['items'] = $this->itemRepo->findAll($id);
-
+        $order['items'] = $this->orderItems->findAll($orderId);
         return $order;
     }
 
     /**
-     * Atualiza status do pedido
+     * Busca pedido básico (sem itens).
      */
-    public function updateStatus(int $id, string $status): void
+    public function findById(int $orderId, int $restaurantId): ?array
     {
         $conn = Database::connect();
+        $stmt = $conn->prepare("
+            SELECT o.id, o.restaurant_id, o.client_id, o.table_id,
+                   o.total, o.status, o.order_type, o.payment_method, o.is_paid, o.created_at,
+                   c.name AS client_name, c.phone AS client_phone,
+                   c.address AS client_address, c.address_number AS client_number,
+                   c.neighborhood AS client_neighborhood, c.city AS client_city,
+                   t.number AS table_number
+            FROM orders o
+            LEFT JOIN clients c ON c.id = o.client_id
+            LEFT JOIN tables t ON t.id = o.table_id
+            WHERE o.id = :oid AND o.restaurant_id = :rid
+            LIMIT 1
+        ");
+        $stmt->execute(['oid' => $orderId, 'rid' => $restaurantId]);
 
-        $stmt = $conn->prepare('UPDATE orders SET status = :status WHERE id = :oid');
-        $stmt->execute(['status' => $status, 'oid' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? $this->hydrateAddress($row) : null;
     }
 
     /**
-     * Gera um hash leve representando o estado atual dos pedidos (Checagem rápida)
+     * Atualiza status de pedido.
+     * Retorna número de linhas afetadas para logs/validação.
+     */
+    public function updateStatus(int $orderId, string $newStatus): int
+    {
+        $conn = Database::connect();
+        $stmt = $conn->prepare("UPDATE orders SET status = :status WHERE id = :id");
+        $stmt->execute(['status' => $newStatus, 'id' => $orderId]);
+        return $stmt->rowCount();
+    }
+
+    /**
+     * Gera hash do estado atual (usado no polling rápido).
      */
     public function getLastUpdateHash(int $restaurantId): string
     {
         $conn = Database::connect();
-        
-        // Hash baseado em ID + Status + Pagamento (se mudar qualquer um, o hash muda)
-        // Usamos status IN (...) para corresponder ao filtro padrão do Kanban
-        $sql = "
-            SELECT MD5(GROUP_CONCAT(CONCAT(id, status, IFNULL(is_paid, 0)) ORDER BY id)) as state_hash
-            FROM orders 
-            WHERE restaurant_id = :rid 
-              AND order_type IN ('delivery', 'pickup')
-              AND status IN ('novo', 'preparo', 'rota', 'entregue', 'cancelado')
-        ";
-
-        $stmt = $conn->prepare($sql);
+        $stmt = $conn->prepare("
+            SELECT id, status, is_paid, created_at
+            FROM orders
+            WHERE restaurant_id = :rid
+              AND order_type IN ('delivery','pickup','retirada','local')
+              AND status IN ('novo','preparo','rota','entregue','cancelado')
+        ");
         $stmt->execute(['rid' => $restaurantId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $result['state_hash'] ?? '';
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        usort($rows, fn ($a, $b) => ($a['id'] ?? 0) <=> ($b['id'] ?? 0));
+
+        $signature = array_map(function ($row) {
+            return implode('|', [
+                $row['id'] ?? 0,
+                $row['status'] ?? '',
+                $row['is_paid'] ?? 0,
+                $row['created_at'] ?? ''
+            ]);
+        }, $rows);
+
+        return sha1(implode(';', $signature));
     }
 
     /**
-     * Busca TODOS os pedidos ativos de um cliente para o Hub Unificado
+     * Retorna dados do cliente e seus pedidos (Client Hub).
      */
     public function fetchClientHubData(int $clientId, int $restaurantId): array
     {
         $conn = Database::connect();
 
-        // 1. Busca dados do cliente
-        $stmtClient = $conn->prepare("SELECT * FROM clients WHERE id = :cid");
-        $stmtClient->execute(['cid' => $clientId]);
+        $stmtClient = $conn->prepare("
+            SELECT id, name, phone, address, address_number, neighborhood, city
+            FROM clients
+            WHERE id = :cid AND restaurant_id = :rid
+            LIMIT 1
+        ");
+        $stmtClient->execute(['cid' => $clientId, 'rid' => $restaurantId]);
         $client = $stmtClient->fetch(PDO::FETCH_ASSOC);
 
-        if (!$client) return [];
-
-        // 2. Busca pedidos ativos (não cancelados/fechados ou do dia)
-        // Critério: Status não é 'fechado' ou 'cancelado' (a menos que seja recente?)
-        // Vamos pegar tudo que não está 'fechado' E tudo do dia de hoje (mesmo fechado/cancelado para histórico)
-        $today = date('Y-m-d');
-        
-        $sql = "
-            SELECT o.*, t.number as table_number 
-            FROM orders o
-            LEFT JOIN tables t ON o.table_id = t.id
-            WHERE o.client_id = :cid 
-              AND o.restaurant_id = :rid
-              AND (
-                  o.status NOT IN ('fechado') 
-                  OR DATE(o.created_at) = :today
-              )
-            ORDER BY o.created_at DESC
-        ";
-
-        $stmt = $conn->prepare($sql);
-        $stmt->execute(['cid' => $clientId, 'rid' => $restaurantId, 'today' => $today]);
-        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // 3. Popula itens para cada pedido
-        foreach ($orders as &$order) {
-            $order['items'] = $this->itemRepo->findAll($order['id']);
-
-            // Recalcula total baseado nos itens (correção para mesas com total 0)
-            $calcTotal = 0;
-            if (!empty($order['items'])) {
-                foreach ($order['items'] as $item) {
-                     $calcTotal += (float)$item['price'] * (float)$item['quantity'];
-                }
-            }
-            // Soma taxa de entrega se existir
-            if (!empty($order['delivery_fee'])) {
-                 $calcTotal += (float)$order['delivery_fee'];
-            }
-            
-            $order['total'] = $calcTotal;
+        if (!$client) {
+            return ['success' => false, 'message' => 'Cliente não encontrado'];
         }
 
+        $stmtOrders = $conn->prepare("
+            SELECT o.id, o.total, o.status, o.payment_method, o.order_type, o.created_at, o.is_paid,
+                   o.table_id, t.number AS table_number
+            FROM orders o
+            LEFT JOIN tables t ON t.id = o.table_id
+            WHERE o.restaurant_id = :rid 
+              AND o.client_id = :cid
+              AND (o.is_paid = 0 OR o.is_paid IS NULL)
+              AND o.status NOT IN ('entregue', 'cancelado', 'fechado')
+            ORDER BY o.created_at DESC, o.id DESC
+            LIMIT 50
+        ");
+        $stmtOrders->execute(['rid' => $restaurantId, 'cid' => $clientId]);
+        $orders = $stmtOrders->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($orders as &$order) {
+            $order['client_address'] = $client['address'] ?? null;
+            $order['client_number'] = $client['address_number'] ?? null;
+            $order['client_neighborhood'] = $client['neighborhood'] ?? null;
+            $order['client_city'] = $client['city'] ?? null;
+            $order['items'] = $this->orderItems->findAll((int) $order['id']);
+            $order = $this->hydrateAddress($order);
+        }
+        unset($order);
+
+        $clientAddressParts = array_filter([
+            $client['address'] ?? null,
+            $client['address_number'] ?? null,
+            $client['neighborhood'] ?? null,
+            $client['city'] ?? null,
+        ], fn ($val) => $val !== null && $val !== '');
+
         return [
-            'client' => $client,
+            'success' => true,
+            'client' => [
+                'id' => (int) $client['id'],
+                'name' => $client['name'],
+                'phone' => $client['phone'],
+                'address' => $client['address'] ?? null,
+                'address_number' => $client['address_number'] ?? null,
+                'neighborhood' => $client['neighborhood'] ?? null,
+                'city' => $client['city'] ?? null,
+                'full_address' => $clientAddressParts ? implode(', ', $clientAddressParts) : null,
+            ],
             'orders' => $orders
         ];
+    }
+
+    /**
+     * Normaliza endereço do cliente para uso nas views.
+     */
+    private function hydrateAddress(array $row): array
+    {
+        $parts = array_filter([
+            $row['client_address'] ?? null,
+            $row['client_number'] ?? null,
+            $row['client_neighborhood'] ?? null,
+            $row['client_city'] ?? null,
+        ], fn ($val) => $val !== null && $val !== '');
+
+        if ($parts) {
+            $row['client_address'] = implode(', ', $parts);
+        }
+
+        return $row;
     }
 }

@@ -44,10 +44,10 @@
 <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.min.js"></script>
 
 <!-- Print Animation (Shared) -->
-<script data-spa-script="print-animation" src="<?= BASE_URL ?>/js/shared/print-animation.js?v=<?= time() ?>"></script>
+<script data-spa-script="print-animation" src="<?= BASE_URL ?>/js/shared/print-animation.js?v=<?= APP_VERSION ?>"></script>
 
 <!-- Print Bundle (QZ Tray + Ficha Térmica) -->
-<script data-spa-script="print-bundle" src="<?= BASE_URL ?>/js/bundles/print-bundle.js?v=<?= time() ?>"></script>
+<script data-spa-script="print-bundle" src="<?= BASE_URL ?>/js/bundles/print-bundle.js?v=<?= APP_VERSION ?>"></script>
 
 <!-- Modal de Detalhes de Delivery (compartilhado) -->
-<script data-spa-script="delivery-details" src="<?= BASE_URL ?>/js/shared/delivery-details-modal.js?v=<?= time() ?>"></script>
+<script data-spa-script="delivery-details" src="<?= BASE_URL ?>/js/shared/delivery-details-modal.js?v=<?= APP_VERSION ?>"></script>

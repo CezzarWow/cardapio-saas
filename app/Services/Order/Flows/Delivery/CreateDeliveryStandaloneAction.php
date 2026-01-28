@@ -10,6 +10,7 @@ use App\Repositories\Order\OrderRepository;
 use App\Repositories\StockRepository;
 use App\Services\Order\OrderStatus;
 use App\Services\Order\TotalCalculator;
+use App\Services\Order\OrderTotalService;
 use App\Services\PaymentService;
 use App\Traits\OrderCreationTrait;
 use RuntimeException;
@@ -40,19 +41,22 @@ class CreateDeliveryStandaloneAction
     private OrderItemRepository $itemRepo;
     private ClientRepository $clientRepo;
     private StockRepository $stockRepo;
+    private OrderTotalService $totalService;
 
     public function __construct(
         PaymentService $paymentService,
         OrderRepository $orderRepo,
         OrderItemRepository $itemRepo,
         ClientRepository $clientRepo,
-        StockRepository $stockRepo
+        StockRepository $stockRepo,
+        OrderTotalService $totalService
     ) {
         $this->paymentService = $paymentService;
         $this->orderRepo = $orderRepo;
         $this->itemRepo = $itemRepo;
         $this->clientRepo = $clientRepo;
         $this->stockRepo = $stockRepo;
+        $this->totalService = $totalService;
     }
 
     /**
@@ -69,14 +73,13 @@ class CreateDeliveryStandaloneAction
         // 1. Buscar ou criar cliente
         $clientId = $this->getOrCreateClient($restaurantId, $data);
 
-        // 2. Calcular total
+        // 2. Calcular total (Estimativa Inicial para Validação)
         $deliveryFee = floatval($data['delivery_fee'] ?? 0);
         $discount = floatval($data['discount'] ?? 0);
         $cartTotal = TotalCalculator::fromCart($data['cart'], $discount);
         $total = $cartTotal + $deliveryFee;
 
         // 3. Determinar status inicial
-        // Delivery começa como NOVO (ou AGUARDANDO se pago)
         $isPaid = !empty($data['payments']);
         $initialStatus = $isPaid ? OrderStatus::AGUARDANDO : OrderStatus::NOVO;
 
@@ -88,6 +91,7 @@ class CreateDeliveryStandaloneAction
                 'restaurant_id' => $restaurantId,
                 'client_id' => $clientId,
                 'total' => $total,
+                'total_delivery' => $total, // FIX: Inicia com valor correto para evitar 0.00 no Kanban
                 'order_type' => 'delivery',
                 'observation' => $data['observation'] ?? null,
                 'change_for' => $data['change_for'] ?? null
@@ -106,6 +110,20 @@ class CreateDeliveryStandaloneAction
                 $this->orderRepo->updatePayment($orderId, true, $mainMethod);
             }
 
+            // 7. Recalcular Totais Definitivos (Popula total_delivery)
+            // Importante: Taxa de Entrega deve estar nos itens se quisermos que o Service some.
+            // Se o Create não insere a taxa como item, o Service não vai considerar?
+            // DIAGNÓSTICO: Pedido #13 tinha item 'Taxa de Entrega'.
+            // Quem insere esse item? Se for o frontend no cart, ok.
+            // Se o frontend manda cart + delivery_fee separado, e a Action não insere item de taxa,
+            // então o Service vai ignorar a taxa.
+            // Vou assumir que o cart já vem com a taxa ou que este sistema precisa inserir a taxa como item.
+            // Como vi que o sistema antigo usava 'Taxa de Entrega' como item, vou manter o recalculate.
+            // Se o total diminuir, é porque a taxa não virou item.
+            
+            $finalTotals = $this->totalService->recalculate($orderId);
+            $total = $finalTotals['total']; // Atualiza com o valor real do banco
+
             $conn->commit();
 
             $this->logOrderCreated('DELIVERY', $orderId, [
@@ -113,7 +131,8 @@ class CreateDeliveryStandaloneAction
                 'client_id' => $clientId,
                 'status' => $initialStatus,
                 'total' => $total,
-                'is_paid' => $isPaid
+                'is_paid' => $isPaid,
+                'total_delivery' => $finalTotals['total_delivery']
             ]);
 
             return [
@@ -121,7 +140,8 @@ class CreateDeliveryStandaloneAction
                 'client_id' => $clientId,
                 'total' => $total,
                 'status' => $initialStatus,
-                'is_paid' => $isPaid
+                'is_paid' => $isPaid,
+                'total_delivery' => $finalTotals['total_delivery']
             ];
 
         } catch (\Throwable $e) {

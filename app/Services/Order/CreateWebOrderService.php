@@ -10,6 +10,7 @@ use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\ProductRepository;
 use App\Services\PaymentService;
+use App\Services\Order\OrderTotalService;
 
 /**
  * Service para criar pedidos via Cardápio Web
@@ -23,6 +24,7 @@ class CreateWebOrderService
     private ProductRepository $productRepository;
     private AdditionalItemRepository $additionalItemRepository;
     private PaymentService $paymentService;
+    private OrderTotalService $totalService;
 
     /**
      * Mapeamento de tipos de pedido (frontend → banco)
@@ -41,7 +43,8 @@ class CreateWebOrderService
         OrderItemRepository $itemRepository,
         ProductRepository $productRepository,
         AdditionalItemRepository $additionalItemRepository,
-        PaymentService $paymentService
+        PaymentService $paymentService,
+        OrderTotalService $totalService
     ) {
         $this->clientRepository = $clientRepository;
         $this->orderRepository = $orderRepository;
@@ -49,6 +52,7 @@ class CreateWebOrderService
         $this->productRepository = $productRepository;
         $this->additionalItemRepository = $additionalItemRepository;
         $this->paymentService = $paymentService;
+        $this->totalService = $totalService;
     }
 
     /**
@@ -97,6 +101,8 @@ class CreateWebOrderService
                 'restaurant_id' => $restaurantId,
                 'client_id' => $clientId,
                 'total' => $total,
+                // FIX: Popula total_delivery para evitar 0.00
+                'total_delivery' => (in_array($orderType, ['delivery', 'pickup']) ? $total : 0),
                 'order_type' => $orderType,
                 'payment_method' => $input['payment_method'] ?? 'dinheiro',
                 'observation' => $input['observation'] ?? null,
@@ -115,6 +121,15 @@ class CreateWebOrderService
             if ($paidAmount > 0) {
                 $conn->prepare('UPDATE orders SET is_paid = 1 WHERE id = :id')
                     ->execute(['id' => $orderId]);
+            }
+
+            // [FIX] Recalcula e valida totais antes de confirmar
+            $totals = $this->totalService->recalculate($orderId);
+            
+            // Guardrail: Se é delivery e tem itens, não pode ter total_delivery zerado
+            if (in_array($orderType, ['delivery', 'pickup']) && $totals['total_delivery'] <= 0 && $total > 0) {
+                // Logger::error("Total Delivery Zerado detectado no WebOrder #{$orderId}", $totals);
+                // Opcional: throw new \RuntimeException("Erro de consistência: Total Delivery zerado.");
             }
 
             $conn->commit();

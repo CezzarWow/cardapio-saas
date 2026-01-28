@@ -83,14 +83,30 @@
     }
 
     // SOBRESCREVE openDetailsModal para usar nosso modal com botões
-    window.DeliveryUI.openDetailsModal = async function (id) {
+    // SOBRESCREVE openDetailsModal para usar nosso modal com botões
+    window.DeliveryUI.openDetailsModal = async function (orderDataOrId) {
         // Garante que o modal NOSSO existe no DOM (com botões de impressão)
         ensureModalExistsLocal();
+
+        // [FIX] Sempre busca do servidor para garantir itens atualizados (não confia no card)
+        if (typeof orderDataOrId === 'object' && orderDataOrId !== null) {
+            orderDataOrId = orderDataOrId.id;
+        }
+
+        // Se recebeu ID, busca na API
         try {
-            const res = await fetch(BASE_URL + '/admin/loja/delivery/details?id=' + id);
+            const res = await fetch(BASE_URL + '/admin/loja/delivery/details?id=' + orderDataOrId);
             const data = await res.json();
             if (data.success) {
-                this.showDetailsModal({ ...data.order, items: data.items || [] });
+                // Normalização defensiva: garante que items seja array
+                let items = [];
+                if (Array.isArray(data.items)) {
+                    items = data.items;
+                } else if (data.items && typeof data.items === 'object') {
+                    items = Object.values(data.items);
+                }
+
+                this.showDetailsModal({ ...data.order, items: items });
             } else {
                 alert('Erro: ' + (data.message || 'Pedido não encontrado'));
             }

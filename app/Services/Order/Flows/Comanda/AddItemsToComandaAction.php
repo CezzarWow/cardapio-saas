@@ -31,15 +31,18 @@ class AddItemsToComandaAction
     private OrderRepository $orderRepo;
     private OrderItemRepository $itemRepo;
     private StockRepository $stockRepo;
+    private OrderTotalService $totalService;
 
     public function __construct(
         OrderRepository $orderRepo,
         OrderItemRepository $itemRepo,
-        StockRepository $stockRepo
+        StockRepository $stockRepo,
+        OrderTotalService $totalService
     ) {
         $this->orderRepo = $orderRepo;
         $this->itemRepo = $itemRepo;
         $this->stockRepo = $stockRepo;
+        $this->totalService = $totalService;
     }
 
     /**
@@ -71,9 +74,13 @@ class AddItemsToComandaAction
             );
         }
 
-        // 4. Calcular valor dos novos itens
-        $addedValue = TotalCalculator::fromCart($data['cart'], 0);
-        $newTotal = floatval($order['total']) + $addedValue;
+        // 4. Forçar source_type 'comanda' se não vier
+        foreach ($data['cart'] as &$item) {
+             if (empty($item['source_type'])) {
+                 $item['source_type'] = 'comanda';
+             }
+        }
+        unset($item);
 
         try {
             $conn->beginTransaction();
@@ -81,8 +88,8 @@ class AddItemsToComandaAction
             // 5. Inserir novos itens e baixar estoque
             $this->insertItemsAndDecrementStock($orderId, $data['cart'], $this->itemRepo, $this->stockRepo);
 
-            // 6. Atualizar total
-            $this->orderRepo->updateTotal($orderId, $newTotal);
+            // 6. Recalcular Totais
+            $totals = $this->totalService->recalculate($orderId);
 
             $conn->commit();
 
@@ -90,15 +97,15 @@ class AddItemsToComandaAction
                 'restaurant_id' => $restaurantId,
                 'order_id' => $orderId,
                 'items_added' => count($data['cart']),
-                'added_value' => $addedValue,
-                'new_total' => $newTotal
+                'new_total' => $totals['total']
             ]);
 
             return [
                 'order_id' => $orderId,
                 'items_added' => count($data['cart']),
-                'added_value' => $addedValue,
-                'new_total' => $newTotal
+                'new_total' => $totals['total'],
+                'total_table' => $totals['total_table'],
+                'total_delivery' => $totals['total_delivery']
             ];
 
         } catch (\Throwable $e) {

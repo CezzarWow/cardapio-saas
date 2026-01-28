@@ -88,13 +88,13 @@
 <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.min.js"></script>
 
 <!-- Print Bundle (Shared with PDV) -->
-<script data-spa-script="print-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/print-bundle.js?v=<?= time() ?>"></script>
+<script data-spa-script="print-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/print-bundle.js?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>"></script>
 
 <!-- Print Animation (Shared) -->
-<script data-spa-script="print-animation" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/shared/print-animation.js?v=<?= time() ?>"></script>
+<script data-spa-script="print-animation" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/shared/print-animation.js?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>"></script>
 
 <!-- Delivery Bundle (12 scripts combinados) -->
-<script data-spa-script="delivery-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/delivery-bundle.js?v=<?= time() ?>"></script>
+<script data-spa-script="delivery-bundle" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/bundles/delivery-bundle.js?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>"></script>
 
 <!-- Modal de Detalhes (compartilhado com Mesas) -->
-<script data-spa-script="delivery-details" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/shared/delivery-details-modal.js?v=<?= time() ?>"></script>
+<script data-spa-script="delivery-details" src="<?= \App\Helpers\ViewHelper::e(BASE_URL) ?>/js/shared/delivery-details-modal.js?v=<?= \App\Helpers\ViewHelper::e(APP_VERSION) ?>"></script>

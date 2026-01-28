@@ -13,6 +13,7 @@ use App\Repositories\StockRepository;
 use App\Repositories\TableRepository;
 use App\Services\CashRegisterService;
 use App\Services\PaymentService;
+use App\Services\Order\OrderTotalService;
 use Exception;
 
 class CreateOrderAction
@@ -24,6 +25,7 @@ class CreateOrderAction
     private OrderItemRepository $itemRepo;
     private TableRepository $tableRepo;
     private ClientRepository $clientRepo;
+    private OrderTotalService $totalService;
 
     public function __construct(
         PaymentService $paymentService,
@@ -32,7 +34,8 @@ class CreateOrderAction
         OrderRepository $orderRepo,
         OrderItemRepository $itemRepo,
         TableRepository $tableRepo,
-        ClientRepository $clientRepo
+        ClientRepository $clientRepo,
+        OrderTotalService $totalService
     ) {
         $this->paymentService = $paymentService;
         $this->cashRegisterService = $cashRegisterService;
@@ -41,6 +44,7 @@ class CreateOrderAction
         $this->itemRepo = $itemRepo;
         $this->tableRepo = $tableRepo;
         $this->clientRepo = $clientRepo;
+        $this->totalService = $totalService;
     }
 
     public function execute(int $restaurantId, int $userId, array $data): int
@@ -118,6 +122,13 @@ class CreateOrderAction
             // Determinar status inicial do pedido
             $orderStatus = $this->determineOrderStatus($orderType, $saveAccount, $finalizeNow, $isPaid);
 
+            // [FIX] Reaproveita comanda aberta do cliente para evitar criar vÃ¡rios pedidos em sequÃªncia
+            if (!$existingOrderId && $saveAccount && !empty($data['client_id'])) {
+                $openOrder = $this->orderRepo->findOpenByClient((int) $data['client_id'], $restaurantId);
+                if (!empty($openOrder['id'])) {
+                    $existingOrderId = (int) $openOrder['id'];
+                }
+            }
 
 
             // VERIFICAR SE É INCREMENTO OU FINALIZAÇÃO DE PEDIDO EXISTENTE
@@ -327,17 +338,20 @@ class CreateOrderAction
             $this->orderRepo->updateStatus($existingOrderId, $orderStatus);
         }
 
-        // Adicionar itens ao pedido existente
-        $this->itemRepo->insert($existingOrderId, $cart);
+        // Adicionar itens ao pedido existente (com source_type baseado no order_type)
+        $cartWithSource = array_map(function($item) use ($orderType) {
+            $item['source_type'] = $this->mapOrderTypeToSourceType($orderType);
+            return $item;
+        }, $cart);
+        $this->itemRepo->insert($existingOrderId, $cartWithSource);
 
         // Atualizar total do pedido (soma novos itens - descontos de ajuste)
         $newTotal = floatval($existingOrder['total']) + $totalVenda - $adjustmentDiscount;
         $this->orderRepo->updateTotal($existingOrderId, max(0, $newTotal));
 
-        // Se mudou o tipo de pedido (ex: Retirada -> Delivery), atualiza o tipo
-        if (!empty($orderType) && $existingOrder['order_type'] !== $orderType) {
-            $this->orderRepo->updateOrderType($existingOrderId, $orderType);
-        }
+        // NOTA: O order_type do pedido NÃO deve mudar ao adicionar itens
+        // O source_type dos ITENS indica de onde vieram (mesa, delivery, etc)
+        // Isso mantém pedidos de delivery no Kanban mesmo quando modificados no PDV
 
         // Baixa Estoque
         foreach ($cart as $item) {
@@ -433,6 +447,8 @@ class CreateOrderAction
             'client_id' => $clientId,
             'table_id' => $tableId ?: null,
             'total' => $finalTotal,
+            // FIX: Popula total_delivery se for delivery/pickup para evitar 0.00 no Kanban
+            'total_delivery' => (in_array($orderType, ['delivery', 'pickup']) ? $finalTotal : 0),
             'order_type' => $orderType,
             'payment_method' => $paymentMethod,
             'observation' => $orderObservation,
@@ -453,8 +469,12 @@ class CreateOrderAction
             $this->tableRepo->occupy($tableId, $orderId);
         }
 
-        // Inserir itens
-        $this->itemRepo->insert($orderId, $cart);
+        // Inserir itens (com source_type baseado no order_type)
+        $cartWithSource = array_map(function($item) use ($orderType) {
+            $item['source_type'] = $this->mapOrderTypeToSourceType($orderType);
+            return $item;
+        }, $cart);
+        $this->itemRepo->insert($orderId, $cartWithSource);
 
         // Baixa Estoque
         foreach ($cart as $item) {
@@ -469,7 +489,8 @@ class CreateOrderAction
                 'price' => $deliveryFee,
                 'quantity' => 1,
                 'extras' => null,
-                'observation' => null
+                'observation' => null,
+                'source_type' => $this->mapOrderTypeToSourceType($orderType)
             ]]);
         }
 
@@ -490,6 +511,30 @@ class CreateOrderAction
             );
         }
 
+        // [FIX] Recalcula totais para persistir total_delivery e total_table
+        $this->totalService->recalculate($orderId);
+
         return $orderId;
+    }
+
+    /**
+     * Mapeia order_type para source_type do item
+     * Usado para agrupar itens na interface por origem
+     *
+     * @param string $orderType Tipo do pedido
+     * @return string Source type para o item
+     */
+    private function mapOrderTypeToSourceType(string $orderType): string
+    {
+        $sourceMap = [
+            'delivery' => 'delivery',
+            'pickup' => 'pickup',
+            'mesa' => 'mesa',
+            'comanda' => 'comanda',
+            'balcao' => 'balcao',
+            'local' => 'balcao'
+        ];
+
+        return $sourceMap[$orderType] ?? 'balcao';
     }
 }

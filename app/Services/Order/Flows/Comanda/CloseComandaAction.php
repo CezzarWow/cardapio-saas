@@ -65,8 +65,9 @@ class CloseComandaAction
             throw new Exception("Pedido #{$orderId} não é uma comanda");
         }
 
-        // 4. Validar status ABERTO
-        if ($order['status'] !== OrderStatus::ABERTO) {
+        // 4. Validar status ABERTO ou NOVO
+        $allowedStatuses = [OrderStatus::ABERTO, OrderStatus::NOVO];
+        if (!in_array($order['status'], $allowedStatuses)) {
             throw new Exception(
                 "Comanda #{$orderId} não está aberta. Status: {$order['status']}"
             );

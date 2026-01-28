@@ -154,7 +154,7 @@ class DeliveryController extends BaseController
         $this->json([
             'success' => true,
             'order' => $data['order'],
-            'items' => $data['items']
+            'items' => $data['items'] ?? []
         ]);
     }
 
@@ -197,7 +197,8 @@ class DeliveryController extends BaseController
             $this->json(['success' => false, 'message' => 'ID inválido'], 400);
         }
 
-        $data = $this->service->getClientHubData($orderId, $rid);
+        // Retorna apenas o pedido clicado, não todos os pedidos do cliente
+        $data = $this->service->getSingleOrderData($orderId, $rid);
 
         if (!$data['success']) {
             $this->json($data, 404);

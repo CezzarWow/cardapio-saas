@@ -366,6 +366,14 @@ window.CheckoutSubmit = {
                 // Usa o order_id retornado pelo backend (prioridade) ou o que já existia
                 const savedOrderId = data.order_id || orderId;
 
+                if (savedOrderId) {
+                    const orderInput = document.getElementById('current_order_id');
+                    if (orderInput) orderInput.value = savedOrderId;
+                    if (typeof PDVState !== 'undefined') {
+                        PDVState.set({ pedidoId: savedOrderId });
+                    }
+                }
+
                 // Abre modal de impressão se tiver um pedido salvo
                 if (savedOrderId && typeof PDVPrint !== 'undefined') {
                     // Se tem itens do carrinho, passa para imprimir apenas eles (não busca da API)

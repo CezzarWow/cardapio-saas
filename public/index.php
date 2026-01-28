@@ -35,7 +35,12 @@ date_default_timezone_set('America/Sao_Paulo');
 $scriptName = dirname($_SERVER['SCRIPT_NAME']);
 $baseUrl = str_replace('\\', '/', $scriptName);
 define('BASE_URL', rtrim($baseUrl, '/'));
-define('APP_VERSION', '1.1.92'); // Cache-buster: incremente ao atualizar JS/CSS
+// AUTOMATIC CACHE BUSTER: Usa a data do 'pdv-bundle.js' como versão.
+// Se o arquivo não existir (dev), usa timestamp atual.
+$bundlePath = __DIR__ . '/js/bundles/pdv-bundle.js';
+// $version = file_exists($bundlePath) ? filemtime($bundlePath) : time();
+$version = time(); // [FIX] Forçar atualização de cache para o Javascript atualizado
+define('APP_VERSION', $version);
 define('APP_ENV', $appEnv); // Disponibiliza APP_ENV globalmente
 
 use App\Controllers\Admin\DashboardController;

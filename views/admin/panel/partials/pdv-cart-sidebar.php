@@ -32,28 +32,86 @@
 
     <!-- Items Area com Flex 1 para empurrar rodapé (mas scrolar) -->
     <div id="cart-items-area" class="cart-items-area" style="display: none;"></div>
-
     <?php if (!empty($itensJaPedidos)): ?>
-        <?php $savedLabel = $mesa_id ? 'Já na Mesa' : 'Já na Comanda'; ?>
+        <?php
+            $orderType = (string) ($contaAberta['order_type'] ?? '');
+            $isDelivery = in_array($orderType, ['delivery', 'entrega'], true);
+            $isPickup = in_array($orderType, ['pickup', 'retirada'], true);
+
+            if (!empty($mesa_id)) {
+                $savedLabel = 'Mesa ' . $mesa_numero;
+                $typeLabel = 'MESA';
+            } elseif ($isDelivery) {
+                $savedLabel = 'Entrega';
+                $typeLabel = 'ENTREGA';
+            } elseif ($isPickup) {
+                $savedLabel = 'Retirada';
+                $typeLabel = 'RETIRADA';
+            } else {
+                $savedLabel = 'Comanda';
+                $typeLabel = '';
+            }
+
+            // Agrupa itens por source_type
+            $groupedItems = [];
+            $feeItems = [];
+            // Fallback: usa order_type do pedido se o item não tiver source_type
+            $fallbackSourceType = $orderType ?: 'comanda';
+            foreach ($itensJaPedidos as $item) {
+                if (($item['name'] ?? '') === 'Taxa de Entrega') {
+                    $feeItems[] = $item;
+                } else {
+                    $sourceType = $item['source_type'] ?? $fallbackSourceType;
+                    if (!isset($groupedItems[$sourceType])) {
+                        $groupedItems[$sourceType] = [];
+                    }
+                    $groupedItems[$sourceType][] = $item;
+                }
+            }
+
+            // Labels para cada source_type
+            $sourceLabels = [
+                'delivery' => 'ENTREGA',
+                'pickup' => 'RETIRADA',
+                'mesa' => 'MESA',
+                'comanda' => 'MESA',
+                'balcao' => 'BALCÃO'
+            ];
+        ?>
         <div style="padding: 1rem; background: #fff7ed; border-bottom: 1px solid #fed7aa;">
-            <h3 style="font-size: 0.85rem; font-weight: 700; color: #9a3412; margin-bottom: 0.5rem; display:flex; justify-content:space-between; align-items:center;">
-                <span><?= \App\Helpers\ViewHelper::e($savedLabel) ?></span>
-                <span>Total: R$ <?= number_format($contaAberta['total'], 2, ',', '.') ?></span>
-            </h3>
-            <div style="max-height: 150px; overflow-y: auto;">
-                <?php foreach ($itensJaPedidos as $itemAntigo): ?>
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #9a3412; margin-bottom: 4px;">
-                        <span><?= (int) ($itemAntigo['quantity'] ?? 0) ?>x <?= \App\Helpers\ViewHelper::e($itemAntigo['name'] ?? '') ?></span>
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <span>R$ <?= number_format($itemAntigo['price'], 2, ',', '.') ?></span>
-                            <button data-action="saved-item-delete" 
-                                    data-id="<?= (int) ($itemAntigo['id'] ?? 0) ?>" 
-                                    data-order-id="<?= (int) ($contaAberta['id'] ?? 0) ?>"
-                                    title="Remover item salvo"
-                                    style="border:none; background:none; cursor:pointer; color:#ef4444; display:flex; align-items:center;">
-                                <i data-lucide="trash" style="width:14px; height:14px;"></i>
-                            </button>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #9a3412; margin-bottom: 0.5rem;">
+                <div>Total: R$ <?= number_format($contaAberta['total'], 2, ',', '.') ?></div>
+            </div>
+            <div style="max-height: 200px; overflow-y: auto;">
+                <?php foreach ($groupedItems as $sourceType => $items): ?>
+                    <?php $label = $sourceLabels[$sourceType] ?? strtoupper($sourceType); ?>
+                    <?php if (!empty($label)): ?>
+                        <div style="font-size: 0.75rem; font-weight: 800; color: #7c2d12; text-transform: uppercase; margin: 8px 0 4px; padding-top: 6px; border-top: 1px dashed #fed7aa;">
+                            <?= \App\Helpers\ViewHelper::e($label) ?>
                         </div>
+                    <?php endif; ?>
+
+                    <?php foreach ($items as $itemAntigo): ?>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #9a3412; margin-bottom: 4px;">
+                            <span><?= (int) ($itemAntigo['quantity'] ?? 0) ?>x <?= \App\Helpers\ViewHelper::e($itemAntigo['name'] ?? '') ?></span>
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <span>R$ <?= number_format($itemAntigo['price'], 2, ',', '.') ?></span>
+                                <button data-action="saved-item-delete" 
+                                        data-id="<?= (int) ($itemAntigo['id'] ?? 0) ?>" 
+                                        data-order-id="<?= (int) ($contaAberta['id'] ?? 0) ?>"
+                                        title="Remover item salvo"
+                                        style="border:none; background:none; cursor:pointer; color:#ef4444; display:flex; align-items:center;">
+                                    <i data-lucide="trash" style="width:14px; height:14px;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endforeach; ?>
+
+                <?php foreach ($feeItems as $itemAntigo): ?>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #7c2d12; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #fed7aa;">
+                        <span><?= (int) ($itemAntigo['quantity'] ?? 0) ?>x <?= \App\Helpers\ViewHelper::e($itemAntigo['name'] ?? '') ?></span>
+                        <span>R$ <?= number_format($itemAntigo['price'], 2, ',', '.') ?></span>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -62,7 +120,7 @@
                          data-table-id="<?= (int) $mesa_id ?>"
                          data-order-id="<?= (int) ($contaAberta['id'] ?? 0) ?>"
                          style="background: none; border: none; color: #dc2626; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-decoration: underline;">
-                     Cancelar Pedido da Mesa
+                     <?= $mesa_id ? 'Cancelar Pedido da Mesa' : 'Cancelar Pedido' ?>
                  </button>
             </div>
         </div>
@@ -268,3 +326,4 @@
     </div>
 </div>
 <?php endif; ?>
+

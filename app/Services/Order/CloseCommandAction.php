@@ -64,8 +64,9 @@ class CloseCommandAction
                 throw new Exception('Pedido não encontrado');
             }
 
-            // 2. Validar estado atual (deve ser 'aberto' para fechar comanda)
-            if ($currentOrder['status'] !== 'aberto') {
+            // 2. Validar estado atual (deve ser 'aberto' ou 'novo' para fechar comanda)
+            $allowedStatuses = ['aberto', 'novo'];
+            if (!in_array($currentOrder['status'], $allowedStatuses)) {
                 throw new Exception(
                     "Comanda #{$orderId} não está aberta. Status atual: {$currentOrder['status']}"
                 );
